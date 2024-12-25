@@ -1,33 +1,36 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from django.conf import settings
 from django.utils import timezone
+from users.models import User
 
 class BasicInfo(models.Model):
     """基本信息"""
-    GENDER_CHOICES = (
+    GENDER_CHOICES = [
         ('male', '男'),
         ('female', '女'),
-        ('other', '其他')
+        ('other', '其他'),
+    ]
+
+    user = models.OneToOneField(
+        User, 
+        on_delete=models.CASCADE,
+        related_name='basic_info'
     )
-    
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='basic_info', verbose_name='用户')
-    name = models.CharField(max_length=50, verbose_name='姓名')
-    avatar = models.ImageField(upload_to='avatars/', blank=True, verbose_name='头像')
-    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default='other', verbose_name='性别')
-    birthday = models.DateField(null=True, blank=True, verbose_name='生日')
-    location = models.CharField(max_length=100, blank=True, verbose_name='所在地')
-    job_title = models.CharField(_('当前职位'), max_length=50, null=True, blank=True, help_text='例如：产品经理、前端工程师')
-    bio = models.TextField(_('个人简介'), max_length=500, null=True, blank=True)
-    email = models.EmailField(blank=True, verbose_name='邮箱')
-    created_at = models.DateTimeField(default=timezone.now, verbose_name='创建时间')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='更新时间')
+    name = models.CharField(_('姓名'), max_length=50, blank=True)
+    avatar = models.ImageField(_('头像'), upload_to='avatars/', null=True, blank=True)
+    gender = models.CharField(_('性别'), max_length=10, choices=GENDER_CHOICES, default='other')
+    birthday = models.DateField(_('生日'), null=True, blank=True)
+    location = models.CharField(_('所在地'), max_length=100, blank=True)
+    email = models.EmailField(_('邮箱'), max_length=254, blank=True)
+    job_title = models.CharField(_('职位'), max_length=100, null=True, blank=True)
+    years_of_experience = models.IntegerField(_('工作年限'), null=True, blank=True)
+    personal_summary = models.TextField(_('个人简介'), blank=True)
 
     class Meta:
-        db_table = 'user_basic_info'
         verbose_name = _('基本信息')
-        verbose_name_plural = verbose_name
+        verbose_name_plural = _('基本信息')
+        db_table = 'user_basic_info'
 
     def __str__(self):
-        return f"{self.name or '未设置姓名'}"
+        return f"{self.user.phone} - {self.name}"
 

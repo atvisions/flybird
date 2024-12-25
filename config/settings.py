@@ -42,10 +42,14 @@ THIRD_PARTY_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'django_filters',
+    'django_ckeditor_5',
+    'simpleui',
 ]
 
 LOCAL_APPS = [
     'users.apps.UsersConfig',
+    'articles.apps.ArticlesConfig',
+    'qa.apps.QaConfig',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -90,7 +94,7 @@ DATABASES = {
         'PORT': os.getenv('DB_PORT'),
         'OPTIONS': {
             'charset': 'utf8mb4',
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES', time_zone='+8:00'",
             'connect_timeout': 60,
         },
         'CONN_MAX_AGE': 60,  # 数据库连接的最大生命周期（秒）
@@ -128,6 +132,7 @@ SESSION_CACHE_ALIAS = "default"
 AUTH_USER_MODEL = 'users.User'
 
 AUTHENTICATION_BACKENDS = [
+    'users.backends.PhoneModelBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
 
@@ -347,3 +352,99 @@ CSRF_TRUSTED_ORIGINS = [
 
 # ----------- 17. 其他配置 -----------
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ----------- 18. CKEditor 5 配置 -----------
+CKEDITOR_5_CONFIGS = {
+    'default': {
+        'toolbar': ['heading', '|', 'bold', 'italic', 'link',
+                   'bulletedList', 'numberedList', 'blockQuote', '|',
+                   'imageUpload', 'insertTable', 'mediaEmbed', '|',
+                   'code', 'codeBlock', '|',
+                   'sourceEditing'],
+        'height': '400px',
+        'width': '100%',
+    },
+}
+
+CKEDITOR_5_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
+CKEDITOR_5_UPLOAD_PATH = "uploads/"
+
+# ----------- 19. SimpleUI配置 -----------
+SIMPLEUI_CONFIG = {
+    'system_keep': False,
+    'menu_display': ['认证和授权', '用户管理', '文章管理', '问答管理'],
+    'dynamic': True,
+    'menus': [
+        {
+            'name': '用户管理',
+            'icon': 'fas fa-user-circle',
+            'models': [
+                {
+                    'name': '用户列表',
+                    'icon': 'fas fa-user',
+                    'url': 'users/user/'
+                }
+            ]
+        },
+        {
+            'name': '文章管理',
+            'icon': 'fas fa-book',
+            'models': [
+                {
+                    'name': '文章分类',
+                    'icon': 'fas fa-tags',
+                    'url': 'articles/category/'
+                },
+                {
+                    'name': '文章列表',
+                    'icon': 'fas fa-file-alt',
+                    'url': 'articles/article/'
+                },
+                {
+                    'name': '评论管理',
+                    'icon': 'fas fa-comments',
+                    'url': 'articles/comment/'
+                }
+            ]
+        },
+        {
+            'name': '问答管理',
+            'icon': 'fas fa-question-circle',
+            'models': [
+                {
+                    'name': '问题列表',
+                    'icon': 'fas fa-question',
+                    'url': 'qa/question/'
+                },
+                {
+                    'name': '回答列表',
+                    'icon': 'fas fa-reply',
+                    'url': 'qa/answer/'
+                },
+                {
+                    'name': '评论管理',
+                    'icon': 'fas fa-comments',
+                    'url': 'qa/comment/'
+                }
+            ]
+        }
+    ]
+}
+
+SIMPLEUI_HOME_INFO = False
+SIMPLEUI_ANALYSIS = False
+SIMPLEUI_HOME_QUICK = True
+SIMPLEUI_HOME_ACTION = True
+SIMPLEUI_DEFAULT_THEME = 'admin.lte.css'
+SIMPLEUI_LOGO = '/static/admin/img/logo.png'
+
+SIMPLEUI_DEFAULT_ICON = False
+SIMPLEUI_ICON = {
+    '认证和授权': 'fas fa-shield-alt',
+    '用户管理': 'fas fa-users-cog',
+    '文章管理': 'fas fa-newspaper',
+    '问答管理': 'fas fa-comments',
+}
+
+# API 基础URL
+BASE_URL = 'http://127.0.0.1:8000'

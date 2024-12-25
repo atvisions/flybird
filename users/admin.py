@@ -1,20 +1,19 @@
+# -*- coding: utf-8 -*-
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.translation import gettext_lazy as _
-from .models import User
+from django.utils.html import format_html
+import requests
+from django.conf import settings
+import logging
+
+logger = logging.getLogger(__name__)
+
 from .profile.models import (
-    BasicInfo,
-    JobIntention,
-    WorkExperience,
-    Education,
-    Skill,
-    Project,
-    Certificate,
-    Language,
-    Portfolio,
-    SocialLink,
-    ProfileLayout
+    BasicInfo, JobIntention, WorkExperience, Education,
+    Project, Skill, Certificate, Language, Portfolio, SocialLink
 )
+from .models import User
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
@@ -30,7 +29,6 @@ class CustomUserAdmin(UserAdmin):
         }),
         (_('重要日期'), {'fields': ('last_login', 'date_joined')}),
     )
-    
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
@@ -40,66 +38,83 @@ class CustomUserAdmin(UserAdmin):
 
 @admin.register(BasicInfo)
 class BasicInfoAdmin(admin.ModelAdmin):
-    list_display = ('user', 'name', 'gender', 'birthday', 'created_at')
-    search_fields = ('user__phone', 'name')
-    list_filter = ('gender', 'created_at')
+    list_display = ('user', 'name', 'gender', 'job_title', 'email')
+    list_filter = ('gender',)
+    search_fields = ('name', 'job_title', 'email')
+    raw_id_fields = ('user',)
 
 @admin.register(JobIntention)
 class JobIntentionAdmin(admin.ModelAdmin):
-    list_display = ('user', 'job_type', 'expected_salary', 'created_at')
-    search_fields = ('user__phone',)
-    list_filter = ('job_type', 'created_at')
+    list_display = ('user', 'job_type', 'expected_salary', 'expected_city', 'job_status')
+    list_filter = ('job_type', 'job_status')
+    search_fields = ('user__phone', 'expected_city')
+    raw_id_fields = ('user',)
 
 @admin.register(WorkExperience)
 class WorkExperienceAdmin(admin.ModelAdmin):
     list_display = ('user', 'company', 'position', 'start_date', 'end_date', 'is_current')
+    list_filter = ('is_current',)
     search_fields = ('user__phone', 'company', 'position')
-    list_filter = ('is_current', 'start_date')
+    raw_id_fields = ('user',)
+    date_hierarchy = 'start_date'
 
 @admin.register(Education)
 class EducationAdmin(admin.ModelAdmin):
-    list_display = ('user', 'school', 'major', 'degree', 'start_date', 'end_date', 'is_current')
-    search_fields = ('user__phone', 'school', 'major')
+    list_display = ('user', 'school', 'major', 'degree', 'start_date', 'end_date')
     list_filter = ('degree', 'is_current')
-
-@admin.register(Skill)
-class SkillAdmin(admin.ModelAdmin):
-    list_display = ('user', 'name', 'level', 'created_at')
-    search_fields = ('user__phone', 'name')
-    list_filter = ('level', 'created_at')
+    search_fields = ('user__phone', 'school', 'major')
+    raw_id_fields = ('user',)
+    date_hierarchy = 'start_date'
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
     list_display = ('user', 'name', 'role', 'start_date', 'end_date', 'is_current')
+    list_filter = ('is_current',)
     search_fields = ('user__phone', 'name', 'role')
-    list_filter = ('is_current', 'start_date')
+    raw_id_fields = ('user',)
+    date_hierarchy = 'start_date'
+
+@admin.register(Skill)
+class SkillAdmin(admin.ModelAdmin):
+    list_display = ('user', 'name', 'level')
+    list_filter = ('level',)
+    search_fields = ('user__phone', 'name')
+    raw_id_fields = ('user',)
 
 @admin.register(Certificate)
 class CertificateAdmin(admin.ModelAdmin):
-    list_display = ('user', 'name', 'issuing_authority', 'issue_date')
+    list_display = ('user', 'name', 'type', 'issuing_authority', 'issue_date')
+    list_filter = ('type',)
     search_fields = ('user__phone', 'name', 'issuing_authority')
-    list_filter = ('issue_date',)
+    raw_id_fields = ('user',)
+    date_hierarchy = 'issue_date'
 
 @admin.register(Language)
 class LanguageAdmin(admin.ModelAdmin):
-    list_display = ('user', 'name', 'level', 'created_at')
+    list_display = ('user', 'name', 'level')
+    list_filter = ('level',)
     search_fields = ('user__phone', 'name')
-    list_filter = ('level', 'created_at')
+    raw_id_fields = ('user',)
 
 @admin.register(Portfolio)
 class PortfolioAdmin(admin.ModelAdmin):
-    list_display = ('user', 'title', 'created_at')
+    list_display = ('user', 'title', 'url_link')
     search_fields = ('user__phone', 'title')
-    list_filter = ('created_at',)
+    raw_id_fields = ('user',)
+    
+    def url_link(self, obj):
+        if obj.url:
+            return format_html('<a href="{}" target="_blank">{}</a>', obj.url, obj.url)
+        return '-'
+    url_link.short_description = '��品链接'
 
 @admin.register(SocialLink)
 class SocialLinkAdmin(admin.ModelAdmin):
-    list_display = ('user', 'platform', 'url', 'created_at')
+    list_display = ('user', 'platform', 'url_link')
+    list_filter = ('platform',)
     search_fields = ('user__phone', 'platform')
-    list_filter = ('platform', 'created_at')
-
-@admin.register(ProfileLayout)
-class ProfileLayoutAdmin(admin.ModelAdmin):
-    list_display = ('user', 'created_at', 'updated_at')
-    search_fields = ('user__phone',)
-    list_filter = ('created_at',) 
+    raw_id_fields = ('user',)
+    
+    def url_link(self, obj):
+        return format_html('<a href="{}" target="_blank">{}</a>', obj.url, obj.url)
+    url_link.short_description = '链接'

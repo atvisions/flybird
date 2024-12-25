@@ -1,4 +1,4 @@
-# 后端
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -19,13 +19,17 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
-.env
 
-# 前端
-flybird-web/node_modules
-flybird-web/dist
-flybird-web/.env.local
-flybird-web/.env.*.local
-flybird-web/npm-debug.log*
-flybird-web/yarn-debug.log*
-flybird-web/yarn-error.log*
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+static/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

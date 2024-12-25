@@ -4,28 +4,28 @@
 
 from .basic import BasicInfo
 from .intention import JobIntention
-from .layout import ProfileLayout
 from .work import WorkExperience
 from .education import Education
-from .skill import Skill
 from .project import Project
+from .skill import Skill
 from .certificate import Certificate
 from .language import Language
 from .portfolio import Portfolio
 from .social import SocialLink
-from .study import Study
+from .layout import ProfileLayout
+from .score import ProfileScore
 
 __all__ = [
     'BasicInfo',
     'JobIntention',
-    'ProfileLayout',
     'WorkExperience',
     'Education',
-    'Skill',
     'Project',
+    'Skill',
     'Certificate',
     'Language',
     'Portfolio',
     'SocialLink',
-    'Study'
+    'ProfileLayout',
+    'ProfileScore'
 ]

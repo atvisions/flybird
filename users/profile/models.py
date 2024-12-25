@@ -1,13 +1,30 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from django.conf import settings
+from django.utils import timezone
+from users.models import User
 
-class ProfileLayout(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile_layout', verbose_name='用户')
-    sections = models.JSONField(verbose_name='布局配置', default=list)
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='更新时间')
+class BasicInfo(models.Model):
+    """基本信息"""
+    GENDER_CHOICES = [
+        ('male', '男'),
+        ('female', '女'),
+        ('other', '其他'),
+    ]
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    name = models.CharField(_('姓名'), max_length=50)
+    avatar = models.ImageField(_('头像'), upload_to='avatars/', null=True, blank=True)
+    gender = models.CharField(_('性别'), max_length=10, choices=GENDER_CHOICES, default='other')
+    birthday = models.DateField(_('生日'), null=True, blank=True)
+    location = models.CharField(_('所在地'), max_length=100, blank=True)
+    email = models.EmailField(_('邮箱'), max_length=254, blank=True)
+    job_title = models.CharField(_('职位'), max_length=100, blank=True)
+    years_of_experience = models.IntegerField(_('工作年限'), null=True, blank=True)
+    personal_summary = models.TextField(_('个人简介'), blank=True)
 
     class Meta:
-        verbose_name = '档案布局'
-        verbose_name_plural = '档案布局' 
+        verbose_name = _('基本信息')
+        verbose_name_plural = _('基本信息')
+        db_table = 'user_basic_info'
+
+# ... 其他模型定义 (WorkExperience, Education, Project 等) 

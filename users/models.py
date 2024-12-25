@@ -54,3 +54,5 @@ class User(AbstractUser):
         
     def __str__(self):
         return self.phone 
+
+# ... 继续添加其他模型 ... 
