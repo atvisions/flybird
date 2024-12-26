@@ -14,6 +14,13 @@ class ProfileScore(models.Model):
     experience_dimension = models.IntegerField(default=0)
     ability_dimension = models.IntegerField(default=0)
     achievement_dimension = models.IntegerField(default=0)
+    content_quality = models.FloatField(default=0)
+    optimized_fields = models.JSONField(
+        default=list,
+        null=True,
+        blank=True,
+        help_text='记录已优化的字段'
+    )
 
     class Meta:
         verbose_name = '档案评分'
@@ -26,9 +33,20 @@ class ProfileScore(models.Model):
     @property
     def total_score(self):
         """计算总分"""
-        return (
+        base_score = (
             self.basic_dimension * 0.4 +
             self.experience_dimension * 0.3 +
             self.ability_dimension * 0.2 +
             self.achievement_dimension * 0.1
-        ) 
+        )
+        
+        # 如果有内容质量分数，增加额外加分
+        quality_bonus = 0
+        if self.content_quality >= 8:  # 优秀
+            quality_bonus = 5
+        elif self.content_quality >= 6:  # 良好
+            quality_bonus = 3
+        elif self.content_quality > 0:  # 及格
+            quality_bonus = 1
+            
+        return base_score + quality_bonus 

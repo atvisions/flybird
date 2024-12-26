@@ -6199,3 +6199,107 @@ INFO 2024-12-26 00:28:45,402 basehttp 69876 6236221440 "GET /static/rest_framewo
 INFO 2024-12-26 00:28:45,404 basehttp 69876 6219395072 "GET /static/rest_framework/js/load-ajax-form.js HTTP/1.1" 200 59
 INFO 2024-12-26 00:28:45,641 basehttp 69876 6219395072 "GET /static/rest_framework/img/grid.png HTTP/1.1" 200 1458
 WARNING 2024-12-26 00:28:45,850 basehttp 69876 6219395072 "GET /favicon.ico HTTP/1.1" 404 2586
+INFO 2024-12-26 09:06:13,393 autoreload 75904 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 09:06:17,635 basehttp 75904 6162968576 "POST /api/v1/users/auth/login/password/ HTTP/1.1" 200 596
+ERROR 2024-12-26 09:06:35,668 basehttp 75904 6162968576 "GET /api/v1/users/profile/completeness/ HTTP/1.1" 500 93
+INFO 2024-12-26 09:08:34,850 autoreload 75904 8278489152 /Users/liuzhao/Documents/Projects/flybird/users/profile/models/score.py changed, reloading.
+INFO 2024-12-26 09:08:35,272 autoreload 75998 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 09:10:51,738 autoreload 75998 8278489152 /Users/liuzhao/Documents/Projects/flybird/users/profile/urls.py changed, reloading.
+INFO 2024-12-26 09:10:52,161 autoreload 76053 8278489152 Watching for file changes with StatReloader
+ERROR 2024-12-26 09:12:16,089 basehttp 76053 6203584512 "GET /api/v1/users/profile/completeness/ HTTP/1.1" 500 81
+INFO 2024-12-26 09:14:03,252 autoreload 76053 8278489152 /Users/liuzhao/Documents/Projects/flybird/users/profile/views/content_quality.py changed, reloading.
+INFO 2024-12-26 09:14:03,670 autoreload 76152 8278489152 Watching for file changes with StatReloader
+ERROR 2024-12-26 09:14:10,182 basehttp 76152 6132461568 "GET /api/v1/users/profile/completeness/ HTTP/1.1" 500 81
+ERROR 2024-12-26 09:14:12,557 basehttp 76152 6132461568 "GET /api/v1/users/profile/completeness/ HTTP/1.1" 500 81
+INFO 2024-12-26 09:14:48,241 autoreload 76152 8278489152 /Users/liuzhao/Documents/Projects/flybird/users/profile/services/completeness.py changed, reloading.
+INFO 2024-12-26 09:14:48,659 autoreload 76193 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 09:14:54,347 basehttp 76193 6124335104 "GET /api/v1/users/profile/completeness/ HTTP/1.1" 200 3338
+INFO 2024-12-26 09:19:00,758 basehttp 76193 6141161472 "GET /api/v1/users/profile/content-quality/ HTTP/1.1" 200 752
+INFO 2024-12-26 09:22:25,438 basehttp 76193 6157987840 "GET /api/v1/users/profile/content-quality/ HTTP/1.1" 200 752
+INFO 2024-12-26 09:23:05,039 basehttp 76193 6157987840 "GET /api/v1/users/profile/content-quality/ HTTP/1.1" 200 752
+INFO 2024-12-26 09:23:19,150 basehttp 76193 6157987840 "GET /api/v1/users/profile/content-quality/ HTTP/1.1" 200 752
+INFO 2024-12-26 09:23:33,614 basehttp 76193 6174814208 "GET /api/v1/users/profile/completeness/ HTTP/1.1" 200 3338
+INFO 2024-12-26 09:23:54,591 basehttp 76193 6191640576 "GET /admin/users/basicinfo/ HTTP/1.1" 200 16824
+INFO 2024-12-26 09:23:54,614 basehttp 76193 6191640576 "GET /static/admin/css/base.css HTTP/1.1" 304 0
+INFO 2024-12-26 09:23:54,619 basehttp 76193 6242119680 "GET /static/admin/css/changelists.css HTTP/1.1" 304 0
+INFO 2024-12-26 09:23:54,620 basehttp 76193 6225293312 "GET /static/admin/css/dark_mode.css HTTP/1.1" 304 0
+INFO 2024-12-26 09:23:54,620 basehttp 76193 6191640576 "GET /static/admin/css/nav_sidebar.css HTTP/1.1" 304 0
+INFO 2024-12-26 09:23:54,623 basehttp 76193 6258946048 "GET /static/admin/js/vendor/jquery/jquery.js HTTP/1.1" 304 0
+INFO 2024-12-26 09:23:54,625 basehttp 76193 6275772416 "GET /static/admin/js/jquery.init.js HTTP/1.1" 304 0
+INFO 2024-12-26 09:23:54,626 basehttp 76193 6191640576 "GET /static/admin/js/core.js HTTP/1.1" 304 0
+INFO 2024-12-26 09:23:54,626 basehttp 76193 6242119680 "GET /static/admin/js/admin/RelatedObjectLookups.js HTTP/1.1" 304 0
+INFO 2024-12-26 09:23:54,631 basehttp 76193 6258946048 "GET /static/admin/js/actions.js HTTP/1.1" 304 0
+INFO 2024-12-26 09:23:54,632 basehttp 76193 6191640576 "GET /static/admin/js/prepopulate.js HTTP/1.1" 304 0
+INFO 2024-12-26 09:23:54,633 basehttp 76193 6225293312 "GET /static/admin/css/responsive.css HTTP/1.1" 304 0
+INFO 2024-12-26 09:23:54,634 basehttp 76193 6275772416 "GET /static/admin/js/urlify.js HTTP/1.1" 304 0
+INFO 2024-12-26 09:23:54,635 basehttp 76193 6242119680 "GET /static/admin/js/vendor/xregexp/xregexp.js HTTP/1.1" 304 0
+INFO 2024-12-26 09:23:54,636 basehttp 76193 6258946048 "GET /static/admin/img/search.svg HTTP/1.1" 304 0
+INFO 2024-12-26 09:23:54,641 basehttp 76193 6208466944 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 09:23:54,756 basehttp 76193 6208466944 "GET /static/admin/js/theme.js HTTP/1.1" 304 0
+INFO 2024-12-26 09:23:54,756 basehttp 76193 6258946048 "GET /static/admin/js/nav_sidebar.js HTTP/1.1" 304 0
+INFO 2024-12-26 09:23:54,765 basehttp 76193 6258946048 "GET /static/admin/js/filters.js HTTP/1.1" 304 0
+INFO 2024-12-26 09:23:54,768 basehttp 76193 6258946048 "GET /static/admin/img/icon-addlink.svg HTTP/1.1" 304 0
+INFO 2024-12-26 09:23:54,768 basehttp 76193 6208466944 "GET /static/admin/img/tooltag-add.svg HTTP/1.1" 304 0
+INFO 2024-12-26 09:23:56,981 basehttp 76193 6208466944 "GET /admin/users/basicinfo/20/change/ HTTP/1.1" 200 20540
+INFO 2024-12-26 09:23:57,004 basehttp 76193 6208466944 "GET /static/admin/css/forms.css HTTP/1.1" 304 0
+INFO 2024-12-26 09:23:57,005 basehttp 76193 6242119680 "GET /static/admin/js/calendar.js HTTP/1.1" 304 0
+INFO 2024-12-26 09:23:57,006 basehttp 76193 6275772416 "GET /static/admin/js/prepopulate_init.js HTTP/1.1" 304 0
+INFO 2024-12-26 09:23:57,008 basehttp 76193 6225293312 "GET /static/admin/js/admin/DateTimeShortcuts.js HTTP/1.1" 304 0
+INFO 2024-12-26 09:23:57,012 basehttp 76193 6258946048 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 09:23:57,101 basehttp 76193 6258946048 "GET /static/admin/css/widgets.css HTTP/1.1" 304 0
+INFO 2024-12-26 09:23:57,105 basehttp 76193 6258946048 "GET /static/admin/js/change_form.js HTTP/1.1" 304 0
+INFO 2024-12-26 09:23:57,208 basehttp 76193 6258946048 "GET /static/admin/img/icon-calendar.svg HTTP/1.1" 304 0
+INFO 2024-12-26 09:24:23,063 basehttp 76193 6191640576 "GET /admin/users/basicinfo/ HTTP/1.1" 200 16824
+INFO 2024-12-26 09:24:23,089 basehttp 76193 6191640576 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 09:24:24,881 basehttp 76193 6191640576 "GET /admin/users/basicinfo/19/change/ HTTP/1.1" 200 20841
+INFO 2024-12-26 09:24:24,902 basehttp 76193 6191640576 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 09:24:41,318 basehttp 76193 6191640576 "GET /api/v1/users/profile/content-quality/ HTTP/1.1" 200 752
+INFO 2024-12-26 09:24:45,581 basehttp 76193 6208466944 "GET /admin/users/basicinfo/19/change/ HTTP/1.1" 200 20841
+INFO 2024-12-26 09:24:45,605 basehttp 76193 6208466944 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 09:25:27,778 basehttp 76193 6191640576 "POST /api/v1/users/profile/content-quality/ HTTP/1.1" 200 107
+INFO 2024-12-26 09:25:33,697 basehttp 76193 6208466944 "GET /admin/users/basicinfo/19/change/ HTTP/1.1" 200 20914
+INFO 2024-12-26 09:25:33,715 basehttp 76193 6208466944 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 09:25:44,003 basehttp 76193 6208466944 "GET /api/v1/users/profile/completeness/ HTTP/1.1" 200 3342
+INFO 2024-12-26 09:28:14,265 autoreload 76193 8278489152 /Users/liuzhao/Documents/Projects/flybird/users/profile/views/content_quality.py changed, reloading.
+INFO 2024-12-26 09:28:14,704 autoreload 76350 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 09:28:34,747 autoreload 76350 8278489152 /Users/liuzhao/Documents/Projects/flybird/users/profile/models/score.py changed, reloading.
+INFO 2024-12-26 09:28:35,125 autoreload 76365 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 09:28:55,738 content_quality 76365 6132953088 更新内容质量分数 - 用户: 13900139000
+INFO 2024-12-26 09:28:55,738 content_quality 76365 6132953088 字段: personal_summary
+INFO 2024-12-26 09:28:55,738 content_quality 76365 6132953088 当前分数: 8.5
+INFO 2024-12-26 09:28:55,738 content_quality 76365 6132953088 新分数: 8.5
+INFO 2024-12-26 09:28:55,738 content_quality 76365 6132953088 已优化字段: ['personal_summary']
+INFO 2024-12-26 09:28:55,738 content_quality 76365 6132953088 最终分数: 8.5
+INFO 2024-12-26 09:28:55,739 basehttp 76365 6132953088 "POST /api/v1/users/profile/content-quality/ HTTP/1.1" 200 147
+INFO 2024-12-26 09:30:16,075 basehttp 76365 6149779456 "GET /api/v1/users/profile/completeness/ HTTP/1.1" 200 3342
+INFO 2024-12-26 09:31:17,657 autoreload 76365 8278489152 /Users/liuzhao/Documents/Projects/flybird/users/profile/services/completeness.py changed, reloading.
+INFO 2024-12-26 09:31:18,086 autoreload 76448 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 09:32:05,131 basehttp 76448 6162558976 "GET /api/v1/users/profile/completeness/ HTTP/1.1" 200 3330
+INFO 2024-12-26 09:35:29,908 autoreload 76448 8278489152 /Users/liuzhao/Documents/Projects/flybird/users/profile/models/score.py changed, reloading.
+INFO 2024-12-26 09:35:30,364 autoreload 76591 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 09:37:13,693 basehttp 76591 6132494336 "GET /admin/users/workexperience/ HTTP/1.1" 200 17772
+INFO 2024-12-26 09:37:13,722 basehttp 76591 6149320704 "GET /static/admin/img/icon-yes.svg HTTP/1.1" 304 0
+INFO 2024-12-26 09:37:13,725 basehttp 76591 6132494336 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 09:37:13,831 basehttp 76591 6132494336 "GET /static/admin/img/icon-no.svg HTTP/1.1" 304 0
+INFO 2024-12-26 09:37:13,843 basehttp 76591 6132494336 "GET /static/admin/img/sorting-icons.svg HTTP/1.1" 304 0
+INFO 2024-12-26 09:37:24,383 basehttp 76591 6132494336 "GET /admin/users/workexperience/16/change/ HTTP/1.1" 200 20454
+INFO 2024-12-26 09:37:24,409 basehttp 76591 6132494336 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 09:37:24,593 basehttp 76591 6132494336 "GET /static/admin/img/icon-clock.svg HTTP/1.1" 304 0
+INFO 2024-12-26 09:37:36,433 content_quality 76591 6132494336 更新内容质量分数 - 用户: 13900139000
+INFO 2024-12-26 09:37:36,434 content_quality 76591 6132494336 字段: work_experience_16
+INFO 2024-12-26 09:37:36,434 content_quality 76591 6132494336 当前分数: 8.8
+INFO 2024-12-26 09:37:36,434 content_quality 76591 6132494336 新分数: 9.0
+INFO 2024-12-26 09:37:36,434 content_quality 76591 6132494336 已优化字段: ['personal_summary', 'work_experience_16']
+INFO 2024-12-26 09:37:36,434 content_quality 76591 6132494336 最终分数: 8.75
+INFO 2024-12-26 09:37:36,434 basehttp 76591 6132494336 "POST /api/v1/users/profile/content-quality/ HTTP/1.1" 200 170
+INFO 2024-12-26 09:37:42,268 basehttp 76591 6149320704 "GET /admin/users/workexperience/16/change/ HTTP/1.1" 200 20647
+INFO 2024-12-26 09:37:42,287 basehttp 76591 6149320704 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 09:38:21,787 basehttp 76591 6149320704 "GET /api/v1/users/profile/completeness/ HTTP/1.1" 200 3269
+INFO 2024-12-26 09:41:59,370 content_quality 76591 6166147072 更新内容质量分数 - 用户: 13900139000
+INFO 2024-12-26 09:41:59,370 content_quality 76591 6166147072 字段: work_experience_17
+INFO 2024-12-26 09:41:59,370 content_quality 76591 6166147072 当前分数: 8.9
+INFO 2024-12-26 09:41:59,370 content_quality 76591 6166147072 新分数: 9.2
+INFO 2024-12-26 09:41:59,370 content_quality 76591 6166147072 已优化字段: ['personal_summary', 'work_experience_16', 'work_experience_17']
+INFO 2024-12-26 09:41:59,370 content_quality 76591 6166147072 最终分数: 8.933333333333334
+INFO 2024-12-26 09:41:59,371 basehttp 76591 6166147072 "POST /api/v1/users/profile/content-quality/ HTTP/1.1" 200 191
+INFO 2024-12-26 09:42:08,610 basehttp 76591 6182973440 "GET /api/v1/users/profile/completeness/ HTTP/1.1" 200 3202

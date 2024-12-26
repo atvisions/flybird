@@ -2986,3 +2986,7 @@ ERROR 2024-12-25 23:53:31,253 log 68809 6159429632 Internal Server Error: /api/v
 ERROR 2024-12-25 23:55:54,846 log 69101 6197407744 Internal Server Error: /api/v1/users/profile/completeness/
 ERROR 2024-12-25 23:55:55,943 log 69101 6197407744 Internal Server Error: /api/v1/users/profile/completeness/
 ERROR 2024-12-25 23:55:56,833 log 69101 6197407744 Internal Server Error: /api/v1/users/profile/completeness/
+ERROR 2024-12-26 09:06:35,665 log 75904 6162968576 Internal Server Error: /api/v1/users/profile/completeness/
+ERROR 2024-12-26 09:12:16,089 log 76053 6203584512 Internal Server Error: /api/v1/users/profile/completeness/
+ERROR 2024-12-26 09:14:10,182 log 76152 6132461568 Internal Server Error: /api/v1/users/profile/completeness/
+ERROR 2024-12-26 09:14:12,556 log 76152 6132461568 Internal Server Error: /api/v1/users/profile/completeness/

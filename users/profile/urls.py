@@ -11,10 +11,11 @@ from .views.language import LanguageView, LanguageDetailView
 from .views.portfolio import PortfolioView, PortfolioDetailView
 from .views.social import SocialLinkView, SocialLinkDetailView
 from .views.completeness import ProfileCompletenessView
-
+from .views.content_quality import ContentQualityView
 app_name = 'profile'
 
 urlpatterns = [
+    
     # 基本信息
     path('basic/', BasicProfileView.as_view(), name='basic'),
     path('avatar/upload/', AvatarUploadView.as_view(), name='avatar-upload'),
@@ -57,5 +58,9 @@ urlpatterns = [
     path('social-links/', SocialLinkView.as_view(), name='social-link-list'),
     path('social-links/<int:pk>/', SocialLinkDetailView.as_view(), name='social-link-detail'),
     
+    # 档案完整度
     path('completeness/', ProfileCompletenessView.as_view(), name='profile-completeness'),
+    
+    # 内容质量
+    path('content-quality/', ContentQualityView.as_view()),
 ]
