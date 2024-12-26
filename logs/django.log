@@ -6303,3 +6303,5 @@ INFO 2024-12-26 09:41:59,370 content_quality 76591 6166147072 已优化字段: [
 INFO 2024-12-26 09:41:59,370 content_quality 76591 6166147072 最终分数: 8.933333333333334
 INFO 2024-12-26 09:41:59,371 basehttp 76591 6166147072 "POST /api/v1/users/profile/content-quality/ HTTP/1.1" 200 191
 INFO 2024-12-26 09:42:08,610 basehttp 76591 6182973440 "GET /api/v1/users/profile/completeness/ HTTP/1.1" 200 3202
+INFO 2024-12-26 10:08:39,701 autoreload 78630 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 10:09:06,971 autoreload 79151 8278489152 Watching for file changes with StatReloader
