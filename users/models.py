@@ -29,6 +29,16 @@ class CustomUserManager(UserManager):
         return self._create_user(phone, password, **extra_fields)
 
 class User(AbstractUser):
+    # 添加 UID 字段
+    uid = models.CharField(
+        _('用户ID'),
+        max_length=10,
+        unique=True,
+        null=True,
+        blank=True,
+        help_text=_('系统生成的唯一标识符')
+    )
+    
     # 允许 username 为空
     username = models.CharField(
         _('username'),
@@ -38,21 +48,22 @@ class User(AbstractUser):
         unique=True
     )
     
-    # 只保留手机号字段
+    # 手机号字段
     phone = models.CharField(_('手机号'), max_length=11, unique=True)
     
-    # 使用手机号登录
     USERNAME_FIELD = 'phone'
     REQUIRED_FIELDS = []
     
     objects = CustomUserManager()
     
-    class Meta:
-        db_table = 'users_user'
-        verbose_name = _('用户')
-        verbose_name_plural = _('用户')
-        
-    def __str__(self):
-        return self.phone 
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            super().save(*args, **kwargs)
+            if not self.uid:
+                self.uid = str(10000 + self.id)
+            if not self.username:
+                self.username = self.uid
+            return super().save(*args, **kwargs)
+        return super().save(*args, **kwargs)
 
 # ... 继续添加其他模型 ... 

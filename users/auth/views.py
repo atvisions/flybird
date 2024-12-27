@@ -1,20 +1,17 @@
-from rest_framework import status
-from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
-from .serializers import (
-    PasswordLoginSerializer,
-    RegisterSerializer,
-    PhoneLoginSerializer,
-    ResetPasswordSerializer,
-    ChangePhoneSerializer
-)
-import random
+from rest_framework_simplejwt.tokens import RefreshToken
 from django.core.cache import cache
 from django.conf import settings
-from rest_framework import permissions
+from rest_framework import permissions, status
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
+from .serializers import (
+    PasswordLoginSerializer, RegisterSerializer,
+    ResetPasswordSerializer, ChangePhoneSerializer
+)
+from users.utils.sms import send_sms
+import random
 
 User = get_user_model()
 
@@ -95,7 +92,7 @@ class SendSmsCodeView(APIView):
         elif scene in ['login', 'reset_password']:
             if not User.objects.filter(phone=phone).exists():
                 return Response({'detail': '该手机号未注册'}, status=status.HTTP_400_BAD_REQUEST)
-            
+             
         # 生成验证码
         code = ''.join(random.choices('0123456789', k=6))
         
@@ -103,17 +100,20 @@ class SendSmsCodeView(APIView):
         cache_key = f'sms_code_{scene}_{phone}'
         cache.set(cache_key, code, timeout=300)  # 5分钟有效期
         
-        # 开发环境直接返回验证码
-        if settings.DEBUG:
-            return Response({
-                'message': f'{self.VALID_SCENES[scene]}验证码已发送',
-                'code': code
-            })
-            
-        # TODO: 生产环境调用短信服务发送验证码
         try:
-            # send_sms(phone, code, scene)
-            return Response({'message': f'{self.VALID_SCENES[scene]}验证码已发送'})
+            # 发送短信
+            send_sms(phone, code, scene)
+            
+            # 根据配置决定是否显示验证码
+            if settings.SMS_CONFIG.get('SHOW_SMS_IN_DEBUG', False):
+                return Response({
+                    'message': f'{self.VALID_SCENES[scene]}验证码已发送',
+                    'code': code
+                })
+            # 不显示验证码时的响应
+            return Response({
+                'message': f'{self.VALID_SCENES[scene]}验证码已发送'
+            })
         except Exception as e:
             return Response({'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

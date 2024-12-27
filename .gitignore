@@ -44,3 +44,8 @@ ENV/
 # 证书和密钥
 keys/*
 !keys/*/.gitkeep
+
+# 敏感配置文件
+.env
+keys/
+*.pem

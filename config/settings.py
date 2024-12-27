@@ -2,9 +2,10 @@ import os
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
+import logging
 
 # 加载环境变量
-load_dotenv()
+load_dotenv(override=True)  # 强制覆盖已存在的环境变量
 
 # ----------- 1. 核心配置 -----------
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -293,6 +294,13 @@ ALIYUN = {
     }
 }
 
+# 记录阿里云配置加载情况
+logger = logging.getLogger('users')
+logger.info(f"阿里云配置加载完成:")
+logger.info(f"ACCESS_KEY_ID: {ALIYUN['ACCESS_KEY_ID']}")
+logger.info(f"SMS_SIGN_NAME: {ALIYUN['SMS_SIGN_NAME']}")
+logger.info(f"SMS_TEMPLATES: {ALIYUN['SMS_TEMPLATES']}")
+
 # API 基础URL和证书路径配置
 BASE_URL = 'http://127.0.0.1:8000'
 CERT_DIR = BASE_DIR / 'keys'
@@ -351,8 +359,8 @@ CELERY_BEAT_SCHEDULE = {
 # 短信服务配置
 SMS_CONFIG = {
     'PROVIDER': os.getenv('SMS_PROVIDER', 'aliyun'),
-    'VIRTUAL_SMS': os.getenv('VIRTUAL_SMS', 'True').lower() == 'true',
-    'SHOW_SMS_IN_DEBUG': DEBUG,
+    'VIRTUAL_SMS': str(os.getenv('VIRTUAL_SMS')).lower() in ['true', '1', 'yes', 'on'],
+    'SHOW_SMS_IN_DEBUG': str(os.getenv('SHOW_SMS_CODE', 'False')).lower() in ['true', '1', 'yes', 'on'],
     'TEMPLATES': ALIYUN['SMS_TEMPLATES']
 }
 
@@ -519,4 +527,20 @@ FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:8000')
 # 会员相关URL
 MEMBERSHIP_URLS = {
     'renewal': f"{FRONTEND_URL}/membership/renewal",  # 会员续费页面
+}
+
+# 支付宝配置
+ALIPAY_CONFIG = {
+    'app_id': os.getenv('ALIPAY_APP_ID'),  # 沙箱环境的APPID
+    'app_private_key_path': os.path.join(BASE_DIR, 'keys/app_private_key.pem'),
+    'alipay_public_key_path': os.path.join(BASE_DIR, 'keys/alipay_public_key.pem'),
+    'debug': True,  # 沙箱环境置为True
+}
+
+# 支付相关配置
+PAYMENT_CONFIG = {
+    'alipay': {
+        'notify_url': f"{os.getenv('NGROK_URL', 'http://127.0.0.1:8000')}/api/v1/membership/alipay/notify/",
+        'return_url': f"{os.getenv('NGROK_URL', 'http://127.0.0.1:8000')}/api/v1/membership/alipay/return/"
+    }
 }

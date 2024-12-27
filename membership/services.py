@@ -180,7 +180,7 @@ class PaymentService:
                 
                 cls.logger.info(f"订单状态已更新为已支付")
 
-                # 更新会员信息
+                # 更新���员信息
                 membership, created = UserMembership.objects.get_or_create(
                     user=order.user,
                     defaults={'tier': order.tier}

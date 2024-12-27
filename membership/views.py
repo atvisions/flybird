@@ -21,6 +21,7 @@ from django.conf import settings
 import logging
 import traceback
 from django.shortcuts import redirect
+from rest_framework.views import APIView
 
 # 配置日志记录器
 logger = logging.getLogger('membership')
@@ -124,7 +125,7 @@ class PointViewSet(viewsets.GenericViewSet):
 def alipay_notify(request):
     """支付宝异步通知"""
     logger.info("\n" + "="*50)
-    logger.info("支付宝异步通知开始处理")
+    logger.info("支付宝异步通知开��处理")
     
     try:
         # 记录请求信息
@@ -276,3 +277,59 @@ def check_in(request):
         })
     except Exception as e:
         return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST) 
+
+class MembershipPurchaseView(APIView):
+    """会员购买"""
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        try:
+            # 获取参数
+            tier_id = request.data.get('tier_id')
+            duration = request.data.get('duration', 'monthly')  # monthly, quarterly, yearly
+            payment_method = request.data.get('payment_method', 'alipay')
+            
+            # 验证会员等级
+            try:
+                tier = MembershipTier.objects.get(id=tier_id)
+            except MembershipTier.DoesNotExist:
+                return Response({
+                    'detail': '无效的会员等级'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # 获取价格
+            if duration == 'monthly':
+                amount = tier.price_monthly
+            elif duration == 'quarterly':
+                amount = tier.price_quarterly
+            elif duration == 'yearly':
+                amount = tier.price_yearly
+            else:
+                return Response({
+                    'detail': '无效的购买时长'
+                }, status=status.HTTP_400_BAD_REQUEST)
+                
+            # 创建订单
+            order = MembershipOrder.objects.create(
+                user=request.user,
+                tier=tier,
+                amount=amount,
+                days=30 if duration == 'monthly' else (90 if duration == 'quarterly' else 365),
+                payment_method=payment_method,
+                status='pending'
+            )
+            
+            # 调用支付服务
+            payment_service = PaymentService()
+            payment_url = payment_service.create_payment(order)
+            
+            return Response({
+                'order_id': order.id,
+                'payment_url': payment_url
+            })
+            
+        except Exception as e:
+            logger.error(f"Purchase membership failed: {str(e)}")
+            return Response({
+                'detail': '购买失败，请稍后重试'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR) 

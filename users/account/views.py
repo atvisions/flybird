@@ -192,3 +192,37 @@ class ChangeEmailView(APIView):
         return Response({
             'message': '邮箱更换成功'
         })
+
+class ChangeUsernameView(APIView):
+    """修改用户名"""
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        username = request.data.get('username', '').strip()
+        
+        # 验证用户名格式
+        if not re.match(r'^[a-zA-Z0-9\u4e00-\u9fa5]{2,20}$', username):
+            return Response({
+                'detail': '用户名只能包含字母、数字和汉字，长度2-20位'
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
+        # 检查用户名是否已被使用
+        if User.objects.filter(username=username).exclude(id=request.user.id).exists():
+            return Response({
+                'detail': '该用户名已被使用'
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
+        # 不允许使用纯数字的用户名
+        if username.isdigit():
+            return Response({
+                'detail': '用户名不能是纯数字'
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
+        # 更新用户名
+        request.user.username = username
+        request.user.save(update_fields=['username'])
+        
+        return Response({
+            'message': '用户名修改成功',
+            'username': username
+        })

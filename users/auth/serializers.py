@@ -40,6 +40,9 @@ class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'phone', 'password', 'code')
+        extra_kwargs = {
+            'password': {'write_only': True},
+        }
 
     def validate(self, attrs):
         # 验证手机号是否已注册
@@ -59,15 +62,15 @@ class RegisterSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        username = validated_data['phone']
+        # 移除验证码
+        validated_data.pop('code', None)
+        
+        # 创建用户
         user = User.objects.create_user(
-            username=username,
+            phone=validated_data['phone'],
             password=validated_data['password'],
-            phone=validated_data['phone']
         )
         
-        # 删除验证码缓存
-        cache.delete(f'sms_code_register_{user.phone}')
         return user
 
 class PhoneLoginSerializer(serializers.Serializer):

@@ -6,7 +6,8 @@ from .views import (
     BindEmailView,
     SendEmailCodeView,
     UnbindEmailView,
-    ChangeEmailView
+    ChangeEmailView,
+    ChangeUsernameView
 )
 
 app_name = 'account'
@@ -19,4 +20,5 @@ urlpatterns = [
     path('send-email-code/', SendEmailCodeView.as_view(), name='send-email-code'),
     path('unbind-email/', UnbindEmailView.as_view(), name='unbind-email'),
     path('change-email/', ChangeEmailView.as_view(), name='change-email'),
+    path('username/', ChangeUsernameView.as_view(), name='change-username'),
 ]
