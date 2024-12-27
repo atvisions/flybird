@@ -1,0 +1,34 @@
+[
+    {
+        "model": "membership.membershiptier",
+        "pk": 1,
+        "fields": {
+            "name": "免费用户",
+            "tier_type": "free",
+            "price_monthly": "0.00",
+            "price_quarterly": "0.00",
+            "price_yearly": "0.00",
+            "is_default": true,
+            "description": "基础功能免费使用",
+            "sort_order": 1,
+            "created_at": "2024-01-01T00:00:00Z",
+            "updated_at": "2024-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "membership.membershiptier",
+        "pk": 2,
+        "fields": {
+            "name": "高级会员",
+            "tier_type": "premium",
+            "price_monthly": "29.90",
+            "price_quarterly": "79.00",
+            "price_yearly": "299.00",
+            "is_default": false,
+            "description": "解锁全部高级功能",
+            "sort_order": 2,
+            "created_at": "2024-01-01T00:00:00Z",
+            "updated_at": "2024-01-01T00:00:00Z"
+        }
+    }
+] 

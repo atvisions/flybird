@@ -17,13 +17,12 @@ WSGI_APPLICATION = 'config.wsgi.application'
 BASE_DOMAIN = os.getenv('BASE_DOMAIN', 'popo.work')
 BACKEND_DOMAIN = os.getenv('BACKEND_DOMAIN', 'www.popo.work:8000')
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://popo.work')
+NGROK_URL = os.getenv('NGROK_URL', 'https://f91a-205-198-122-83.ngrok-free.app')
 
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    '192.168.186.162',
-    '0.0.0.0',
-    '*',  # 开发环境可以允许所有主机
+    'spaniel-square-perfectly.ngrok-free.app',
 ]
 
 # ----------- 3. 应用配置 -----------
@@ -50,6 +49,7 @@ LOCAL_APPS = [
     'users.apps.UsersConfig',
     'articles.apps.ArticlesConfig',
     'qa.apps.QaConfig',
+    'membership.apps.MembershipConfig',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -87,17 +87,15 @@ TEMPLATES = [
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT'),
+        'NAME': os.getenv('DB_NAME', 'flybird'),
+        'USER': os.getenv('DB_USER', 'root'),
+        'PASSWORD': os.getenv('DB_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', '3306'),
         'OPTIONS': {
             'charset': 'utf8mb4',
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES', time_zone='+8:00'",
-            'connect_timeout': 60,
-        },
-        'CONN_MAX_AGE': 60,  # 数据库连接的最大生命周期（秒）
+            'init_command': "SET default_storage_engine=INNODB, time_zone='+8:00'",
+        }
     }
 }
 
@@ -179,7 +177,7 @@ REST_FRAMEWORK = {
         'anon': '100/hour',
         'user': '1000/hour'
     },
-    'EXCEPTION_HANDLER': 'utils.handlers.custom_exception_handler',
+    'EXCEPTION_HANDLER': 'users.utils.handlers.custom_exception_handler',
     'DEFAULT_FILTER_BACKENDS': (
         'django_filters.rest_framework.DjangoFilterBackend',
         'rest_framework.filters.SearchFilter',
@@ -189,10 +187,9 @@ REST_FRAMEWORK = {
 
 # ----------- 10. CORS配置 -----------
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8080",
-    "http://127.0.0.1:8080",
-    "http://192.168.186.162:8080",
-    "http://0.0.0.0:8080",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "https://spaniel-square-perfectly.ngrok-free.app",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -241,60 +238,29 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
-            'style': '{',
-        },
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
-        },
-    },
-    'filters': {
-        'require_debug_true': {
-            '()': 'django.utils.log.RequireDebugTrue',
+            'format': '\n[%(levelname)s] %(asctime)s %(name)s\n%(message)s\n',
+            'datefmt': '%Y-%m-%d %H:%M:%S'
         },
     },
     'handlers': {
         'console': {
-            'level': 'INFO',
-            'filters': ['require_debug_true'],
+            'level': 'DEBUG',
             'class': 'logging.StreamHandler',
-            'formatter': 'simple'
-        },
-        'file': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': LOG_DIR / 'django.log',
-            'maxBytes': 10 * 1024 * 1024,  # 10MB
-            'backupCount': 10,
             'formatter': 'verbose',
         },
-        'error_file': {
-            'level': 'ERROR',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': LOG_DIR / 'error.log',
-            'maxBytes': 10 * 1024 * 1024,
-            'backupCount': 10,
-            'formatter': 'verbose',
-        }
     },
     'loggers': {
-        'django': {
-            'handlers': ['console', 'file'],
-            'propagate': True,
-            'level': 'INFO',
-        },
-        'django.request': {
-            'handlers': ['error_file'],
-            'level': 'ERROR',
+        'membership': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
             'propagate': False,
         },
-        'users': {
-            'handlers': ['console', 'file', 'error_file'],
-            'level': 'DEBUG' if DEBUG else 'INFO',
+        'alipay': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
             'propagate': False,
-        }
-    }
+        },
+    },
 }
 
 # ----------- 13. 静态文件配置 -----------
@@ -312,7 +278,7 @@ USE_I18N = True
 USE_TZ = True
 
 # ----------- 15. 第三方服务配置 -----------
-# 阿里云配置
+# 阿里配置
 ALIYUN = {
     'ACCESS_KEY_ID': os.getenv('ALIYUN_ACCESS_KEY_ID'),
     'ACCESS_KEY_SECRET': os.getenv('ALIYUN_ACCESS_KEY_SECRET'),
@@ -325,17 +291,62 @@ ALIYUN = {
     }
 }
 
-# 微信配置
-WECHAT = {
-    'APP_ID': os.getenv('WECHAT_APP_ID'),
-    'APP_SECRET': os.getenv('WECHAT_APP_SECRET'),
-    'MP_APP_ID': os.getenv('WECHAT_MP_APP_ID'),
-    'MP_APP_SECRET': os.getenv('WECHAT_MP_APP_SECRET'),
-    'MP_TOKEN': os.getenv('WECHAT_MP_TOKEN'),
+# API 基础URL和证书路径配置
+BASE_URL = 'http://127.0.0.1:8000'
+CERT_DIR = BASE_DIR / 'keys'
+
+# 支付相关配置
+PAYMENT_CONFIG = {
+    'alipay': {
+        'app_id': '2021000142698861',
+        'private_key_path': BASE_DIR / 'keys/alipay/app_private_key.pem',
+        'public_key_path': BASE_DIR / 'keys/alipay/alipay_public_key.pem',
+        'notify_url': f"http://localhost:8000/api/v1/membership/notify/alipay/",
+        'return_url': f"http://localhost:8000/api/v1/membership/notify/alipay/return/",
+        'debug': True,
+        'sign_type': 'RSA2',
+        'charset': 'utf-8',
+        'server_url': 'https://openapi-sandbox.dl.alipaydev.com/gateway.do',
+    }
 }
 
-# ----------- 16. 业务配置 -----------
-# 短信服务配置
+# 支付宝配置（简化访问）
+ALIPAY_APP_ID = PAYMENT_CONFIG['alipay']['app_id']
+ALIPAY_NOTIFY_URL = PAYMENT_CONFIG['alipay']['notify_url']
+ALIPAY_RETURN_URL = PAYMENT_CONFIG['alipay']['return_url']
+ALIPAY_SERVER_URL = PAYMENT_CONFIG['alipay']['server_url']
+
+# ----------- Celery配置 -----------
+CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
+CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+
+# 解决警告信息
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+
+# Celery定时任务
+from celery.schedules import crontab
+
+CELERY_BEAT_SCHEDULE = {
+    'check-expired-memberships': {
+        'task': 'membership.tasks.check_expired_memberships',
+        'schedule': crontab(hour='*/1'),
+    },
+    'send-expiration-reminder': {
+        'task': 'membership.tasks.send_expiration_reminder',
+        'schedule': crontab(hour='9', minute='0'),
+    },
+    'cancel-expired-orders': {
+        'task': 'membership.tasks.cancel_expired_orders',
+        'schedule': crontab(minute='*/30'),
+    },
+}
+
+# ----------- 16. 服务配置 -----------
+# 短��服务配置
 SMS_CONFIG = {
     'PROVIDER': os.getenv('SMS_PROVIDER', 'aliyun'),
     'VIRTUAL_SMS': os.getenv('VIRTUAL_SMS', 'True').lower() == 'true',
@@ -348,6 +359,7 @@ CSRF_TRUSTED_ORIGINS = [
     f"http://{BASE_DOMAIN}",
     f"http://www.{BASE_DOMAIN}",
     "http://localhost:8080",
+    "https://spaniel-square-perfectly.ngrok-free.app",
 ]
 
 # ----------- 17. 其他配置 -----------
@@ -446,5 +458,38 @@ SIMPLEUI_ICON = {
     '问答管理': 'fas fa-comments',
 }
 
-# API 基础URL
-BASE_URL = 'http://127.0.0.1:8000'
+# ----------- 20. 日志配置 -----------
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '\n[%(levelname)s] %(asctime)s %(name)s\n%(message)s\n',
+            'datefmt': '%Y-%m-%d %H:%M:%S'
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'membership': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'alipay': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+}
+
+# 确保日志目录存在
+import os
+if not os.path.exists(BASE_DIR / 'logs'):
+    os.makedirs(BASE_DIR / 'logs')

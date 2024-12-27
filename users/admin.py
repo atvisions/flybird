@@ -106,7 +106,7 @@ class PortfolioAdmin(admin.ModelAdmin):
         if obj.url:
             return format_html('<a href="{}" target="_blank">{}</a>', obj.url, obj.url)
         return '-'
-    url_link.short_description = '��品链接'
+    url_link.short_description = '作品链接'
 
 @admin.register(SocialLink)
 class SocialLinkAdmin(admin.ModelAdmin):

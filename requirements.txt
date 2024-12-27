@@ -47,3 +47,13 @@ yarl==1.15.2
 django-ckeditor-5==0.2.11
 # 后台美化
 django-simpleui==2024.3.8
+# 消息队列
+celery>=5.3.6
+redis>=5.0.1
+django-redis>=5.4.0
+
+# 支付相关
+python-alipay-sdk>=3.3.0
+wechatpy>=1.8.18
+cryptography>=42.0.5
+pycryptodome>=3.20.0

@@ -6305,3 +6305,830 @@ INFO 2024-12-26 09:41:59,371 basehttp 76591 6166147072 "POST /api/v1/users/profi
 INFO 2024-12-26 09:42:08,610 basehttp 76591 6182973440 "GET /api/v1/users/profile/completeness/ HTTP/1.1" 200 3202
 INFO 2024-12-26 10:08:39,701 autoreload 78630 8278489152 Watching for file changes with StatReloader
 INFO 2024-12-26 10:09:06,971 autoreload 79151 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 19:13:08,005 autoreload 94240 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 19:13:34,130 autoreload 94271 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 19:14:01,709 basehttp 94271 6192017408 "GET /admin/ HTTP/1.1" 302 0
+INFO 2024-12-26 19:14:01,740 basehttp 94271 6192017408 "GET /admin/login/?next=/admin/ HTTP/1.1" 200 4194
+INFO 2024-12-26 19:14:01,759 basehttp 94271 6225670144 "GET /static/admin/css/dark_mode.css HTTP/1.1" 304 0
+INFO 2024-12-26 19:14:01,760 basehttp 94271 6192017408 "GET /static/admin/css/base.css HTTP/1.1" 304 0
+INFO 2024-12-26 19:14:01,761 basehttp 94271 6208843776 "GET /static/admin/css/responsive.css HTTP/1.1" 304 0
+INFO 2024-12-26 19:14:01,761 basehttp 94271 6259322880 "GET /static/admin/css/login.css HTTP/1.1" 304 0
+INFO 2024-12-26 19:14:01,763 basehttp 94271 6242496512 "GET /static/admin/css/nav_sidebar.css HTTP/1.1" 304 0
+INFO 2024-12-26 19:14:01,876 basehttp 94271 6242496512 "GET /static/admin/js/theme.js HTTP/1.1" 304 0
+INFO 2024-12-26 19:14:01,877 basehttp 94271 6259322880 "GET /static/admin/js/nav_sidebar.js HTTP/1.1" 304 0
+INFO 2024-12-26 19:14:08,683 basehttp 94271 6192017408 "POST /admin/login/?next=/admin/ HTTP/1.1" 302 0
+INFO 2024-12-26 19:14:08,702 basehttp 94271 6192017408 "GET /admin/ HTTP/1.1" 200 14373
+INFO 2024-12-26 19:14:08,720 basehttp 94271 6192017408 "GET /static/admin/css/dashboard.css HTTP/1.1" 304 0
+INFO 2024-12-26 19:14:08,833 basehttp 94271 6208843776 "GET /static/admin/img/icon-addlink.svg HTTP/1.1" 304 0
+INFO 2024-12-26 19:14:08,834 basehttp 94271 6192017408 "GET /static/admin/img/icon-changelink.svg HTTP/1.1" 304 0
+INFO 2024-12-26 19:17:43,673 autoreload 94271 8278489152 /Users/liuzhao/Documents/Projects/flybird/config/urls.py changed, reloading.
+INFO 2024-12-26 19:17:44,115 autoreload 94346 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 19:20:43,946 autoreload 94514 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 19:22:45,023 autoreload 94708 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 19:22:49,496 basehttp 94708 6204911616 "GET /admin/ HTTP/1.1" 200 14373
+INFO 2024-12-26 19:22:50,895 basehttp 94708 6204911616 "GET /admin/articles/category/ HTTP/1.1" 200 13675
+INFO 2024-12-26 19:22:50,905 basehttp 94708 6204911616 "GET /static/admin/css/changelists.css HTTP/1.1" 304 0
+INFO 2024-12-26 19:22:50,912 basehttp 94708 6255390720 "GET /static/admin/js/admin/RelatedObjectLookups.js HTTP/1.1" 304 0
+INFO 2024-12-26 19:22:50,914 basehttp 94708 6255390720 "GET /static/admin/js/urlify.js HTTP/1.1" 304 0
+INFO 2024-12-26 19:22:50,916 basehttp 94708 6272217088 "GET /static/admin/js/actions.js HTTP/1.1" 304 0
+INFO 2024-12-26 19:22:50,918 basehttp 94708 6204911616 "GET /static/admin/js/vendor/jquery/jquery.js HTTP/1.1" 304 0
+INFO 2024-12-26 19:22:50,923 basehttp 94708 6238564352 "GET /static/admin/js/core.js HTTP/1.1" 304 0
+INFO 2024-12-26 19:22:50,923 basehttp 94708 6255390720 "GET /static/admin/js/prepopulate.js HTTP/1.1" 304 0
+INFO 2024-12-26 19:22:50,925 basehttp 94708 6289043456 "GET /static/admin/js/jquery.init.js HTTP/1.1" 304 0
+INFO 2024-12-26 19:22:50,926 basehttp 94708 6272217088 "GET /static/admin/js/vendor/xregexp/xregexp.js HTTP/1.1" 304 0
+INFO 2024-12-26 19:22:50,928 basehttp 94708 6255390720 "GET /static/admin/img/search.svg HTTP/1.1" 304 0
+INFO 2024-12-26 19:22:50,947 basehttp 94708 6221737984 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 19:22:51,015 basehttp 94708 6221737984 "GET /static/admin/js/filters.js HTTP/1.1" 304 0
+INFO 2024-12-26 19:22:51,032 basehttp 94708 6221737984 "GET /static/admin/img/tooltag-add.svg HTTP/1.1" 304 0
+INFO 2024-12-26 19:22:53,684 basehttp 94708 6221737984 "GET /admin/articles/category/add/ HTTP/1.1" 200 15646
+INFO 2024-12-26 19:22:53,708 basehttp 94708 6272217088 "GET /static/admin/js/prepopulate_init.js HTTP/1.1" 304 0
+INFO 2024-12-26 19:22:53,708 basehttp 94708 6221737984 "GET /static/admin/css/forms.css HTTP/1.1" 304 0
+INFO 2024-12-26 19:22:53,719 basehttp 94708 6255390720 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 19:22:53,808 basehttp 94708 6255390720 "GET /static/admin/css/widgets.css HTTP/1.1" 304 0
+INFO 2024-12-26 19:22:53,817 basehttp 94708 6255390720 "GET /static/admin/js/change_form.js HTTP/1.1" 304 0
+INFO 2024-12-26 19:23:06,313 basehttp 94708 6255390720 "POST /admin/articles/category/add/ HTTP/1.1" 302 0
+INFO 2024-12-26 19:23:06,336 basehttp 94708 6255390720 "GET /admin/articles/category/ HTTP/1.1" 200 15844
+INFO 2024-12-26 19:23:06,357 basehttp 94708 6255390720 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 19:23:06,466 basehttp 94708 6255390720 "GET /static/admin/img/sorting-icons.svg HTTP/1.1" 304 0
+INFO 2024-12-26 19:23:09,108 basehttp 94708 6255390720 "GET /admin/articles/article/ HTTP/1.1" 200 15544
+INFO 2024-12-26 19:23:09,130 basehttp 94708 6255390720 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 19:23:11,076 basehttp 94708 6255390720 "GET /admin/articles/article/add/ HTTP/1.1" 200 23969
+INFO 2024-12-26 19:23:11,097 basehttp 94708 6272217088 "GET /static/django_ckeditor_5/dist/styles.css HTTP/1.1" 304 0
+INFO 2024-12-26 19:23:11,099 basehttp 94708 6221737984 "GET /static/admin/js/calendar.js HTTP/1.1" 304 0
+INFO 2024-12-26 19:23:11,100 basehttp 94708 6289043456 "GET /static/django_ckeditor_5/dist/bundle.js HTTP/1.1" 304 0
+INFO 2024-12-26 19:23:11,101 basehttp 94708 6204911616 "GET /static/admin/js/admin/DateTimeShortcuts.js HTTP/1.1" 304 0
+INFO 2024-12-26 19:23:11,102 basehttp 94708 6238564352 "GET /static/admin/js/collapse.js HTTP/1.1" 304 0
+INFO 2024-12-26 19:23:11,106 basehttp 94708 6255390720 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 19:23:11,107 basehttp 94708 6238564352 "GET /static/admin/img/icon-viewlink.svg HTTP/1.1" 304 0
+INFO 2024-12-26 19:23:28,252 basehttp 94708 6238564352 "POST /admin/articles/article/add/ HTTP/1.1" 200 24246
+INFO 2024-12-26 19:23:28,301 basehttp 94708 6238564352 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 19:23:44,491 basehttp 94708 6238564352 "POST /admin/articles/article/add/ HTTP/1.1" 302 0
+ERROR 2024-12-26 19:23:44,576 basehttp 94708 6238564352 "GET /admin/articles/article/ HTTP/1.1" 500 485412
+INFO 2024-12-26 19:25:07,936 autoreload 94708 8278489152 /Users/liuzhao/Documents/Projects/flybird/config/settings.py changed, reloading.
+INFO 2024-12-26 19:25:08,387 autoreload 94774 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 19:28:10,283 autoreload 94992 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 19:28:13,918 basehttp 94992 6189346816 "GET /admin/articles/article/ HTTP/1.1" 302 0
+INFO 2024-12-26 19:28:13,952 basehttp 94992 6189346816 "GET /admin/login/?next=/admin/articles/article/ HTTP/1.1" 200 4228
+INFO 2024-12-26 19:28:19,804 basehttp 94992 6189346816 "POST /admin/login/?next=/admin/articles/article/ HTTP/1.1" 302 0
+INFO 2024-12-26 19:28:19,833 basehttp 94992 6189346816 "GET /admin/articles/article/ HTTP/1.1" 200 15239
+INFO 2024-12-26 19:28:19,869 basehttp 94992 6189346816 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 19:28:21,554 basehttp 94992 6189346816 "GET /admin/articles/category/ HTTP/1.1" 200 13675
+INFO 2024-12-26 19:28:21,579 basehttp 94992 6189346816 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 19:28:23,552 basehttp 94992 6189346816 "GET /admin/articles/category/add/ HTTP/1.1" 200 15646
+INFO 2024-12-26 19:28:23,575 basehttp 94992 6189346816 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 19:28:39,546 basehttp 94992 6189346816 "POST /admin/articles/category/add/ HTTP/1.1" 302 0
+INFO 2024-12-26 19:28:39,569 basehttp 94992 6189346816 "GET /admin/articles/category/ HTTP/1.1" 200 15844
+INFO 2024-12-26 19:28:39,589 basehttp 94992 6189346816 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 19:28:41,697 basehttp 94992 6189346816 "GET /admin/articles/article/ HTTP/1.1" 200 15544
+INFO 2024-12-26 19:28:41,723 basehttp 94992 6189346816 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 19:28:43,219 basehttp 94992 6189346816 "GET /admin/articles/article/add/ HTTP/1.1" 200 23969
+INFO 2024-12-26 19:28:43,241 basehttp 94992 6189346816 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 19:29:08,262 basehttp 94992 6189346816 "POST /ckeditor5/image_upload/ HTTP/1.1" 200 28
+INFO 2024-12-26 19:29:08,270 basehttp 94992 6189346816 "GET /media/avatar.png HTTP/1.1" 200 5702
+INFO 2024-12-26 19:29:10,657 basehttp 94992 6189346816 "POST /admin/articles/article/add/ HTTP/1.1" 302 0
+INFO 2024-12-26 19:29:10,682 basehttp 94992 6189346816 "GET /admin/articles/article/ HTTP/1.1" 200 18939
+INFO 2024-12-26 19:29:10,703 basehttp 94992 6206173184 "GET /media/articles/covers/2024/12/logo.png HTTP/1.1" 200 11501
+INFO 2024-12-26 19:29:10,710 basehttp 94992 6189346816 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 19:29:21,722 basehttp 94992 6189346816 "GET /admin/articles/article/1/change/ HTTP/1.1" 200 24572
+INFO 2024-12-26 19:29:21,740 basehttp 94992 6189346816 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 19:29:21,895 basehttp 94992 6189346816 "GET /media/avatar.png HTTP/1.1" 304 0
+INFO 2024-12-26 19:29:26,044 basehttp 94992 6206173184 "GET /static/admin/img/icon-clock.svg HTTP/1.1" 304 0
+INFO 2024-12-26 19:29:26,044 basehttp 94992 6189346816 "GET /static/admin/img/icon-calendar.svg HTTP/1.1" 304 0
+INFO 2024-12-26 19:29:31,822 basehttp 94992 6189346816 "POST /admin/articles/article/1/change/ HTTP/1.1" 302 0
+INFO 2024-12-26 19:29:31,851 basehttp 94992 6189346816 "GET /admin/articles/article/ HTTP/1.1" 200 18939
+INFO 2024-12-26 19:29:31,871 basehttp 94992 6206173184 "GET /media/articles/covers/2024/12/logo.png HTTP/1.1" 304 0
+INFO 2024-12-26 19:29:31,876 basehttp 94992 6189346816 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 19:29:36,255 basehttp 94992 6189346816 "GET /admin/articles/comment/ HTTP/1.1" 200 14888
+INFO 2024-12-26 19:29:36,275 basehttp 94992 6189346816 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 19:29:38,133 basehttp 94992 6189346816 "GET /admin/articles/category/ HTTP/1.1" 200 15646
+INFO 2024-12-26 19:29:38,156 basehttp 94992 6189346816 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 19:29:39,077 basehttp 94992 6189346816 "GET /admin/articles/article/ HTTP/1.1" 200 18748
+INFO 2024-12-26 19:29:39,093 basehttp 94992 6206173184 "GET /media/articles/covers/2024/12/logo.png HTTP/1.1" 304 0
+INFO 2024-12-26 19:29:39,100 basehttp 94992 6189346816 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 19:29:40,572 basehttp 94992 6189346816 "GET /admin/users/portfolio/ HTTP/1.1" 200 13683
+INFO 2024-12-26 19:29:40,591 basehttp 94992 6189346816 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 19:29:41,933 basehttp 94992 6189346816 "GET /admin/users/basicinfo/ HTTP/1.1" 200 16052
+INFO 2024-12-26 19:29:41,951 basehttp 94992 6189346816 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 19:29:44,348 basehttp 94992 6189346816 "GET /admin/users/basicinfo/1/change/ HTTP/1.1" 200 20359
+INFO 2024-12-26 19:29:44,372 basehttp 94992 6189346816 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 19:29:50,097 basehttp 94992 6189346816 "GET /admin/users/workexperience/ HTTP/1.1" 200 14185
+INFO 2024-12-26 19:29:50,122 basehttp 94992 6189346816 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 19:29:51,367 basehttp 94992 6189346816 "GET /admin/users/portfolio/ HTTP/1.1" 200 13683
+INFO 2024-12-26 19:29:51,387 basehttp 94992 6189346816 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 19:29:52,304 basehttp 94992 6189346816 "GET /admin/users/basicinfo/ HTTP/1.1" 200 16052
+INFO 2024-12-26 19:29:52,325 basehttp 94992 6189346816 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 19:29:55,373 basehttp 94992 6189346816 "GET /admin/users/basicinfo/1/change/ HTTP/1.1" 200 20359
+INFO 2024-12-26 19:29:55,397 basehttp 94992 6189346816 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 20:01:58,376 autoreload 97107 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 20:02:21,086 basehttp 97107 6164951040 "GET /admin/users/basicinfo/1/change/ HTTP/1.1" 200 22981
+INFO 2024-12-26 20:02:21,132 basehttp 97107 6164951040 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+ERROR 2024-12-26 20:02:23,462 basehttp 97107 6164951040 "GET /admin/membership/membershiptier/ HTTP/1.1" 500 263404
+INFO 2024-12-26 20:02:29,660 basehttp 97107 6164951040 "GET /admin/users/basicinfo/1/change/ HTTP/1.1" 200 22981
+INFO 2024-12-26 20:11:51,519 autoreload 97402 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 20:11:55,878 basehttp 97402 6132543488 "GET /admin/users/basicinfo/1/change/ HTTP/1.1" 200 22981
+INFO 2024-12-26 20:11:56,310 basehttp 97402 6132543488 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 20:11:57,682 basehttp 97402 6132543488 "GET /admin/membership/membershiptier/ HTTP/1.1" 200 21191
+INFO 2024-12-26 20:11:57,721 basehttp 97402 6132543488 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 20:12:05,375 basehttp 97402 6132543488 "GET /admin/membership/membershiptier/2/change/ HTTP/1.1" 200 21627
+INFO 2024-12-26 20:12:05,406 basehttp 97402 6132543488 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 20:12:10,334 basehttp 97402 6132543488 "GET /admin/membership/membershiporder/ HTTP/1.1" 200 17547
+INFO 2024-12-26 20:12:10,368 basehttp 97402 6132543488 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 20:12:12,321 basehttp 97402 6132543488 "GET /admin/membership/privilege/ HTTP/1.1" 200 20739
+INFO 2024-12-26 20:12:12,355 basehttp 97402 6132543488 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 20:12:28,678 basehttp 97402 6132543488 "GET /admin/membership/usermembership/ HTTP/1.1" 200 16836
+INFO 2024-12-26 20:12:28,711 basehttp 97402 6132543488 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 20:12:30,040 basehttp 97402 6132543488 "GET /admin/membership/userpoint/ HTTP/1.1" 200 16213
+INFO 2024-12-26 20:12:30,059 basehttp 97402 6132543488 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 20:12:30,972 basehttp 97402 6132543488 "GET /admin/membership/pointrule/ HTTP/1.1" 200 17202
+INFO 2024-12-26 20:12:30,994 basehttp 97402 6132543488 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 20:12:31,892 basehttp 97402 6132543488 "GET /admin/membership/pointrecord/ HTTP/1.1" 200 16572
+INFO 2024-12-26 20:12:31,910 basehttp 97402 6132543488 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 20:12:33,226 basehttp 97402 6132543488 "GET /admin/membership/tierprivilege/ HTTP/1.1" 200 19645
+INFO 2024-12-26 20:12:33,248 basehttp 97402 6132543488 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 20:12:41,720 basehttp 97402 6132543488 "GET /admin/articles/category/ HTTP/1.1" 200 18268
+INFO 2024-12-26 20:12:41,745 basehttp 97402 6132543488 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 20:12:42,419 basehttp 97402 6132543488 "GET /admin/articles/article/ HTTP/1.1" 200 21370
+INFO 2024-12-26 20:12:42,444 basehttp 97402 6149369856 "GET /media/articles/covers/2024/12/logo.png HTTP/1.1" 304 0
+INFO 2024-12-26 20:12:42,445 basehttp 97402 6166196224 "GET /static/admin/img/icon-yes.svg HTTP/1.1" 304 0
+INFO 2024-12-26 20:12:42,448 basehttp 97402 6132543488 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 20:12:43,149 basehttp 97402 6132543488 "GET /admin/articles/comment/ HTTP/1.1" 200 17510
+INFO 2024-12-26 20:12:43,172 basehttp 97402 6132543488 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 20:12:44,745 basehttp 97402 6132543488 "GET /admin/membership/membershiporder/ HTTP/1.1" 200 17547
+INFO 2024-12-26 20:12:44,765 basehttp 97402 6132543488 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 20:14:38,989 basehttp 97402 6132543488 "GET /admin/membership/membershiptier/ HTTP/1.1" 200 21191
+INFO 2024-12-26 20:14:39,045 basehttp 97402 6132543488 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 20:14:40,440 basehttp 97402 6132543488 "GET /admin/membership/membershiporder/ HTTP/1.1" 200 17547
+INFO 2024-12-26 20:14:40,578 basehttp 97402 6132543488 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 20:18:44,758 views 97402 6132543488 Storing SMS code: key=register_13018181898, code=059919
+INFO 2024-12-26 20:18:44,760 basehttp 97402 6132543488 "POST /api/v1/users/auth/sms/send/ HTTP/1.1" 200 103
+INFO 2024-12-26 20:18:54,475 basehttp 97402 6132543488 "POST /api/v1/users/auth/register/ HTTP/1.1" 201 539
+WARNING 2024-12-26 20:19:28,465 basehttp 97402 6132543488 "POST /api/v1/membership/tiers/ HTTP/1.1" 401 106
+WARNING 2024-12-26 20:19:49,937 basehttp 97402 6132543488 "POST /api/v1/membership/tiers/ HTTP/1.1" 401 106
+WARNING 2024-12-26 20:19:58,692 basehttp 97402 6132543488 "POST /api/v1/membership/tiers/ HTTP/1.1" 401 106
+WARNING 2024-12-26 20:20:10,324 basehttp 97402 6132543488 "POST /api/v1/membership/tiers/ HTTP/1.1" 401 106
+INFO 2024-12-26 20:20:44,656 basehttp 97402 6132543488 "POST /api/v1/users/auth/login/password/ HTTP/1.1" 200 593
+WARNING 2024-12-26 20:21:46,543 basehttp 97402 6149369856 "GET /api/v1/membership/memberships/plans/ HTTP/1.1" 404 7228
+WARNING 2024-12-26 20:23:41,619 basehttp 97402 6166196224 "GET /api/v1/memberships/plans/ HTTP/1.1" 404 2972
+WARNING 2024-12-26 20:24:50,166 basehttp 97402 6325039104 "GET /api/v1//membership/tiers/ HTTP/1.1" 404 2972
+WARNING 2024-12-26 20:24:58,137 basehttp 97402 6325039104 "GET /api/v1/membership/tiers/ HTTP/1.1" 401 326
+WARNING 2024-12-26 20:25:23,362 basehttp 97402 6325039104 "GET /api/v1/membership/tiers/ HTTP/1.1" 401 326
+WARNING 2024-12-26 20:25:32,187 basehttp 97402 6325039104 "GET /api/v1/membership/tiers/ HTTP/1.1" 401 621
+INFO 2024-12-26 20:25:44,276 basehttp 97402 6325039104 "POST /api/v1/users/auth/login/password/ HTTP/1.1" 200 593
+INFO 2024-12-26 20:25:55,059 basehttp 97402 6325039104 "GET /api/v1/membership/tiers/ HTTP/1.1" 200 1006
+INFO 2024-12-26 20:26:11,124 basehttp 97402 6325039104 "GET /api/v1/membership/tiers/ HTTP/1.1" 200 1006
+INFO 2024-12-26 20:27:21,773 basehttp 97402 6341865472 "GET /api/v1/membership/membership/info/ HTTP/1.1" 200 563
+INFO 2024-12-26 20:28:45,209 basehttp 97402 6358691840 "GET /api/v1/membership/tiers/ HTTP/1.1" 200 1006
+INFO 2024-12-26 20:28:50,525 basehttp 97402 6358691840 "GET /api/v1/membership/tiers/ HTTP/1.1" 200 1006
+WARNING 2024-12-26 20:30:19,779 basehttp 97402 6375518208 "GET /api/v1/membership/membership/purchase/ HTTP/1.1" 405 110
+WARNING 2024-12-26 20:30:32,334 basehttp 97402 6375518208 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 400 97
+INFO 2024-12-26 20:30:51,073 basehttp 97402 6375518208 "GET /api/v1/membership/tiers/ HTTP/1.1" 200 1006
+INFO 2024-12-26 20:31:17,691 basehttp 97402 6375518208 "GET /api/v1/membership/membership/info/ HTTP/1.1" 200 563
+WARNING 2024-12-26 20:32:21,546 basehttp 97402 6392344576 "GET /api/v1/membership/membership/purchase/ HTTP/1.1" 405 110
+INFO 2024-12-26 20:32:50,770 views 97402 6392344576 Storing SMS code: key=register_18818181898, code=552337
+INFO 2024-12-26 20:32:50,771 basehttp 97402 6392344576 "POST /api/v1/users/auth/sms/send/ HTTP/1.1" 200 103
+WARNING 2024-12-26 20:33:08,241 basehttp 97402 6392344576 "POST /api/v1/membership/tiers/ HTTP/1.1" 401 106
+WARNING 2024-12-26 20:33:31,065 basehttp 97402 6392344576 "POST /api/v1/membership/tiers/ HTTP/1.1" 401 106
+INFO 2024-12-26 20:34:07,623 basehttp 97402 6409170944 "GET /admin/membership/usermembership/ HTTP/1.1" 200 18787
+INFO 2024-12-26 20:34:07,694 basehttp 97402 6409170944 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 20:34:16,860 basehttp 97402 6409170944 "GET /admin/membership/usermembership/1/change/ HTTP/1.1" 200 20167
+INFO 2024-12-26 20:34:16,922 basehttp 97402 6409170944 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 20:34:17,022 basehttp 97402 6409170944 "GET /static/admin/img/icon-deletelink.svg HTTP/1.1" 304 0
+INFO 2024-12-26 20:34:21,087 basehttp 97402 6409170944 "GET /admin/membership/usermembership/ HTTP/1.1" 200 18787
+ERROR 2024-12-26 20:34:30,202 basehttp 97402 6392344576 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 216
+INFO 2024-12-26 20:34:46,457 basehttp 97402 6409170944 "GET /admin/membership/usermembership/ HTTP/1.1" 200 18787
+INFO 2024-12-26 20:34:46,480 basehttp 97402 6409170944 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 20:35:40,577 autoreload 97402 8278489152 /Users/liuzhao/Documents/Projects/flybird/users/views.py changed, reloading.
+INFO 2024-12-26 20:35:41,194 autoreload 97792 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 20:42:36,359 autoreload 97792 8278489152 /Users/liuzhao/Documents/Projects/flybird/users/views.py changed, reloading.
+INFO 2024-12-26 20:42:36,920 autoreload 98091 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 20:43:28,056 autoreload 98091 8278489152 /Users/liuzhao/Documents/Projects/flybird/users/views.py changed, reloading.
+INFO 2024-12-26 20:43:28,652 autoreload 98178 8278489152 Watching for file changes with StatReloader
+ERROR 2024-12-26 20:43:42,446 basehttp 98178 6202273792 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 216
+WARNING 2024-12-26 20:43:49,656 basehttp 98178 6202273792 "POST /api/v1/membership/tiers/ HTTP/1.1" 401 106
+WARNING 2024-12-26 20:43:50,859 basehttp 98178 6202273792 "POST /api/v1/membership/tiers/ HTTP/1.1" 401 106
+WARNING 2024-12-26 20:43:51,552 basehttp 98178 6202273792 "POST /api/v1/membership/tiers/ HTTP/1.1" 401 106
+INFO 2024-12-26 20:44:02,285 basehttp 98178 6202273792 "POST /api/v1/users/auth/sms/send/ HTTP/1.1" 200 31
+INFO 2024-12-26 20:50:21,790 autoreload 98178 8278489152 /Users/liuzhao/Documents/Projects/flybird/users/auth/serializers.py changed, reloading.
+INFO 2024-12-26 20:50:22,384 autoreload 98350 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 20:50:27,155 basehttp 98350 6197833728 "POST /api/v1/users/auth/sms/send/ HTTP/1.1" 200 54
+WARNING 2024-12-26 20:50:36,302 basehttp 98350 6197833728 "POST /api/v1/membership/tiers/ HTTP/1.1" 401 106
+INFO 2024-12-26 20:51:52,722 autoreload 98350 8278489152 /Users/liuzhao/Documents/Projects/flybird/config/urls.py changed, reloading.
+INFO 2024-12-26 20:51:53,352 autoreload 98391 8278489152 Watching for file changes with StatReloader
+WARNING 2024-12-26 20:51:56,714 basehttp 98391 6169227264 "POST /api/v1/membership/tiers/ HTTP/1.1" 401 106
+INFO 2024-12-26 20:52:28,451 basehttp 98391 6169227264 "POST /api/v1/users/auth/register/ HTTP/1.1" 200 521
+INFO 2024-12-26 20:52:47,139 basehttp 98391 6169227264 "POST /api/v1/users/auth/login/password/ HTTP/1.1" 200 483
+INFO 2024-12-26 20:53:26,682 basehttp 98391 6169227264 "POST /api/v1/users/account/delete/ HTTP/1.1" 200 40
+INFO 2024-12-26 20:53:37,361 basehttp 98391 6169227264 "POST /api/v1/users/auth/sms/send/ HTTP/1.1" 200 54
+WARNING 2024-12-26 20:53:44,073 basehttp 98391 6169227264 "POST /api/v1/users/auth/register/ HTTP/1.1" 400 126
+WARNING 2024-12-26 20:53:51,562 basehttp 98391 6169227264 "POST /api/v1/users/auth/register/ HTTP/1.1" 400 132
+WARNING 2024-12-26 20:54:02,149 basehttp 98391 6169227264 "POST /api/v1/users/auth/register/ HTTP/1.1" 400 132
+INFO 2024-12-26 20:54:16,449 basehttp 98391 6169227264 "POST /api/v1/users/auth/register/ HTTP/1.1" 200 521
+WARNING 2024-12-26 20:54:21,821 basehttp 98391 6169227264 "POST /api/v1/users/auth/sms/send/ HTTP/1.1" 400 34
+INFO 2024-12-26 20:54:28,582 basehttp 98391 6169227264 "POST /api/v1/users/auth/login/password/ HTTP/1.1" 200 483
+WARNING 2024-12-26 20:54:55,444 basehttp 98391 6186053632 "POST /api/v1/users/account/password/ HTTP/1.1" 401 246
+INFO 2024-12-26 20:55:29,853 basehttp 98391 6186053632 "POST /api/v1/users/account/password/ HTTP/1.1" 200 43
+WARNING 2024-12-26 20:55:37,458 basehttp 98391 6169227264 "POST /api/v1/users/auth/sms/send/ HTTP/1.1" 400 34
+WARNING 2024-12-26 20:56:03,090 basehttp 98391 6169227264 "POST /api/v1/users/auth/sms/send/ HTTP/1.1" 400 34
+INFO 2024-12-26 20:56:16,768 basehttp 98391 6169227264 "POST /api/v1/users/auth/sms/send/ HTTP/1.1" 200 60
+WARNING 2024-12-26 20:56:28,300 basehttp 98391 6169227264 "POST /api/v1/users/auth/password/reset/ HTTP/1.1" 400 161
+WARNING 2024-12-26 20:56:45,652 basehttp 98391 6169227264 "POST /api/v1/users/auth/password/reset/ HTTP/1.1" 400 150
+INFO 2024-12-26 20:56:55,058 basehttp 98391 6169227264 "POST /api/v1/users/auth/password/reset/ HTTP/1.1" 200 31
+WARNING 2024-12-26 20:57:02,751 basehttp 98391 6169227264 "POST /api/v1/users/auth/logout/ HTTP/1.1" 401 621
+WARNING 2024-12-26 20:57:26,354 basehttp 98391 6169227264 "POST /api/v1/users/auth/logout/ HTTP/1.1" 400 0
+INFO 2024-12-26 20:57:35,307 basehttp 98391 6169227264 "POST /api/v1/users/auth/sms/send/ HTTP/1.1" 200 63
+WARNING 2024-12-26 20:57:50,223 basehttp 98391 6169227264 "POST /api/v1/users/account/phone/ HTTP/1.1" 401 621
+INFO 2024-12-26 20:57:59,325 basehttp 98391 6169227264 "POST /api/v1/users/auth/login/password/ HTTP/1.1" 200 483
+WARNING 2024-12-26 20:58:18,151 basehttp 98391 6169227264 "POST /api/v1/users/account/phone/ HTTP/1.1" 400 108
+INFO 2024-12-26 20:58:49,070 basehttp 98391 6169227264 "POST /api/v1/users/auth/sms/send/ HTTP/1.1" 200 63
+WARNING 2024-12-26 20:58:58,160 basehttp 98391 6169227264 "POST /api/v1/users/account/phone/ HTTP/1.1" 400 108
+INFO 2024-12-26 20:59:31,196 basehttp 98391 6169227264 "POST /api/v1/users/auth/sms/send/ HTTP/1.1" 200 63
+WARNING 2024-12-26 20:59:44,064 basehttp 98391 6169227264 "POST /api/v1/users/account/phone/ HTTP/1.1" 400 108
+INFO 2024-12-26 21:00:19,864 basehttp 98391 6169227264 "POST /api/v1/users/auth/login/password/ HTTP/1.1" 200 483
+WARNING 2024-12-26 21:01:29,782 basehttp 98391 6202880000 "POST /api/v1/users/auth/sms/send/ HTTP/1.1" 415 602
+INFO 2024-12-26 21:01:39,571 basehttp 98391 6202880000 "POST /api/v1/users/auth/sms/send/ HTTP/1.1" 200 63
+INFO 2024-12-26 21:01:59,602 autoreload 98391 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/models.py changed, reloading.
+INFO 2024-12-26 21:02:00,225 autoreload 98672 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 21:03:34,462 autoreload 98672 8278489152 /Users/liuzhao/Documents/Projects/flybird/users/auth/views.py changed, reloading.
+INFO 2024-12-26 21:03:35,015 autoreload 98723 8278489152 Watching for file changes with StatReloader
+WARNING 2024-12-26 21:03:39,615 basehttp 98723 6202372096 "POST /api/v1/users/auth/sms/send/ HTTP/1.1" 401 106
+INFO 2024-12-26 21:03:49,198 basehttp 98723 6202372096 "POST /api/v1/users/auth/login/password/ HTTP/1.1" 200 483
+INFO 2024-12-26 21:04:11,674 basehttp 98723 6202372096 "POST /api/v1/users/auth/sms/send/ HTTP/1.1" 200 63
+WARNING 2024-12-26 21:04:26,874 basehttp 98723 6202372096 "POST /api/v1/users/account/phone/ HTTP/1.1" 400 108
+WARNING 2024-12-26 21:05:07,265 basehttp 98723 6202372096 "POST /api/v1/users/auth/change-phone/ HTTP/1.1" 400 155
+INFO 2024-12-26 21:05:18,960 basehttp 98723 6202372096 "POST /api/v1/users/auth/change-phone/ HTTP/1.1" 200 34
+WARNING 2024-12-26 21:05:26,960 basehttp 98723 6202372096 "POST /api/v1/users/auth/login/password/ HTTP/1.1" 400 150
+INFO 2024-12-26 21:05:36,570 basehttp 98723 6202372096 "POST /api/v1/users/auth/login/password/ HTTP/1.1" 200 483
+WARNING 2024-12-26 21:05:45,564 basehttp 98723 6202372096 "POST /api/v1/users/auth/sms/send/ HTTP/1.1" 400 37
+WARNING 2024-12-26 21:05:49,911 basehttp 98723 6202372096 "POST /api/v1/users/auth/change-phone/ HTTP/1.1" 400 154
+WARNING 2024-12-26 21:05:58,097 basehttp 98723 6202372096 "POST /api/v1/users/auth/token/refresh/ HTTP/1.1" 401 248
+INFO 2024-12-26 21:06:21,268 basehttp 98723 6202372096 "POST /api/v1/users/auth/token/refresh/ HTTP/1.1" 200 483
+WARNING 2024-12-26 21:07:40,536 basehttp 98723 6202372096 "GET /v1/users/profile/ HTTP/1.1" 404 2948
+WARNING 2024-12-26 21:08:26,040 basehttp 98723 6202372096 "GET /v1/users/profile/ HTTP/1.1" 404 2948
+WARNING 2024-12-26 21:09:18,767 basehttp 98723 6202372096 "GET /api/v1/users/profile/ HTTP/1.1" 404 8961
+WARNING 2024-12-26 21:09:23,062 basehttp 98723 6202372096 "GET /api/v1/users/profile/ HTTP/1.1" 404 8961
+WARNING 2024-12-26 21:10:22,340 basehttp 98723 6219198464 "GET /api/v1/users/profile/basic/ HTTP/1.1" 401 621
+INFO 2024-12-26 21:10:34,062 basehttp 98723 6202372096 "POST /api/v1/users/auth/login/password/ HTTP/1.1" 200 483
+INFO 2024-12-26 21:11:02,641 basehttp 98723 6219198464 "GET /api/v1/users/profile/basic/ HTTP/1.1" 200 201
+WARNING 2024-12-26 21:12:06,298 basehttp 98723 6219198464 "GET /api/v1/users/profile/basic/avatar/ HTTP/1.1" 404 9000
+INFO 2024-12-26 21:12:43,412 autoreload 98723 8278489152 /Users/liuzhao/Documents/Projects/flybird/users/profile/urls.py changed, reloading.
+INFO 2024-12-26 21:12:44,031 autoreload 98900 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 21:13:23,903 basehttp 98900 6171340800 "POST /api/v1/users/auth/login/password/ HTTP/1.1" 200 483
+INFO 2024-12-26 21:13:36,844 basehttp 98900 6171340800 "GET /api/v1/users/profile/completeness/ HTTP/1.1" 200 1849
+INFO 2024-12-26 21:14:06,881 basehttp 98900 6188167168 "POST /api/v1/users/profile/basic/ HTTP/1.1" 200 296
+INFO 2024-12-26 21:14:14,362 basehttp 98900 6188167168 "GET /api/v1/users/profile/basic/ HTTP/1.1" 200 296
+INFO 2024-12-26 21:14:26,209 basehttp 98900 6171340800 "GET /api/v1/users/profile/completeness/ HTTP/1.1" 200 2471
+INFO 2024-12-26 21:14:48,485 basehttp 98900 6188167168 "GET /api/v1/users/profile/content-quality/ HTTP/1.1" 200 208
+INFO 2024-12-26 21:15:20,722 content_quality 98900 6188167168 更新内容质量分数 - 用户: 17721215327
+INFO 2024-12-26 21:15:20,722 content_quality 98900 6188167168 字段: personal_summary
+INFO 2024-12-26 21:15:20,723 content_quality 98900 6188167168 当前分数: 8.5
+INFO 2024-12-26 21:15:20,723 content_quality 98900 6188167168 新分数: 8.5
+INFO 2024-12-26 21:15:20,723 content_quality 98900 6188167168 已优化字段: ['personal_summary']
+INFO 2024-12-26 21:15:20,723 content_quality 98900 6188167168 最终分数: 8.5
+INFO 2024-12-26 21:15:20,725 basehttp 98900 6188167168 "POST /api/v1/users/profile/content-quality/ HTTP/1.1" 200 147
+INFO 2024-12-26 21:15:36,085 basehttp 98900 6188167168 "GET /api/v1/users/profile/basic/ HTTP/1.1" 200 660
+INFO 2024-12-26 21:15:45,715 basehttp 98900 6171340800 "GET /api/v1/users/profile/completeness/ HTTP/1.1" 200 1922
+ERROR 2024-12-26 21:16:07,450 content_quality 98900 6188167168 Error in ContentQualityView: WorkExperience matching query does not exist.
+Traceback (most recent call last):
+  File "/Users/liuzhao/Documents/Projects/flybird/users/profile/views/content_quality.py", line 62, in post
+    work = WorkExperience.objects.get(id=work_id, user=request.user)
+  File "/opt/anaconda3/envs/fly-env/lib/python3.8/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+  File "/opt/anaconda3/envs/fly-env/lib/python3.8/site-packages/django/db/models/query.py", line 637, in get
+    raise self.model.DoesNotExist(
+users.profile.models.work.WorkExperience.DoesNotExist: WorkExperience matching query does not exist.
+ERROR 2024-12-26 21:16:07,456 basehttp 98900 6188167168 "POST /api/v1/users/profile/content-quality/ HTTP/1.1" 500 82
+WARNING 2024-12-26 21:21:39,060 basehttp 98900 6204993536 "POST /api/v1/users/profile/work// HTTP/1.1" 404 8980
+WARNING 2024-12-26 21:22:28,676 basehttp 98900 6204993536 "POST /api/v1/users/profile/work-experiences/ HTTP/1.1" 400 297
+INFO 2024-12-26 21:25:34,488 basehttp 98900 6221819904 "POST /api/v1/users/profile/work-experiences/ HTTP/1.1" 200 428
+INFO 2024-12-26 21:25:40,825 basehttp 98900 6221819904 "GET /api/v1/users/profile/basic/ HTTP/1.1" 200 660
+INFO 2024-12-26 21:27:41,206 basehttp 98900 6238646272 "POST /api/v1/users/profile/work-experiences/ HTTP/1.1" 200 436
+INFO 2024-12-26 21:27:52,223 basehttp 98900 6255472640 "GET /api/v1/users/profile/completeness/ HTTP/1.1" 200 2882
+INFO 2024-12-26 21:51:49,698 autoreload 99792 8278489152 Watching for file changes with StatReloader
+WARNING 2024-12-26 21:53:02,606 basehttp 99792 6160396288 "POST /api/v1/membership/orders/ HTTP/1.1" 404 7196
+INFO 2024-12-26 21:56:31,268 basehttp 99792 6177222656 "GET /api/v1/membership/tiers/ HTTP/1.1" 200 1006
+INFO 2024-12-26 21:56:50,964 basehttp 99792 6177222656 "GET /api/v1/membership/tiers/ HTTP/1.1" 200 1006
+WARNING 2024-12-26 21:57:44,060 basehttp 99792 6177222656 "POST /api/v1/membership/tiers/%7Btier_id%7D/purchase/ HTTP/1.1" 404 7254
+INFO 2024-12-26 21:57:58,993 basehttp 99792 6177222656 "GET /api/v1/membership/tiers/ HTTP/1.1" 200 1006
+WARNING 2024-12-26 21:58:53,739 basehttp 99792 6177222656 "POST /api/v1/membership/tiers/2/purchase/ HTTP/1.1" 404 7226
+WARNING 2024-12-26 21:59:16,810 basehttp 99792 6177222656 "POST /api/v1/membership/tiers/%7B2%7D/purchase/ HTTP/1.1" 404 7236
+WARNING 2024-12-26 22:00:45,137 basehttp 99792 6194049024 "POST /api/v1/membership/tiers/1/purchase/ HTTP/1.1" 404 7226
+INFO 2024-12-26 22:01:39,727 basehttp 99792 6194049024 "POST /api/v1/users/auth/login/password/ HTTP/1.1" 200 483
+WARNING 2024-12-26 22:02:09,606 basehttp 99792 6194049024 "POST /api/v1/membership/tiers/1/purchase/ HTTP/1.1" 404 7226
+INFO 2024-12-26 22:03:29,788 basehttp 99792 6210875392 "GET /api/v1/membership/tiers/ HTTP/1.1" 200 1006
+INFO 2024-12-26 22:04:18,758 autoreload 99792 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/views.py changed, reloading.
+INFO 2024-12-26 22:04:19,505 autoreload 178 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 22:11:17,701 autoreload 178 8278489152 /Users/liuzhao/Documents/Projects/flybird/users/urls/users.py changed, reloading.
+INFO 2024-12-26 22:11:18,250 autoreload 360 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 22:15:05,879 autoreload 542 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 22:15:39,897 basehttp 542 6194081792 "GET /api/v1/membership/tiers/ HTTP/1.1" 200 1006
+WARNING 2024-12-26 22:16:07,642 basehttp 542 6194081792 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 400 34
+WARNING 2024-12-26 22:16:39,076 basehttp 542 6194081792 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 400 97
+INFO 2024-12-26 22:24:29,346 autoreload 1411 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 22:25:39,325 autoreload 1411 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/models.py changed, reloading.
+INFO 2024-12-26 22:25:39,947 autoreload 1424 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 22:25:41,210 autoreload 1424 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/models.py changed, reloading.
+INFO 2024-12-26 22:25:41,572 autoreload 1430 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 22:26:48,805 autoreload 1430 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/admin.py changed, reloading.
+INFO 2024-12-26 22:26:49,393 autoreload 1462 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 22:28:07,753 autoreload 1462 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/admin.py changed, reloading.
+INFO 2024-12-26 22:28:08,419 autoreload 1500 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 22:28:22,651 basehttp 1500 6200258560 "GET /admin/membership/usermembership/ HTTP/1.1" 200 19994
+INFO 2024-12-26 22:28:22,752 basehttp 1500 6250737664 "GET /static/admin/css/nav_sidebar.css HTTP/1.1" 304 0
+INFO 2024-12-26 22:28:22,754 basehttp 1500 6267564032 "GET /static/admin/css/changelists.css HTTP/1.1" 304 0
+INFO 2024-12-26 22:28:22,775 basehttp 1500 6250737664 "GET /static/admin/js/vendor/jquery/jquery.js HTTP/1.1" 304 0
+INFO 2024-12-26 22:28:22,777 basehttp 1500 6250737664 "GET /static/admin/js/core.js HTTP/1.1" 304 0
+INFO 2024-12-26 22:28:22,792 basehttp 1500 6250737664 "GET /static/admin/js/admin/RelatedObjectLookups.js HTTP/1.1" 304 0
+INFO 2024-12-26 22:28:22,793 basehttp 1500 6250737664 "GET /static/admin/js/actions.js HTTP/1.1" 304 0
+INFO 2024-12-26 22:28:22,795 basehttp 1500 6250737664 "GET /static/admin/js/urlify.js HTTP/1.1" 304 0
+INFO 2024-12-26 22:28:22,842 basehttp 1500 6267564032 "GET /static/admin/js/jquery.init.js HTTP/1.1" 304 0
+INFO 2024-12-26 22:28:22,850 basehttp 1500 6217084928 "GET /static/admin/css/base.css HTTP/1.1" 304 0
+INFO 2024-12-26 22:28:22,853 basehttp 1500 6250737664 "GET /static/admin/js/prepopulate.js HTTP/1.1" 304 0
+INFO 2024-12-26 22:28:22,854 basehttp 1500 6284390400 "GET /static/admin/css/responsive.css HTTP/1.1" 304 0
+INFO 2024-12-26 22:28:22,855 basehttp 1500 6267564032 "GET /static/admin/js/vendor/xregexp/xregexp.js HTTP/1.1" 304 0
+INFO 2024-12-26 22:28:22,856 basehttp 1500 6233911296 "GET /static/admin/css/dark_mode.css HTTP/1.1" 304 0
+INFO 2024-12-26 22:28:22,861 basehttp 1500 6233911296 "GET /static/admin/img/search.svg HTTP/1.1" 304 0
+INFO 2024-12-26 22:28:22,943 basehttp 1500 6233911296 "GET /static/admin/js/theme.js HTTP/1.1" 304 0
+INFO 2024-12-26 22:28:22,948 basehttp 1500 6200258560 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 22:28:22,970 basehttp 1500 6200258560 "GET /static/admin/js/filters.js HTTP/1.1" 304 0
+INFO 2024-12-26 22:28:22,971 basehttp 1500 6233911296 "GET /static/admin/js/nav_sidebar.js HTTP/1.1" 304 0
+INFO 2024-12-26 22:28:23,000 basehttp 1500 6200258560 "GET /static/admin/img/tooltag-add.svg HTTP/1.1" 304 0
+INFO 2024-12-26 22:28:23,000 basehttp 1500 6233911296 "GET /static/admin/img/icon-addlink.svg HTTP/1.1" 304 0
+INFO 2024-12-26 22:28:24,933 basehttp 1500 6233911296 "GET /admin/membership/membershiptier/ HTTP/1.1" 200 20764
+INFO 2024-12-26 22:28:25,114 basehttp 1500 6200258560 "GET /static/admin/css/forms.css HTTP/1.1" 304 0
+INFO 2024-12-26 22:28:25,232 basehttp 1500 6200258560 "GET /static/admin/css/widgets.css HTTP/1.1" 304 0
+INFO 2024-12-26 22:28:25,279 basehttp 1500 6233911296 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 22:28:25,322 basehttp 1500 6233911296 "GET /static/admin/img/sorting-icons.svg HTTP/1.1" 304 0
+INFO 2024-12-26 22:28:26,155 basehttp 1500 6200258560 "GET /admin/membership/membershiporder/ HTTP/1.1" 200 20989
+INFO 2024-12-26 22:28:26,185 basehttp 1500 6200258560 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 22:28:27,127 basehttp 1500 6200258560 "GET /admin/membership/usermembership/ HTTP/1.1" 200 19994
+INFO 2024-12-26 22:28:27,152 basehttp 1500 6200258560 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 22:28:28,727 basehttp 1500 6200258560 "GET /admin/membership/userpoint/ HTTP/1.1" 200 18258
+INFO 2024-12-26 22:28:28,745 basehttp 1500 6200258560 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 22:28:29,914 basehttp 1500 6200258560 "GET /admin/membership/pointrule/ HTTP/1.1" 200 16343
+INFO 2024-12-26 22:28:29,932 basehttp 1500 6200258560 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 22:28:31,541 basehttp 1500 6200258560 "GET /admin/membership/pointrecord/ HTTP/1.1" 200 16229
+INFO 2024-12-26 22:28:31,562 basehttp 1500 6200258560 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 22:28:33,397 basehttp 1500 6200258560 "GET /admin/membership/pointrule/ HTTP/1.1" 200 16343
+INFO 2024-12-26 22:28:33,419 basehttp 1500 6200258560 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 22:28:33,938 basehttp 1500 6200258560 "GET /admin/membership/userpoint/ HTTP/1.1" 200 18258
+INFO 2024-12-26 22:28:33,963 basehttp 1500 6200258560 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 22:28:34,456 basehttp 1500 6200258560 "GET /admin/membership/usermembership/ HTTP/1.1" 200 19994
+INFO 2024-12-26 22:28:34,473 basehttp 1500 6200258560 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 22:28:35,049 basehttp 1500 6200258560 "GET /admin/membership/membershiporder/ HTTP/1.1" 200 20989
+INFO 2024-12-26 22:28:35,072 basehttp 1500 6200258560 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 22:28:35,717 basehttp 1500 6200258560 "GET /admin/membership/membershiptier/ HTTP/1.1" 200 20764
+INFO 2024-12-26 22:28:35,744 basehttp 1500 6200258560 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 22:28:36,659 basehttp 1500 6200258560 "GET /admin/membership/usermembership/ HTTP/1.1" 200 19994
+INFO 2024-12-26 22:28:36,686 basehttp 1500 6200258560 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 22:28:38,464 basehttp 1500 6200258560 "GET /admin/membership/usermembership/3/change/ HTTP/1.1" 200 18543
+INFO 2024-12-26 22:28:38,488 basehttp 1500 6233911296 "GET /static/admin/js/prepopulate_init.js HTTP/1.1" 304 0
+INFO 2024-12-26 22:28:38,488 basehttp 1500 6217084928 "GET /static/admin/js/calendar.js HTTP/1.1" 304 0
+INFO 2024-12-26 22:28:38,491 basehttp 1500 6250737664 "GET /static/admin/js/admin/DateTimeShortcuts.js HTTP/1.1" 304 0
+INFO 2024-12-26 22:28:38,493 basehttp 1500 6200258560 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 22:28:38,591 basehttp 1500 6200258560 "GET /static/admin/js/change_form.js HTTP/1.1" 304 0
+INFO 2024-12-26 22:28:38,680 basehttp 1500 6200258560 "GET /static/admin/img/icon-clock.svg HTTP/1.1" 304 0
+INFO 2024-12-26 22:28:38,681 basehttp 1500 6250737664 "GET /static/admin/img/icon-calendar.svg HTTP/1.1" 304 0
+INFO 2024-12-26 22:28:41,540 basehttp 1500 6200258560 "GET /admin/membership/usermembership/ HTTP/1.1" 200 19994
+INFO 2024-12-26 22:29:54,775 basehttp 1500 6200258560 "GET /api/v1/membership/tiers/ HTTP/1.1" 200 1006
+WARNING 2024-12-26 22:30:04,992 basehttp 1500 6200258560 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 400 97
+INFO 2024-12-26 22:33:58,516 autoreload 1500 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/views.py changed, reloading.
+INFO 2024-12-26 22:33:59,197 autoreload 2260 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 22:37:49,459 autoreload 2260 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/views.py changed, reloading.
+INFO 2024-12-26 22:37:50,062 autoreload 2363 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 22:38:52,646 basehttp 2363 6125072384 "GET /api/v1/membership/tiers/ HTTP/1.1" 200 1006
+INFO 2024-12-26 22:40:55,034 autoreload 2363 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/services.py changed, reloading.
+INFO 2024-12-26 22:40:55,661 autoreload 2484 8278489152 Watching for file changes with StatReloader
+ERROR 2024-12-26 22:41:07,649 basehttp 2484 6163656704 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 152214
+ERROR 2024-12-26 22:42:16,226 basehttp 2484 6180483072 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 152670
+ERROR 2024-12-26 22:42:30,128 basehttp 2484 6197309440 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 152670
+ERROR 2024-12-26 22:44:17,103 basehttp 2484 6214135808 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 152669
+ERROR 2024-12-26 22:44:19,989 basehttp 2484 6214135808 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 152669
+ERROR 2024-12-26 22:45:01,261 basehttp 2484 6214135808 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 152669
+ERROR 2024-12-26 22:47:50,827 basehttp 2484 6230962176 "GET /api/v1/membership/ HTTP/1.1" 500 153423
+WARNING 2024-12-26 22:48:50,058 basehttp 2484 6230962176 "GET /api/v1/membership/memberships/plans/ HTTP/1.1" 404 7228
+WARNING 2024-12-26 22:48:55,722 basehttp 2484 6230962176 "GET /api/v1/api-urls HTTP/1.1" 404 2942
+INFO 2024-12-26 22:49:02,910 basehttp 2484 6230962176 "GET /api/v1/users/api-urls HTTP/1.1" 301 0
+INFO 2024-12-26 22:49:03,007 basehttp 2484 6247788544 "GET /api/v1/users/api-urls/ HTTP/1.1" 200 16946
+INFO 2024-12-26 22:49:03,043 basehttp 2484 6281441280 "GET /static/rest_framework/css/default.css HTTP/1.1" 304 0
+INFO 2024-12-26 22:49:03,043 basehttp 2484 6264614912 "GET /static/rest_framework/css/prettify.css HTTP/1.1" 304 0
+INFO 2024-12-26 22:49:03,044 basehttp 2484 6230962176 "GET /static/rest_framework/css/bootstrap-tweaks.css HTTP/1.1" 304 0
+INFO 2024-12-26 22:49:03,048 basehttp 2484 6281441280 "GET /static/rest_framework/js/csrf.js HTTP/1.1" 304 0
+INFO 2024-12-26 22:49:03,048 basehttp 2484 6247788544 "GET /static/rest_framework/css/bootstrap.min.css HTTP/1.1" 304 0
+INFO 2024-12-26 22:49:03,051 basehttp 2484 6264614912 "GET /static/rest_framework/js/bootstrap.min.js HTTP/1.1" 304 0
+INFO 2024-12-26 22:49:03,055 basehttp 2484 6298267648 "GET /static/rest_framework/js/jquery-3.7.1.min.js HTTP/1.1" 304 0
+INFO 2024-12-26 22:49:03,055 basehttp 2484 12901707776 "GET /static/rest_framework/js/ajax-form.js HTTP/1.1" 304 0
+INFO 2024-12-26 22:49:03,057 basehttp 2484 6230962176 "GET /static/rest_framework/js/prettify-min.js HTTP/1.1" 304 0
+INFO 2024-12-26 22:49:03,058 basehttp 2484 6247788544 "GET /static/rest_framework/js/default.js HTTP/1.1" 304 0
+INFO 2024-12-26 22:49:03,059 basehttp 2484 6281441280 "GET /static/rest_framework/js/load-ajax-form.js HTTP/1.1" 304 0
+INFO 2024-12-26 22:49:03,204 basehttp 2484 6281441280 "GET /static/rest_framework/img/grid.png HTTP/1.1" 304 0
+INFO 2024-12-26 22:50:36,336 autoreload 2484 8278489152 /Users/liuzhao/Documents/Projects/flybird/config/settings.py changed, reloading.
+INFO 2024-12-26 22:50:37,045 autoreload 2818 8278489152 Watching for file changes with StatReloader
+ERROR 2024-12-26 22:50:50,370 basehttp 2818 6161674240 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 124569
+INFO 2024-12-26 22:53:19,422 autoreload 2818 8278489152 /Users/liuzhao/Documents/Projects/flybird/config/settings.py changed, reloading.
+INFO 2024-12-26 22:53:20,040 autoreload 2861 8278489152 Watching for file changes with StatReloader
+ERROR 2024-12-26 22:53:29,773 basehttp 2861 6160429056 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 152213
+ERROR 2024-12-26 22:53:38,578 basehttp 2861 6160429056 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 152669
+ERROR 2024-12-26 22:53:42,253 basehttp 2861 6160429056 "GET /api/v1/membership/membership/purchase/ HTTP/1.1" 500 144172
+ERROR 2024-12-26 22:53:46,126 basehttp 2861 6160429056 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 152669
+INFO 2024-12-26 22:56:53,643 autoreload 2861 8278489152 /Users/liuzhao/Documents/Projects/flybird/config/settings.py changed, reloading.
+INFO 2024-12-26 22:56:54,237 autoreload 2957 8278489152 Watching for file changes with StatReloader
+ERROR 2024-12-26 22:57:09,996 basehttp 2957 6162100224 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 68
+INFO 2024-12-26 22:58:09,326 autoreload 2957 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/services.py changed, reloading.
+INFO 2024-12-26 22:58:09,927 autoreload 3015 8278489152 Watching for file changes with StatReloader
+WARNING 2024-12-26 22:58:12,784 basehttp 3015 6159495168 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 400 97
+INFO 2024-12-26 22:59:03,240 autoreload 3015 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/services.py changed, reloading.
+INFO 2024-12-26 22:59:03,857 autoreload 3047 8278489152 Watching for file changes with StatReloader
+WARNING 2024-12-26 22:59:06,900 basehttp 3047 6130921472 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 400 97
+INFO 2024-12-26 22:59:20,855 autoreload 3094 8278489152 Watching for file changes with StatReloader
+WARNING 2024-12-26 22:59:25,288 basehttp 3094 6163017728 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 400 97
+INFO 2024-12-26 23:00:35,825 autoreload 3094 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/services.py changed, reloading.
+INFO 2024-12-26 23:00:36,493 autoreload 3141 8278489152 Watching for file changes with StatReloader
+WARNING 2024-12-26 23:00:40,801 basehttp 3141 6126284800 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 400 97
+INFO 2024-12-26 23:01:11,548 basehttp 3141 6126284800 "GET /api/v1/membership/tiers/ HTTP/1.1" 200 1006
+INFO 2024-12-26 23:01:33,183 basehttp 3141 6143111168 "GET /admin/membership/membershiporder/ HTTP/1.1" 200 28742
+INFO 2024-12-26 23:01:33,240 basehttp 3141 6143111168 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 23:03:07,952 autoreload 3141 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/views.py changed, reloading.
+INFO 2024-12-26 23:03:08,614 autoreload 3231 8278489152 Watching for file changes with StatReloader
+ERROR 2024-12-26 23:03:26,818 basehttp 3231 6166982656 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 34
+INFO 2024-12-26 23:03:48,410 basehttp 3231 6183809024 "GET /admin/membership/membershiporder/ HTTP/1.1" 200 29227
+INFO 2024-12-26 23:03:48,482 basehttp 3231 6183809024 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 23:04:26,349 autoreload 3231 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/views.py changed, reloading.
+INFO 2024-12-26 23:04:26,933 autoreload 3300 8278489152 Watching for file changes with StatReloader
+ERROR 2024-12-26 23:04:30,788 basehttp 3300 6164983808 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 143
+INFO 2024-12-26 23:06:46,141 autoreload 3300 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/services.py changed, reloading.
+INFO 2024-12-26 23:06:46,814 autoreload 3365 8278489152 Watching for file changes with StatReloader
+ERROR 2024-12-26 23:06:52,375 basehttp 3365 6128201728 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 82
+ERROR 2024-12-26 23:10:38,376 basehttp 3365 6145028096 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 82
+INFO 2024-12-26 23:11:01,174 autoreload 3553 8278489152 Watching for file changes with StatReloader
+ERROR 2024-12-26 23:11:04,493 basehttp 3553 6196817920 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 82
+INFO 2024-12-26 23:12:12,958 autoreload 3621 8278489152 Watching for file changes with StatReloader
+ERROR 2024-12-26 23:12:16,968 basehttp 3621 6131429376 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 82
+INFO 2024-12-26 23:16:30,216 autoreload 3621 8278489152 /Users/liuzhao/Documents/Projects/flybird/config/settings.py changed, reloading.
+INFO 2024-12-26 23:27:17,187 autoreload 4008 8278489152 Watching for file changes with StatReloader
+ERROR 2024-12-26 23:27:21,988 basehttp 4008 6200225792 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 82
+INFO 2024-12-26 23:29:26,330 autoreload 4008 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/services.py changed, reloading.
+INFO 2024-12-26 23:29:26,967 autoreload 4075 8278489152 Watching for file changes with StatReloader
+ERROR 2024-12-26 23:29:31,099 basehttp 4075 6131560448 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 82
+INFO 2024-12-26 23:31:07,438 autoreload 4075 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/services.py changed, reloading.
+INFO 2024-12-26 23:31:08,049 autoreload 4230 8278489152 Watching for file changes with StatReloader
+ERROR 2024-12-26 23:31:11,692 basehttp 4230 6130298880 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 82
+ERROR 2024-12-26 23:31:29,613 basehttp 4230 6130298880 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 82
+INFO 2024-12-26 23:32:30,434 autoreload 4230 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/services.py changed, reloading.
+INFO 2024-12-26 23:32:30,987 autoreload 4285 8278489152 Watching for file changes with StatReloader
+ERROR 2024-12-26 23:32:37,040 basehttp 4285 6205108224 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 82
+INFO 2024-12-26 23:33:44,040 autoreload 4285 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/services.py changed, reloading.
+INFO 2024-12-26 23:33:44,663 autoreload 4331 8278489152 Watching for file changes with StatReloader
+ERROR 2024-12-26 23:33:59,184 basehttp 4331 6167310336 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 82
+ERROR 2024-12-26 23:34:39,002 basehttp 4331 6167310336 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 82
+INFO 2024-12-26 23:35:26,378 basehttp 4331 6184136704 "GET /admin/membership/membershiporder/ HTTP/1.1" 200 35047
+INFO 2024-12-26 23:35:26,439 basehttp 4331 6184136704 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 23:35:44,127 autoreload 4331 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/services.py changed, reloading.
+INFO 2024-12-26 23:35:44,704 autoreload 4456 8278489152 Watching for file changes with StatReloader
+ERROR 2024-12-26 23:35:51,363 basehttp 4456 6133592064 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 82
+INFO 2024-12-26 23:38:10,026 autoreload 4456 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/services.py changed, reloading.
+INFO 2024-12-26 23:38:10,577 autoreload 4543 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 23:38:16,889 autoreload 4566 8278489152 Watching for file changes with StatReloader
+ERROR 2024-12-26 23:38:20,751 basehttp 4566 6189461504 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 82
+INFO 2024-12-26 23:39:28,890 autoreload 4566 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/services.py changed, reloading.
+INFO 2024-12-26 23:39:29,472 autoreload 4621 8278489152 Watching for file changes with StatReloader
+ERROR 2024-12-26 23:39:56,061 basehttp 4621 6159527936 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 82
+INFO 2024-12-26 23:41:17,957 autoreload 4621 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/services.py changed, reloading.
+INFO 2024-12-26 23:41:18,531 autoreload 4676 8278489152 Watching for file changes with StatReloader
+ERROR 2024-12-26 23:41:25,175 basehttp 4676 6128431104 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 82
+INFO 2024-12-26 23:42:38,118 autoreload 4676 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/services.py changed, reloading.
+INFO 2024-12-26 23:42:38,681 autoreload 4728 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 23:42:48,985 autoreload 4752 8278489152 Watching for file changes with StatReloader
+ERROR 2024-12-26 23:42:55,450 basehttp 4752 6136655872 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 82
+INFO 2024-12-26 23:48:39,109 autoreload 4752 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/services.py changed, reloading.
+INFO 2024-12-26 23:48:39,709 autoreload 5015 8278489152 Watching for file changes with StatReloader
+ERROR 2024-12-26 23:48:46,226 basehttp 5015 6204157952 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 82
+INFO 2024-12-26 23:52:35,662 basehttp 5015 6220984320 "GET /admin/membership/membershiporder/33/change/ HTTP/1.1" 200 21980
+INFO 2024-12-26 23:52:35,817 basehttp 5015 6220984320 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 23:52:51,822 basehttp 5015 6220984320 "GET /admin/membership/membershiporder/ HTTP/1.1" 200 37957
+INFO 2024-12-26 23:52:56,970 basehttp 5015 6220984320 "GET /admin/membership/membershiporder/?o=1 HTTP/1.1" 200 39362
+INFO 2024-12-26 23:52:57,683 basehttp 5015 6220984320 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-26 23:52:59,697 basehttp 5015 6220984320 "GET /admin/membership/membershiporder/ HTTP/1.1" 200 37957
+INFO 2024-12-26 23:53:58,363 autoreload 5015 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/services.py changed, reloading.
+INFO 2024-12-26 23:53:58,938 autoreload 5702 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 23:55:19,432 autoreload 5702 8278489152 /opt/anaconda3/envs/fly-env/lib/python3.8/site-packages/alipay/__init__.py changed, reloading.
+INFO 2024-12-26 23:55:21,090 autoreload 5750 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-26 23:59:02,491 autoreload 5750 8278489152 /opt/anaconda3/envs/fly-env/lib/python3.8/site-packages/alipay/__init__.py changed, reloading.
+INFO 2024-12-26 23:59:02,957 autoreload 5948 8278489152 Watching for file changes with StatReloader
+ERROR 2024-12-26 23:59:27,631 basehttp 5948 6169227264 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 82
+ERROR 2024-12-26 23:59:37,279 basehttp 5948 6169227264 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 82
+INFO 2024-12-27 00:00:35,104 autoreload 5948 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/services.py changed, reloading.
+INFO 2024-12-27 00:00:35,669 autoreload 6039 8278489152 Watching for file changes with StatReloader
+ERROR 2024-12-27 00:00:43,538 basehttp 6039 6171635712 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 82
+INFO 2024-12-27 00:08:44,833 autoreload 6039 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/services.py changed, reloading.
+INFO 2024-12-27 00:08:45,635 autoreload 6268 8278489152 Watching for file changes with StatReloader
+ERROR 2024-12-27 00:08:52,256 basehttp 6268 6194032640 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 82
+ERROR 2024-12-27 00:23:08,900 basehttp 6268 6210859008 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 82
+INFO 2024-12-27 00:25:38,506 autoreload 6831 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-27 00:25:46,628 basehttp 6831 6162477056 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 200 1527
+INFO 2024-12-27 00:26:31,247 basehttp 6831 6179303424 "GET /admin/membership/membershiporder/ HTTP/1.1" 200 40867
+INFO 2024-12-27 00:26:31,289 basehttp 6831 6179303424 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 00:26:33,702 basehttp 6831 6179303424 "GET /admin/membership/membershiporder/45/change/ HTTP/1.1" 200 21980
+INFO 2024-12-27 00:26:33,726 basehttp 6831 6179303424 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 00:29:08,164 autoreload 6831 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/services.py changed, reloading.
+INFO 2024-12-27 00:29:08,740 autoreload 6935 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-27 00:32:41,477 basehttp 6935 6165065728 "GET /api/v1/membership/membership/info/ HTTP/1.1" 200 563
+INFO 2024-12-27 00:34:37,985 autoreload 6935 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/views.py changed, reloading.
+INFO 2024-12-27 00:34:38,564 autoreload 7168 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-27 00:36:19,598 autoreload 7168 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/urls.py changed, reloading.
+INFO 2024-12-27 00:36:20,140 autoreload 7245 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-27 00:36:45,226 basehttp 7245 6200225792 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 200 1531
+INFO 2024-12-27 00:38:28,470 autoreload 7245 8278489152 /Users/liuzhao/Documents/Projects/flybird/config/settings.py changed, reloading.
+INFO 2024-12-27 00:38:29,025 autoreload 7323 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-27 00:41:28,550 basehttp 7323 6157299712 "GET /admin/membership/membershiptier/ HTTP/1.1" 200 20764
+INFO 2024-12-27 00:41:28,583 basehttp 7323 6157299712 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 00:41:30,748 basehttp 7323 6157299712 "GET /admin/membership/membershiptier/2/change/ HTTP/1.1" 200 21200
+INFO 2024-12-27 00:41:30,783 basehttp 7323 6157299712 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 00:41:35,159 basehttp 7323 6157299712 "POST /admin/membership/membershiptier/2/change/ HTTP/1.1" 302 0
+INFO 2024-12-27 00:41:35,179 basehttp 7323 6157299712 "GET /admin/membership/membershiptier/ HTTP/1.1" 200 20976
+INFO 2024-12-27 00:41:35,207 basehttp 7323 6157299712 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 00:41:35,316 basehttp 7323 6157299712 "GET /static/admin/img/icon-yes.svg HTTP/1.1" 304 0
+INFO 2024-12-27 00:41:42,956 basehttp 7323 6157299712 "GET /admin/membership/membershiptier/2/change/ HTTP/1.1" 200 21200
+INFO 2024-12-27 00:41:42,978 basehttp 7323 6157299712 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 00:41:46,765 basehttp 7323 6157299712 "POST /admin/membership/membershiptier/2/change/ HTTP/1.1" 302 0
+INFO 2024-12-27 00:41:46,792 basehttp 7323 6157299712 "GET /admin/membership/membershiptier/ HTTP/1.1" 200 20977
+INFO 2024-12-27 00:41:46,823 basehttp 7323 6157299712 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 00:41:53,521 basehttp 7323 6190952448 "GET /api/v1/membership/tiers/ HTTP/1.1" 200 1007
+INFO 2024-12-27 00:44:38,542 basehttp 7323 6157299712 "GET /admin/membership/membershiporder/ HTTP/1.1" 200 41352
+INFO 2024-12-27 00:44:38,594 basehttp 7323 6157299712 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 00:47:31,895 autoreload 7323 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/services.py changed, reloading.
+INFO 2024-12-27 00:47:32,483 autoreload 7636 8278489152 Watching for file changes with StatReloader
+WARNING 2024-12-27 00:47:39,960 basehttp 7636 6133035008 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 400 38
+INFO 2024-12-27 00:47:47,064 basehttp 7636 6133035008 "GET /api/v1/membership/tiers/ HTTP/1.1" 200 1007
+INFO 2024-12-27 00:49:46,727 basehttp 7636 6149861376 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 200 1529
+INFO 2024-12-27 00:52:21,944 basehttp 7636 6166687744 "GET /admin/membership/membershiporder/ HTTP/1.1" 200 41838
+INFO 2024-12-27 00:52:22,035 basehttp 7636 6166687744 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 00:53:04,433 basehttp 7636 6166687744 "GET /admin/membership/membershiporder/47/change/ HTTP/1.1" 200 21981
+INFO 2024-12-27 00:53:04,568 basehttp 7636 6166687744 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 00:53:13,140 basehttp 7636 6166687744 "GET /admin/membership/membershiporder/ HTTP/1.1" 200 41838
+INFO 2024-12-27 00:53:13,234 basehttp 7636 6166687744 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 00:55:22,942 basehttp 7636 6183514112 "POST /api/v1/membership/notify/alipay/ HTTP/1.1" 200 4
+INFO 2024-12-27 00:55:34,602 basehttp 7636 6166687744 "GET /admin/membership/membershiporder/ HTTP/1.1" 200 41838
+INFO 2024-12-27 00:55:34,648 basehttp 7636 6166687744 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 00:56:01,047 basehttp 7636 6166687744 "GET /admin/membership/membershiporder/47/change/ HTTP/1.1" 200 21981
+INFO 2024-12-27 00:56:01,201 basehttp 7636 6166687744 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 00:56:04,006 basehttp 7636 6166687744 "GET /admin/membership/membershiporder/ HTTP/1.1" 200 41838
+INFO 2024-12-27 00:56:09,152 basehttp 7636 6166687744 "GET /admin/membership/membershiptier/ HTTP/1.1" 200 20765
+INFO 2024-12-27 00:56:09,198 basehttp 7636 6166687744 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 00:56:10,742 basehttp 7636 6166687744 "GET /admin/membership/membershiptier/1/change/ HTTP/1.1" 200 21204
+INFO 2024-12-27 00:56:10,761 basehttp 7636 6166687744 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 00:56:18,352 basehttp 7636 6166687744 "GET /admin/membership/membershiptier/ HTTP/1.1" 200 20765
+INFO 2024-12-27 00:56:18,389 basehttp 7636 6166687744 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 00:56:20,245 basehttp 7636 6166687744 "GET /admin/membership/usermembership/ HTTP/1.1" 200 19994
+INFO 2024-12-27 00:56:20,268 basehttp 7636 6166687744 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 00:56:24,365 basehttp 7636 6166687744 "GET /admin/membership/userpoint/ HTTP/1.1" 200 18258
+INFO 2024-12-27 00:56:24,385 basehttp 7636 6166687744 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 00:56:25,326 basehttp 7636 6166687744 "GET /admin/membership/pointrule/ HTTP/1.1" 200 16343
+INFO 2024-12-27 00:56:25,347 basehttp 7636 6166687744 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 00:56:25,917 basehttp 7636 6166687744 "GET /admin/membership/pointrecord/ HTTP/1.1" 200 16229
+INFO 2024-12-27 00:56:25,935 basehttp 7636 6166687744 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 00:56:26,802 basehttp 7636 6166687744 "GET /admin/membership/membershiptier/ HTTP/1.1" 200 20765
+INFO 2024-12-27 00:56:26,824 basehttp 7636 6166687744 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 00:57:18,125 autoreload 7636 8278489152 /Users/liuzhao/Documents/Projects/flybird/config/settings.py changed, reloading.
+INFO 2024-12-27 00:57:18,754 autoreload 7953 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-27 00:57:25,791 basehttp 7953 6160920576 "POST /api/v1/membership/notify/alipay/ HTTP/1.1" 200 4
+INFO 2024-12-27 00:57:52,932 basehttp 7953 6160920576 "GET /admin/membership/membershiporder/ HTTP/1.1" 200 41838
+INFO 2024-12-27 00:57:52,982 basehttp 7953 6160920576 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 00:58:06,069 basehttp 7953 6160920576 "GET /admin/membership/pointrule/ HTTP/1.1" 200 16343
+INFO 2024-12-27 00:58:06,104 basehttp 7953 6160920576 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 00:58:08,925 basehttp 7953 6160920576 "GET /admin/membership/pointrule/add/ HTTP/1.1" 200 18814
+INFO 2024-12-27 00:58:08,966 basehttp 7953 6160920576 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 00:58:16,487 basehttp 7953 6160920576 "GET /admin/membership/pointrecord/ HTTP/1.1" 200 16229
+INFO 2024-12-27 00:58:16,510 basehttp 7953 6160920576 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 00:58:18,633 basehttp 7953 6160920576 "GET /admin/membership/pointrule/ HTTP/1.1" 200 16343
+INFO 2024-12-27 00:58:18,656 basehttp 7953 6160920576 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 00:58:19,467 basehttp 7953 6160920576 "GET /admin/membership/userpoint/ HTTP/1.1" 200 18258
+INFO 2024-12-27 00:58:19,493 basehttp 7953 6160920576 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 00:58:20,408 basehttp 7953 6160920576 "GET /admin/membership/usermembership/ HTTP/1.1" 200 19994
+INFO 2024-12-27 00:58:20,430 basehttp 7953 6160920576 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 00:58:22,873 basehttp 7953 6160920576 "GET /admin/membership/membershiporder/ HTTP/1.1" 200 41838
+INFO 2024-12-27 00:58:22,918 basehttp 7953 6160920576 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 00:58:23,862 basehttp 7953 6160920576 "GET /admin/membership/membershiptier/ HTTP/1.1" 200 20765
+INFO 2024-12-27 00:58:24,198 basehttp 7953 6160920576 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 00:58:26,601 basehttp 7953 6160920576 "GET /admin/membership/pointrule/ HTTP/1.1" 200 16343
+INFO 2024-12-27 00:58:27,331 basehttp 7953 6160920576 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 00:58:29,624 basehttp 7953 6160920576 "GET /admin/membership/pointrule/add/ HTTP/1.1" 200 18814
+INFO 2024-12-27 00:58:29,661 basehttp 7953 6160920576 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 00:59:23,239 autoreload 7953 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/views.py changed, reloading.
+INFO 2024-12-27 00:59:23,880 autoreload 8093 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-27 00:59:30,796 basehttp 8093 6158774272 "POST /api/v1/membership/notify/alipay/ HTTP/1.1" 200 4
+INFO 2024-12-27 01:00:53,738 autoreload 8093 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/services.py changed, reloading.
+INFO 2024-12-27 01:00:54,289 autoreload 8229 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-27 01:01:05,772 basehttp 8229 6124761088 "POST /api/v1/membership/notify/alipay/ HTTP/1.1" 200 4
+INFO 2024-12-27 01:01:36,904 basehttp 8229 6124761088 "GET /admin/membership/membershiptier/ HTTP/1.1" 200 20765
+INFO 2024-12-27 01:01:36,971 basehttp 8229 6124761088 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 01:01:39,781 basehttp 8229 6124761088 "GET /admin/membership/membershiporder/ HTTP/1.1" 200 41838
+INFO 2024-12-27 01:01:40,213 basehttp 8229 6124761088 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 01:01:42,697 basehttp 8229 6124761088 "GET /admin/membership/userpoint/ HTTP/1.1" 200 18258
+INFO 2024-12-27 01:01:42,963 basehttp 8229 6124761088 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 01:01:44,544 basehttp 8229 6124761088 "GET /admin/membership/usermembership/ HTTP/1.1" 200 19994
+INFO 2024-12-27 01:01:44,575 basehttp 8229 6124761088 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 01:03:20,741 basehttp 8229 6124761088 "POST /api/v1/membership/notify/alipay/ HTTP/1.1" 200 4
+INFO 2024-12-27 01:03:50,812 basehttp 8229 6124761088 "GET /admin/articles/category/ HTTP/1.1" 200 17841
+INFO 2024-12-27 01:03:50,909 basehttp 8229 6124761088 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 01:03:52,850 basehttp 8229 6124761088 "GET /admin/articles/article/ HTTP/1.1" 200 20943
+INFO 2024-12-27 01:03:52,862 basehttp 8229 6141587456 "GET /media/articles/covers/2024/12/logo.png HTTP/1.1" 304 0
+INFO 2024-12-27 01:03:52,872 basehttp 8229 6124761088 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 01:03:55,912 basehttp 8229 6124761088 "GET /admin/articles/comment/ HTTP/1.1" 200 17083
+INFO 2024-12-27 01:03:55,946 basehttp 8229 6124761088 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 01:03:58,700 basehttp 8229 6124761088 "GET /admin/articles/article/ HTTP/1.1" 200 20943
+INFO 2024-12-27 01:03:58,848 basehttp 8229 6124761088 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 01:04:01,460 basehttp 8229 6124761088 "GET /admin/articles/article/1/change/ HTTP/1.1" 200 26775
+INFO 2024-12-27 01:04:01,495 basehttp 8229 6141587456 "GET /static/django_ckeditor_5/dist/styles.css HTTP/1.1" 304 0
+INFO 2024-12-27 01:04:01,502 basehttp 8229 6325039104 "GET /static/admin/js/collapse.js HTTP/1.1" 304 0
+INFO 2024-12-27 01:04:01,504 basehttp 8229 6358691840 "GET /static/admin/img/icon-deletelink.svg HTTP/1.1" 304 0
+INFO 2024-12-27 01:04:01,505 basehttp 8229 6158413824 "GET /static/django_ckeditor_5/dist/bundle.js HTTP/1.1" 304 0
+INFO 2024-12-27 01:04:01,506 basehttp 8229 6341865472 "GET /static/admin/img/icon-changelink.svg HTTP/1.1" 304 0
+INFO 2024-12-27 01:04:01,522 basehttp 8229 6124761088 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 01:04:01,595 basehttp 8229 6124761088 "GET /static/admin/img/icon-viewlink.svg HTTP/1.1" 304 0
+INFO 2024-12-27 01:04:01,731 basehttp 8229 6124761088 "GET /media/avatar.png HTTP/1.1" 304 0
+INFO 2024-12-27 01:04:15,133 basehttp 8229 6124761088 "GET /admin/membership/membershiptier/ HTTP/1.1" 200 20765
+INFO 2024-12-27 01:04:15,163 basehttp 8229 6124761088 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 01:04:16,622 basehttp 8229 6124761088 "GET /admin/membership/membershiporder/ HTTP/1.1" 200 41838
+INFO 2024-12-27 01:04:16,638 basehttp 8229 6124761088 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 01:04:22,678 basehttp 8229 6124761088 "GET /admin/membership/membershiporder/47/change/ HTTP/1.1" 200 21981
+INFO 2024-12-27 01:04:22,694 basehttp 8229 6124761088 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 01:05:45,911 autoreload 8229 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/services.py changed, reloading.
+INFO 2024-12-27 01:05:46,531 autoreload 8391 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-27 01:05:53,884 basehttp 8391 6169604096 "POST /api/v1/membership/notify/alipay/ HTTP/1.1" 200 4
+INFO 2024-12-27 01:11:50,017 autoreload 8391 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/services.py changed, reloading.
+INFO 2024-12-27 01:11:50,652 autoreload 8596 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-27 01:11:55,708 basehttp 8596 6161592320 "POST /api/v1/membership/notify/alipay/ HTTP/1.1" 200 4
+INFO 2024-12-27 01:23:51,720 autoreload 8881 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-27 01:24:01,594 basehttp 8881 6159101952 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 200 1521
+INFO 2024-12-27 01:24:15,834 basehttp 8881 6175928320 "GET /admin/membership/membershiporder/ HTTP/1.1" 200 42324
+INFO 2024-12-27 01:24:15,877 basehttp 8881 6175928320 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 01:24:51,909 basehttp 8881 6175928320 "GET /admin/membership/membershiporder/48/change/ HTTP/1.1" 200 21981
+INFO 2024-12-27 01:24:52,150 basehttp 8881 6175928320 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 01:24:58,178 basehttp 8881 6175928320 "GET /admin/membership/membershiporder/ HTTP/1.1" 200 42324
+INFO 2024-12-27 01:25:54,634 autoreload 8881 8278489152 /Users/liuzhao/Documents/Projects/flybird/config/settings.py changed, reloading.
+INFO 2024-12-27 01:25:55,250 autoreload 8930 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-27 01:25:59,917 basehttp 8930 6190968832 "POST /api/v1/membership/notify/alipay/ HTTP/1.1" 200 4
+INFO 2024-12-27 01:31:02,028 autoreload 8930 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/services.py changed, reloading.
+INFO 2024-12-27 01:31:02,657 autoreload 9060 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-27 01:31:49,167 autoreload 9104 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-27 01:31:53,945 basehttp 9104 6204076032 "POST /api/v1/membership/notify/alipay/ HTTP/1.1" 200 4
+INFO 2024-12-27 01:33:33,840 basehttp 9104 6204076032 "GET /admin/membership/membershiptier/ HTTP/1.1" 200 20765
+INFO 2024-12-27 01:33:33,938 basehttp 9104 6204076032 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 01:33:37,099 basehttp 9104 6204076032 "GET /admin/membership/membershiptier/1/change/ HTTP/1.1" 200 21204
+INFO 2024-12-27 01:33:37,192 basehttp 9104 6204076032 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 01:33:49,647 basehttp 9104 6204076032 "GET /admin/membership/membershiptier/ HTTP/1.1" 200 20765
+INFO 2024-12-27 01:33:49,677 basehttp 9104 6204076032 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 01:33:51,073 basehttp 9104 6204076032 "GET /admin/membership/membershiptier/2/change/ HTTP/1.1" 200 21201
+INFO 2024-12-27 01:33:51,093 basehttp 9104 6204076032 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 01:34:04,033 basehttp 9104 6204076032 "GET /admin/membership/usermembership/ HTTP/1.1" 200 19994
+INFO 2024-12-27 01:34:04,077 basehttp 9104 6204076032 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 01:41:47,891 autoreload 9104 8278489152 /Users/liuzhao/Documents/Projects/flybird/config/settings.py changed, reloading.
+INFO 2024-12-27 01:41:48,485 autoreload 9498 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-27 01:41:49,741 autoreload 9498 8278489152 /Users/liuzhao/Documents/Projects/flybird/config/settings.py changed, reloading.
+INFO 2024-12-27 01:41:50,086 autoreload 9503 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-27 01:46:43,935 autoreload 9503 8278489152 /Users/liuzhao/Documents/Projects/flybird/config/settings.py changed, reloading.
+INFO 2024-12-27 01:46:45,629 autoreload 9611 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-27 01:46:47,895 autoreload 9611 8278489152 /Users/liuzhao/Documents/Projects/flybird/config/settings.py changed, reloading.
+INFO 2024-12-27 01:46:48,284 autoreload 9627 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-27 01:48:19,963 autoreload 9762 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-27 01:48:27,052 basehttp 9762 6199422976 "POST /api/v1/membership/notify/alipay/ HTTP/1.1" 200 4
+INFO 2024-12-27 01:48:44,413 basehttp 9762 6199422976 "GET /admin/membership/membershiporder/ HTTP/1.1" 200 42324
+INFO 2024-12-27 01:48:44,470 basehttp 9762 6233075712 "GET /static/admin/css/nav_sidebar.css HTTP/1.1" 304 0
+INFO 2024-12-27 01:48:44,490 basehttp 9762 6216249344 "GET /static/admin/css/dark_mode.css HTTP/1.1" 304 0
+INFO 2024-12-27 01:48:44,514 basehttp 9762 6249902080 "GET /static/admin/css/changelists.css HTTP/1.1" 304 0
+INFO 2024-12-27 01:48:44,519 basehttp 9762 6233075712 "GET /static/admin/css/responsive.css HTTP/1.1" 304 0
+INFO 2024-12-27 01:48:44,613 basehttp 9762 6216249344 "GET /static/admin/js/jquery.init.js HTTP/1.1" 304 0
+INFO 2024-12-27 01:48:44,625 basehttp 9762 6283554816 "GET /static/admin/js/vendor/jquery/jquery.js HTTP/1.1" 304 0
+INFO 2024-12-27 01:48:44,668 basehttp 9762 6249902080 "GET /static/admin/js/urlify.js HTTP/1.1" 304 0
+INFO 2024-12-27 01:48:44,675 basehttp 9762 6266728448 "GET /static/admin/css/base.css HTTP/1.1" 304 0
+INFO 2024-12-27 01:48:44,684 basehttp 9762 6233075712 "GET /static/admin/js/core.js HTTP/1.1" 304 0
+INFO 2024-12-27 01:48:44,685 basehttp 9762 6216249344 "GET /static/admin/js/admin/RelatedObjectLookups.js HTTP/1.1" 304 0
+INFO 2024-12-27 01:48:44,685 basehttp 9762 6283554816 "GET /static/admin/js/actions.js HTTP/1.1" 304 0
+INFO 2024-12-27 01:48:44,866 basehttp 9762 6249902080 "GET /static/admin/js/vendor/xregexp/xregexp.js HTTP/1.1" 304 0
+INFO 2024-12-27 01:48:44,869 basehttp 9762 6266728448 "GET /static/admin/js/prepopulate.js HTTP/1.1" 304 0
+INFO 2024-12-27 01:48:44,875 basehttp 9762 6283554816 "GET /static/admin/img/search.svg HTTP/1.1" 304 0
+INFO 2024-12-27 01:48:44,880 basehttp 9762 6283554816 "GET /static/admin/js/theme.js HTTP/1.1" 304 0
+INFO 2024-12-27 01:48:44,884 basehttp 9762 6283554816 "GET /static/admin/js/nav_sidebar.js HTTP/1.1" 304 0
+INFO 2024-12-27 01:48:44,902 basehttp 9762 6283554816 "GET /static/admin/js/filters.js HTTP/1.1" 304 0
+INFO 2024-12-27 01:48:44,907 basehttp 9762 6199422976 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 01:48:44,923 basehttp 9762 6199422976 "GET /static/admin/img/icon-addlink.svg HTTP/1.1" 304 0
+INFO 2024-12-27 01:48:44,924 basehttp 9762 6283554816 "GET /static/admin/img/tooltag-add.svg HTTP/1.1" 304 0
+INFO 2024-12-27 08:02:21,187 basehttp 9762 6199422976 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 200 1497
+INFO 2024-12-27 10:10:51,351 autoreload 9762 8278489152 /Users/liuzhao/Documents/Projects/flybird/config/settings.py changed, reloading.
+INFO 2024-12-27 10:10:52,594 autoreload 14072 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-27 10:16:18,952 autoreload 14072 8278489152 /Users/liuzhao/Documents/Projects/flybird/config/settings.py changed, reloading.
+INFO 2024-12-27 10:16:19,994 autoreload 14185 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-27 10:25:09,202 autoreload 17138 8278489152 Watching for file changes with StatReloader
+WARNING 2024-12-27 10:25:13,310 basehttp 17138 6129184768 "GET / HTTP/1.1" 404 2899
+WARNING 2024-12-27 10:25:13,660 basehttp 17138 6129184768 "GET /favicon.ico HTTP/1.1" 404 2950
+INFO 2024-12-27 10:25:28,449 basehttp 17138 6146011136 "GET /api/v1/users/api-urls/ HTTP/1.1" 200 17145
+INFO 2024-12-27 10:25:28,476 basehttp 17138 6162837504 "GET /static/rest_framework/js/jquery-3.7.1.min.js HTTP/1.1" 304 0
+INFO 2024-12-27 10:25:28,478 basehttp 17138 6146011136 "GET /static/rest_framework/css/bootstrap.min.css HTTP/1.1" 304 0
+INFO 2024-12-27 10:25:28,478 basehttp 17138 6196490240 "GET /static/rest_framework/css/prettify.css HTTP/1.1" 304 0
+INFO 2024-12-27 10:25:28,479 basehttp 17138 6179663872 "GET /static/rest_framework/css/bootstrap-tweaks.css HTTP/1.1" 304 0
+INFO 2024-12-27 10:25:28,480 basehttp 17138 6213316608 "GET /static/rest_framework/js/csrf.js HTTP/1.1" 304 0
+INFO 2024-12-27 10:25:28,480 basehttp 17138 6230142976 "GET /static/rest_framework/js/bootstrap.min.js HTTP/1.1" 304 0
+INFO 2024-12-27 10:25:28,480 basehttp 17138 6162837504 "GET /static/rest_framework/css/default.css HTTP/1.1" 304 0
+INFO 2024-12-27 10:25:28,481 basehttp 17138 6146011136 "GET /static/rest_framework/js/ajax-form.js HTTP/1.1" 304 0
+INFO 2024-12-27 10:25:28,482 basehttp 17138 6179663872 "GET /static/rest_framework/js/default.js HTTP/1.1" 304 0
+INFO 2024-12-27 10:25:28,483 basehttp 17138 6196490240 "GET /static/rest_framework/js/load-ajax-form.js HTTP/1.1" 304 0
+INFO 2024-12-27 10:25:28,485 basehttp 17138 6213316608 "GET /static/rest_framework/js/prettify-min.js HTTP/1.1" 304 0
+INFO 2024-12-27 10:25:28,744 basehttp 17138 6213316608 "GET /static/rest_framework/img/grid.png HTTP/1.1" 304 0
+INFO 2024-12-27 10:25:35,693 basehttp 17138 6129184768 "GET /api/v1/users/api-urls/ HTTP/1.1" 200 17145
+INFO 2024-12-27 10:25:35,801 basehttp 17138 6129184768 "GET /static/rest_framework/css/bootstrap.min.css HTTP/1.1" 200 121457
+INFO 2024-12-27 10:25:35,846 basehttp 17138 6263795712 "GET /static/rest_framework/css/default.css HTTP/1.1" 200 1152
+INFO 2024-12-27 10:25:35,846 basehttp 17138 6246969344 "GET /static/rest_framework/css/bootstrap-tweaks.css HTTP/1.1" 200 3426
+INFO 2024-12-27 10:25:35,846 basehttp 17138 6280622080 "GET /static/rest_framework/css/prettify.css HTTP/1.1" 200 817
+INFO 2024-12-27 10:25:36,073 basehttp 17138 6246969344 "GET /static/rest_framework/img/grid.png HTTP/1.1" 200 1458
+INFO 2024-12-27 10:25:36,087 basehttp 17138 6129184768 "GET /static/rest_framework/js/prettify-min.js HTTP/1.1" 200 13632
+INFO 2024-12-27 10:25:36,088 basehttp 17138 6263795712 "GET /static/rest_framework/js/ajax-form.js HTTP/1.1" 200 3796
+INFO 2024-12-27 10:25:36,089 basehttp 17138 12918534144 "GET /static/rest_framework/js/csrf.js HTTP/1.1" 200 1793
+INFO 2024-12-27 10:25:36,089 basehttp 17138 6280622080 "GET /static/rest_framework/js/jquery-3.7.1.min.js HTTP/1.1" 200 87533
+INFO 2024-12-27 10:25:36,089 basehttp 17138 6297448448 "GET /static/rest_framework/js/default.js HTTP/1.1" 200 1268
+INFO 2024-12-27 10:25:36,090 basehttp 17138 12935360512 "GET /static/rest_framework/js/bootstrap.min.js HTTP/1.1" 200 39680
+INFO 2024-12-27 10:25:36,117 basehttp 17138 12901707776 "GET /static/rest_framework/js/load-ajax-form.js HTTP/1.1" 200 59
+INFO 2024-12-27 10:27:06,448 autoreload 17138 8278489152 /Users/liuzhao/Documents/Projects/flybird/config/settings.py changed, reloading.
+INFO 2024-12-27 10:27:06,964 autoreload 17201 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-27 10:27:54,369 autoreload 17201 8278489152 /Users/liuzhao/Documents/Projects/flybird/config/settings.py changed, reloading.
+INFO 2024-12-27 10:27:54,924 autoreload 17266 8278489152 Watching for file changes with StatReloader
+ERROR 2024-12-27 10:29:22,007 basehttp 17266 6123106304 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 44
+INFO 2024-12-27 10:29:29,965 basehttp 17266 6123106304 "GET /api/v1/membership/tiers/ HTTP/1.1" 200 1007
+INFO 2024-12-27 10:30:27,050 autoreload 17266 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/views.py changed, reloading.
+INFO 2024-12-27 10:30:27,542 autoreload 18927 8278489152 Watching for file changes with StatReloader
+ERROR 2024-12-27 10:30:37,075 basehttp 18927 6164295680 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 500 82
+INFO 2024-12-27 10:31:33,579 autoreload 18927 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/views.py changed, reloading.
+INFO 2024-12-27 10:31:34,081 autoreload 18971 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-27 10:31:37,595 basehttp 18971 6171586560 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 200 1058
+INFO 2024-12-27 10:34:48,914 basehttp 18971 6188412928 "GET /admin/membership/membershiporder/ HTTP/1.1" 200 44224
+INFO 2024-12-27 10:34:48,931 basehttp 18971 6205239296 "GET /static/admin/css/base.css HTTP/1.1" 304 0
+INFO 2024-12-27 10:34:48,932 basehttp 18971 6222065664 "GET /static/admin/css/dark_mode.css HTTP/1.1" 304 0
+INFO 2024-12-27 10:34:48,934 basehttp 18971 6205239296 "GET /static/admin/js/vendor/jquery/jquery.js HTTP/1.1" 304 0
+INFO 2024-12-27 10:34:48,936 basehttp 18971 6238892032 "GET /static/admin/css/nav_sidebar.css HTTP/1.1" 304 0
+INFO 2024-12-27 10:34:48,937 basehttp 18971 6222065664 "GET /static/admin/js/jquery.init.js HTTP/1.1" 304 0
+INFO 2024-12-27 10:34:48,938 basehttp 18971 6255718400 "GET /static/admin/css/changelists.css HTTP/1.1" 304 0
+INFO 2024-12-27 10:34:48,943 basehttp 18971 6272544768 "GET /static/admin/css/responsive.css HTTP/1.1" 304 0
+INFO 2024-12-27 10:34:48,943 basehttp 18971 6205239296 "GET /static/admin/js/core.js HTTP/1.1" 304 0
+INFO 2024-12-27 10:34:48,945 basehttp 18971 6222065664 "GET /static/admin/js/urlify.js HTTP/1.1" 304 0
+INFO 2024-12-27 10:34:48,946 basehttp 18971 6238892032 "GET /static/admin/js/admin/RelatedObjectLookups.js HTTP/1.1" 304 0
+INFO 2024-12-27 10:34:48,947 basehttp 18971 6255718400 "GET /static/admin/js/actions.js HTTP/1.1" 304 0
+INFO 2024-12-27 10:34:48,948 basehttp 18971 6272544768 "GET /static/admin/js/prepopulate.js HTTP/1.1" 304 0
+INFO 2024-12-27 10:34:48,950 basehttp 18971 6205239296 "GET /static/admin/js/vendor/xregexp/xregexp.js HTTP/1.1" 304 0
+INFO 2024-12-27 10:34:48,950 basehttp 18971 6188412928 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 10:34:48,952 basehttp 18971 6238892032 "GET /static/admin/img/search.svg HTTP/1.1" 304 0
+INFO 2024-12-27 10:34:49,195 basehttp 18971 6238892032 "GET /static/admin/js/theme.js HTTP/1.1" 304 0
+INFO 2024-12-27 10:34:49,195 basehttp 18971 6188412928 "GET /static/admin/js/nav_sidebar.js HTTP/1.1" 304 0
+INFO 2024-12-27 10:34:49,204 basehttp 18971 6238892032 "GET /static/admin/js/filters.js HTTP/1.1" 304 0
+INFO 2024-12-27 10:34:49,206 basehttp 18971 6188412928 "GET /static/admin/img/tooltag-add.svg HTTP/1.1" 304 0
+INFO 2024-12-27 10:34:49,206 basehttp 18971 6238892032 "GET /static/admin/img/icon-addlink.svg HTTP/1.1" 304 0
+INFO 2024-12-27 10:34:56,851 basehttp 18971 6188412928 "GET /admin/membership/membershiporder/52/change/ HTTP/1.1" 200 22021
+INFO 2024-12-27 10:34:56,862 basehttp 18971 6188412928 "GET /static/admin/css/forms.css HTTP/1.1" 304 0
+INFO 2024-12-27 10:34:56,872 basehttp 18971 6238892032 "GET /static/admin/js/calendar.js HTTP/1.1" 304 0
+INFO 2024-12-27 10:34:56,875 basehttp 18971 6272544768 "GET /static/admin/js/admin/DateTimeShortcuts.js HTTP/1.1" 304 0
+INFO 2024-12-27 10:34:56,875 basehttp 18971 6205239296 "GET /static/admin/js/prepopulate_init.js HTTP/1.1" 304 0
+INFO 2024-12-27 10:34:56,880 basehttp 18971 6188412928 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 10:34:56,974 basehttp 18971 6188412928 "GET /static/admin/css/widgets.css HTTP/1.1" 304 0
+INFO 2024-12-27 10:34:56,979 basehttp 18971 6188412928 "GET /static/admin/js/change_form.js HTTP/1.1" 304 0
+INFO 2024-12-27 10:34:57,088 basehttp 18971 6188412928 "GET /static/admin/img/icon-calendar.svg HTTP/1.1" 304 0
+INFO 2024-12-27 10:34:57,089 basehttp 18971 6205239296 "GET /static/admin/img/icon-clock.svg HTTP/1.1" 304 0
+INFO 2024-12-27 10:35:33,137 basehttp 18971 6205239296 "GET /admin/membership/usermembership/ HTTP/1.1" 200 19999
+INFO 2024-12-27 10:35:33,156 basehttp 18971 6205239296 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 10:35:49,303 basehttp 18971 6205239296 "GET /admin/membership/usermembership/1/change/ HTTP/1.1" 200 18548
+INFO 2024-12-27 10:35:49,325 basehttp 18971 6205239296 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 10:35:52,950 basehttp 18971 6205239296 "GET /admin/membership/usermembership/ HTTP/1.1" 200 19999
+INFO 2024-12-27 10:36:40,393 autoreload 18971 8278489152 /Users/liuzhao/Documents/Projects/flybird/config/settings.py changed, reloading.
+INFO 2024-12-27 10:36:40,994 autoreload 19110 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-27 10:37:01,327 basehttp 19110 6137376768 "GET /api/v1/membership/tiers/ HTTP/1.1" 200 1007
+INFO 2024-12-27 10:37:25,855 basehttp 19110 6137376768 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 200 1062
+INFO 2024-12-27 10:38:20,119 basehttp 19110 6154203136 "GET /admin/membership/usermembership/ HTTP/1.1" 200 19999
+INFO 2024-12-27 10:38:20,146 basehttp 19110 6154203136 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 10:38:26,373 basehttp 19110 6154203136 "GET /admin/membership/userpoint/ HTTP/1.1" 200 18263
+INFO 2024-12-27 10:38:26,398 basehttp 19110 6154203136 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 10:38:27,520 basehttp 19110 6154203136 "GET /admin/membership/membershiptier/ HTTP/1.1" 200 20770
+INFO 2024-12-27 10:38:27,548 basehttp 19110 6154203136 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 10:38:27,664 basehttp 19110 6154203136 "GET /static/admin/img/sorting-icons.svg HTTP/1.1" 304 0
+INFO 2024-12-27 10:38:28,701 basehttp 19110 6154203136 "GET /admin/membership/membershiporder/ HTTP/1.1" 200 44714
+INFO 2024-12-27 10:38:28,726 basehttp 19110 6154203136 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 10:38:35,685 basehttp 19110 6154203136 "GET /admin/membership/membershiporder/53/change/ HTTP/1.1" 200 22021
+INFO 2024-12-27 10:38:35,711 basehttp 19110 6154203136 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+INFO 2024-12-27 10:41:18,646 autoreload 19110 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/views.py changed, reloading.
+INFO 2024-12-27 10:41:19,217 autoreload 19246 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-27 10:41:27,946 basehttp 19246 6124908544 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 200 1068
+INFO 2024-12-27 10:41:33,415 basehttp 19246 6141734912 "GET /admin/membership/membershiporder/ HTTP/1.1" 200 45204
+INFO 2024-12-27 10:41:33,442 basehttp 19246 6141734912 "GET /admin/jsi18n/ HTTP/1.1" 200 8560
+WARNING 2024-12-27 10:43:46,073 log 19246 6158561280 Not Found: /
+WARNING 2024-12-27 10:43:46,073 basehttp 19246 6158561280 "GET / HTTP/1.1" 404 2899
+WARNING 2024-12-27 10:44:06,704 log 19246 6175387648 Not Found: /
+WARNING 2024-12-27 10:44:06,705 basehttp 19246 6175387648 "GET / HTTP/1.1" 404 2899
+INFO 2024-12-27 10:44:50,509 basehttp 19246 6158561280 "GET /api/v1/membership/notify/alipay/ HTTP/1.1" 200 4
+INFO 2024-12-27 10:45:10,611 autoreload 19415 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-27 10:45:15,274 basehttp 19415 6134214656 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 200 1078
+INFO 2024-12-27 10:47:08,389 basehttp 19415 6151041024 "GET /api/v1/membership/notify/alipay/ HTTP/1.1" 200 4
+INFO 2024-12-27 10:48:10,803 autoreload 19415 8278489152 /Users/liuzhao/Documents/Projects/flybird/config/settings.py changed, reloading.
+INFO 2024-12-27 10:48:11,303 autoreload 19549 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-27 10:49:14,654 autoreload 19549 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/views.py changed, reloading.
+INFO 2024-12-27 10:49:15,197 autoreload 19614 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-27 10:50:17,238 basehttp 19614 6199996416 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 200 1058
+INFO 2024-12-27 10:54:27,634 autoreload 19614 8278489152 /Users/liuzhao/Documents/Projects/flybird/config/settings.py changed, reloading.
+INFO 2024-12-27 10:54:28,178 autoreload 19887 8278489152 Watching for file changes with StatReloader
+INFO 2024-12-27 10:55:00,181 basehttp 19887 6199750656 "POST /api/v1/membership/membership/purchase/ HTTP/1.1" 200 1066
+INFO 2024-12-27 10:59:21,809 autoreload 19887 8278489152 /Users/liuzhao/Documents/Projects/flybird/membership/urls.py changed, reloading.
