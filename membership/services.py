@@ -138,16 +138,6 @@ class PaymentService:
         try:
             client = cls.create_alipay_client()
             
-            # 记录当前使用的回调地址
-            cls.logger.info("\n" + "="*50)
-            cls.logger.info("创建支付宝支付")
-            cls.logger.info(f"订单号: {order.order_no}")
-            cls.logger.info(f"订单金额: {float(order.amount)}")
-            cls.logger.info(f"商品名称: 会员订阅-{order.tier.name}")
-            cls.logger.info(f"NGROK_URL: {settings.NGROK_URL}")
-            cls.logger.info(f"notify_url: {settings.PAYMENT_CONFIG['alipay']['notify_url']}")
-            cls.logger.info(f"return_url: {settings.PAYMENT_CONFIG['alipay']['return_url']}")
-            
             # 创建支付订单
             order_string = client.api_alipay_trade_page_pay(
                 out_trade_no=order.order_no,
@@ -163,9 +153,6 @@ class PaymentService:
             else:
                 pay_url = f"https://openapi.alipay.com/gateway.do?{order_string}"
                 
-            cls.logger.info(f"生成支付链接: {pay_url}")
-            cls.logger.info("="*50 + "\n")
-            
             return pay_url
             
         except Exception as e:

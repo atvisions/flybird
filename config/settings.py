@@ -17,12 +17,10 @@ WSGI_APPLICATION = 'config.wsgi.application'
 BASE_DOMAIN = os.getenv('BASE_DOMAIN', 'popo.work')
 BACKEND_DOMAIN = os.getenv('BACKEND_DOMAIN', 'www.popo.work:8000')
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://popo.work')
-NGROK_URL = os.getenv('NGROK_URL', 'https://f91a-205-198-122-83.ngrok-free.app')
 
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    'spaniel-square-perfectly.ngrok-free.app',
 ]
 
 # ----------- 3. 应用配置 -----------
@@ -189,7 +187,6 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
-    "https://spaniel-square-perfectly.ngrok-free.app",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -250,6 +247,11 @@ LOGGING = {
         },
     },
     'loggers': {
+        'users': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
         'membership': {
             'handlers': ['console'],
             'level': 'DEBUG',
@@ -301,8 +303,8 @@ PAYMENT_CONFIG = {
         'app_id': '2021000142698861',
         'private_key_path': BASE_DIR / 'keys/alipay/app_private_key.pem',
         'public_key_path': BASE_DIR / 'keys/alipay/alipay_public_key.pem',
-        'notify_url': f"http://localhost:8000/api/v1/membership/notify/alipay/",
-        'return_url': f"http://localhost:8000/api/v1/membership/notify/alipay/return/",
+        'notify_url': f"https://{BACKEND_DOMAIN}/api/v1/membership/notify/alipay/",
+        'return_url': f"https://{BACKEND_DOMAIN}/api/v1/membership/notify/alipay/return/",
         'debug': True,
         'sign_type': 'RSA2',
         'charset': 'utf-8',
@@ -310,7 +312,7 @@ PAYMENT_CONFIG = {
     }
 }
 
-# 支付宝配置（简化访问）
+# 支付宝配置（简化问）
 ALIPAY_APP_ID = PAYMENT_CONFIG['alipay']['app_id']
 ALIPAY_NOTIFY_URL = PAYMENT_CONFIG['alipay']['notify_url']
 ALIPAY_RETURN_URL = PAYMENT_CONFIG['alipay']['return_url']
@@ -346,7 +348,7 @@ CELERY_BEAT_SCHEDULE = {
 }
 
 # ----------- 16. 服务配置 -----------
-# 短��服务配置
+# 短信服务配置
 SMS_CONFIG = {
     'PROVIDER': os.getenv('SMS_PROVIDER', 'aliyun'),
     'VIRTUAL_SMS': os.getenv('VIRTUAL_SMS', 'True').lower() == 'true',
@@ -359,7 +361,6 @@ CSRF_TRUSTED_ORIGINS = [
     f"http://{BASE_DOMAIN}",
     f"http://www.{BASE_DOMAIN}",
     "http://localhost:8080",
-    "https://spaniel-square-perfectly.ngrok-free.app",
 ]
 
 # ----------- 17. 其他配置 -----------
@@ -476,6 +477,11 @@ LOGGING = {
         },
     },
     'loggers': {
+        'users': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
         'membership': {
             'handlers': ['console'],
             'level': 'DEBUG',
@@ -493,3 +499,24 @@ LOGGING = {
 import os
 if not os.path.exists(BASE_DIR / 'logs'):
     os.makedirs(BASE_DIR / 'logs')
+
+# ----------- 邮件配置 -----------
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.qiye.aliyun.com'  # 阿里企业邮箱服务器
+EMAIL_PORT = 465  # 使用SSL端口
+EMAIL_USE_SSL = True  # 使用SSL
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')  # service@popo.work
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')  # 邮箱密码
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')  # service@popo.work
+
+# 添加邮件超时设置
+EMAIL_TIMEOUT = 5  # 5秒超时
+
+# API基础URL(开发环境)
+API_BASE_URL = os.getenv('API_BASE_URL', 'http://127.0.0.1:8000')
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:8000')
+
+# 会员相关URL
+MEMBERSHIP_URLS = {
+    'renewal': f"{FRONTEND_URL}/membership/renewal",  # 会员续费页面
+}

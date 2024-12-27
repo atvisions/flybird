@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>邮箱验证码</title>
+    <style>
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .code {
+            background-color: #f5f5f5;
+            padding: 15px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 5px;
+            margin: 20px 0;
+            color: #333;
+        }
+        .footer {
+            color: #666;
+            font-size: 12px;
+            margin-top: 30px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="data:image/png;base64,{{ logo_base64 }}" alt="飞鸟简历" style="width: 100px; height: 100px; margin-bottom: 20px;">
+            <h2>飞鸟简历</h2>
+        </div>
+        <p>您好！</p>
+        <p>您正在进行邮箱验证，验证码为：</p>
+        <div class="code">{{ code }}</div>
+        <p>验证码有效期为5分钟，请尽快完成验证。</p>
+        <div class="footer">
+            <p>此邮件由系统自动发送，请勿回复。</p>
+            <p>如非本人操作，请忽略此邮件。</p>
+            <p>© {% now "Y" %} FlyBirdX.Com. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html> 
