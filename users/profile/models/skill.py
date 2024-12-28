@@ -13,6 +13,7 @@ class Skill(models.Model):
     description = models.TextField(blank=True, verbose_name='技能描述')
     created_at = models.DateTimeField(default=timezone.now, verbose_name='创建时间')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='更新时间')
+    projects = models.TextField('相关项目', blank=True)
 
     class Meta:
         verbose_name = '技能特长'

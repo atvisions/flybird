@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ..models.work import WorkExperience
+from ..models import WorkExperience
 
 class WorkExperienceSerializer(serializers.ModelSerializer):
     class Meta:
@@ -8,10 +8,14 @@ class WorkExperienceSerializer(serializers.ModelSerializer):
             'id',
             'company',
             'position',
+            'department',
             'start_date',
             'end_date',
             'is_current',
-            'description',
+            'company_description',
+            'responsibilities',
+            'achievements',
+            'technologies',
             'created_at',
             'updated_at'
         ]

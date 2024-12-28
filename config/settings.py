@@ -110,14 +110,7 @@ CACHES = {
         "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            "CONNECTION_POOL_KWARGS": {"max_connections": 100},
-            "PASSWORD": REDIS_PASSWORD if REDIS_PASSWORD else None,
-            "SOCKET_CONNECT_TIMEOUT": 5,
-            "SOCKET_TIMEOUT": 5,
-            "RETRY_ON_TIMEOUT": True,
-            "COMPRESSOR": "django_redis.compressors.zlib.ZlibCompressor",
-        },
-        "KEY_PREFIX": "popo",
+        }
     }
 }
 
@@ -429,7 +422,7 @@ SIMPLEUI_CONFIG = {
             ]
         },
         {
-            'name': '问答管理',
+            'name': '��答管理',
             'icon': 'fas fa-question-circle',
             'models': [
                 {
@@ -544,3 +537,8 @@ PAYMENT_CONFIG = {
         'return_url': f"{os.getenv('NGROK_URL', 'http://127.0.0.1:8000')}/api/v1/membership/alipay/return/"
     }
 }
+
+
+# 百度文心一言配置
+ERNIE_API_KEY = os.getenv('ERNIE_API_KEY')
+ERNIE_SECRET_KEY = os.getenv('ERNIE_SECRET_KEY')

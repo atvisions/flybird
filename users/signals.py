@@ -3,7 +3,7 @@ from django.dispatch import receiver
 from users.models import User
 from users.profile.models import BasicInfo, WorkExperience, Education, Project, Skill, Certificate, Language, Portfolio
 from users.profile.models.layout import ProfileLayout
-from users.profile.models.score import ProfileScore
+from users.models import ProfileScore
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
@@ -36,68 +36,47 @@ def create_user_profile(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=BasicInfo)
 def update_basic_dimension_score(sender, instance, **kwargs):
-    """当基本信息更新时，重新计算基础维度分数"""
+    """更新基础维度分数"""
     print("\n开始计算基础维度分数...")
     print(f"用户: {instance.user.phone}")
     print(f"姓名: {instance.name}")
     print(f"性别: {instance.gender}")
-    print(f"生日: {instance.birthday}")
-    print(f"地点: {instance.location}")
-    print(f"邮箱: {instance.email}")
-    print(f"职位: {instance.job_title}")
-    print(f"工作年限: {instance.years_of_experience}")
-    print(f"个人简介长度: {len(instance.personal_summary) if instance.personal_summary else 0}")
+    print(f"生日: {instance.birth_date}")
+    print(f"头像: {instance.avatar}")
+    print(f"个人简介: {instance.personal_summary}")
     
-    # 确保 profile_score 存在
-    score, created = ProfileScore.objects.get_or_create(user=instance.user)
+    # 计算基础维度分数
+    score = 0
     
-    points = 0
-    
-    # 基础信息 (总分70分)
+    # 头像 20分
     if instance.avatar:
-        points += 20  # 头像很重要，保持20分
-        print(f"头像: +20分")
-    if instance.name:
-        points += 10  # 姓名也很重要
-        print(f"姓名: +10分")
-    if instance.gender:
-        points += 5
-        print(f"性别: +5分")
-    if instance.birthday:
-        points += 5
-        print(f"生日: +5分")
-    if instance.location:
-        points += 5
-        print(f"所在地: +5分")
-    if instance.email:
-        points += 5
-        print(f"邮箱: +5分")
-    if instance.job_title:
-        points += 10  # 职位信息提高到10分
-        print(f"职位: +10分")
-    if instance.years_of_experience is not None:
-        points += 5
-        print(f"工作年限: +5分")
+        score += 20
+        
+    # 个人简介 20分
     if instance.personal_summary:
-        points += 15  # 个人简介提高到15分
-        print(f"个人简介: +15分")
+        if len(instance.personal_summary) >= 100:
+            score += 20
+        else:
+            score += 10
+            
+    # 其他基本信息 30分
+    if instance.name:
+        score += 10
+    if instance.gender:
+        score += 5
+    if instance.birth_date:
+        score += 5
+    if instance.phone:
+        score += 5
+    if instance.email:
+        score += 5
+        
+    # 更新分数
+    profile_score, _ = ProfileScore.objects.get_or_create(user=instance.user)
+    profile_score.basic_dimension = score
+    profile_score.save()
     
-    # 质量加分 (最高30分)
-    if instance.personal_summary and len(instance.personal_summary) >= 100:
-        points += 10  # 详细的个人简介
-        print(f"详细简介: +10分")
-    if instance.avatar and hasattr(instance.avatar, 'size') and instance.avatar.size >= 100 * 1024:  # 高清头像
-        points += 10
-        print(f"高清头像: +10分")
-    if instance.years_of_experience and instance.years_of_experience >= 5:
-        points += 10  # 资深工作经验
-        print(f"资深经验: +10分")
-    
-    print(f"基础维度总得分: {points}")
-    
-    score.basic_dimension = points
-    score.save()
-    print(f"基础维度分数已保存: {score.basic_dimension}")
+    print(f"基础维度分数: {score}")
 
 @receiver(post_save, sender=WorkExperience)
 @receiver(post_save, sender=Education)

@@ -16,20 +16,20 @@ class BasicInfo(models.Model):
         on_delete=models.CASCADE,
         related_name='basic_info'
     )
-    name = models.CharField(_('姓名'), max_length=50, blank=True)
-    avatar = models.ImageField(_('头像'), upload_to='avatars/', null=True, blank=True)
-    gender = models.CharField(_('性别'), max_length=10, choices=GENDER_CHOICES, default='other')
-    birthday = models.DateField(_('生日'), null=True, blank=True)
-    location = models.CharField(_('所在地'), max_length=100, blank=True)
-    email = models.EmailField(_('邮箱'), max_length=254, blank=True)
-    job_title = models.CharField(_('职位'), max_length=100, null=True, blank=True)
-    years_of_experience = models.IntegerField(_('工作年限'), null=True, blank=True)
-    personal_summary = models.TextField(_('个人简介'), blank=True)
+    name = models.CharField('姓名', max_length=50, blank=True)
+    avatar = models.ImageField('头像', upload_to='avatars/', blank=True)
+    gender = models.CharField('性别', max_length=10, choices=GENDER_CHOICES, blank=True)
+    birth_date = models.DateField('出生日期', null=True, blank=True)
+    phone = models.CharField('手机号', max_length=11, blank=True)
+    email = models.EmailField('邮箱', blank=True)
+    location = models.CharField('所在地', max_length=100, blank=True)
+    personal_summary = models.TextField('个人简介', blank=True)
+    created_at = models.DateTimeField('创建时间', auto_now_add=True)
+    updated_at = models.DateTimeField('更新时间', auto_now=True)
 
     class Meta:
-        verbose_name = _('基本信息')
-        verbose_name_plural = _('基本信息')
-        db_table = 'user_basic_info'
+        verbose_name = '基本信息'
+        verbose_name_plural = verbose_name
 
     def __str__(self):
         return f"{self.user.phone} - {self.name}"

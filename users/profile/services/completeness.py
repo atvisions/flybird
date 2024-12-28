@@ -1,5 +1,9 @@
 from typing import Dict, List
-from users.profile.models import WorkExperience, Education, Skill, Language, Certificate, Portfolio, ProfileScore, Project
+from users.profile.models import WorkExperience, Education, Skill, Language, Certificate, Portfolio
+from users.models import ProfileScore  # 只从 users.models 导入
+import logging
+
+logger = logging.getLogger(__name__)
 
 class CompletenessCalculator:
     """档案完整度评分服务"""
@@ -18,25 +22,6 @@ class CompletenessCalculator:
     def get_completeness(self) -> Dict:
         """获取档案完整度评分"""
         total_score = self.score.total_score
-        
-        # 构建内容质量数据
-        content_quality_data = {
-            'score': float(self.score.content_quality),
-            'weight': 0.0,  # 预留权重
-            'weighted_score': 0.0,
-            'status': self.get_content_quality_status(),
-            'can_optimize': True,
-            'optimize_fields': self.get_optimize_fields(),  # 添加可优化的字段列表
-            'optimized_fields': self.score.optimized_fields or []  # 添加已优化字段列表
-        }
-        
-        # 获取可优化字段，但排除已优化的
-        optimize_fields = self.get_optimize_fields()
-        if self.score.optimized_fields:
-            optimize_fields = [
-                field for field in optimize_fields 
-                if field['field'] not in self.score.optimized_fields
-            ]
         
         return {
             'code': 200,
@@ -63,8 +48,7 @@ class CompletenessCalculator:
                         'score': float(self.score.achievement_dimension),
                         'weight': 0.1,
                         'weighted_score': round(self.score.achievement_dimension * 0.1, 1)
-                    },
-                    'content_quality': content_quality_data
+                    }
                 },
                 'level': self.get_user_level(total_score),
                 'basic_dimension': {
@@ -87,8 +71,12 @@ class CompletenessCalculator:
                     'weight': 0.1,
                     'weighted_score': round(self.score.achievement_dimension * 0.1, 1)
                 },
-                'content_quality': content_quality_data,
-                'improvement_suggestions': self.get_improvement_suggestions(optimize_fields)
+                'content_professionalism': {
+                    'score': round(total_score, 1),
+                    'weight': 0.0,
+                    'weighted_score': 0.0
+                },
+                'improvement_suggestions': self.get_improvement_suggestions()
             }
         }
         
@@ -99,55 +87,7 @@ class CompletenessCalculator:
                 return level
         return 'improving'
         
-    def get_content_quality_status(self) -> str:
-        """获取内容质量状态"""
-        if self.score.content_quality >= 8:
-            return 'excellent'
-        elif self.score.content_quality >= 6:
-            return 'good'
-        elif self.score.content_quality > 0:
-            return 'improving'
-        return 'pending'
-        
-    def get_optimize_fields(self) -> List[Dict]:
-        """获取可优化的字段列表"""
-        fields = []
-        basic_info = self.user.basic_info
-        
-        # 检查个人简介
-        if basic_info.personal_summary:
-            fields.append({
-                'field': 'personal_summary',
-                'name': '个人简介',
-                'current_length': len(basic_info.personal_summary),
-                'can_optimize': True
-            })
-        
-        # 检查工作经历描述
-        work_experiences = WorkExperience.objects.filter(user=self.user)
-        for work in work_experiences:
-            if work.description:
-                fields.append({
-                    'field': f'work_experience_{work.id}',
-                    'name': f'工作经历 - {work.company}',
-                    'current_length': len(work.description),
-                    'can_optimize': True
-                })
-        
-        # 检查项目经历描述
-        projects = Project.objects.filter(user=self.user)
-        for project in projects:
-            if project.description or project.achievement:
-                fields.append({
-                    'field': f'project_{project.id}',
-                    'name': f'项目经历 - {project.name}',
-                    'current_length': len(project.description or '') + len(project.achievement or ''),
-                    'can_optimize': True
-                })
-        
-        return fields
-        
-    def get_improvement_suggestions(self, optimize_fields=None) -> List[Dict]:
+    def get_improvement_suggestions(self) -> List[Dict]:
         """获取优化建议"""
         suggestions = []
         basic_info = self.user.basic_info
@@ -158,7 +98,7 @@ class CompletenessCalculator:
                 'type': 'basic_info',
                 'field': 'avatar',
                 'importance': 'high',
-                'message': '添加头像可以让你的档案更加专业',
+                'message': '添加头像可以让你的档案加专业',
                 'score_impact': 20
             })
         
@@ -226,7 +166,7 @@ class CompletenessCalculator:
                 'type': 'certificate',
                 'field': 'certificate',
                 'importance': 'medium',
-                'message': '添加专业证书可以证明你的能力水平',
+                'message': '添加专业证书以证明你的能力水平',
                 'score_impact': 25
             })
         
@@ -239,22 +179,143 @@ class CompletenessCalculator:
                 'score_impact': 20
             })
         
-        # 内容质量建议
-        if optimize_fields:  # 只有还有未优化的字段时才添加建议
-            suggestions.append({
-                'type': 'content',
-                'field': 'content_quality',
-                'importance': 'medium',
-                'message': '使用AI助手优化您的文字表达，提升专业度',
-                'score_impact': 10,
-                'can_optimize': True,
-                'optimize_fields': optimize_fields,
-                'optimize_tips': [
-                    '使用更专业的词汇和表达方式',
-                    '突出关键成就和数据',
-                    '保持逻辑性和连贯性',
-                    '适当增加行业术语'
-                ]
-            })
-        
         return suggestions 
+        
+    def get_content_quality_status(self) -> Dict:
+        """获取内容质量状态"""
+        try:
+            # 计算各维度得分
+            basic_score = self.calculate_basic_score()
+            experience_score = self.calculate_experience_score()
+            capability_score = self.calculate_capability_score()
+            achievement_score = self.calculate_achievement_score()
+            
+            # 计算总分
+            total_score = (
+                basic_score * 0.4 +
+                experience_score * 0.3 +
+                capability_score * 0.2 +
+                achievement_score * 0.1
+            )
+            
+            # 更新数据库中的分数
+            self.score.basic_dimension = basic_score
+            self.score.experience_dimension = experience_score
+            self.score.ability_dimension = capability_score
+            self.score.achievement_dimension = achievement_score
+            self.score.total_score = total_score
+            self.score.save()
+            
+            return {
+                'code': 200,
+                'message': '获取成功',
+                'data': {
+                    'total_score': round(total_score, 1),
+                    'dimensions': {
+                        'basic_info': {
+                            'score': float(basic_score),
+                            'weight': 0.4,
+                            'weighted_score': round(basic_score * 0.4, 1)
+                        },
+                        'experience': {
+                            'score': float(experience_score),
+                            'weight': 0.3,
+                            'weighted_score': round(experience_score * 0.3, 1)
+                        },
+                        'capability': {
+                            'score': float(capability_score),
+                            'weight': 0.2,
+                            'weighted_score': round(capability_score * 0.2, 1)
+                        },
+                        'achievement': {
+                            'score': float(achievement_score),
+                            'weight': 0.1,
+                            'weighted_score': round(achievement_score * 0.1, 1)
+                        }
+                    },
+                    'suggestions': self.get_improvement_suggestions()
+                }
+            }
+        except Exception as e:
+            logger.error(f"获取内容质量状态失败: {str(e)}")
+            return {
+                'code': 500,
+                'message': str(e),
+                'data': None
+            }
+
+    def calculate_basic_score(self) -> float:
+        """计算基础维度得分"""
+        try:
+            score = 0
+            basic_info = self.user.basic_info
+            
+            # 头像 20分
+            if basic_info.avatar:
+                score += 20
+            
+            # 个人简介 20分
+            if basic_info.personal_summary:
+                if len(basic_info.personal_summary) >= 100:
+                    score += 20
+                else:
+                    score += 10
+            
+            # 其他基本信息 30分
+            if basic_info.name:
+                score += 10
+            if basic_info.gender:
+                score += 5
+            if hasattr(basic_info, 'birth_date') and basic_info.birth_date:
+                score += 5
+            if basic_info.phone:
+                score += 5
+            if basic_info.email:
+                score += 5
+            
+            return score
+        except Exception as e:
+            logger.error(f"计算基础维度得分失败: {str(e)}")
+            return 0.0
+
+    def calculate_experience_score(self) -> float:
+        """计算经验维度得分"""
+        score = 0
+        
+        # 工作经历 60分
+        work_count = WorkExperience.objects.filter(user=self.user).count()
+        score += min(work_count * 20, 60)
+        
+        # 教育经历 40分
+        education_count = Education.objects.filter(user=self.user).count()
+        score += min(education_count * 20, 40)
+        
+        return score
+
+    def calculate_capability_score(self) -> float:
+        """计算能力维度得分"""
+        score = 0
+        
+        # 技能特长 60分
+        skill_count = Skill.objects.filter(user=self.user).count()
+        score += min(skill_count * 12, 60)
+        
+        # 语言能力 40分
+        language_count = Language.objects.filter(user=self.user).count()
+        score += min(language_count * 20, 40)
+        
+        return score
+
+    def calculate_achievement_score(self) -> float:
+        """计算成就维度得分"""
+        score = 0
+        
+        # 证书 50分
+        cert_count = Certificate.objects.filter(user=self.user).count()
+        score += min(cert_count * 25, 50)
+        
+        # 作品集 50分
+        port_count = Portfolio.objects.filter(user=self.user).count()
+        score += min(port_count * 25, 50)
+        
+        return score 

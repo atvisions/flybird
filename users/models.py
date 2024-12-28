@@ -66,4 +66,21 @@ class User(AbstractUser):
             return super().save(*args, **kwargs)
         return super().save(*args, **kwargs)
 
+class ProfileScore(models.Model):
+    """档案评分"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile_score')
+    total_score = models.DecimalField('总分', max_digits=5, decimal_places=2, default=0)
+    basic_dimension = models.DecimalField('基础维度', max_digits=5, decimal_places=2, default=0)
+    experience_dimension = models.DecimalField('经验维度', max_digits=5, decimal_places=2, default=0)
+    ability_dimension = models.DecimalField('能力维度', max_digits=5, decimal_places=2, default=0)
+    achievement_dimension = models.DecimalField('成就维度', max_digits=5, decimal_places=2, default=0)
+    updated_at = models.DateTimeField('更新时间', auto_now=True)
+
+    class Meta:
+        verbose_name = '档案评分'
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return f"{self.user.username} - {self.total_score}分"
+
 # ... 继续添加其他模型 ... 

@@ -38,10 +38,16 @@ class CustomUserAdmin(UserAdmin):
 
 @admin.register(BasicInfo)
 class BasicInfoAdmin(admin.ModelAdmin):
-    list_display = ('user', 'name', 'gender', 'job_title', 'email')
-    list_filter = ('gender',)
-    search_fields = ('name', 'job_title', 'email')
-    raw_id_fields = ('user',)
+    list_display = [
+        'user', 
+        'name', 
+        'gender',
+        'email',
+        'created_at'
+    ]
+    list_filter = ['gender', 'created_at']
+    search_fields = ['name', 'email', 'user__phone']
+    raw_id_fields = ['user']
 
 @admin.register(JobIntention)
 class JobIntentionAdmin(admin.ModelAdmin):

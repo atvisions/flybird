@@ -13,7 +13,6 @@ from .language import Language
 from .portfolio import Portfolio
 from .social import SocialLink
 from .layout import ProfileLayout
-from .score import ProfileScore
 
 __all__ = [
     'BasicInfo',
@@ -26,6 +25,5 @@ __all__ = [
     'Language',
     'Portfolio',
     'SocialLink',
-    'ProfileLayout',
-    'ProfileScore'
+    'ProfileLayout'
 ]

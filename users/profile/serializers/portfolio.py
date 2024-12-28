@@ -1,17 +1,21 @@
 from rest_framework import serializers
-from ..models.portfolio import Portfolio
+from ..models import Portfolio
 
 class PortfolioSerializer(serializers.ModelSerializer):
+    type_display = serializers.CharField(source='get_type_display', read_only=True)
+    
     class Meta:
         model = Portfolio
-        exclude = ['user']
-        read_only_fields = ['created_at', 'updated_at']
-        
-    def to_representation(self, instance):
-        ret = super().to_representation(instance)
-        ret['type_display'] = instance.get_type_display()
-        if instance.cover:
-            ret['cover_url'] = instance.cover.url
-        if instance.attachment:
-            ret['attachment_url'] = instance.attachment.url
-        return ret 
+        fields = [
+            'id',
+            'title',
+            'type',
+            'type_display',
+            'description',
+            'url',
+            'image',
+            'highlights',
+            'created_at',
+            'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at'] 
