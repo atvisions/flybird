@@ -61,31 +61,72 @@ class MembershipService:
 
 class PaymentService:
     """支付服务"""
-    logger = logging.getLogger('membership')
     
-    @classmethod
-    def create_alipay_client(cls):
-        """创建支付宝客户端"""
+    def __init__(self):
+        self.alipay = self._init_alipay()
+    
+    def _init_alipay(self):
+        """初始化支付宝客户端"""
         try:
             # 读取密钥文件
-            with open(settings.PAYMENT_CONFIG['alipay']['private_key_path']) as f:
+            with open(settings.ALIPAY_CONFIG['PRIVATE_KEY_PATH']) as f:
                 app_private_key_string = f.read()
-            with open(settings.PAYMENT_CONFIG['alipay']['public_key_path']) as f:
+            
+            with open(settings.ALIPAY_CONFIG['PUBLIC_KEY_PATH']) as f:
                 alipay_public_key_string = f.read()
-
+            
+            logger.info("成功读取支付宝密钥文件")
+            
             # 创建支付宝客户端
-            client = AliPay(
-                appid=settings.PAYMENT_CONFIG['alipay']['app_id'],
-                app_notify_url=settings.PAYMENT_CONFIG['alipay']['notify_url'],
+            alipay = AliPay(
+                appid=settings.ALIPAY_CONFIG['APP_ID'],
+                app_notify_url=settings.ALIPAY_CONFIG['NOTIFY_URL'],
                 app_private_key_string=app_private_key_string,
                 alipay_public_key_string=alipay_public_key_string,
                 sign_type="RSA2",
-                debug=settings.PAYMENT_CONFIG['alipay']['debug']
+                debug=settings.ALIPAY_CONFIG['DEBUG']
             )
-            return client
+            
+            logger.info("成功创建支付宝客户端")
+            return alipay
+            
         except Exception as e:
-            logger.error(f"创建支付宝客户端失败: {str(e)}")
-            logger.error(traceback.format_exc())
+            logger.error(f"初始化支付宝客户端失败: {str(e)}")
+            logger.error(f"错误详情: {e.__class__.__name__}")
+            raise
+    
+    def create_payment(self, order):
+        """创建支付链接"""
+        try:
+            logger.info(f"开始创建支付链接: 订单号={order.order_no}")
+            logger.info(f"支付金额: {float(order.amount)}")
+            
+            # 构建商品信息
+            subject = f'飞鸟简历 - {order.tier.name}'
+            body = f'{order.days}天会员服务'
+            
+            # 生成支付参数
+            order_string = self.alipay.api_alipay_trade_page_pay(
+                out_trade_no=order.order_no,
+                total_amount=float(order.amount),
+                subject=subject,
+                body=body,
+                return_url=settings.ALIPAY_CONFIG['RETURN_URL'],
+                notify_url=settings.ALIPAY_CONFIG['NOTIFY_URL'],
+                # 添加额外参数
+                timeout_express='15m',  # 订单有效期15分钟
+                product_code='FAST_INSTANT_TRADE_PAY'  # 固定值
+            )
+            
+            # 生成完整支付URL
+            payment_url = f"{settings.ALIPAY_CONFIG['SANDBOX_URL']}?{order_string}"
+            
+            logger.info(f"生成支付链接成功: {payment_url}")
+            return payment_url
+                
+        except Exception as e:
+            logger.error(f"创建支付链接失败: {str(e)}")
+            logger.error(f"错误详情: {e.__class__.__name__}")
             raise
 
     @classmethod
@@ -180,7 +221,7 @@ class PaymentService:
                 
                 cls.logger.info(f"订单状态已更新为已支付")
 
-                # 更新���员信息
+                # 更新会员信息
                 membership, created = UserMembership.objects.get_or_create(
                     user=order.user,
                     defaults={'tier': order.tier}
@@ -213,11 +254,11 @@ class PaymentService:
             
             # 记录关键参数
             cls.logger.info("关键参数:")
-            cls.logger.info(f"订单号: {data.get('out_trade_no')}")
+            cls.logger.info(f"订单: {data.get('out_trade_no')}")
             cls.logger.info(f"交易号: {data.get('trade_no')}")
             cls.logger.info(f"交易状态: {data.get('trade_status')}")
             cls.logger.info(f"签名: {data.get('sign')}")
-            cls.logger.info(f"签名类型: {data.get('sign_type')}")
+            cls.logger.info(f"签��类型: {data.get('sign_type')}")
             
             client = cls.create_alipay_client()
             

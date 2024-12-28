@@ -11,6 +11,7 @@ from django.utils.timezone import localtime
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from .utils import get_logo_base64
+from django.db.models import Q
 
 @shared_task
 def process_payment_callback(order_id, payment_data):
@@ -113,3 +114,142 @@ def cancel_expired_orders():
     )
     
     return count 
+
+logger = logging.getLogger('membership')
+
+@shared_task
+def check_membership_expiry():
+    """检查会员到期情况并发送提醒"""
+    from .models import UserMembership
+    
+    now = timezone.now()
+    reminder_days = settings.MEMBERSHIP_EXPIRY_REMINDER['DAYS_BEFORE']
+    
+    logger.info(f"开始检查会员到期情况，当前时间: {now}")
+    logger.info(f"邮件配置: backend={settings.EMAIL_BACKEND}")
+    logger.info(f"发件人: {settings.DEFAULT_FROM_EMAIL}")
+    
+    for days in reminder_days:
+        # 计算目标日期范围（当天的起始和结束时间）
+        target_date = now + timezone.timedelta(days=days)
+        start_of_day = target_date.replace(hour=0, minute=0, second=0, microsecond=0)
+        end_of_day = target_date.replace(hour=23, minute=59, second=59, microsecond=999999)
+        
+        # 查找即将到期的会员
+        expiring_memberships = UserMembership.objects.filter(
+            Q(expire_time__gte=start_of_day) & Q(expire_time__lte=end_of_day),
+            tier__tier_type='premium'  # 只提醒付费会员
+        ).select_related('user', 'tier')
+        
+        logger.info(f"检查 {days} 天后到期的会员，找到 {expiring_memberships.count()} 个")
+        
+        for membership in expiring_memberships:
+            try:
+                # 准备邮件内容
+                context = {
+                    'user': membership.user,
+                    'membership': membership,
+                    'days_left': days,
+                    'renewal_url': f"{settings.FRONTEND_URL}/membership/renewal"
+                }
+                
+                # 渲染邮件模板
+                html_content = render_to_string(
+                    'membership/email/expiry_reminder.html',
+                    context
+                )
+                
+                # 发送邮件
+                send_mail(
+                    subject=f'您的{membership.tier.name}即将到期',
+                    message='',  # 纯文本内容可以为空
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[membership.user.email],
+                    html_message=html_content,
+                    fail_silently=False  # 不要静默失败
+                )
+                
+                logger.info(
+                    f"发送到期提醒成功: "
+                    f"用户={membership.user.phone}, "
+                    f"邮箱={membership.user.email}, "
+                    f"等级={membership.tier.name}, "
+                    f"到期时间={membership.expire_time}"
+                )
+                
+            except Exception as e:
+                logger.error(
+                    f"发送到期提醒失败: "
+                    f"用户={membership.user.phone}, "
+                    f"错误={str(e)}",
+                    exc_info=True
+                )
+
+@shared_task
+def handle_expired_memberships():
+    """处理已过期会员"""
+    from .models import UserMembership, MembershipTier
+    
+    logger.info("开始处理已过期会员")
+    
+    # 获取默认等级
+    default_tier = MembershipTier.objects.filter(is_default=True).first()
+    if not default_tier:
+        logger.error("找不到默认会员等级")
+        return
+    
+    # 查找已过期会员
+    expired_memberships = UserMembership.objects.filter(
+        expire_time__lt=timezone.now(),
+        tier__tier_type='premium'  # 只处理付费会员
+    ).select_related('user', 'tier')
+    
+    logger.info(f"找到 {expired_memberships.count()} 个已过期会员")
+    
+    for membership in expired_memberships:
+        try:
+            # 记录原等级
+            old_tier = membership.tier
+            
+            # 降级为默认等级
+            membership.tier = default_tier
+            membership.expire_time = None
+            membership.save()
+            
+            logger.info(
+                f"会员降级成功: "
+                f"用户={membership.user.phone}, "
+                f"原等级={old_tier.name}, "
+                f"新等级={default_tier.name}"
+            )
+            
+            # 发送通知
+            context = {
+                'user': membership.user,
+                'old_tier': old_tier,
+                'renewal_url': f"{settings.FRONTEND_URL}/membership/renewal"
+            }
+            
+            html_content = render_to_string(
+                'membership/email/membership_expired.html',
+                context
+            )
+            
+            send_mail(
+                subject='您的会员已到期',
+                message='',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[membership.user.email],
+                html_message=html_content,
+                fail_silently=False
+            )
+            
+            logger.info(f"发送到期通知成功: 用户={membership.user.phone}")
+            
+        except Exception as e:
+            logger.error(
+                f"处理过期会员失败: "
+                f"用户={membership.user.phone}, "
+                f"错误={str(e)}",
+                exc_info=True
+            ) 

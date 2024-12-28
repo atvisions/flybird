@@ -3,6 +3,7 @@ from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
 import logging
+from celery.schedules import crontab
 
 # 加载环境变量
 load_dotenv(override=True)  # 强制覆盖已存在的环境变量
@@ -10,14 +11,14 @@ load_dotenv(override=True)  # 强制覆盖已存在的环境变量
 # ----------- 1. 核心配置 -----------
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY')
-DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
+DEBUG = True
 ROOT_URLCONF = 'config.urls'
 WSGI_APPLICATION = 'config.wsgi.application'
 
 # ----------- 2. 域名配置 -----------
 BASE_DOMAIN = os.getenv('BASE_DOMAIN', 'popo.work')
-BACKEND_DOMAIN = os.getenv('BACKEND_DOMAIN', 'www.popo.work:8000')
-FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://popo.work')
+BACKEND_DOMAIN = os.getenv('BACKEND_DOMAIN', '127.0.0.1:8000')
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://127.0.0.1:8000')
 
 ALLOWED_HOSTS = [
     'localhost',
@@ -51,7 +52,7 @@ LOCAL_APPS = [
     'membership.apps.MembershipConfig',
 ]
 
-INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
+INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS + ['django_celery_beat']
 
 # ----------- 4. 中间件配置 -----------
 MIDDLEWARE = [
@@ -69,7 +70,9 @@ MIDDLEWARE = [
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'templates'),  # 添加全局模板目录
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -325,26 +328,20 @@ CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = TIME_ZONE
-
-# 解决警告信息
+CELERY_TIMEZONE = 'Asia/Shanghai'
+CELERY_ENABLE_UTC = False
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
-# Celery定时任务
-from celery.schedules import crontab
-
+# Celery Beat 配置
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 CELERY_BEAT_SCHEDULE = {
-    'check-expired-memberships': {
-        'task': 'membership.tasks.check_expired_memberships',
-        'schedule': crontab(hour='*/1'),
+    'check-membership-expiry': {
+        'task': 'membership.tasks.check_membership_expiry',
+        'schedule': crontab(hour=9, minute=0),
     },
-    'send-expiration-reminder': {
-        'task': 'membership.tasks.send_expiration_reminder',
-        'schedule': crontab(hour='9', minute='0'),
-    },
-    'cancel-expired-orders': {
-        'task': 'membership.tasks.cancel_expired_orders',
-        'schedule': crontab(minute='*/30'),
+    'handle-expired-memberships': {
+        'task': 'membership.tasks.handle_expired_memberships',
+        'schedule': crontab(hour=0, minute=0),
     },
 }
 
@@ -422,7 +419,7 @@ SIMPLEUI_CONFIG = {
             ]
         },
         {
-            'name': '��答管理',
+            'name': '问答管理',
             'icon': 'fas fa-question-circle',
             'models': [
                 {
@@ -455,7 +452,7 @@ SIMPLEUI_LOGO = '/static/admin/img/logo.png'
 SIMPLEUI_DEFAULT_ICON = False
 SIMPLEUI_ICON = {
     '认证和授权': 'fas fa-shield-alt',
-    '用户管理': 'fas fa-users-cog',
+    '用户���理': 'fas fa-users-cog',
     '文章管理': 'fas fa-newspaper',
     '问答管理': 'fas fa-comments',
 }
@@ -464,54 +461,33 @@ SIMPLEUI_ICON = {
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '\n[%(levelname)s] %(asctime)s %(name)s\n%(message)s\n',
-            'datefmt': '%Y-%m-%d %H:%M:%S'
-        },
-    },
     'handlers': {
         'console': {
-            'level': 'DEBUG',
             'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
+            'level': 'DEBUG',
         },
     },
-    'loggers': {
-        'users': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-        'membership': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-        'alipay': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
+    'root': {
+        'handlers': ['console'],
+        'level': 'DEBUG',
     },
 }
 
-# 确保日志目录存在
+# 保日志目录存在
 import os
 if not os.path.exists(BASE_DIR / 'logs'):
     os.makedirs(BASE_DIR / 'logs')
 
 # ----------- 邮件配置 -----------
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.qiye.aliyun.com'  # 阿里企业邮箱服务器
+# 使用阿里企业邮箱 SMTP
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # 改为SMTP后端
+EMAIL_HOST = 'smtp.qiye.aliyun.com'  # 阿里企业邮箱SMTP服务器
 EMAIL_PORT = 465  # 使用SSL端口
 EMAIL_USE_SSL = True  # 使用SSL
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')  # service@popo.work
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')  # 邮箱密码
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')  # service@popo.work
-
-# 添加邮件超时设置
-EMAIL_TIMEOUT = 5  # 5秒超时
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'service@popo.work')  # 发件邮箱
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')  # 从环境变量获取密码
+DEFAULT_FROM_EMAIL = 'service@popo.work'  # 默认发件人
+EMAIL_TIMEOUT = 5  # 设置超时时间
 
 # API基础URL(开发环境)
 API_BASE_URL = os.getenv('API_BASE_URL', 'http://127.0.0.1:8000')
@@ -524,21 +500,45 @@ MEMBERSHIP_URLS = {
 
 # 支付宝配置
 ALIPAY_CONFIG = {
-    'app_id': os.getenv('ALIPAY_APP_ID'),  # 沙箱环境的APPID
-    'app_private_key_path': os.path.join(BASE_DIR, 'keys/app_private_key.pem'),
-    'alipay_public_key_path': os.path.join(BASE_DIR, 'keys/alipay_public_key.pem'),
-    'debug': True,  # 沙箱环境置为True
+    'DEBUG': True,  # 沙箱环境
+    'APP_ID': '2021000142698861',  # 沙箱应用ID
+    'NOTIFY_URL': f"{FRONTEND_URL}/api/v1/membership/notify/alipay/",  # 异步通知地址
+    'RETURN_URL': f"{FRONTEND_URL}/payment/success",  # 支付成功跳转页面
+    'FAIL_URL': f"{FRONTEND_URL}/payment/fail",  # 支付失败跳转页面
+    'SANDBOX_URL': 'https://openapi-sandbox.dl.alipaydev.com/gateway.do',  # 支付宝沙箱网关
+    'SANDBOX_LOGIN_URL': 'https://open.alipay.com/develop/sandbox/account',  # 沙箱登录地址
+    'PRODUCTION_URL': 'https://openapi.alipay.com/gateway.do',
+    'PRIVATE_KEY_PATH': os.path.join(BASE_DIR, 'keys/alipay/app_private_key.pem'),
+    'PUBLIC_KEY_PATH': os.path.join(BASE_DIR, 'keys/alipay/alipay_public_key.pem')
 }
 
-# 支付相关配置
-PAYMENT_CONFIG = {
-    'alipay': {
-        'notify_url': f"{os.getenv('NGROK_URL', 'http://127.0.0.1:8000')}/api/v1/membership/alipay/notify/",
-        'return_url': f"{os.getenv('NGROK_URL', 'http://127.0.0.1:8000')}/api/v1/membership/alipay/return/"
-    }
+# 支付相关URL
+PAYMENT_URLS = {
+    'SUCCESS_URL': '/payment/success/',  # 支付成功页面
+    'FAIL_URL': '/payment/fail/',  # 支付失败页面
 }
-
 
 # 百度文心一言配置
 ERNIE_API_KEY = os.getenv('ERNIE_API_KEY')
 ERNIE_SECRET_KEY = os.getenv('ERNIE_SECRET_KEY')
+
+# 会员到期提醒配置
+MEMBERSHIP_EXPIRY_REMINDER = {
+    'DAYS_BEFORE': [7, 3, 1],  # 到期前7天、3天、1天提醒
+    'TEMPLATE_ID': 'membership_expiry_reminder',  # 邮件模板ID
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'level': 'DEBUG',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'DEBUG',
+    },
+}
