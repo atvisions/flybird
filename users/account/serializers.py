@@ -16,6 +16,7 @@ class ChangePasswordSerializer(serializers.Serializer):
             raise serializers.ValidationError("两次输入的密码不一致")
         return attrs
 
+
 class ChangePhoneSerializer(serializers.Serializer):
     phone = serializers.CharField()
     code = serializers.CharField()
@@ -23,9 +24,18 @@ class ChangePhoneSerializer(serializers.Serializer):
     def validate(self, attrs):
         phone = attrs['phone']
         code = attrs['code']
-        cached_code = cache.get(f'change_phone_{phone}')
+        
+        # 使用与发送验证码时相同的缓存key格式
+        cache_key = f'sms_code_change_phone_{phone}'
+        cached_code = cache.get(cache_key)
         
         if not cached_code or cached_code != code:
             raise serializers.ValidationError("验证码无效或已过期")
             
         return attrs
+
+    def save(self, **kwargs):
+        phone = self.validated_data['phone']
+        user = self.context['request'].user
+        user.phone = phone
+        user.save(update_fields=['phone'])

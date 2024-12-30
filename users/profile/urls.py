@@ -21,15 +21,18 @@ urlpatterns = [
     path('basic/', BasicProfileView.as_view(), name='basic'),
     path('avatar/upload/', AvatarUploadView.as_view(), name='avatar-upload'),
     
+    # 完整度评分
+    path('completeness/', ProfileCompletenessView.as_view(), name='completeness'),
+    
+    # 工作经历
+    path('work-experiences/', WorkExperienceView.as_view(), name='work-experience-list'),
+    path('work-experiences/<int:pk>/', WorkExperienceDetailView.as_view(), name='work-experience-detail'),
+    
     # 求职意向
     path('job-intention/', JobIntentionView.as_view(), name='job-intention'),
     
     # 档案布局
     path('layout/', ProfileLayoutView.as_view(), name='layout'),
-    
-    # 工作经历
-    path('work-experiences/', WorkExperienceView.as_view(), name='work-experience-list'),
-    path('work-experiences/<int:pk>/', WorkExperienceDetailView.as_view(), name='work-experience-detail'),
     
     # 教育经历
     path('educations/', EducationView.as_view(), name='education-list'),
@@ -59,11 +62,8 @@ urlpatterns = [
     path('social-links/', SocialLinkView.as_view(), name='social-link-list'),
     path('social-links/<int:pk>/', SocialLinkDetailView.as_view(), name='social-link-detail'),
     
-    # 档案完整度
-    path('completeness/', ProfileCompletenessView.as_view(), name='profile-completeness'),
-    
     # 内容质量
     path('content-quality/', ContentQualityView.as_view()),
-    
     path('complete/', CompleteProfileView.as_view(), name='complete-profile'),
+
 ]

@@ -1,0 +1,122 @@
+{
+  "main": [
+    {
+      "name": "简历模板",
+      "href": "/templates"
+    },
+    {
+      "name": "职场资源",
+      "children": [
+        {
+          "name": "职场指南",
+          "children": [
+            {
+              "name": "简历",
+              "href": "/guide/resume",
+              "description": "专业的简历撰写技巧和建议",
+              "icon": "document"
+            },
+            {
+              "name": "求职信",
+              "href": "/guide/cover-letter",
+              "description": "求职信范例与写作指导",
+              "icon": "mail"
+            },
+            {
+              "name": "面试技巧",
+              "href": "/guide/interview",
+              "description": "面试准备与技巧分享",
+              "icon": "chat"
+            }
+          ]
+        },
+        {
+          "name": "职业发展",
+          "children": [
+            {
+              "name": "职业规划",
+              "href": "/career/planning",
+              "description": "科学的职业生涯规划方法",
+              "icon": "chart"
+            },
+            {
+              "name": "职场管理",
+              "href": "/career/management",
+              "description": "提升职场管理能力",
+              "icon": "briefcase"
+            },
+            {
+              "name": "人际与沟通",
+              "href": "/career/communication",
+              "description": "职场人际关系与沟通技巧",
+              "icon": "users"
+            }
+          ]
+        },
+        {
+          "name": "职场动向",
+          "children": [
+            {
+              "name": "人物专访",
+              "href": "/trends/interview",
+              "description": "行业领袖的经验分享",
+              "icon": "users"
+            },
+            {
+              "name": "数据报告",
+              "href": "/trends/report",
+              "description": "最新职场趋势分析",
+              "icon": "chart"
+            }
+          ]
+        },
+        {
+          "name": "POPO动态",
+          "children": [
+            {
+              "name": "最新消息",
+              "href": "/news",
+              "description": "平台最新资讯",
+              "icon": "news"
+            },
+            {
+              "name": "活动",
+              "href": "/events",
+              "description": "线上线下活动信息",
+              "icon": "calendar"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "帮助中心",
+      "href": "/faq"
+    }
+  ],
+  "userMenu": [
+    {
+      "name": "个人档案",
+      "key": "profile",
+      "icon": "user",
+      "count": "60%"
+    },
+    {
+      "name": "我的简历",
+      "key": "resumes",
+      "icon": "document",
+      "count": 2
+    },
+    {
+      "name": "作品集",
+      "key": "portfolio",
+      "icon": "collection",
+      "count": 3
+    },
+    {
+      "name": "账户设置",
+      "key": "account",
+      "icon": "cog"
+    }
+  ]
+}

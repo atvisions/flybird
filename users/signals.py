@@ -1,7 +1,7 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from users.models import User
-from users.profile.models import BasicInfo, WorkExperience, Education, Project, Skill, Certificate, Language, Portfolio
+from users.profile.models import BasicInfo, WorkExperience, Education, Project, Skill, Certificate, Language, Portfolio, JobIntention
 from users.profile.models.layout import ProfileLayout
 from users.models import ProfileScore
 
@@ -9,29 +9,16 @@ from users.models import ProfileScore
 def create_user_profile(sender, instance, created, **kwargs):
     """创建用户时自动创建基本信息和档案布局"""
     if created:
-        # 创建档案评分（放在最前面）
+        # 创建档案评分
         ProfileScore.objects.create(user=instance)
         
-        # 只在不存在时创建基本信息
-        BasicInfo.objects.get_or_create(user=instance)
+        # 创建基本信息
+        BasicInfo.objects.create(user=instance)
         
-        # 只在不存在时创建档案布局
-        ProfileLayout.objects.get_or_create(
+        # 创建档案布局
+        ProfileLayout.objects.create(
             user=instance,
-            defaults={
-                'layout': {
-                    'basic_info': {'order': 1, 'visible': True},
-                    'job_intention': {'order': 2, 'visible': True},
-                    'work_experience': {'order': 3, 'visible': True},
-                    'education': {'order': 4, 'visible': True},
-                    'project': {'order': 5, 'visible': True},
-                    'skill': {'order': 6, 'visible': True},
-                    'certificate': {'order': 7, 'visible': True},
-                    'language': {'order': 8, 'visible': True},
-                    'portfolio': {'order': 9, 'visible': True},
-                    'social_link': {'order': 10, 'visible': True}
-                }
-            }
+            layout=ProfileLayout.DEFAULT_LAYOUT  # 使用默认布局
         )
 
 @receiver(post_save, sender=BasicInfo)
@@ -157,4 +144,59 @@ def update_achievement_dimension_score(sender, instance, **kwargs):
     print(f"成就维度总分: {total_score}")
     
     score.achievement_dimension = total_score
-    score.save() 
+    score.save()
+
+@receiver(post_save, sender=JobIntention)
+def update_basic_dimension_score(sender, instance, **kwargs):
+    """当求职意向更新时，重新计算基础维度分数"""
+    print("\n开始计算基础维度分数...")
+    print(f"用户: {instance.user.phone}")
+    
+    try:
+        # 确保 profile_score 存在
+        score, created = ProfileScore.objects.get_or_create(user=instance.user)
+        
+        # 计算基础维度分数
+        total_score = 0
+        
+        # 求职意向得分 (20分)
+        if instance.job_type:
+            total_score += 5
+        if instance.job_status:
+            total_score += 5
+        if instance.expected_salary:
+            total_score += 5
+        if instance.expected_city:
+            total_score += 5
+            
+        # 获取其他基础信息分数
+        basic_info = instance.user.basic_info
+        if basic_info:
+            if basic_info.avatar:
+                total_score += 20
+            if basic_info.name:
+                total_score += 10
+            if basic_info.gender:
+                total_score += 5
+            if basic_info.birth_date:
+                total_score += 5
+            if basic_info.phone:
+                total_score += 5
+            if basic_info.email:
+                total_score += 5
+            if basic_info.location:
+                total_score += 10
+            if basic_info.personal_summary:
+                if len(basic_info.personal_summary) >= 100:
+                    total_score += 20
+                else:
+                    total_score += 10
+        
+        # 更新分数
+        score.basic_dimension = min(total_score, 100)  # 最高100分
+        score.save()
+        
+        print(f"基础维度最终得分: {score.basic_dimension}")
+        
+    except Exception as e:
+        print(f"计算基础维度分数失败: {str(e)}") 

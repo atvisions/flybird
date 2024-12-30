@@ -16,13 +16,16 @@ ROOT_URLCONF = 'config.urls'
 WSGI_APPLICATION = 'config.wsgi.application'
 
 # ----------- 2. 域名配置 -----------
-BASE_DOMAIN = os.getenv('BASE_DOMAIN', 'popo.work')
-BACKEND_DOMAIN = os.getenv('BACKEND_DOMAIN', '127.0.0.1:8000')
-FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://127.0.0.1:8000')
+BASE_DOMAIN = os.getenv('BASE_DOMAIN', 'http://192.168.3.16:8080')  # 修改这里
+BACKEND_DOMAIN = os.getenv('BACKEND_DOMAIN', '192.168.3.16:8000')   # 修改这里
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://192.168.3.16:8080') # 修改这里
 
+# 允许访问的主机
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
+    '192.168.3.16',
+    '*',    # 允许所有主机访问
 ]
 
 # ----------- 3. 应用配置 -----------
@@ -97,6 +100,7 @@ DATABASES = {
         'OPTIONS': {
             'charset': 'utf8mb4',
             'init_command': "SET default_storage_engine=INNODB, time_zone='+8:00'",
+            'autocommit': True,
         }
     }
 }
@@ -110,14 +114,17 @@ REDIS_PASSWORD = os.getenv('REDIS_PASSWORD', '')
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}",
+        "LOCATION": "redis://127.0.0.1:6379/1",  # Redis 服务器地址
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "PASSWORD": "",  # 如果有密码，在这里设置
+            "SOCKET_CONNECT_TIMEOUT": 5,  # 连接超时时间
+            "SOCKET_TIMEOUT": 5,  # 读写超时时间
         }
     }
 }
 
-# Session 配置
+# 使用 Redis 作为 session 后端
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"
 
@@ -182,8 +189,8 @@ REST_FRAMEWORK = {
 
 # ----------- 10. CORS配置 -----------
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
+    "http://192.168.3.16:8080",
+    "http://localhost:8080",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -232,7 +239,7 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '\n[%(levelname)s] %(asctime)s %(name)s\n%(message)s\n',
+            'format': '[%(levelname)s] %(asctime)s %(name)s\n%(message)s\n',
             'datefmt': '%Y-%m-%d %H:%M:%S'
         },
     },
@@ -268,7 +275,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # ----------- 14. 国际化配置 -----------
 LANGUAGE_CODE = 'zh-Hans'
@@ -452,7 +459,7 @@ SIMPLEUI_LOGO = '/static/admin/img/logo.png'
 SIMPLEUI_DEFAULT_ICON = False
 SIMPLEUI_ICON = {
     '认证和授权': 'fas fa-shield-alt',
-    '用户���理': 'fas fa-users-cog',
+    '用户管理': 'fas fa-users-cog',
     '文章管理': 'fas fa-newspaper',
     '问答管理': 'fas fa-comments',
 }
@@ -490,9 +497,8 @@ DEFAULT_FROM_EMAIL = 'service@popo.work'  # 默认发件人
 EMAIL_TIMEOUT = 5  # 设置超时时间
 
 # API基础URL(开发环境)
-API_BASE_URL = os.getenv('API_BASE_URL', 'http://127.0.0.1:8000')
-FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:8000')
-
+API_BASE_URL = os.getenv('API_BASE_URL', 'http://192.168.3.16:8000')
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://192.168.3.16:8080')  
 # 会员相关URL
 MEMBERSHIP_URLS = {
     'renewal': f"{FRONTEND_URL}/membership/renewal",  # 会员续费页面
@@ -542,3 +548,6 @@ LOGGING = {
         'level': 'DEBUG',
     },
 }
+
+# 允许上传的文件类型
+ALLOWED_UPLOAD_IMAGES = ['image/jpeg', 'image/png', 'image/gif']

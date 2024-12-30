@@ -3,30 +3,43 @@ from django.conf import settings
 from django.utils import timezone
 
 class ProfileLayout(models.Model):
+    """档案布局"""
+    DEFAULT_LAYOUT = {
+        'basic_info': {'order': 1, 'visible': True},
+        'job_intention': {'order': 2, 'visible': True},
+        'work_experience': {'order': 3, 'visible': True},
+        'education': {'order': 4, 'visible': True},
+        'project': {'order': 5, 'visible': True},
+        'skill': {'order': 6, 'visible': True},
+        'certificate': {'order': 7, 'visible': True},
+        'language': {'order': 8, 'visible': True},
+        'portfolio': {'order': 9, 'visible': True},
+        'social_link': {'order': 10, 'visible': True}
+    }
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='profile_layout',
-        verbose_name='用户'
+        unique=True
     )
-    layout = models.JSONField(default=dict, verbose_name='布局配置')
-    
-    # 添加评分相关字段
-    basic_dimension = models.IntegerField(default=0, verbose_name='基础维度分数')
-    experience_dimension = models.IntegerField(default=0, verbose_name='经验维度分数')
-    ability_dimension = models.IntegerField(default=0, verbose_name='能力维度分数')
-    achievement_dimension = models.IntegerField(default=0, verbose_name='成就维度分数')
-    
-    created_at = models.DateTimeField(default=timezone.now, verbose_name='创建时间')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='更新时间')
+    layout = models.JSONField(default=dict)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = '档案布局'
-        verbose_name_plural = '档案布局'
+        verbose_name_plural = verbose_name
+        unique_together = ['user']
 
     def __str__(self):
         return f'{self.user.phone} 的档案布局'
-        
+
+    def save(self, *args, **kwargs):
+        if not self.pk and not self.layout:
+            self.layout = self.DEFAULT_LAYOUT.copy()
+        super().save(*args, **kwargs)
+
     @property
     def total_score(self):
         """计算总分"""

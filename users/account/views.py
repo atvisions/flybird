@@ -198,31 +198,31 @@ class ChangeUsernameView(APIView):
     permission_classes = [IsAuthenticated]
     
     def post(self, request):
-        username = request.data.get('username', '').strip()
-        
-        # 验证用户名格式
-        if not re.match(r'^[a-zA-Z0-9\u4e00-\u9fa5]{2,20}$', username):
-            return Response({
-                'detail': '用户名只能包含字母、数字和汉字，长度2-20位'
-            }, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            username = request.data.get('username')
             
-        # 检查用户名是否已被使用
-        if User.objects.filter(username=username).exclude(id=request.user.id).exists():
-            return Response({
-                'detail': '该用户名已被使用'
-            }, status=status.HTTP_400_BAD_REQUEST)
+            if not username:
+                return Response({
+                    'code': 400,
+                    'message': '昵称不能为空'
+                }, status=status.HTTP_400_BAD_REQUEST)
             
-        # 不允许使用纯数字的用户名
-        if username.isdigit():
-            return Response({
-                'detail': '用户名不能是纯数字'
-            }, status=status.HTTP_400_BAD_REQUEST)
+            # 更新用户昵称
+            user = request.user
+            user.username = username
+            user.save()
             
-        # 更新用户名
-        request.user.username = username
-        request.user.save(update_fields=['username'])
-        
-        return Response({
-            'message': '用户名修改成功',
-            'username': username
-        })
+            return Response({
+                'code': 200,
+                'message': '昵称修改成功',
+                'data': {
+                    'username': username
+                }
+            })
+            
+        except Exception as e:
+            logger.error(f"更新昵称失败: {str(e)}")
+            return Response({
+                'code': 500,
+                'message': '修改昵称失败'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

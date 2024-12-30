@@ -1,29 +1,58 @@
 from rest_framework import serializers
-from django.contrib.auth import get_user_model
+from django.utils import timezone
 from ..models import BasicInfo
+import re
+import logging
 
-User = get_user_model()
+logger = logging.getLogger(__name__)
 
-class UserProfileSerializer(serializers.ModelSerializer):
-    """用户基本信息序列化器"""
-    class Meta:
-        model = User
-        fields = [
-            'id',
-            'username',
-            'nickname',
-            'email',
-            'phone',
-            'avatar',
-            'is_active',
-            'date_joined',  # 使用 date_joined 替代 created_at
-            'last_login'
-        ]
-        read_only_fields = ['id', 'date_joined', 'last_login']
+class FlexibleDateField(serializers.DateField):
+    """灵活的日期字段，可以处理空字符串和None"""
+    
+    def to_internal_value(self, value):
+        """转换输入值为日期对象"""
+        if not value or value == '':
+            return None
+        try:
+            return super().to_internal_value(value)
+        except (ValueError, TypeError):
+            return None
 
 class BasicInfoSerializer(serializers.ModelSerializer):
-    """用户详细信息序列化器"""
+    birth_date = FlexibleDateField(required=False, allow_null=True)
+    avatar = serializers.SerializerMethodField()
+    
     class Meta:
         model = BasicInfo
-        exclude = ['user']  # 排除 user 字段，因为它会自动关联
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        fields = [
+            'id', 'name', 'avatar', 'gender', 'birth_date', 
+            'phone', 'email', 'location', 'personal_summary'
+        ]
+        extra_kwargs = {
+            'name': {'required': False, 'allow_blank': True},
+            'gender': {'required': False, 'allow_blank': True},
+            'phone': {'required': False, 'allow_blank': True},
+            'email': {'required': False, 'allow_blank': True},
+            'location': {'required': False, 'allow_blank': True},
+            'personal_summary': {'required': False, 'allow_blank': True},
+        }
+        
+    def get_avatar(self, obj):
+        """获取头像URL"""
+        if obj.avatar:
+            return obj.avatar.url
+        return None
+        
+    def validate(self, attrs):
+        """验证所有字段"""
+        logger.info(f"开始验证数据: {attrs}")
+        try:
+            # 验证每个字段
+            for field, value in attrs.items():
+                logger.info(f"验证字段 {field}: {value}")
+                if hasattr(self, f'validate_{field}'):
+                    attrs[field] = getattr(self, f'validate_{field}')(value)
+            return attrs
+        except serializers.ValidationError as e:
+            logger.error(f"验证失败: {e.detail}")
+            raise

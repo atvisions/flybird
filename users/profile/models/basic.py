@@ -19,7 +19,7 @@ class BasicInfo(models.Model):
     name = models.CharField('姓名', max_length=50, blank=True)
     avatar = models.ImageField('头像', upload_to='avatars/', blank=True)
     gender = models.CharField('性别', max_length=10, choices=GENDER_CHOICES, blank=True)
-    birth_date = models.DateField('出生日期', null=True, blank=True)
+    birth_date = models.DateField('出生日期', null=True, blank=True, default=None)
     phone = models.CharField('手机号', max_length=11, blank=True)
     email = models.EmailField('邮箱', blank=True)
     location = models.CharField('所在地', max_length=100, blank=True)
@@ -33,4 +33,11 @@ class BasicInfo(models.Model):
 
     def __str__(self):
         return f"{self.user.phone} - {self.name}"
+
+    @property
+    def avatar_url(self):
+        """获取头像URL"""
+        if self.avatar:
+            return self.avatar.url
+        return None
 

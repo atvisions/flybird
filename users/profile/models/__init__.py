@@ -6,24 +6,28 @@ from .basic import BasicInfo
 from .intention import JobIntention
 from .work import WorkExperience
 from .education import Education
-from .project import Project
 from .skill import Skill
-from .certificate import Certificate
 from .language import Language
+from .certificate import Certificate
 from .portfolio import Portfolio
+from .project import Project
 from .social import SocialLink
 from .layout import ProfileLayout
+from .ai import AIOptimizationSuggestion, AIQualityImprovement, AIOptimizationQuota
 
 __all__ = [
     'BasicInfo',
     'JobIntention',
     'WorkExperience',
     'Education',
-    'Project',
     'Skill',
-    'Certificate',
     'Language',
+    'Certificate',
     'Portfolio',
+    'Project',
     'SocialLink',
-    'ProfileLayout'
+    'AIOptimizationSuggestion',
+    'AIQualityImprovement',
+    'AIOptimizationQuota',
+    'ProfileLayout',
 ]

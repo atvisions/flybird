@@ -57,14 +57,24 @@ class User(AbstractUser):
     objects = CustomUserManager()
     
     def save(self, *args, **kwargs):
-        if not self.pk:
+        if not self.pk:  # 如果是新用户
+            # 先保存以获取 id
             super().save(*args, **kwargs)
+            # 生成 uid (保证7位数字)
             if not self.uid:
-                self.uid = str(10000 + self.id)
+                self.uid = f"{1000000 + self.pk:07d}"  # 格式化为7位数字
+            # 设置默认用户名
             if not self.username:
-                self.username = self.uid
+                self.username = f"Flybird{self.phone[-4:]}"  # 使用手机号后4位作为默认用户名
+            # 再次保存以更新 uid 和 username
             return super().save(*args, **kwargs)
         return super().save(*args, **kwargs)
+
+    class Meta:
+        verbose_name = _('user')
+        verbose_name_plural = _('users')
+        db_table = 'users_user'  # 使用默认的表名
+        ordering = ['-date_joined']  # 按注册时间倒序排序
 
 class ProfileScore(models.Model):
     """档案评分"""

@@ -1,7 +1,8 @@
 from typing import Dict, List
-from users.profile.models import WorkExperience, Education, Skill, Language, Certificate, Portfolio
+from users.profile.models import WorkExperience, Education, Skill, Language, Certificate, Portfolio, ProfileLayout
 from users.models import ProfileScore  # 只从 users.models 导入
 import logging
+
 
 logger = logging.getLogger(__name__)
 

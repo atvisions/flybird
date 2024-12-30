@@ -97,9 +97,9 @@ class CertificateAdmin(admin.ModelAdmin):
 
 @admin.register(Language)
 class LanguageAdmin(admin.ModelAdmin):
-    list_display = ('user', 'name', 'level')
-    list_filter = ('level',)
-    search_fields = ('user__phone', 'name')
+    list_display = ('user', 'name', 'proficiency', 'certification', 'quality_score')
+    list_filter = ('proficiency',)
+    search_fields = ('user__username', 'name', 'certification')
     raw_id_fields = ('user',)
 
 @admin.register(Portfolio)
