@@ -1,239 +1,309 @@
 <template>
-  <el-dialog
-    :model-value="modelValue"
-    @update:model-value="$emit('update:modelValue', $event)"
-    :width="dialogWidth"
-    :fullscreen="isMobile"
-    :close-on-click-modal="false"
-    :show-close="false"
-    @close="handleClose"
-    class="edit-dialog"
-    destroy-on-close
-  >
-    <div class="dialog-container">
-      <!-- Header -->
-      <div class="dialog-header">
-        <div class="flex items-center justify-between">
-          <h3 class="text-lg font-medium text-gray-900">编辑求职意向</h3>
-          <!-- 移动端显示关闭按钮 -->
-          <button
-            v-if="isMobile"
-            @click="handleClose"
-            class="text-gray-400 hover:text-gray-500"
+  <TransitionRoot appear :show="modelValue" as="template">
+    <Dialog as="div" class="relative z-50" @close="handleClose">
+      <!-- 背景遮罩 -->
+      <TransitionChild
+        as="template"
+        enter="duration-300 ease-out"
+        enter-from="opacity-0"
+        enter-to="opacity-100"
+        leave="duration-200 ease-in"
+        leave-from="opacity-100"
+        leave-to="opacity-0"
+      >
+        <div class="fixed inset-0 bg-black/25" />
+      </TransitionChild>
+
+      <!-- 对话框 -->
+      <div class="fixed inset-0 overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-4 text-center">
+          <TransitionChild
+            as="template"
+            enter="duration-300 ease-out"
+            enter-from="opacity-0 scale-95"
+            enter-to="opacity-100 scale-100"
+            leave="duration-200 ease-in"
+            leave-from="opacity-100 scale-100"
+            leave-to="opacity-0 scale-95"
           >
-            <XMarkIcon class="h-6 w-6" />
-          </button>
+            <DialogPanel class="w-full max-w-2xl transform overflow-hidden rounded-xl bg-white text-left align-middle shadow-xl transition-all">
+              <!-- 头部 -->
+              <DialogTitle 
+                as="div" 
+                class="flex items-center justify-between border-b border-gray-200 px-6 py-4"
+              >
+                <h3 class="text-lg font-medium text-gray-900">编辑求职意向</h3>
+                <button
+                  @click="handleClose"
+                  class="rounded-full p-1 hover:bg-gray-100 transition-colors"
+                >
+                  <XMarkIcon class="w-5 h-5 text-gray-400" />
+                </button>
+              </DialogTitle>
+
+              <!-- 表单内容 -->
+              <form @submit.prevent="handleSubmit" class="p-6">
+                <div class="space-y-6">
+                  <!-- 第一行：工作类型和求职状态 -->
+                  <div class="grid grid-cols-2 gap-6">
+                    <!-- 工作类型 -->
+                    <div class="space-y-1">
+                      <label class="block text-sm font-medium text-gray-700">
+                        工作类型
+                      </label>
+                      <Listbox v-model="form.job_type">
+                        <div class="relative">
+                          <ListboxButton
+                            class="relative w-full cursor-pointer rounded-lg bg-white py-2.5 pl-4 pr-10 text-left border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500"
+                          >
+                            <span class="block truncate text-sm">
+                              {{ getJobTypeLabel(form.job_type) }}
+                            </span>
+                            <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                              <ChevronUpDownIcon class="h-5 w-5 text-gray-400" />
+                            </span>
+                          </ListboxButton>
+
+                          <ListboxOptions
+                            class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg bg-white py-1 text-sm shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                          >
+                            <ListboxOption
+                              v-for="option in JOB_TYPE_OPTIONS"
+                              :key="option.value"
+                              :value="option.value"
+                              v-slot="{ active, selected }"
+                            >
+                              <li
+                                :class="[
+                                  active ? 'bg-blue-50 text-blue-600' : 'text-gray-900',
+                                  'relative cursor-pointer select-none py-2.5 pl-4 pr-9'
+                                ]"
+                              >
+                                <span :class="[selected ? 'font-medium' : 'font-normal', 'block truncate']">
+                                  {{ option.label }}
+                                </span>
+                                <span
+                                  v-if="selected"
+                                  :class="[
+                                    active ? 'text-blue-600' : 'text-blue-500',
+                                    'absolute inset-y-0 right-0 flex items-center pr-3'
+                                  ]"
+                                >
+                                  <CheckIcon class="h-5 w-5" />
+                                </span>
+                              </li>
+                            </ListboxOption>
+                          </ListboxOptions>
+                        </div>
+                      </Listbox>
+                    </div>
+
+                    <!-- 求职状态 -->
+                    <div class="space-y-1">
+                      <label class="block text-sm font-medium text-gray-700">
+                        求职状态
+                      </label>
+                      <Listbox v-model="form.job_status">
+                        <div class="relative">
+                          <ListboxButton
+                            class="relative w-full cursor-pointer rounded-lg bg-white py-2.5 pl-4 pr-10 text-left border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500"
+                          >
+                            <span class="block truncate text-sm">
+                              {{ getJobStatusLabel(form.job_status) }}
+                            </span>
+                            <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                              <ChevronUpDownIcon class="h-5 w-5 text-gray-400" />
+                            </span>
+                          </ListboxButton>
+
+                          <ListboxOptions
+                            class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg bg-white py-1 text-sm shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                          >
+                            <ListboxOption
+                              v-for="option in JOB_STATUS_OPTIONS"
+                              :key="option.value"
+                              :value="option.value"
+                              v-slot="{ active, selected }"
+                            >
+                              <li
+                                :class="[
+                                  active ? 'bg-blue-50 text-blue-600' : 'text-gray-900',
+                                  'relative cursor-pointer select-none py-2.5 pl-4 pr-9'
+                                ]"
+                              >
+                                <span :class="[selected ? 'font-medium' : 'font-normal', 'block truncate']">
+                                  {{ option.label }}
+                                </span>
+                                <span
+                                  v-if="selected"
+                                  :class="[
+                                    active ? 'text-blue-600' : 'text-blue-500',
+                                    'absolute inset-y-0 right-0 flex items-center pr-3'
+                                  ]"
+                                >
+                                  <CheckIcon class="h-5 w-5" />
+                                </span>
+                              </li>
+                            </ListboxOption>
+                          </ListboxOptions>
+                        </div>
+                      </Listbox>
+                    </div>
+                  </div>
+
+                  <!-- 第二行：期望薪资和期望城市 -->
+                  <div class="grid grid-cols-2 gap-6">
+                    <!-- 期望薪资 -->
+                    <div class="space-y-1">
+                      <label class="block text-sm font-medium text-gray-700">
+                        期望薪资
+                      </label>
+                      <Listbox v-model="form.expected_salary">
+                        <div class="relative">
+                          <ListboxButton
+                            class="relative w-full cursor-pointer rounded-lg bg-white py-2.5 pl-4 pr-10 text-left border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500"
+                          >
+                            <span class="block truncate text-sm">
+                              {{ getSalaryLabel(form.expected_salary) }}
+                            </span>
+                            <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                              <ChevronUpDownIcon class="h-5 w-5 text-gray-400" />
+                            </span>
+                          </ListboxButton>
+
+                          <ListboxOptions
+                            class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg bg-white py-1 text-sm shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                          >
+                            <ListboxOption
+                              v-for="option in SALARY_OPTIONS"
+                              :key="option.value"
+                              :value="option.value"
+                              v-slot="{ active, selected }"
+                            >
+                              <li
+                                :class="[
+                                  active ? 'bg-blue-50 text-blue-600' : 'text-gray-900',
+                                  'relative cursor-pointer select-none py-2.5 pl-4 pr-9'
+                                ]"
+                              >
+                                <span :class="[selected ? 'font-medium' : 'font-normal', 'block truncate']">
+                                  {{ option.label }}
+                                </span>
+                                <span
+                                  v-if="selected"
+                                  :class="[
+                                    active ? 'text-blue-600' : 'text-blue-500',
+                                    'absolute inset-y-0 right-0 flex items-center pr-3'
+                                  ]"
+                                >
+                                  <CheckIcon class="h-5 w-5" />
+                                </span>
+                              </li>
+                            </ListboxOption>
+                          </ListboxOptions>
+                        </div>
+                      </Listbox>
+                    </div>
+
+                    <!-- 期望城市 -->
+                    <div class="space-y-1">
+                      <label class="block text-sm font-medium text-gray-700">
+                        期望城市
+                      </label>
+                      <input
+                        type="text"
+                        v-model="form.expected_city"
+                        placeholder="请输入期望城市，多个城市用逗号分隔"
+                        class="w-full rounded-lg border border-gray-300 py-2.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- 第三行：期望行业 -->
+                  <div class="space-y-1">
+                    <label class="block text-sm font-medium text-gray-700">
+                      期望行业
+                    </label>
+                    <div class="relative">
+                      <input
+                        type="text"
+                        v-model="form.industries"
+                        placeholder="请输入期望行业，多个行业用逗号分隔"
+                        class="w-full rounded-lg border border-gray-300 py-2.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- 底部按钮 -->
+                  <div class="flex justify-end space-x-3 pt-6">
+                    <button
+                      type="button"
+                      @click="handleClose"
+                      class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                    >
+                      取消
+                    </button>
+                    <button
+                      type="submit"
+                      :disabled="loading"
+                      class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {{ loading ? '保存中...' : '确认' }}
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </DialogPanel>
+          </TransitionChild>
         </div>
       </div>
-
-      <!-- Body -->
-      <div class="dialog-body p-4">
-        <el-form
-          ref="formRef"
-          :model="form"
-          :disabled="loading"
-        >
-          <form @submit.prevent="handleSubmit" class="space-y-4 sm:space-y-5">
-            <!-- 两列布局 -->
-            <div class="grid grid-cols-2 gap-4">
-              <!-- 工作类型 -->
-              <div class="space-y-2">
-                <label class="block text-sm font-medium text-gray-700">工作类型</label>
-                <el-form-item prop="job_type" class="mb-0">
-                  <Listbox v-model="form.job_type">
-                    <div class="relative w-full">
-                      <ListboxButton class="relative w-full cursor-default rounded-md border border-gray-300 bg-gray-50 py-2 pl-3 pr-10 text-left shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900/10 sm:text-sm">
-                        <span class="block truncate">{{ getJobTypeLabel(form.job_type) }}</span>
-                        <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                          <ChevronUpDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
-                        </span>
-                      </ListboxButton>
-
-                      <transition
-                        leave-active-class="transition ease-in duration-100"
-                        leave-from-class="opacity-100"
-                        leave-to-class="opacity-0"
-                      >
-                        <ListboxOptions class="absolute z-10 mt-1 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                          <ListboxOption
-                            v-for="option in JOB_TYPE_OPTIONS"
-                            :key="option.value"
-                            :value="option.value"
-                            v-slot="{ active, selected }"
-                          >
-                            <div :class="[
-                              active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
-                              'relative cursor-default select-none py-2 pl-3 pr-9'
-                            ]">
-                              <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">
-                                {{ option.label }}
-                              </span>
-                              <span v-if="selected" :class="[active ? 'text-gray-900' : 'text-gray-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                <CheckIcon class="h-5 w-5" aria-hidden="true" />
-                              </span>
-                            </div>
-                          </ListboxOption>
-                        </ListboxOptions>
-                      </transition>
-                    </div>
-                  </Listbox>
-                </el-form-item>
-              </div>
-
-              <!-- 求职状态 -->
-              <div class="space-y-2">
-                <label class="block text-sm font-medium text-gray-700">求职状态</label>
-                <el-form-item prop="job_status" class="mb-0">
-                  <Listbox v-model="form.job_status">
-                    <div class="relative w-full">
-                      <ListboxButton class="relative w-full cursor-default rounded-md border border-gray-300 bg-gray-50 py-2 pl-3 pr-10 text-left shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900/10 sm:text-sm">
-                        <span class="block truncate">{{ getJobStatusLabel(form.job_status) }}</span>
-                        <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                          <ChevronUpDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
-                        </span>
-                      </ListboxButton>
-
-                      <transition
-                        leave-active-class="transition ease-in duration-100"
-                        leave-from-class="opacity-100"
-                        leave-to-class="opacity-0"
-                      >
-                        <ListboxOptions class="absolute z-10 mt-1 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                          <ListboxOption
-                            v-for="option in LOCAL_JOB_STATUS_OPTIONS"
-                            :key="option.value"
-                            :value="option.value"
-                            v-slot="{ active, selected }"
-                          >
-                            <div :class="[
-                              active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
-                              'relative cursor-default select-none py-2 pl-3 pr-9'
-                            ]">
-                              <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">
-                                {{ option.label }}
-                              </span>
-                              <span v-if="selected" :class="[active ? 'text-gray-900' : 'text-gray-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                <CheckIcon class="h-5 w-5" aria-hidden="true" />
-                              </span>
-                            </div>
-                          </ListboxOption>
-                        </ListboxOptions>
-                      </transition>
-                    </div>
-                  </Listbox>
-                </el-form-item>
-              </div>
-
-              <!-- 期望薪资 -->
-              <div class="space-y-2">
-                <label class="block text-sm font-medium text-gray-700">期望薪资</label>
-                <el-form-item prop="expected_salary" class="mb-0">
-                  <Listbox v-model="form.expected_salary">
-                    <div class="relative w-full">
-                      <ListboxButton class="relative w-full cursor-default rounded-md border border-gray-300 bg-gray-50 py-2 pl-3 pr-10 text-left shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900/10 sm:text-sm">
-                        <span class="block truncate">{{ getSalaryLabel(form.expected_salary) }}</span>
-                        <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                          <ChevronUpDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
-                        </span>
-                      </ListboxButton>
-
-                      <transition
-                        leave-active-class="transition ease-in duration-100"
-                        leave-from-class="opacity-100"
-                        leave-to-class="opacity-0"
-                      >
-                        <ListboxOptions class="absolute z-10 mt-1 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                          <ListboxOption
-                            v-for="option in SALARY_OPTIONS"
-                            :key="option.value"
-                            :value="option.value"
-                            v-slot="{ active, selected }"
-                          >
-                            <div :class="[
-                              active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
-                              'relative cursor-default select-none py-2 pl-3 pr-9'
-                            ]">
-                              <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">
-                                {{ option.label }}
-                              </span>
-                              <span v-if="selected" :class="[active ? 'text-gray-900' : 'text-gray-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                <CheckIcon class="h-5 w-5" aria-hidden="true" />
-                              </span>
-                            </div>
-                          </ListboxOption>
-                        </ListboxOptions>
-                      </transition>
-                    </div>
-                  </Listbox>
-                </el-form-item>
-              </div>
-
-              <!-- 期望城市 -->
-              <div class="space-y-2">
-                <label class="block text-sm font-medium text-gray-700">期望城市</label>
-                <el-form-item prop="expected_city" class="mb-0">
-                  <input
-                    v-model="form.expected_city"
-                    type="text"
-                    placeholder="请输入期望城市，多个城市用逗号分隔"
-                    class="block w-full rounded-md border-gray-300 bg-gray-50 py-2 px-3 shadow-sm focus:border-gray-900 focus:ring-1 focus:ring-gray-900/10 sm:text-sm"
-                  />
-                </el-form-item>
-              </div>
-            </div>
-
-            <!-- 期望行业 -->
-            <div class="space-y-2">
-              <label class="block text-sm font-medium text-gray-700">期望行业</label>
-              <el-form-item prop="industries" class="mb-0">
-                <input
-                  v-model="form.industries"
-                  type="text"
-                  placeholder="请输入期望行业，多个行业用逗号分隔"
-                  class="block w-full rounded-md border-gray-300 bg-gray-50 py-2 px-3 shadow-sm focus:border-gray-900 focus:ring-1 focus:ring-gray-900/10 sm:text-sm"
-                />
-              </el-form-item>
-            </div>
-          </form>
-        </el-form>
-      </div>
-
-      <!-- Footer -->
-      <div class="dialog-footer">
-        <div class="flex justify-end space-x-3">
-          <button
-            type="button"
-            @click="handleClose"
-            class="rounded-md border border-gray-300 bg-white px-3 sm:px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
-          >
-            取消
-          </button>
-          <button
-            type="button"
-            @click="handleSubmit"
-            :disabled="loading"
-            class="rounded-md border border-transparent bg-gray-900 px-3 sm:px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900/10 disabled:opacity-50"
-          >
-            {{ loading ? '保存中...' : '保存' }}
-          </button>
-        </div>
-      </div>
-    </div>
-  </el-dialog>
+    </Dialog>
+  </TransitionRoot>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
-import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/vue'
-import { CheckIcon, ChevronUpDownIcon } from '@heroicons/vue/20/solid'
-import { JOB_TYPE_OPTIONS, JOB_STATUS_OPTIONS, SALARY_OPTIONS } from '../constants/jobOptions'
-import { INDUSTRY_CATEGORIES } from '../constants/industryOptions'
-import { useWindowSize } from '@vueuse/core'
-import { ElMessage } from 'element-plus'
-import { XMarkIcon } from '@heroicons/vue/24/outline'
+import { ref, watch } from 'vue'
+import {
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+  Listbox,
+  ListboxButton,
+  ListboxOptions,
+  ListboxOption,
+  TransitionRoot,
+  TransitionChild
+} from '@headlessui/vue'
+import {
+  XMarkIcon,
+  ChevronUpDownIcon,
+  CheckIcon
+} from '@heroicons/vue/24/outline'
 
-// 添加调试日志
-console.log('求职状态选项:', JOB_STATUS_OPTIONS)
+// 选项常量
+const JOB_TYPE_OPTIONS = [
+  { value: 'full_time', label: '全职' },
+  { value: 'part_time', label: '兼职' },
+  { value: 'internship', label: '实习' },
+  { value: 'freelance', label: '自由职业' }
+]
+
+const JOB_STATUS_OPTIONS = [
+  { value: 'actively_looking', label: '积极找工作' },
+  { value: 'open_to_offers', label: '考虑机会' },
+  { value: 'not_looking', label: '暂不找工作' }
+]
+
+const SALARY_OPTIONS = [
+  { value: '0-5', label: '5K以下' },
+  { value: '5-10', label: '5-10K' },
+  { value: '10-15', label: '10-15K' },
+  { value: '15-20', label: '15-20K' },
+  { value: '20-30', label: '20-30K' },
+  { value: '30-50', label: '30-50K' },
+  { value: '50-100', label: '50-100K' },
+  { value: '100+', label: '100K以上' }
+]
 
 const props = defineProps({
   modelValue: Boolean,
@@ -246,256 +316,69 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'submit'])
 
-// 表单引用
-const formRef = ref(null)
-
-// 常用城市列表
-const commonCities = [
-  '北京',
-  '上海',
-  '广州',
-  '深圳',
-  '杭州',
-  '南京',
-  '成都',
-  '武汉',
-  '西安',
-  '苏州',
-  '天津',
-  '重庆'
-]
-
-// 城市选择
-const selectedCities = ref([])
-
 // 表单数据
 const form = ref({
-  job_type: '',
-  job_status: '',
-  expected_salary: '',
-  expected_city: '',
-  industries: []
+  job_type: '',           // 工作类型
+  job_status: '',         // 求职状态
+  expected_salary: '',    // 期望薪资
+  expected_city: '',      // 期望城市
+  industries: [],         // 期望行业
+  arrival_time: '',       // 到岗时间
+  job_nature: '',         // 工作性质
+  work_type: ''          // 工作方式
 })
 
-// 处理城市变化
-const handleCityChange = (value) => {
-  form.value.expected_city = value.join('-')
-}
-
-// 监听初始数据变化
+// 初始化表单数据
 watch(() => props.initialData, (newVal) => {
   if (newVal) {
-    // 转换旧的状态值到新的状态值
-    const convertOldStatus = (oldStatus) => {
-      const statusMap = {
-        'open': 'unemployed_looking',
-        'closed': 'employed_not_looking'
-      }
-      return statusMap[oldStatus] || oldStatus
+    form.value = {
+      job_type: newVal.job_type || '',
+      job_status: newVal.job_status || '',
+      expected_salary: newVal.expected_salary || '',
+      expected_city: newVal.expected_city || '',
+      industries: newVal.industries || []
     }
-
-    const formData = {
-      ...form.value,
-      ...newVal,
-      job_status: convertOldStatus(newVal.job_status),
-      // 将破折号分隔的城市转换为逗号分隔
-      expected_city: newVal.expected_city ? newVal.expected_city.split('-').join(',') : ''
-    }
-    
-    form.value = formData
-    console.log('更新后的表单数据:', form.value)
   }
 }, { immediate: true })
 
-// 表单验证规则
-const rules = {
-  job_type: [{ required: true, message: '请选择工作类型', trigger: 'change' }],
-  job_status: [{ required: true, message: '请选择求职状态', trigger: 'change' }]
-}
-
-// 对话框可见性
-const dialogVisible = computed({
-  get: () => props.modelValue,
-  set: (val) => emit('update:modelValue', val)
-})
-
-// 提交表单
-const handleSubmit = async () => {
-  if (!formRef.value) return
-  
-  try {
-    await formRef.value.validate()
-    console.log('表单验证通过')
-    
-    // 处理行业数据
-    const formData = { ...form.value }
-    
-    // 确保使用新的状态值
-    const statusMap = {
-      'open': 'unemployed_looking',
-      'closed': 'employed_not_looking'
-    }
-    formData.job_status = statusMap[formData.job_status] || formData.job_status
-    
-    // 将逗号分隔的城市转换为破折号分隔（后端存储格式）
-    if (formData.expected_city) {
-      formData.expected_city = formData.expected_city.split(',').map(city => city.trim()).join('-')
-    }
-    
-    if (Array.isArray(formData.industries)) {
-      formData.industries = formData.industries.join(',')
-    }
-    
-    console.log('提交的数据:', formData)
-    emit('submit', formData)
-  } catch (error) {
-    console.error('表单验证失败:', error)
-  }
-}
-
-// 临时定义选项用于测试
-const LOCAL_JOB_STATUS_OPTIONS = [
-  { value: 'unemployed_looking', label: '离职-找工作' },
-  { value: 'employed_not_looking', label: '在职-暂不考虑' },
-  { value: 'employed_looking', label: '在职-看机会' },
-  { value: 'student_internship', label: '在校-找实习' },
-  { value: 'fresh_graduate', label: '应届生' }
-]
-
-const { width } = useWindowSize()
-const isMobile = computed(() => width.value < 640)
-
-// 根据屏幕宽度设置弹窗宽度
-const dialogWidth = computed(() => {
-  if (isMobile.value) return '100%'
-  if (width.value < 1024) return '80%'
-  return '640px'
-})
-
-// 处理关闭对话框
 const handleClose = () => {
-  dialogVisible.value = false
+  emit('update:modelValue', false)
 }
 
-// 获取工作类型标签
+const handleSubmit = () => {
+  emit('submit', form.value)
+}
+
+// 标签获取方法
 const getJobTypeLabel = (value) => {
   const option = JOB_TYPE_OPTIONS.find(opt => opt.value === value)
   return option ? option.label : '请选择工作类型'
 }
 
-// 获取求职状态标签
 const getJobStatusLabel = (value) => {
-  const option = LOCAL_JOB_STATUS_OPTIONS.find(opt => opt.value === value)
+  const option = JOB_STATUS_OPTIONS.find(opt => opt.value === value)
   return option ? option.label : '请选择求职状态'
 }
 
-// 获取薪资标签
 const getSalaryLabel = (value) => {
   const option = SALARY_OPTIONS.find(opt => opt.value === value)
   return option ? option.label : '请选择期望薪资'
 }
 </script>
 
-<style>
-.edit-dialog {
-  @apply max-h-screen flex flex-col;
+<style scoped>
+/* 添加一些过渡动画 */
+.transition-all {
+  @apply duration-200;
 }
 
-.edit-dialog :deep(.el-dialog__body) {
-  @apply flex-1 overflow-y-auto;
+/* 输入框聚焦效果 */
+input:focus, select:focus {
+  @apply ring-2 ring-blue-500/10 border-blue-500;
 }
 
-.edit-dialog :deep(.el-dialog__footer) {
-  @apply sticky bottom-0 bg-gray-50 z-10;
-}
-
-/* 移动端样式 */
-@media (max-width: 640px) {
-  .edit-dialog {
-    margin: 0 !important;
-  }
-
-  .edit-dialog :deep(.el-dialog__body) {
-    @apply p-0;
-    height: calc(100vh - 120px);
-    overflow-y: auto;
-  }
-
-  /* 调整表单布局 */
-  .dialog-body {
-    @apply px-4;  /* 添加左右内边距 */
-  }
-
-  /* 在移动端时所有输入框占满整行 */
-  .grid {
-    @apply grid-cols-1 gap-3;
-  }
-
-  /* 调整输入框在移动端的大小和间距 */
-  input, select, textarea {
-    @apply text-base py-3;  /* 增加高度使触摸更容易 */
-  }
-
-  /* 调整标签和输入框的间距 */
-  .space-y-2 {
-    @apply space-y-1.5;
-  }
-
-  /* 调整表单项之间的间距 */
-  .space-y-4 {
-    @apply space-y-3;
-  }
-
-  /* 确保底部按钮有足够的大小和间距 */
-  .dialog-footer button {
-    @apply py-2.5 px-4 text-base;
-  }
-
-  /* 调整下拉选项在移动端的显示 */
-  .listbox-button {
-    @apply py-3;  /* 增加高度便于触摸 */
-  }
-
-  .listbox-options {
-    @apply max-h-60;  /* 限制最大高度 */
-  }
-
-  /* 调整选项的触摸区域 */
-  .listbox-option {
-    @apply py-3;
-  }
-}
-
-/* 桌面端样式 */
-@media (min-width: 641px) {
-  .edit-dialog :deep(.el-dialog__body) {
-    @apply p-0;
-    max-height: calc(80vh - 120px);
-    overflow-y: auto;
-  }
-
-  /* 桌面端保持原有的间距 */
-  .dialog-body {
-    @apply px-6;
-  }
-}
-
-/* 通用样式 */
-.dialog-header {
-  @apply px-6 pt-4 pb-0 border-b border-gray-200;
-}
-
-.dialog-footer {
-  @apply px-6 py-4 bg-gray-50 border-t border-gray-200;
-}
-
-/* 输入框聚焦时的样式 */
-input:focus, textarea:focus {
-  @apply ring-2 ring-gray-900/10 border-gray-900;
-}
-
-/* 禁用状态的样式 */
-input:disabled, textarea:disabled {
-  @apply bg-gray-100 cursor-not-allowed;
+/* 下拉选项悬停效果 */
+.hover\:bg-blue-50:hover {
+  @apply bg-blue-50 text-blue-600;
 }
 </style> 

@@ -1,201 +1,173 @@
 <!-- src/views/user/MyProfile/dialogs/EditBasicDialog.vue -->
 <template>
-  <el-dialog
-    :model-value="modelValue"
-    @update:model-value="$emit('update:modelValue', $event)"
-    :width="dialogWidth"
-    :fullscreen="isMobile"
-    :close-on-click-modal="false"
-    :show-close="false"
-    @close="handleClose"
-    class="edit-dialog"
-    destroy-on-close
-  >
-    <div class="dialog-container">
-      <!-- Header -->
-      <div class="dialog-header">
-        <div class="flex items-center justify-between">
-          <h3 class="text-lg font-medium text-gray-900">编辑基本信息</h3>
-          <!-- 移动端显示关闭按钮 -->
-          <button
-            v-if="isMobile"
-            @click="handleClose"
-            class="text-gray-400 hover:text-gray-500"
+  <TransitionRoot appear :show="modelValue" as="template">
+    <Dialog as="div" class="relative z-50" @close="handleClose">
+      <!-- 背景遮罩 -->
+      <TransitionChild
+        as="template"
+        enter="duration-300 ease-out"
+        enter-from="opacity-0"
+        enter-to="opacity-100"
+        leave="duration-200 ease-in"
+        leave-from="opacity-100"
+        leave-to="opacity-0"
+      >
+        <div class="fixed inset-0 bg-black/25" />
+      </TransitionChild>
+
+      <!-- 对话框 -->
+      <div class="fixed inset-0 overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-4 text-center">
+          <TransitionChild
+            as="template"
+            enter="duration-300 ease-out"
+            enter-from="opacity-0 scale-95"
+            enter-to="opacity-100 scale-100"
+            leave="duration-200 ease-in"
+            leave-from="opacity-100 scale-100"
+            leave-to="opacity-0 scale-95"
           >
-            <XMarkIcon class="h-6 w-6" />
-          </button>
-        </div>
-      </div>
+            <DialogPanel class="w-full max-w-2xl transform overflow-hidden rounded-xl bg-white text-left align-middle shadow-xl transition-all">
+              <!-- 头部 -->
+              <DialogTitle as="div" class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">编辑基本信息</h3>
+                <button
+                  @click="handleClose"
+                  class="rounded-full p-1 hover:bg-gray-100 transition-colors"
+                >
+                  <XMarkIcon class="w-5 h-5 text-gray-400" />
+                </button>
+              </DialogTitle>
 
-      <!-- Body -->
-      <div class="dialog-body  pt-4 pb-6">
-        <el-form
-          ref="formRef"
-          :model="form"
-          :disabled="loading"
-        >
-          <form @submit.prevent="handleSubmit" class="space-y-4 sm:space-y-5">
-            <!-- 两列布局 -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-              <!-- 姓名 -->
-              <div class="space-y-2">
-                <label class="block text-sm font-medium text-gray-700">姓名</label>
-                <el-form-item prop="name" class="mb-0">
-                  <input
-                    v-model="form.name"
-                    type="text"
-                    placeholder="请输入姓名"
-                    class="block w-full rounded-md border-gray-300 bg-gray-50 py-2 px-3 shadow-sm focus:border-gray-900 focus:ring-1 focus:ring-gray-900/10 sm:text-sm"
-                  />
-                </el-form-item>
-              </div>
-
-              <!-- 性别 -->
-              <div class="space-y-2">
-                <label class="block text-sm font-medium text-gray-700">性别</label>
-                <el-form-item prop="gender" class="mb-0">
-                  <Listbox v-model="form.gender">
-                    <div class="relative w-full">
-                      <ListboxButton class="relative w-full cursor-default rounded-md border border-gray-300 bg-gray-50 py-2 pl-3 pr-10 text-left shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900/10 sm:text-sm">
-                        <span class="block truncate">{{ getGenderLabel(form.gender) }}</span>
-                        <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                          <ChevronUpDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
-                        </span>
-                      </ListboxButton>
-
-                      <transition
-                        leave-active-class="transition ease-in duration-100"
-                        leave-from-class="opacity-100"
-                        leave-to-class="opacity-0"
-                      >
-                        <ListboxOptions class="absolute z-10 mt-1 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                          <ListboxOption
-                            v-for="option in GENDER_OPTIONS"
-                            :key="option.value"
-                            :value="option.value"
-                            v-slot="{ active, selected }"
-                          >
-                            <div :class="[
-                              active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
-                              'relative cursor-default select-none py-2 pl-3 pr-9'
-                            ]">
-                              <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">
-                                {{ option.label }}
-                              </span>
-                              <span v-if="selected" :class="[active ? 'text-gray-900' : 'text-gray-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                <CheckIcon class="h-5 w-5" aria-hidden="true" />
-                              </span>
-                            </div>
-                          </ListboxOption>
-                        </ListboxOptions>
-                      </transition>
+              <!-- 表单内容 -->
+              <div class="px-6 py-4">
+                <form @submit.prevent="handleSubmit" class="space-y-4">
+                  <!-- 第一行：姓名和性别 -->
+                  <div class="grid grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">姓名</label>
+                      <input
+                        v-model="formData.name"
+                        type="text"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="请输入姓名"
+                      />
                     </div>
-                  </Listbox>
-                </el-form-item>
-              </div>
-
-              <!-- 手机号 -->
-              <div class="space-y-2">
-                <label class="block text-sm font-medium text-gray-700">手机号</label>
-                <el-form-item prop="phone" class="mb-0">
-                  <input
-                    v-model="form.phone"
-                    type="tel"
-                    placeholder="请输入手机号"
-                    class="block w-full rounded-md border-gray-300 bg-gray-50 py-2 px-3 shadow-sm focus:border-gray-900 focus:ring-1 focus:ring-gray-900/10 sm:text-sm"
-                  />
-                </el-form-item>
-              </div>
-
-              <!-- 邮箱 -->
-              <div class="space-y-2">
-                <label class="block text-sm font-medium text-gray-700">邮箱</label>
-                <el-form-item prop="email" class="mb-0">
-                  <input
-                    v-model="form.email"
-                    type="email"
-                    placeholder="请输入邮箱"
-                    class="block w-full rounded-md border-gray-300 bg-gray-50 py-2 px-3 shadow-sm focus:border-gray-900 focus:ring-1 focus:ring-gray-900/10 sm:text-sm"
-                  />
-                </el-form-item>
-              </div>
-
-              <!-- 所在地 -->
-              <div class="space-y-2">
-                <label class="block text-sm font-medium text-gray-700">所在地</label>
-                <el-form-item prop="location" class="mb-0">
-                  <input
-                    v-model="form.location"
-                    type="text"
-                    placeholder="请输入所在地"
-                    class="block w-full rounded-md border-gray-300 bg-gray-50 py-2 px-3 shadow-sm focus:border-gray-900 focus:ring-1 focus:ring-gray-900/10 sm:text-sm"
-                  />
-                </el-form-item>
-              </div>
-
-              <!-- 出生日期 -->
-              <div class="space-y-2">
-                <label class="block text-sm font-medium text-gray-700">出生日期</label>
-                <el-form-item prop="birth_date" class="mb-0">
-                  <div class="relative w-full">
-                    <input
-                      v-model="form.birth_date"
-                      type="date"
-                      class="!w-full block rounded-md border-gray-300 bg-gray-50 py-2 pl-3 pr-10 text-left shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900/10 sm:text-sm"
-                    />
-                    <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                      <CalendarIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
-                    </span>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">性别</label>
+                      <div class="flex flex-wrap gap-2">
+                        <button
+                          v-for="option in genderOptions"
+                          :key="option.value"
+                          type="button"
+                          class="px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
+                          :class="[
+                            formData.gender === option.value
+                              ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
+                              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                          ]"
+                          @click="formData.gender = option.value"
+                        >
+                          {{ option.label }}
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </el-form-item>
+
+                  <!-- 第二行：出生日期和手机号码 -->
+                  <div class="grid grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">出生日期</label>
+                      <input
+                        v-model="formData.birth_date"
+                        type="date"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">手机号码</label>
+                      <input
+                        v-model="formData.phone"
+                        type="tel"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="请输入手机号码"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- 第三行：邮箱和所在城市 -->
+                  <div class="grid grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
+                      <input
+                        v-model="formData.email"
+                        type="email"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="请输入邮箱"
+                      />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">所在城市</label>
+                      <input
+                        v-model="formData.location"
+                        type="text"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="请输入所在城市"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- 第四行：个人简介（独占一行） -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">个人简介</label>
+                    <textarea
+                      v-model="formData.personal_summary"
+                      rows="4"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="请输入个人简介"
+                    ></textarea>
+                  </div>
+                </form>
               </div>
-            </div>
 
-            <!-- 个人简介 -->
-            <div class="space-y-2">
-              <label class="block text-sm font-medium text-gray-700">个人简介</label>
-              <el-form-item prop="personal_summary" class="mb-0">
-                <textarea
-                  v-model="form.personal_summary"
-                  rows="4"
-                  placeholder="请输入个人简介"
-                  class="block w-full rounded-md border-gray-300 bg-gray-50 py-2 px-3 shadow-sm focus:border-gray-900 focus:ring-1 focus:ring-gray-900/10 sm:text-sm"
-                ></textarea>
-              </el-form-item>
-            </div>
-          </form>
-        </el-form>
-      </div>
-
-      <!-- Footer -->
-      <div class="dialog-footer">
-        <div class="flex justify-end space-x-3">
-          <button
-            type="button"
-            @click="handleClose"
-            class="rounded-md border border-gray-300 bg-white px-3 sm:px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
-          >
-            取消
-          </button>
-          <button
-            type="button"
-            @click="handleSubmit"
-            :disabled="loading"
-            class="rounded-md border border-transparent bg-gray-900 px-3 sm:px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900/10 disabled:opacity-50"
-          >
-            {{ loading ? '保存中...' : '保存' }}
-          </button>
+              <!-- 底部按钮 -->
+              <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                <div class="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    @click="handleClose"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    取消
+                  </button>
+                  <button
+                    type="submit"
+                    @click="handleSubmit"
+                    :disabled="loading"
+                    class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {{ loading ? '保存中...' : '保存' }}
+                  </button>
+                </div>
+              </div>
+            </DialogPanel>
+          </TransitionChild>
         </div>
       </div>
-    </div>
-  </el-dialog>
+    </Dialog>
+  </TransitionRoot>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
-import { useWindowSize } from '@vueuse/core'
-import { XMarkIcon, ChevronUpDownIcon, CheckIcon, CalendarIcon } from '@heroicons/vue/24/outline'
-import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/vue'
+import { ref, watch } from 'vue'
+import {
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+  TransitionChild,
+  TransitionRoot
+} from '@headlessui/vue'
+import { XMarkIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -208,125 +180,58 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'submit'])
 
-const form = ref({
+const formData = ref({
   name: '',
   gender: '',
+  birth_date: '',
   phone: '',
   email: '',
   location: '',
-  birth_date: '',
   personal_summary: ''
 })
 
 // 监听初始数据变化
-watch(
-  () => props.initialData,
-  (newVal) => {
-    if (newVal) {
-      form.value = { ...newVal }
-    }
-  },
-  { immediate: true }
-)
+watch(() => props.initialData, (newData) => {
+  if (newData) {
+    formData.value = { ...newData }
+  }
+}, { immediate: true })
 
-const { width } = useWindowSize()
-const isMobile = computed(() => width.value < 640)
-
-// 根据屏幕宽度设置弹窗宽度
-const dialogWidth = computed(() => {
-  if (isMobile.value) return '100%'
-  if (width.value < 1024) return '80%'
-  return '640px'
-})
-
-// 处理关闭对话框
 const handleClose = () => {
   emit('update:modelValue', false)
 }
 
-// 提交表单
 const handleSubmit = () => {
-  // 直接提交表单数据，不需要额外包装
-  emit('submit', form.value)
+  emit('submit', formData.value)
 }
 
-const GENDER_OPTIONS = [
+// 性别选项
+const genderOptions = [
   { value: 'male', label: '男' },
   { value: 'female', label: '女' }
 ]
-
-const getGenderLabel = (value) => {
-  const option = GENDER_OPTIONS.find(option => option.value === value)
-  return option ? option.label : ''
-}
 </script>
 
-<style>
-.edit-dialog {
-  @apply max-h-screen flex flex-col;
+<style scoped>
+:deep(.el-select) {
+  width: 100%;
 }
 
-.edit-dialog :deep(.el-dialog__body) {
-  @apply flex-1 overflow-y-auto;
+:deep(.el-input__wrapper) {
+  background-color: white;
+  border-radius: 0.5rem;
 }
 
-.edit-dialog :deep(.el-dialog__footer) {
-  @apply sticky bottom-0 bg-gray-50 z-10;
+:deep(.el-select .el-input__wrapper) {
+  box-shadow: 0 0 0 1px #d1d5db;
+  padding: 0.5rem 0.75rem;
 }
 
-/* 移动端样式 */
-@media (max-width: 640px) {
-  .edit-dialog {
-    margin: 0 !important;
-  }
-
-  .edit-dialog :deep(.el-dialog__body) {
-    @apply p-0;
-    height: calc(100vh - 120px);
-    overflow-y: auto;
-  }
-
-  .dialog-body {
-    @apply px-4;  /* 减小内边距 */
-  }
-
-  /* 在移动端时所有输入框占满整行 */
-  .grid {
-    @apply grid-cols-1 gap-3;
-  }
-
-  /* 调整输入框在移动端的大小和间距 */
-  input, select, textarea {
-    @apply text-base py-3;  /* 增加高度使触摸更容易 */
-  }
-
-  /* 调整标签和输入框的间距 */
-  .space-y-2 {
-    @apply space-y-1.5;
-  }
-
-  /* 调整表单项之间的间距 */
-  .space-y-4 {
-    @apply space-y-3;
-  }
-
-  /* 确保底部按钮有足够的大小和间距 */
-  .dialog-footer button {
-    @apply py-2.5 px-4 text-base;
-  }
+:deep(.el-select .el-input__wrapper:hover) {
+  box-shadow: 0 0 0 1px #3b82f6;
 }
 
-/* 桌面端样式 */
-@media (min-width: 641px) {
-  .edit-dialog :deep(.el-dialog__body) {
-    @apply p-0;
-    max-height: calc(80vh - 120px);
-    overflow-y: auto;
-  }
-}
-
-/* 通用样式 */
-.dialog-header {
-  @apply px-6 pt-4 pb-0 border-b border-gray-200;
+:deep(.el-select .el-input__wrapper.is-focus) {
+  box-shadow: 0 0 0 2px #3b82f680, 0 0 0 1px #3b82f6 !important;
 }
 </style>

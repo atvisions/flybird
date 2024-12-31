@@ -106,7 +106,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { profile } from '@/api/profile'
+import profile from '@/api/profile'
 import HeadView from '../../components/HeadView.vue'
 import FootView from '../../components/FootView.vue'
 import MyProfile from './MyProfile/index.vue'

@@ -60,17 +60,23 @@ class PasswordLoginSerializer(serializers.Serializer):
 class RegisterSerializer(serializers.ModelSerializer):
     phone = serializers.CharField(required=True)
     password = serializers.CharField(write_only=True, required=True)
+    confirm_password = serializers.CharField(write_only=True, required=True)  # 新增确认密码字段
     code = serializers.CharField(write_only=True, required=True)
     
     class Meta:
         model = User
-        fields = ('phone', 'password', 'code')
+        fields = ('phone', 'password', 'confirm_password', 'code')  # 添加confirm_password到fields
         extra_kwargs = {
             'password': {'write_only': True},
+            'confirm_password': {'write_only': True},  # 确保确认密码也是write_only
         }
 
     def validate(self, attrs):
         try:
+            # 验证两次密码是否一致
+            if attrs.get('password') != attrs.get('confirm_password'):
+                raise serializers.ValidationError({'confirm_password': '两次输入的密码不一致'})
+
             # 验证手机号是否已注册
             phone = attrs.get('phone')
             if User.objects.filter(phone=phone).exists():
@@ -97,8 +103,9 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         try:
-            # 移除验证码字段
+            # 移除验证码和确认密码字段
             validated_data.pop('code', None)
+            validated_data.pop('confirm_password', None)  # 新增：移除确认密码字段
             
             # 创建用户
             user = User.objects.create_user(

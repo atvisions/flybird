@@ -1,22 +1,18 @@
 import axios from 'axios'
+import { STORAGE_KEYS } from '@/utils/storage'
 
-// 创建 axios 实例
 const request = axios.create({
-  baseURL: process.env.VUE_APP_API_URL,
-  timeout: 15000,
-  headers: {
-    'Accept': 'application/json',
-    'Content-Type': 'application/json'
-  }
+  baseURL: 'http://192.168.3.16:8000',
+  timeout: 5000,
+  withCredentials: true
 })
 
 // 请求拦截器
 request.interceptors.request.use(
   config => {
-    // 如果有 token，添加到 headers 中
-    const token = localStorage.getItem('access_token')
+    const token = localStorage.getItem(STORAGE_KEYS.TOKEN)
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+      config.headers['Authorization'] = `Bearer ${token}`
     }
     return config
   },
@@ -27,10 +23,12 @@ request.interceptors.request.use(
 
 // 响应拦截器
 request.interceptors.response.use(
-  response => {
-    return response
-  },
-  async error => {
+  response => response,
+  error => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem(STORAGE_KEYS.TOKEN)
+      delete request.defaults.headers.common['Authorization']
+    }
     return Promise.reject(error)
   }
 )

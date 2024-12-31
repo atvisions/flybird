@@ -16,7 +16,7 @@
               <div class="mt-2">
                 <input 
                   id="phone" 
-                  v-model="phone" 
+                  v-model="form.phone" 
                   type="text" 
                   required
                   placeholder="请输入手机号"
@@ -32,7 +32,7 @@
                 <div class="flex-grow">
                   <input 
                     id="code" 
-                    v-model="code" 
+                    v-model="form.code" 
                     type="text" 
                     required
                     placeholder="请输入验证码"
@@ -63,7 +63,7 @@
               <div class="mt-2 relative">
                 <input 
                   id="password" 
-                  v-model="password" 
+                  v-model="form.password" 
                   :type="showPassword ? 'text' : 'password'" 
                   required
                   placeholder="请输入新密码"
@@ -96,7 +96,7 @@
               <div class="mt-2">
                 <input 
                   id="confirm-password" 
-                  v-model="confirmPassword" 
+                  v-model="form.confirmPassword" 
                   type="password" 
                   required
                   placeholder="请再次输入密码"
@@ -154,151 +154,16 @@
 
 <script setup>
 import HeadView from '@/components/HeadView.vue'
-import { showToast } from '@/components/ToastMessage.js'
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { auth } from '@/api/auth'  // 只需要导入 auth
-import { SMS_SCENE } from '@/store'
+import { useResetPassword } from '@/composables/useResetPassword'
 
-const router = useRouter()
-const phone = ref('')
-const code = ref('')
-const password = ref('')
-const confirmPassword = ref('')
-const showPassword = ref(false)
-const loading = ref(false)
-const countdown = ref(0)
-
-// 表单验证相关代码保持不变...
-const isFormValid = computed(() => {
-  return phone.value && 
-         code.value && 
-         password.value &&
-         confirmPassword.value &&
-         password.value === confirmPassword.value &&
-         password.value.length >= 6 &&
-         /^1[3-9]\d{9}$/.test(phone.value)
-})
-
-// 验证函数保持不变...
-const validatePhone = () => {
-  const phoneRegex = /^1[3-9]\d{9}$/
-  if (!phone.value) {
-    showToast('请输入手机号', 'warning')
-    return false
-  }
-  if (!phoneRegex.test(phone.value)) {
-    showToast('请输入正确的手机号', 'warning')
-    return false
-  }
-  return true
-}
-
-const validatePassword = () => {
-  if (!password.value) {
-    showToast('请输入新密码', 'warning')
-    return false
-  }
-  if (password.value.length < 6) {
-    showToast('密码长度不能少于6位', 'warning')
-    return false
-  }
-  return true
-}
-
-const validateConfirmPassword = () => {
-  if (!confirmPassword.value) {
-    showToast('请确认密码', 'warning')
-    return false
-  }
-  if (confirmPassword.value !== password.value) {
-    showToast('两次输入的密码不一致', 'warning')
-    return false
-  }
-  return true
-}
-
-// 发送验证码
-const handleSendCode = async () => {
-  if (!validatePhone()) return
-  
-  try {
-    loading.value = true
-    const response = await auth.sendVerifyCode({
-      phone: phone.value.trim(),
-      scene: SMS_SCENE.RESET_PASSWORD  // 使用正确的场景值
-    })
-    
-    if (response.data?.code === 200) {
-      showToast('验证码已发送', 'success')
-      countdown.value = 60
-      const timer = setInterval(() => {
-        countdown.value--
-        if (countdown.value <= 0) {
-          clearInterval(timer)
-        }
-      }, 1000)
-    }
-  } catch (error) {
-    console.error('发送验证码失败:', error)
-    const errorMessage = error.response?.data?.message 
-      || error.response?.data?.detail
-      || error.message
-      || '发送验证码失败，请稍后重试'
-    showToast(errorMessage, 'error')
-  } finally {
-    loading.value = false
-  }
-}
-
-// 重置密码
-const handleResetPassword = async () => {
-  if (!validatePhone()) return
-  if (!code.value) {
-    showToast('请输入验证码', 'warning')
-    return
-  }
-  if (!validatePassword()) return
-  if (!validateConfirmPassword()) return
-
-  try {
-    loading.value = true
-    const response = await auth.resetPassword({
-      phone: phone.value.trim(),
-      code: code.value,
-      new_password: password.value,
-      confirm_password: confirmPassword.value
-    })
-
-    if (response.data?.code === 200) {
-      showToast('密码重置成功', 'success')
-      // 清空表单
-      phone.value = ''
-      code.value = ''
-      password.value = ''
-      confirmPassword.value = ''
-      
-      // 使用 Promise 来确保 toast 显示后再跳转
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      await router.push({
-        path: '/login',
-        query: { source: 'reset_success' }  // 添加来源标记
-      })
-    }
-  } catch (error) {
-    console.error('重置密码失败:', error)
-    const errorMessage = error.response?.data?.message 
-      || error.response?.data?.detail
-      || error.message
-      || '重置密码失败，请稍后重试'
-    showToast(errorMessage, 'error')
-  } finally {
-    loading.value = false
-  }
-}
-
-// 切换密码显示
-const togglePassword = () => {
-  showPassword.value = !showPassword.value
-}
+const {
+  form,
+  loading,
+  countdown,
+  showPassword,
+  isFormValid,
+  handleSendCode,
+  handleResetPassword,
+  togglePassword
+} = useResetPassword()
 </script>

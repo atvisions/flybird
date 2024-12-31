@@ -1,45 +1,58 @@
 <!-- src/views/user/MyProfile/index.vue -->
 <template>
-  <div class="container mx-auto">
+  <div class="container mx-auto pb-6">
     <div class="max-w-4xl mx-auto space-y-4">
       <BasicInfo
         :resumeData="basicInfo"
-        :loading="loading"
+        :loading="profileLoading"
         :bioExpanded="bioExpanded"
         :showBioExpandButton="showBioExpandButton"
         @edit="handleEdit"
+        @update="handleUpdate"
         @toggleBioExpand="toggleBioExpand"
       />
 
       <ResumeStatus
         :completion-data="completionData"
         :profile-data="profileData"
-        :loading="loading"
+        :loading="profileLoading"
       />
 
+      <!-- 激活的模块列表 -->
       <ModuleList
         :active-modules="activeModules"
-        :loading="loading"
-        @edit="handleEditModule"
-        @add="addItem"
-        @remove="removeModule"
-        @edit-item="editItem"
-        @remove-item="removeItem"
+        :inactive-modules="inactiveModules"
+        :loading="modulesLoading"
+        @edit="handleEdit"
+        @remove="handleModuleRemove"
+        @edit-item="handleEditItem"
+        @remove-item="handleRemoveItem"
       />
 
-      <AddModule
-        :inactive-modules="inactiveModules"
-        :loading="loading"
-        @activate="activateModule"
-      />
+      <!-- 未激活的模块按钮组 -->
+      <div v-if="inactiveModules.length > 0" class="bg-white rounded-lg shadow">
+        <div class="px-4 py-3">
+          <h3 class="text-sm font-medium text-gray-900">添加更多模块</h3>
+          <div class="mt-3 flex flex-wrap gap-2">
+            <button
+              v-for="module in inactiveModules"
+              :key="module.type"
+              @click="handleAddModule(module.type)"
+              class="inline-flex items-center px-3 py-1.5 text-sm text-gray-600 bg-gray-50 hover:bg-gray-100 rounded border border-gray-200"
+            >
+              {{ getModuleName(module.type) }}
+              <PlusIcon class="w-4 h-4 ml-1 text-gray-400" />
+            </button>
+          </div>
+        </div>
+      </div>
 
       <!-- 工作经历编辑弹窗 -->
       <EditWorkExperienceDialog
-        v-if="currentModule?.type === 'work_experience'"
-        v-model="showEditModal"
-        :initial-data="editFormData"
-        :loading="loading"
-        @submit="handleSubmit"
+        v-model="showWorkExperienceDialog"
+        :initial-data="currentEditData"
+        :loading="profileLoading"
+        @submit="handleWorkExperienceSubmit"
       />
 
       <!-- 求职意向编辑弹窗 -->
@@ -47,7 +60,7 @@
         v-if="currentModule?.type === 'job_intention'"
         v-model="showEditModal"
         :initial-data="editFormData"
-        :loading="loading"
+        :loading="profileLoading"
         @submit="handleSubmit"
       />
 
@@ -56,7 +69,7 @@
         v-if="currentModule?.type === 'basic_info'"
         v-model="showEditModal"
         :initial-data="editFormData"
-        :loading="loading"
+        :loading="profileLoading"
         @submit="handleSubmit"
       />
 
@@ -65,15 +78,88 @@
         :profile-data="profileData"
         @apply="handleAIOptimize"
       />
+
+      <!-- 删除确认弹窗 -->
+      <TransitionRoot appear :show="showDeleteConfirm" as="template">
+        <Dialog as="div" class="relative z-50" @close="showDeleteConfirm = false">
+          <!-- 背景遮罩 -->
+          <TransitionChild
+            as="template"
+            enter="duration-300 ease-out"
+            enter-from="opacity-0"
+            enter-to="opacity-100"
+            leave="duration-200 ease-in"
+            leave-from="opacity-100"
+            leave-to="opacity-0"
+          >
+            <div class="fixed inset-0 bg-black/25" />
+          </TransitionChild>
+
+          <!-- 对话框 -->
+          <div class="fixed inset-0 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 text-center">
+              <TransitionChild
+                as="template"
+                enter="duration-300 ease-out"
+                enter-from="opacity-0 scale-95"
+                enter-to="opacity-100 scale-100"
+                leave="duration-200 ease-in"
+                leave-from="opacity-100 scale-100"
+                leave-to="opacity-0 scale-95"
+              >
+                <DialogPanel class="w-full max-w-md transform overflow-hidden rounded-xl bg-white text-left align-middle shadow-xl transition-all">
+                  <div class="p-6">
+                    <div class="flex items-start space-x-3">
+                      <div class="p-2 bg-red-50 rounded-full flex-shrink-0">
+                        <ExclamationTriangleIcon class="w-6 h-6 text-red-600" />
+                      </div>
+                      <div class="flex-1">
+                        <DialogTitle as="h3" class="text-lg font-medium text-gray-900">
+                          确认删除工作经历？
+                        </DialogTitle>
+                        <p class="mt-2 text-sm text-gray-500">
+                          删除后将无法恢复，请确认是否继续。
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div class="mt-6 flex justify-end space-x-3">
+                      <button
+                        type="button"
+                        @click="showDeleteConfirm = false"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                      >
+                        取消
+                      </button>
+                      <button
+                        type="button"
+                        @click="confirmDelete"
+                        class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                      >
+                        确认删除
+                      </button>
+                    </div>
+                  </div>
+                </DialogPanel>
+              </TransitionChild>
+            </div>
+          </div>
+        </Dialog>
+      </TransitionRoot>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useModules } from './composables/useModules'
-import { profile } from '@/api/profile'
+import { useProfileData } from './composables/useProfileData'
+import profile from '@/api/profile'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { PlusIcon, ExclamationTriangleIcon } from '@heroicons/vue/24/outline'
+import { ALL_MODULES } from '@/constants'
+import { useLoading } from './composables/useLoading'
+import { TransitionRoot, TransitionChild, Dialog, DialogPanel, DialogTitle } from '@headlessui/vue'
 
 // 组件引入
 import BasicInfo from './components/BasicInfo.vue'
@@ -85,59 +171,36 @@ import EditJobIntentionDialog from './dialogs/EditJobIntentionDialog.vue'
 import EditWorkExperienceDialog from './dialogs/EditWorkExperienceDialog.vue'
 import AIOptimizeDialog from './dialogs/AIOptimizeDialog.vue'
 
-// 状态管理
+// 使用模块管理
 const { 
-  activeModules, 
-  currentModule, 
-  inactiveModules, 
-  addItem, 
-  removeModule, 
-  activateModule 
+  loading: modulesLoading,
+  activeModules,
+  inactiveModules,
+  fetchModulesData,
+  addModule,
+  removeModule
 } = useModules()
+
+const {
+  loading: profileLoading,
+  basicInfo,
+  profileData,
+  completionData,
+  fetchBasicInfo,
+  fetchModuleData,
+  fetchCompletionData
+} = useProfileData()
+
+// 当前编辑的模块
+const currentModule = ref(null)
 
 // 基本状态
 const showEditModal = ref(false)
 const editFormData = ref({})
-const loading = ref(false)
 
 // 基本信息控制
 const bioExpanded = ref(false)
 const showBioExpandButton = ref(false)
-
-// 基本信息数据
-const basicInfo = ref({})
-
-// 档案数据
-const profileData = ref({
-  basic_info: {
-    name: '',
-    name_en: '',
-    personal_summary: '',
-    personal_summary_en: '',
-    gender: '',
-    phone: '',
-    email: '',
-    location: '',
-    birth_date: ''
-  },
-  job_intention: {
-    job_type: '',
-    job_status: '',
-    expected_salary: '',
-    expected_city: '',
-    industries: ''
-  },
-  work_experiences: [],
-  educations: [],
-  skills: []
-})
-
-// 完整度数据
-const completionData = ref({
-  total_score: 0,
-  dimensions: {},
-  suggestions: []
-})
 
 // 添加缺失的响应式变量
 const showAIOptimizeDialog = ref(false)
@@ -157,153 +220,159 @@ defineEmits([
   'remove-item'
 ])
 
-// 获取档案数据
-const fetchProfileData = async () => {
+// 初始化数据
+onMounted(async () => {
   try {
-    loading.value = true
+    // 获取基本信息
+    await fetchBasicInfo()
+    console.log('传递给 BasicInfo 组件的数据:', basicInfo.value)
     
-    const completenessResponse = await profile.getCompleteness()
-    if (completenessResponse.data?.code === 200) {
-      const data = completenessResponse.data.data
-      completionData.value = {
-        total_score: data.total_score || 0,
-        dimensions: data.dimensions || {},
-        suggestions: data.suggestions || []
-      }
-    }
-
-    // 获取完整档案数据
-    const response = await profile.getComplete()
-    if (response.data?.code === 200) {
-      const data = response.data.data
-      
-      // 更新档案数据
-      profileData.value = {
-        basic_info: data.basic_info || {},
-        job_intention: data.job_intention || {},
-        work_experiences: data.work_experiences || [],
-        educations: data.educations || [],
-        skills: data.skills || [],
-        certificates: data.certificates || [],
-        projects: data.projects || []
-      }
-
-      // 更新基本信息
-      basicInfo.value = data.basic_info || {}
-
-      // 更新活动模块数据
-      const jobIntentionModule = activeModules.value.find(m => m.type === 'job_intention')
-      if (jobIntentionModule) {
-        jobIntentionModule.data = data.job_intention || {}
-      }
-
-      const workExperienceModule = activeModules.value.find(m => m.type === 'work_experience')
-      if (workExperienceModule) {
-        workExperienceModule.data = data.work_experiences || []
-      }
-    }
-  } catch (error) {
-    console.error('获取数据失败:', error)
-    ElMessage.error('获取数据失败，请稍后重试')
-  } finally {
-    loading.value = false
-  }
-}
-
-// 监听完整度数据变化
-watch(() => completionData.value, (newVal) => {}, { deep: true })
-
-// 处理编辑基本信息
-const handleEdit = () => {
-  currentModule.value = {
-    type: 'basic_info',
-    data: basicInfo.value
-  }
-  editFormData.value = { ...currentModule.value.data }
-  showEditModal.value = true
-}
-
-// 编辑具体项目（用于工作经历）
-const editItem = (moduleId, item) => {
-  currentModule.value = activeModules.value.find(m => m.id === moduleId)
-  editFormData.value = { ...item }
-  showEditModal.value = true
-}
-
-// 删除工作经历
-const removeItem = async (moduleId, itemId) => {
-  try {
-    await ElMessageBox.confirm('确定要删除这条记录吗？', '提示', {
-      type: 'warning'
+    // 获取模块数据
+    await fetchModulesData()
+    console.log('模块数据:', {
+      active: activeModules.value,
+      inactive: inactiveModules.value
     })
-    
-    if (moduleId === 'work_experience') {
-      await profile.deleteWorkExperience(itemId)
-      ElMessage.success('删除成功')
-      await fetchProfileData()
-    }
+
+    // 获取完整度数据
+    await fetchCompletionData()
+    console.log('完整度数据:', completionData.value)
   } catch (error) {
-    if (error !== 'cancel') {
-      console.error('删除失败:', error)
-      ElMessage.error('删除失败')
+    console.error('初始化数据失败:', error)
+    ElMessage.error('获取数据失败，请稍后重试')
+  }
+})
+
+// 工作经历相关
+const showWorkExperienceDialog = ref(false)
+const currentEditData = ref({})
+const { loading: submitLoading, withLoading } = useLoading()
+
+// 统一处理编辑事件
+const handleEdit = (type, item = null) => {
+  console.log('handleEdit - type:', type, 'item:', item)
+  if (type === 'work_experience') {
+    currentEditData.value = item || {}
+    showWorkExperienceDialog.value = true
+  } else if (type === 'basic_info') {
+    currentModule.value = {
+      type,
+      data: item || basicInfo.value
     }
+    console.log('基本信息编辑数据:', currentModule.value)
+    editFormData.value = { ...currentModule.value.data }
+    showEditModal.value = true
+  } else {
+    // 处理其他类型的编辑
+    currentModule.value = {
+      type,
+      data: item || {}
+    }
+    editFormData.value = { ...currentModule.value.data }
+    showEditModal.value = true
+  }
+}
+
+// 处理编辑具体项目
+const handleEditItem = (type, item) => {
+  console.log('handleEditItem - type:', type, 'item:', item)
+  handleEdit(type, item)
+}
+
+// 删除确认弹窗状态
+const showDeleteConfirm = ref(false)
+const itemToDelete = ref(null)
+
+// 处理删除
+const handleRemoveItem = async (type, itemId) => {
+  if (type === 'work_experience') {
+    itemToDelete.value = { type, id: itemId }
+    showDeleteConfirm.value = true
+  }
+}
+
+// 确认删除
+const confirmDelete = async () => {
+  try {
+    await withLoading(async () => {
+      await profile.workExperience.delete(itemToDelete.value.id)
+      ElMessage.success('删除成功')
+      await fetchModulesData()
+    })
+  } catch (error) {
+    console.error('删除失败:', error)
+    ElMessage.error('删除失败，请稍后重试')
+  } finally {
+    showDeleteConfirm.value = false
+    itemToDelete.value = null
+  }
+}
+
+// 处理工作经历提交
+const handleWorkExperienceSubmit = async (data) => {
+  try {
+    await withLoading(async () => {
+      if (data.id) {
+        await profile.workExperience.update(data.id, data)
+        ElMessage.success('更新成功')
+      } else {
+        await profile.workExperience.add(data)
+        ElMessage.success('添加成功')
+      }
+      showWorkExperienceDialog.value = false
+      await fetchModulesData()
+    })
+  } catch (error) {
+    console.error('保存失败:', error)
+    ElMessage.error('保存失败，请稍后重试')
+  }
+}
+
+// 处理求职意向提交
+const handleJobIntentionSubmit = async (data) => {
+  try {
+    await withLoading(async () => {
+      await profile.jobIntention.update(data)
+      ElMessage.success('保存成功')
+      showEditModal.value = false
+      await fetchModulesData()
+    })
+  } catch (error) {
+    console.error('保存失败:', error)
+    ElMessage.error('保存失败，请稍后重试')
   }
 }
 
 // 提交表单
 const handleSubmit = async (data) => {
   try {
-    loading.value = true
-    
     if (currentModule.value?.type === 'basic_info') {
-      // 基本信息保存
-      const response = await profile.updateBasicInfo(data)
-      if (response.data?.code === 200) {
-        ElMessage.success('保存成功')
-        showEditModal.value = false
-        await fetchProfileData()
-      } else {
-        throw new Error(response.data?.message || '保存失败')
-      }
-    } else if (currentModule.value?.type === 'work_experience') {
-      if (data.id) {
-        // 更新工作经历
-        const response = await profile.workExperience.update(data.id, data)
+      await withLoading(async () => {
+        // 基本信息保存
+        const response = await profile.updateBasicInfo(data)
         if (response.data?.code === 200) {
-          ElMessage.success('更新成功')
+          ElMessage.success('保存成功')
           showEditModal.value = false
-          await fetchProfileData()
+          // 重新获取基本信息
+          await fetchBasicInfo()
+          // 刷新完整度
+          await fetchCompletionData()
         } else {
-          throw new Error(response.data?.message || '更新失败')
+          throw new Error(response.data?.message || '保存失败')
         }
-      } else {
-        // 添加工作经历
-        const response = await profile.workExperience.add(data)
-        if (response.data?.code === 200) {
-          ElMessage.success('添加成功')
-          showEditModal.value = false
-          await fetchProfileData()
-        }
-      }
+      })
     } else if (currentModule.value?.type === 'job_intention') {
-      const response = await profile.updateJobIntention(data)
-      if (response.data?.code === 200) {
-        ElMessage.success('保存成功')
-        showEditModal.value = false
-        await fetchProfileData()
-      }
+      await handleJobIntentionSubmit(data)
     }
   } catch (error) {
     console.error('保存失败:', error)
     ElMessage.error(error.message || '保存失败，请稍后重试')
-  } finally {
-    loading.value = false
   }
 }
 
 // 处理编辑模块
 const handleEditModule = (moduleId) => {
-  currentModule.value = activeModules.value.find(m => m.id === moduleId)
+  currentModule.value = activeModules.value.find(m => m.type === moduleId)
   
   if (currentModule.value?.type === 'work_experience') {
     editFormData.value = {}
@@ -329,7 +398,30 @@ const handleAIOptimize = (optimizedData) => {
   })
 }
 
-onMounted(() => {
-  fetchProfileData()
-})
+// 添加更新处理方法
+const handleUpdate = async () => {
+  try {
+    await fetchBasicInfo()
+    await fetchModulesData()
+    await fetchCompletionData()
+  } catch (error) {
+    console.error('更新数据失败:', error)
+    ElMessage.error('更新失败，请稍后重试')
+  }
+}
+
+// 处理模块移除
+const handleModuleRemove = async (moduleType) => {
+  await removeModule(moduleType)
+}
+
+// 处理添加模块
+const handleAddModule = async (moduleType) => {
+  await addModule(moduleType)
+}
+
+// 获取模块显示名称
+const getModuleName = (type) => {
+  return ALL_MODULES[type] || type
+}
 </script>

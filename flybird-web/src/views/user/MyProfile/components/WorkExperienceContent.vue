@@ -45,7 +45,7 @@
 </template>
 
 <script setup>
-import { watch } from 'vue'
+import { watch, computed } from 'vue'
 import { 
   PencilSquareIcon, 
   TrashIcon 
@@ -83,6 +83,45 @@ const formatDateRange = (startDate, endDate, isCurrent) => {
   
   return start
 }
+
+// 添加计算工作时长的函数
+const calculateDuration = (startDate, endDate, isCurrent) => {
+  if (!startDate) return ''
+  
+  const start = new Date(startDate)
+  const end = isCurrent ? new Date() : (endDate ? new Date(endDate) : null)
+  
+  if (!end) return ''
+  
+  const years = end.getFullYear() - start.getFullYear()
+  const months = end.getMonth() - start.getMonth()
+  
+  let totalMonths = years * 12 + months
+  if (end.getDate() < start.getDate()) {
+    totalMonths--
+  }
+  
+  const finalYears = Math.floor(totalMonths / 12)
+  const finalMonths = totalMonths % 12
+  
+  let duration = ''
+  if (finalYears > 0) {
+    duration += `${finalYears}年`
+  }
+  if (finalMonths > 0) {
+    duration += `${finalMonths}个月`
+  }
+  
+  return duration
+}
+
+// 添加计算属性处理工作经历数据
+const workExperiences = computed(() => {
+  return props.data?.map(item => ({
+    ...item,
+    duration: calculateDuration(item.start_date, item.end_date, item.is_current)
+  })) || []
+})
 
 // 监听数据变化
 watch(() => props.data, (newVal) => {

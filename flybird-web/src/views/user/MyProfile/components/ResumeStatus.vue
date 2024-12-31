@@ -133,7 +133,7 @@
   } from '@heroicons/vue/24/outline'
   import ProfilePreview from './ProfilePreview.vue'
   import AIOptimizeDialog from '../dialogs/AIOptimizeDialog.vue'
-  
+
   const props = defineProps({
     completionData: {
       type: Object,
@@ -153,12 +153,12 @@
       default: false
     }
   })
-  
+
   defineEmits(['ai-optimize', 'import', 'preview'])
-  
+
   // 预览对话框控制
   const showPreview = ref(false)
-  
+
   // 响应式布局
   const { width } = useWindowSize()
   const isMobile = computed(() => width.value < 640)
@@ -167,13 +167,13 @@
     if (width.value < 1024) return '80%'
     return '800px'  // 预览窗口可以稍微宽一点
   })
-  
+
   // 总分 - 保留一位小数
   const totalScore = computed(() => {
     const score = props.completionData?.total_score || 0
     return Number(score.toFixed(1))
   })
-  
+
   // 维度数据 - 保留整数
   const dimensions = computed(() => {
     const dims = props.completionData?.dimensions || {}
@@ -186,14 +186,14 @@
       return acc
     }, {})
   })
-  
+
   // 建议
   const suggestions = computed(() => {
     const rawSuggestions = props.completionData?.suggestions || []
     // 只返回建议消息
     return rawSuggestions.map(suggestion => suggestion.message)
   })
-  
+
   // 维度名称映射
   const getDimensionName = (key) => {
     const nameMap = {
@@ -204,7 +204,7 @@
     }
     return nameMap[key] || key
   }
-  
+
   // 进度条颜色 - 根据实际分数范围调整
   const progressColorClass = computed(() => {
     const score = totalScore.value
@@ -212,7 +212,7 @@
     if (score >= 40) return 'bg-yellow-500'
     return 'bg-red-500'
   })
-  
+
   // 文字颜色 - 与进度条颜色对应
   const progressTextColorClass = computed(() => {
     const score = totalScore.value
@@ -220,21 +220,21 @@
     if (score >= 40) return 'text-yellow-600'
     return 'text-red-600'
   })
-  
+
   // 处理预览按钮点击
   const handlePreview = () => {
     showPreview.value = true
   }
-  
+
   // AI优化相关
   const showOptimize = ref(false)
-  
+
   // 处理优化结果
   const handleOptimizeApply = (optimizedData) => {
     console.log('优化后的数据:', optimizedData)
     // 这里处理优化后的数据，可能需要调用 API 更新档案
   }
-  
+
   // 监听 profileData 变化，确保数据有效
   watch(() => props.profileData, (newVal) => {
     if (!newVal || Object.keys(newVal).length === 0) {

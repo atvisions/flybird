@@ -17,7 +17,7 @@
                 <input 
                   type="tel" 
                   id="phone" 
-                  v-model="phone"
+                  v-model="form.phone"
                   @input="handlePhoneInput"
                   required
                   class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 px-3"
@@ -34,7 +34,7 @@
                 <input 
                   :type="showPassword ? 'text' : 'password'"
                   id="password"
-                  v-model="password"
+                  v-model="form.password"
                   @input="handlePasswordInput"
                   required
                   class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 px-3 pr-10"
@@ -63,7 +63,7 @@
               <div class="flex items-center">
                 <input
                   id="remember-me"
-                  v-model="rememberMe"
+                  v-model="form.rememberMe"
                   type="checkbox"
                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                 />
@@ -146,53 +146,60 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import HeadView from '@/components/HeadView.vue'
 import { showToast } from '@/components/ToastMessage'
 import { auth } from '@/api/auth'
+import { STORAGE_KEYS } from '@/utils/storage'
+import { ElMessage } from 'element-plus'
+import { authService } from '@/services/authService'
+import { useLogin } from '@/composables/useLogin'
 
 const router = useRouter()
 const store = useStore()
 
-// 表单数据
-const phone = ref('')
-const password = ref('')
-const loading = ref(false)
-const rememberMe = ref(localStorage.getItem('remember_me') === 'true')
-const showPassword = ref(false)
-const phoneError = ref('')
-const passwordError = ref('')
+// 使用 useLogin composable
+const {
+  form,
+  loading,
+  sendingCode,
+  showPassword,
+  phoneError,
+  passwordError,
+  handlePasswordLogin,
+  handleCodeLogin
+} = useLogin()
 
-// 表单验证状态
+// 修改表单验证状态
 const isFormValid = computed(() => {
-  return phone.value && password.value && !loading.value && !phoneError.value && !passwordError.value
+  return form.value.phone && form.value.password && !loading.value && !phoneError.value && !passwordError.value
 })
 
-// 手机号验证
+// 修改手机号验证
 const validatePhone = () => {
   phoneError.value = ''
   const phoneRegex = /^1[3-9]\d{9}$/
-  if (!phone.value) {
+  if (!form.value.phone) {
     phoneError.value = '请输入手机号'
     return false
   }
-  if (!phoneRegex.test(phone.value)) {
+  if (!phoneRegex.test(form.value.phone)) {
     phoneError.value = '请输入正确的手机号'
     return false
   }
   return true
 }
 
-// 密码验证
+// 修改密码验证
 const validatePassword = () => {
   passwordError.value = ''
-  if (!password.value) {
+  if (!form.value.password) {
     passwordError.value = '请输入密码'
     return false
   }
-  if (password.value.length < 6) {
+  if (form.value.password.length < 6) {
     passwordError.value = '密码长度不能少于6位'
     return false
   }
@@ -200,38 +207,60 @@ const validatePassword = () => {
 }
 
 // 表单验证
-const validatePasswordForm = () => {
+const validateForm = () => {
   const isPhoneValid = validatePhone()
   const isPasswordValid = validatePassword()
   return isPhoneValid && isPasswordValid
 }
 
+// 处理登录错误
+const handleLoginError = (error) => {
+  console.error('登录失败:', error)
+  
+  // 处理特定错误
+  if (error.response?.data?.detail) {
+    if (error.response.data.detail.includes('不存在')) {
+      showToast('账号不存在，请先注册', 'warning')
+      setTimeout(() => {
+        router.push('/register')
+      }, 1500)
+      return
+    }
+    if (error.response.data.detail.includes('密码错误')) {
+      showToast('密码错误，请重试或找回密码', 'error')
+      return
+    }
+  }
+  
+  // 处理其他错误
+  const errorMessage = error.response?.data?.detail || 
+                      error.response?.data?.message || 
+                      error.message || 
+                      '登录失败，请重试'
+  showToast(errorMessage, 'error')
+}
+
 // 处理登录
 const handleLogin = async () => {
+  if (!validateForm()) return
+  
   try {
-    const response = await auth.login({
-      phone: phone.value.trim(),
-      password: password.value
+    loading.value = true
+    const success = await authService.login({
+      phone: form.value.phone,
+      password: form.value.password,
+      rememberMe: form.value.rememberMe  // 使用 form 中的 rememberMe
     })
-
-    console.log('Login response:', response)
-
-    // 处理登录响应
-    if (response.data) {
-      const { access, refresh, user } = response.data
-      
-      // 更新 store
-      await store.dispatch('login', {
-        token: { access, refresh },
-        user
-      })
-
+    
+    if (success) {
       showToast('登录成功', 'success')
-      router.push(router.currentRoute.value.query.redirect || '/user')
+      router.push('/')
     }
   } catch (error) {
-    console.error('Login failed:', error)
-    showToast(error.message || '登录失败，请稍后重试', 'error')
+    console.error('登录失败:', error)
+    handleLoginError(error)
+  } finally {
+    loading.value = false
   }
 }
 
@@ -264,9 +293,29 @@ onMounted(async () => {
 
 // 在组件挂载时恢复记住我状态
 onMounted(() => {
-  const savedRememberMe = localStorage.getItem('remember_me')
+  const savedRememberMe = localStorage.getItem(STORAGE_KEYS.REMEMBER_ME)
   if (savedRememberMe !== null) {
-    rememberMe.value = savedRememberMe === 'true'
+    form.value.rememberMe = savedRememberMe === 'true'  // 更新 form 中的 rememberMe
+  }
+})
+
+// 添加 watch 监听 rememberMe 的变化
+watch(() => form.value.rememberMe, (newValue) => {  // 监听 form 中的 rememberMe
+  if (!newValue) {
+    localStorage.removeItem(STORAGE_KEYS.REMEMBERED_PHONE)
+    localStorage.removeItem(STORAGE_KEYS.REMEMBER_ME)
+    localStorage.removeItem(STORAGE_KEYS.TOKEN)
+    localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
+    localStorage.removeItem(STORAGE_KEYS.TOKEN_EXPIRES)
+  }
+  localStorage.setItem(STORAGE_KEYS.REMEMBER_ME, newValue.toString())
+})
+
+// 在组件卸载时，如果没有选择记住我，清除相关信息
+onUnmounted(() => {
+  if (!form.value.rememberMe) {  // 使用 form 中的 rememberMe
+    localStorage.removeItem(STORAGE_KEYS.REMEMBERED_PHONE)
+    localStorage.removeItem(STORAGE_KEYS.REMEMBER_ME)
   }
 })
 </script>

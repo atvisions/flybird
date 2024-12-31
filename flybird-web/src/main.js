@@ -9,6 +9,8 @@ import { showToast } from '@/components/ToastMessage'
 import store from './store'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
+import { eventBus } from '@/utils/eventBus'
+import axios from 'axios'
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -20,5 +22,8 @@ app.use(ElementPlus)
 
 // 添加全局 Toast 方法
 app.config.globalProperties.$toast = showToast
+
+// 如果需要全局使用
+app.config.globalProperties.eventBus = eventBus
 
 app.mount('#app')

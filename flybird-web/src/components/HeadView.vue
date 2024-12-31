@@ -48,8 +48,10 @@
                       <nav class="space-y-2">
                         <router-link v-for="item in category.children" :key="item.href" :to="item.href"
                           class="flex items-center space-x-3 px-2 py-2 hover:bg-gray-50 group">
-                          <component :is="getIcon(item.icon)"
-                            class="flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-indigo-600" />
+                          <component 
+                            :is="getIcon(item.key)" 
+                            class="flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-indigo-600" 
+                          />
                           <div>
                             <span class="text-sm text-gray-900 group-hover:text-indigo-600">{{ item.name }}</span>
                             <p class="text-xs text-gray-500">{{ item.description }}</p>
@@ -124,13 +126,14 @@
             <button @click.stop="userMenuOpen = !userMenuOpen"
               class="flex items-center space-x-1 text-sm font-semibold text-gray-900 hover:text-indigo-600">
               <img 
-                :src="avatarUrl" 
-                :key="Date.now()"
+                :src="avatarUrl"
+                @error="handleImageError"
                 class="h-8 w-8 rounded-full"
                 alt="用户头像"
-                @error="handleImageError"
               />
-              <span class="hidden lg:inline">{{ username }}</span>
+              <span class="hidden lg:inline">
+                {{ store.state.userInfo?.username || '未设置昵称' }}
+              </span>
               <svg class="h-5 w-5" :class="{ 'rotate-180': userMenuOpen }" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd"
                   d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
@@ -164,9 +167,15 @@
       <!-- 用户信息头部 -->
       <div class="px-5 py-4 border-b border-gray-100">
         <div class="flex items-center space-x-3">
-          <img :src="avatarUrl" :key="avatarUrl" class="h-12 w-12 rounded-full" alt="用户头像" @error="handleImageError" />
+          <img 
+            :src="avatarUrl"
+            :key="avatarUrl"
+            class="h-12 w-12 rounded-full" 
+            alt="用户头像" 
+            @error="handleImageError" 
+          />
           <div>
-            <div class="text-base font-medium text-gray-900">{{ username }}</div>
+            <div class="text-base font-medium text-gray-900">{{ store.state.userInfo?.username || '未设置昵称' }}</div>
             <div class="text-sm text-gray-500">{{ userType }}</div>
           </div>
         </div>
@@ -174,16 +183,15 @@
 
       <!-- 菜单项 -->
       <div class="py-2">
-        <button v-for="item in navigation.userMenu" :key="item.key"
+        <button v-for="item in userMenuItems" :key="item.key"
           class="block w-full px-5 py-3 text-base text-gray-700 hover:bg-gray-50 text-left"
-          @click="handleMenuClick(item.key)">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-              <span>{{ item.name }}</span>
-            </div>
-            <span v-if="item.count" class="text-gray-400 text-sm">
-              {{ item.count }}
-            </span>
+          @click="item.action">
+          <div class="flex items-center space-x-2">
+            <component 
+              :is="getIcon(item.icon)" 
+              class="flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-indigo-600" 
+            />
+            <span>{{ item.label }}</span>
           </div>
         </button>
       </div>
@@ -232,7 +240,7 @@
         <div class="flex items-center justify-between p-4">
           <router-link to="/" class="flex items-center space-x-2" @click="toggleMenu">
             <img src="@/assets/images/logo.png" alt="" class="w-8 h-8">
-            <span class="text-gray-500 text-xl whitespace-nowrap">泡泡智造</span>
+            <span class="text-gray-500 text-xl whitespace-nowrap">飞鸟简历</span>
           </router-link>
           <!-- 关闭按钮 -->
           <button type="button" @click="toggleMenu" class="p-2 text-gray-700">
@@ -304,26 +312,75 @@
   </header>
 </template>
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useStore } from 'vuex'
 import { showToast } from '@/components/ToastMessage'
 import defaultAvatarImage from '@/assets/images/default-avatar.png'
 import navigation from '@/config/navigation.json'
+import { MEDIA_URL } from '@/config'
+import { eventBus } from '@/utils/eventBus'
+import { authService } from '@/services/authService'
+import { useLogout } from '@/composables/useLogout'
+
+// 导入所需的图标
 import {
-  DocumentIcon,
-  EnvelopeIcon as MailIcon,
-  ChatBubbleLeftIcon as ChatIcon,
+  AcademicCapIcon,
+  BookOpenIcon,
   BriefcaseIcon,
-  ChartBarIcon as ChartIcon,
-  UserGroupIcon as UsersIcon,
-  CalendarIcon,
+  ChartBarIcon,
+  ComputerDesktopIcon,
+  DocumentTextIcon,
   LightBulbIcon,
-  WrenchScrewdriverIcon as TemplateIcon,
-  CompassIcon,
-  NewspaperIcon as NewsIcon
+  PencilIcon,
+  UserIcon,
+  Cog6ToothIcon,
+  ArrowRightOnRectangleIcon,
+  HomeIcon,
+  DocumentDuplicateIcon,
+  StarIcon,
+  BellIcon,
+  HeartIcon,
+  ShieldCheckIcon,
+  UserCircleIcon,
+  WrenchScrewdriverIcon
 } from '@heroicons/vue/24/outline'
 
+// 添加图标映射函数
+const getIcon = (menuKey) => {
+  const iconMap = {
+    // 主导航图标
+    'home': HomeIcon,
+    'resume': DocumentDuplicateIcon,
+    'resources': BookOpenIcon,
+    'pro': StarIcon,
+    
+    // 用户菜单图标
+    'profile': UserCircleIcon,
+    'resumes': DocumentTextIcon,
+    'favorites': HeartIcon,
+    'notifications': BellIcon,
+    'settings': Cog6ToothIcon,
+    'security': ShieldCheckIcon,
+    'account': WrenchScrewdriverIcon,
+    'logout': ArrowRightOnRectangleIcon,
+
+    // 资源分类图标
+    'templates': DocumentDuplicateIcon,
+    'guides': LightBulbIcon,
+    'tools': ComputerDesktopIcon,
+    'career': BriefcaseIcon,
+    'education': AcademicCapIcon,
+    'statistics': ChartBarIcon,
+    'editor': PencilIcon
+  }
+  return iconMap[menuKey] || UserIcon // 默认返回 UserIcon
+}
+
+// 将 getIcon 添加到模板中使用
+const icons = {
+  getIcon
+}
 
 // 状态管理
 const router = useRouter()
@@ -333,31 +390,30 @@ const mobileMenuOpen = ref(false)
 const userMenuOpen = ref(false)
 const resourceMenuOpen = ref(false)
 const mobileSubmenuOpen = ref({})
+const userBasicInfo = ref(null)
+
+// 使用 useLogout composable
+const { handleLogout } = useLogout()
+
+// 监听 store 中的用户信息变化
+watch(
+  () => [store.state.userInfo, store.state.basicInfo],
+  ([newUserInfo, newBasicInfo]) => {
+    if (newUserInfo || newBasicInfo) {
+      userBasicInfo.value = {
+        ...newBasicInfo,
+        ...newUserInfo
+      }
+    }
+  },
+  { immediate: true }
+)
 
 // 响应式计算
 const isMobile = computed(() => {
   return window.innerWidth < 1024
 })
 
-
-
-// 获取图标组件
-const getIcon = (iconName) => {
-  const icons = {
-    document: DocumentIcon,
-    mail: MailIcon,
-    chat: ChatIcon,
-    briefcase: BriefcaseIcon,
-    chart: ChartIcon,
-    users: UsersIcon,
-    calendar: CalendarIcon,
-    lightbulb: LightBulbIcon,
-    template: TemplateIcon,
-    compass: CompassIcon,
-    news: NewsIcon
-  }
-  return icons[iconName] || null
-}
 
 
 
@@ -409,55 +465,57 @@ const getResourceCategories = computed(() => {
 // 从 store 获取用户信息和认证状态
 const isAuthenticated = computed(() => store.state.isAuthenticated)
 
-// 使用计算属性获取头像 URL，并添加时间戳防止缓存
-const avatarUrl = computed(() => {
-  const url = store.getters.getUserAvatar
-  // 如果是完整的 URL，直接添加时间戳
-  if (url.startsWith('http')) {
-    return `${url}?t=${Date.now()}`
-  }
-  // 否则拼接完整的 URL 和时间戳
-  return `${process.env.VUE_APP_API_URL}${url}?t=${Date.now()}`
-})
-
-// 处理图片加载错误
-const handleImageError = (e) => {
-  e.target.src = defaultAvatarImage
-}
-
-// 用户类型
-const userType = computed(() => {
-  return store.state.userInfo?.vip ? '会员用户' : '普通用户'
-})
-
-// 手机号脱敏处理
-const maskedPhone = computed(() => {
-  const phone = store.getters.getUserPhone
-  if (!phone) return ''
-  return phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2')
-})
-
-// 退出登录处理
-const handleLogout = async () => {
-  try {
-    await store.dispatch('logout')
-    userMenuOpen.value = false
-    showToast('已安全退出登录', 'success')
-  } catch (error) {
-    showToast('退出登录失败，但已清除本地登录状态', 'warning')
-    // 即使失败也重定向到登录页
-    router.push('/login')
-  }
-}
-
-// 用户昵称
+// 用户昵称计算属性
 const username = computed(() => {
-  const name = store.getters.getUserInfo?.username
-  if (name) return name
-  // 如果没有设置昵称，显示 Flybird + 手机号后4位
-  const phone = store.getters.getUserPhone
-  return phone ? `Flybird${phone.slice(-4)}` : 'Flybird用户'
+  return store.state.userInfo?.username || '未设置昵称'
 })
+
+// 头像 URL 计算属性
+const avatarUrl = computed(() => {
+  const avatar = store.state.basicInfo?.avatar
+  const baseUrl = process.env.VUE_APP_API_BASE_URL || 'http://192.168.3.16:8000'
+  
+  // 如果有头像且是相对路径，添加 API 基础路径
+  if (avatar && !avatar.startsWith('http')) {
+    return `${baseUrl}${avatar}`
+  }
+  
+  return avatar || defaultAvatarImage
+})
+
+// 获取用户信息的函数
+const fetchUserInfo = async () => {
+  if (store.state.isAuthenticated) {
+    await store.dispatch('fetchUserInfo')
+    
+    // 打印 API 返回的数据
+    console.log('API Response - BasicInfo:', store.state.basicInfo)
+    console.log('API Response - UserInfo:', store.state.userInfo)
+    
+    // 打印 store 中的状态
+    console.log('Store State:', {
+      basicInfo: store.state.basicInfo,
+      userInfo: store.state.userInfo,
+      isAuthenticated: store.state.isAuthenticated
+    })
+
+    userBasicInfo.value = {
+      ...store.state.basicInfo?.basic_info,
+      ...store.state.userInfo?.user
+    }
+  }
+}
+
+// 添加 watch 来监控数据变化
+watch(() => store.state.basicInfo, (newVal) => {
+  console.log('BasicInfo Changed:', newVal)
+  console.log('Avatar URL:', avatarUrl.value)
+  console.log('Base URL:', process.env.VUE_APP_API_BASE_URL)
+}, { deep: true })
+
+watch(() => store.state.userInfo, (newVal) => {
+  console.log('UserInfo Changed:', newVal)
+}, { deep: true })
 
 // 生命周期钩子
 onMounted(async () => {
@@ -467,20 +525,121 @@ onMounted(async () => {
       mobileMenuOpen.value = false
     }
   })
-
-  if (store.state.isAuthenticated && !store.state.userInfo) {
+  
+  if (store.state.isAuthenticated) {
     try {
-      await store.dispatch('fetchUserInfo')
+      await fetchUserInfo()
     } catch (error) {
-      // 即使失败也重定向到登录页
-      router.push('/login')
+      console.error('Failed to fetch user info:', error)
+      if (error.response?.status === 401) {
+        store.commit('SET_LOGGED_IN', false)
+      }
     }
+  }
+  
+  eventBus.on('avatar-updated', handleAvatarUpdate)
+})
+
+// 保持原有的事件清理
+onUnmounted(() => {
+  eventBus.off('avatar-updated', handleAvatarUpdate)
+})
+
+// 将 resize 处理函数提取出来
+const handleResize = () => {
+  if (!isMobile.value) {
+    mobileMenuOpen.value = false
+  }
+}
+
+// 简化头像更新处理方法
+const handleAvatarUpdate = (newAvatar) => {
+  store.commit('SET_BASIC_INFO', {
+    ...store.state.basicInfo,
+    avatar: newAvatar
+  })
+}
+
+// 监听登录状态变化
+watch(() => store.state.isAuthenticated, (newValue) => {
+  if (newValue) {
+    fetchUserInfo()
+  } else {
+    userBasicInfo.value = null
+  }
+}, { immediate: true })
+
+// 监听头像更新
+watch(() => store.state.avatarUpdateTime, () => {
+  if (store.state.isAuthenticated) {
+    fetchUserInfo()
   }
 })
 
-onUnmounted(() => {
-  document.removeEventListener('click', closeMenus)
-  window.removeEventListener('resize', () => { })
+// 处理图片加载错误
+const handleImageError = (e) => {
+  e.target.src = defaultAvatarImage
+}
+
+// 用户类型
+const userType = computed(() => '普通用户')
+
+// 手机号脱敏处理
+const maskedPhone = computed(() => '')
+
+// 用户菜单选项
+const userMenuItems = computed(() => {
+  return [
+    {
+      key: 'profile',
+      label: '我的档案',
+      icon: 'profile',
+      action: () => router.push('/user?tab=profile')
+    },
+    {
+      key: 'resumes',
+      label: '我的简历',
+      icon: 'resumes',
+      action: () => router.push('/user?tab=resumes')
+    },
+    {
+      key: 'favorites',
+      label: '我的收藏',
+      icon: 'favorites',
+      action: () => router.push('/user/favorites')
+    },
+    {
+      key: 'notifications',
+      label: '消息通知',
+      icon: 'notifications',
+      action: () => router.push('/user/notifications')
+    },
+    {
+      key: 'settings',
+      label: '账号设置',
+      icon: 'settings',
+      action: () => router.push('/user?tab=account')
+    },
+    {
+      key: 'logout',
+      label: '退出登录',
+      icon: 'logout',
+      action: handleLogout
+    }
+  ]
+})
+
+// 导航菜单
+const navItems = computed(() => {
+  const items = [
+    { label: '首页', path: '/' },
+    { label: '关于我们', path: '/about' },
+    { label: '联系我们', path: '/contact' }
+  ]
+  if (store.getters.getUserInfo?.role === 'admin') {
+    items.push({ label: '管理后台', path: '/admin' })
+  }
+  return items
 })
 </script>
 <style scoped>

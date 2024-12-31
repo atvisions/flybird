@@ -49,36 +49,15 @@ class PasswordLoginView(APIView):
             user = serializer.validated_data['user']
             refresh = RefreshToken.for_user(user)
             
-            # 获取用户的档案评分
-            try:
-                profile_score = user.profile_score
-                score_data = {
-                    'total_score': float(profile_score.total_score),
-                    'basic_dimension': float(profile_score.basic_dimension),
-                    'experience_dimension': float(profile_score.experience_dimension),
-                    'ability_dimension': float(profile_score.ability_dimension),
-                    'achievement_dimension': float(profile_score.achievement_dimension)
-                }
-            except ProfileScore.DoesNotExist:
-                score_data = None
-            
             # 打印成功登录信息
-            print(f"User logged in successfully - UID: {user.uid}, Phone: {user.phone}")
+            print(f"User logged in successfully - UID: {user.uid}")
             
             return Response({
                 'code': 200,
                 'message': '登录成功',
                 'data': {
                     'access': str(refresh.access_token),
-                    'refresh': str(refresh),
-                    'user': {
-                        'uid': user.uid,
-                        'username': user.username,
-                        'phone': user.phone,
-                        'basic_info': {
-                            'profile_score': score_data
-                        }
-                    }
+                    'refresh': str(refresh)
                 }
             })
             
@@ -99,13 +78,36 @@ class RegisterView(APIView):
     
     def post(self, request):
         try:
-            logger.info(f"注册请求数据: {request.data}")
+            # 记录请求数据（排除敏感信息）
+            safe_data = {
+                'phone': request.data.get('phone'),
+                'has_code': bool(request.data.get('code')),
+                'has_password': bool(request.data.get('password')),
+                'has_confirm_password': bool(request.data.get('confirm_password'))
+            }
+            logger.info(f"注册请求数据: {safe_data}")
+            
+            # 预检查密码匹配
+            password = request.data.get('password')
+            confirm_password = request.data.get('confirm_password')
+            if password != confirm_password:
+                return Response({
+                    'code': 400,
+                    'message': '两次输入的密码不一致',
+                    'errors': {
+                        'confirm_password': ['两次输入的密码不一致']
+                    }
+                }, status=status.HTTP_400_BAD_REQUEST)
             
             serializer = RegisterSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             
-            # 记录验证后的数据
-            logger.info(f"验证后的数据: {serializer.validated_data}")
+            # 记录验证后的数据（排除敏感信息）
+            safe_validated_data = {
+                'phone': serializer.validated_data.get('phone'),
+                'has_code': bool(serializer.validated_data.get('code'))
+            }
+            logger.info(f"验证后的数据: {safe_validated_data}")
             
             # 创建用户 - uid 和 username 会在 save() 方法中自动生成
             user = serializer.save()
@@ -119,30 +121,38 @@ class RegisterView(APIView):
                 'message': '注册成功',
                 'data': {
                     'access': str(refresh.access_token),
-                    'refresh': str(refresh),
-                    'user': {
-                        'uid': user.uid,  # 自动生成的 uid
-                        'username': user.username,  # 自动生成的用户名
-                        'phone': user.phone
-                    }
+                    'refresh': str(refresh)
                 }
             })
             
         except serializers.ValidationError as e:
-            logger.warning(f"注册验证失败: {e.detail}")
+            # 处理验证错误，提供更友好的错误消息
+            errors = e.detail
+            message = '验证失败'
+            
+            if 'phone' in errors:
+                message = str(errors['phone'][0])
+            elif 'code' in errors:
+                message = str(errors['code'][0])
+            elif 'password' in errors:
+                message = str(errors['password'][0])
+            elif 'confirm_password' in errors:
+                message = str(errors['confirm_password'][0])
+            
+            logger.warning(f"注册验证失败: {errors}")
             return Response({
                 'code': 400,
-                'message': '验证失败',
-                'errors': e.detail
+                'message': message,
+                'errors': errors
             }, status=status.HTTP_400_BAD_REQUEST)
             
         except Exception as e:
             logger.error(f"注册异常: {str(e)}", exc_info=True)
             return Response({
                 'code': 500,
-                'message': str(e)
+                'message': '注册失败，请稍后重试'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+        
 class LogoutView(APIView):
     def post(self, request):
         try:

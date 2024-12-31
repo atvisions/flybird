@@ -1,58 +1,71 @@
 import { ref } from 'vue'
-import { profile } from '@/api/profile'
+import { ElMessage } from 'element-plus'
+import profile from '@/api/profile'
 
 export function useProfileData() {
-  const resumeData = ref(null)
-  const bioExpanded = ref(false)
-  const showBioExpandButton = ref(false)
+  const loading = ref(false)
+  const basicInfo = ref({})
+  const profileData = ref({})
+  const completionData = ref({
+    total_score: 0,
+    dimensions: {},
+    suggestions: []
+  })
 
-  const fetchInitialData = async () => {
+  // 获取基本信息
+  const fetchBasicInfo = async () => {
     try {
+      loading.value = true
       const response = await profile.getBasicInfo()
-      if (response.data?.code === 200) {
-        resumeData.value = response.data.data
+      console.log('基本信息响应:', response)
+      
+      if (response?.data?.code === 200) {
+        // 合并 user 和 basic_info 数据
+        basicInfo.value = {
+          ...response.data.data.user,
+          ...response.data.data.basic_info
+        }
+        
+        // 更新 profileData
+        profileData.value = { 
+          ...profileData.value, 
+          basic: basicInfo.value 
+        }
       }
     } catch (error) {
-      console.error('获取个人资料失败:', error)
+      console.error('获取基本信息失败:', error)
+      ElMessage.error('获取基本信息失败，请稍后重试')
+    } finally {
+      loading.value = false
     }
   }
 
-  const updateResumeData = async (data) => {
+  // 获取完整度数据
+  const fetchCompletionData = async () => {
     try {
-      const response = await profile.updateBasicInfo(data)
-      if (response.data?.code === 200) {
-        resumeData.value = response.data.data
-        return true
+      loading.value = true
+      const response = await profile.getCompleteness()
+      if (response?.data?.code === 200) {
+        completionData.value = {
+          total_score: response.data.data?.total_score || 0,
+          dimensions: response.data.data?.dimensions || {},
+          suggestions: response.data.data?.suggestions || []
+        }
       }
-      return false
     } catch (error) {
-      console.error('更新个人资料失败:', error)
-      return false
+      console.error('获取完整度数据失败:', error)
+      ElMessage.error('获取完整度数据失败，请稍后重试')
+    } finally {
+      loading.value = false
     }
-  }
-
-  const getBioText = () => {
-    if (!resumeData.value) return ''
-    const bio = resumeData.value.personal_summary || ''
-    if (!bioExpanded.value && bio.length > 100) {
-      showBioExpandButton.value = true
-      return bio.slice(0, 100) + '...'
-    }
-    showBioExpandButton.value = bio.length > 100
-    return bio
-  }
-
-  const toggleBioExpand = () => {
-    bioExpanded.value = !bioExpanded.value
   }
 
   return {
-    resumeData,
-    bioExpanded,
-    showBioExpandButton,
-    fetchInitialData,
-    updateResumeData,
-    getBioText,
-    toggleBioExpand
+    loading,
+    basicInfo,
+    profileData,
+    completionData,
+    fetchBasicInfo,
+    fetchCompletionData
   }
 }

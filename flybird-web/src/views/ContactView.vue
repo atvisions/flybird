@@ -41,22 +41,42 @@
     <!-- 留言表单 -->
     <div class="bg-white rounded-lg shadow-sm p-8">
       <h2 class="text-2xl font-bold text-gray-900 mb-6">给我们留言</h2>
-      <form class="space-y-6">
+      <form class="space-y-6" @submit.prevent="handleSubmit">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">您的称呼</label>
-          <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+          <input 
+            type="text" 
+            v-model="formData.name"
+            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+            required
+          >
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">联系方式</label>
-          <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+          <input 
+            type="text"
+            v-model="formData.contact"
+            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+            required
+          >
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">留言内容</label>
-          <textarea rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+          <textarea 
+            rows="4"
+            v-model="formData.message"
+            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+            required
+          ></textarea>
         </div>
         <div>
-          <button type="submit" class="w-full bg-indigo-600 text-white px-6 py-3 rounded-md hover:bg-indigo-700 transition-colors">
-            提交留言
+          <button 
+            type="submit"
+            :disabled="isSubmitting"
+            class="w-full bg-indigo-600 text-white px-6 py-3 rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span v-if="isSubmitting">提交中...</span>
+            <span v-else>提交留言</span>
           </button>
         </div>
       </form>
@@ -68,11 +88,74 @@
 <script>
 import HeadView from '@/components/HeadView.vue'
 import FootView from '@/components/FootView.vue'
+import { ref } from 'vue'
+import { showToast } from '@/components/ToastMessage'
+import request from '@/utils/request'
 
 export default {
   components: {
     HeadView,
     FootView
+  },
+  setup() {
+    const formData = ref({
+      name: '',
+      contact: '',
+      message: ''
+    })
+    
+    const isSubmitting = ref(false)
+
+    const handleSubmit = async () => {
+      try {
+        isSubmitting.value = true
+        
+        // 这里添加表单验证
+        if (!formData.value.name.trim()) {
+          showToast('请输入您的称呼', 'warning')
+          return
+        }
+        
+        if (!formData.value.contact.trim()) {
+          showToast('请输入联系方式', 'warning')
+          return
+        }
+        
+        if (!formData.value.message.trim()) {
+          showToast('请输入留言内容', 'warning')
+          return
+        }
+
+        // 发送留言请求
+        const response = await request({
+          url: '/api/v1/feedback/submit/',
+          method: 'post',
+          data: formData.value
+        })
+
+        if (response.data?.code === 200) {
+          showToast('留言提交成功，我们会尽快回复您', 'success')
+          // 清空表单
+          formData.value = {
+            name: '',
+            contact: '',
+            message: ''
+          }
+        } else {
+          throw new Error(response.data?.message || '提交失败')
+        }
+      } catch (error) {
+        showToast(error.message || '提交失败，请稍后重试', 'error')
+      } finally {
+        isSubmitting.value = false
+      }
+    }
+
+    return {
+      formData,
+      isSubmitting,
+      handleSubmit
+    }
   }
 }
 </script>

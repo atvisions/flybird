@@ -1,19 +1,18 @@
 <template>
+  <div class="max-w-4xl mx-auto">
     <div class="space-y-6">
       <!-- 账户信息 -->
       <section class="bg-white rounded-lg shadow overflow-hidden">
-        <!-- 标题栏 -->
         <div class="px-6 py-4 bg-gray-100 border-b border-gray-200">
           <h2 class="text-lg font-medium text-gray-900">账户信息</h2>
         </div>
         
-        <!-- 内容区 -->
         <div class="p-6 space-y-6">
           <!-- UID -->
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-2">
               <span class="text-sm font-medium text-gray-500">用户 ID</span>
-              <span class="text-sm text-gray-900">{{ userInfo.uid || '暂无' }}</span>
+              <span class="text-sm text-gray-900">{{ uid }}</span>
             </div>
             <div class="text-xs text-gray-500">用户唯一标识</div>
           </div>
@@ -22,33 +21,31 @@
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-2">
               <span class="text-sm font-medium text-gray-500">昵称</span>
-              <span class="text-sm text-gray-900">{{ userInfo.username || '未设置' }}</span>
-              <span class="text-xs text-gray-400" v-if="!userInfo.username">
+              <span class="text-sm text-gray-900">{{ username }}</span>
+              <span class="text-xs text-gray-400" v-if="!username">
                 (默认为 Flybird + 手机号后4位)
               </span>
             </div>
-            <button @click="showNicknameModal = true"
-              class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700 
-              transition-colors rounded-md hover:bg-indigo-50">
+            <button 
+              @click="openNicknameModal"
+              class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-indigo-600 border border-indigo-600 
+              hover:bg-indigo-50 transition-colors rounded-md">
               <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                   d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
               </svg>
-              {{ userInfo.username ? '修改' : '设置' }}
+              设置
             </button>
           </div>
-
         </div>
       </section>
 
       <!-- 账户安全 -->
       <section class="bg-white rounded-lg shadow overflow-hidden">
-        <!-- 标题栏 -->
         <div class="px-6 py-4 bg-gray-100 border-b border-gray-200">
           <h2 class="text-lg font-medium text-gray-900">账户安全</h2>
         </div>
         
-        <!-- 内容区 -->
         <div class="p-6 space-y-6">
           <!-- 手机号 -->
           <div class="flex items-center justify-between">
@@ -60,16 +57,17 @@
                 </svg>
                 <span class="text-sm font-medium text-gray-900">手机号</span>
               </div>
-              <p class="mt-1 text-sm text-gray-500">{{ maskPhone(userPhone) }}</p>
+              <p class="mt-1 text-sm text-gray-500">{{ maskPhone(phone) }}</p>
             </div>
-            <button @click="showPhoneModal = true"
-              class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700 
-              transition-colors rounded-md hover:bg-indigo-50">
+            <button 
+              @click="openPhoneModal"
+              class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-indigo-600 border border-indigo-600 
+              hover:bg-indigo-50 transition-colors rounded-md">
               更换手机号
             </button>
           </div>
 
-          <!-- 登录密码 -->
+          <!-- 密码 -->
           <div class="flex items-center justify-between">
             <div class="flex-1">
               <div class="flex items-center space-x-2">
@@ -79,667 +77,625 @@
                 </svg>
                 <span class="text-sm font-medium text-gray-900">登录密码</span>
               </div>
-              <p class="mt-1 text-sm text-gray-500">定期更换密码可以帮助保护账号安全</p>
+              <p class="mt-1 text-sm text-gray-500">用于保护账号安全</p>
             </div>
-            <button @click="showPasswordModal = true"
-              class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700 
-              transition-colors rounded-md hover:bg-indigo-50">
+            <button 
+              @click="openPasswordModal"
+              class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-indigo-600 border border-indigo-600 
+              hover:bg-indigo-50 transition-colors rounded-md">
               修改密码
             </button>
           </div>
         </div>
       </section>
 
-      <!-- 账号注销 -->
-      <section class="bg-white rounded-lg p-6 shadow">
-        <div class="flex items-start space-x-3">
-          <div class="flex-shrink-0">
-            <svg class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-          </div>
-          <div class="flex-grow">
-            <h3 class="text-base font-medium text-gray-900">注销账号</h3>
-            <p class="mt-1 text-sm text-gray-500">
-              注销后，您的所有数据将被永久删除且无法恢复。请谨慎操作。
-            </p>
-            <button @click="showDeleteConfirm = true"
-              class="mt-4 px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 transition-colors border border-red-600 rounded-md">
-              注销账号
+      <!-- 账户注销 -->
+      <section class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="px-6 py-4 bg-gray-100 border-b border-gray-200">
+          <h2 class="text-lg font-medium text-gray-900">账户注销</h2>
+        </div>
+        
+        <div class="p-6">
+          <div class="flex items-center justify-between">
+            <div class="flex-1">
+              <div class="flex items-center space-x-2">
+                <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                <span class="text-sm font-medium text-gray-900">账户注销</span>
+              </div>
+              <p class="mt-1 text-sm text-gray-500">注销后，账户将被永久删除且无法恢复</p>
+            </div>
+            <button 
+              @click="openDeleteConfirm"
+              class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-600 border border-red-600 
+              hover:bg-red-50 transition-colors rounded-md">
+              注销账户
             </button>
           </div>
         </div>
       </section>
-          <!-- 更换手机号弹窗 -->
-    <div v-if="showPhoneModal"
-      class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-        <div class="p-6">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">更换手机号</h3>
-          <!-- 添加当前手机号显示 -->
-      <div class="mb-6 p-4 bg-gray-50 rounded-md">
-        <p class="text-sm text-gray-500">当前手机号：{{ maskPhone(userPhone) }}</p>
-      </div>
-          <form @submit.prevent="handlePhoneChange" class="space-y-4">
-            <div>
-              <label for="newPhone" class="block text-sm font-medium text-gray-700">新手机号</label>
-              <input type="tel" id="newPhone" v-model="phoneForm.newPhone"
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
-            </div>
-            <div>
-              <label for="verifyCode" class="block text-sm font-medium text-gray-700">验证码</label>
-              <div class="mt-1 flex rounded-md shadow-sm">
-                <input type="text" id="verifyCode" v-model="phoneForm.verifyCode"
-                  class="block w-full rounded-l-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
-                  <button type="button" @click="sendPhoneCode"
-                    class="relative inline-flex items-center whitespace-nowrap rounded-r-md border border-gray-300 bg-gray-50 px-6 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
-                    {{ phoneForm.countdown > 0 ? `${phoneForm.countdown}s` : '获取验证码' }}
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
-        <div class="bg-gray-50 px-6 py-4 flex justify-end space-x-3 rounded-b-lg">
-          <button @click="showPhoneModal = false"
-            class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">
-            取消
-          </button>
-          <button @click="handlePhoneChange"
-            class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors">
-            确认更换
-          </button>
-        </div>
-      </div>
-    </div>
 
-    <!-- 修改密码弹窗 -->
-    <div v-if="showPasswordModal"
-      class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-        <div class="p-6">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">修改密码</h3>
-          <form @submit.prevent="handlePasswordChange" class="space-y-4">
-            <!-- 当前密码 -->
-            <div>
-              <label for="old_password" class="block text-sm font-medium text-gray-700">当前密码</label>
-              <div class="mt-1 relative">
-                <input :type="showold_password ? 'text' : 'password'" 
-                  id="old_password" 
-                  v-model="passwordForm.old_password"
-                  class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" 
+      <!-- Teleport 部分重写所有弹窗 -->
+      <Teleport to="body">
+        <!-- 昵称设置弹窗 -->
+        <div v-if="showNicknameModal" class="modal-overlay">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3>修改昵称</h3>
+              <button class="close-btn" @click="closeNicknameModal">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div class="form-group">
+                <input 
+                  type="text"
+                  v-model="nickname.state.value"
+                  placeholder="请输入新昵称"
+                  :disabled="nickname.state.loading"
+                  @input="validateNickname"
+                  :class="{ 'error': nickname.state.error }"
                 />
-                <button type="button" 
-                  @click="showold_password = !showold_password"
-                  class="absolute inset-y-0 right-0 pr-3 flex items-center">
-                  <svg v-if="showold_password" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                  <svg v-else class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                  </svg>
-                </button>
+                <!-- 错误提示 -->
+                <div v-if="nickname.state.error" class="text-red-500 text-sm mt-1">
+                  {{ nickname.state.error }}
+                </div>
+                <!-- 简单的提示文字 -->
+                <div class="text-gray-400 text-xs mt-1">
+                  昵称长度4-8个字符，可使用中文、英文字母、数字
+                </div>
               </div>
             </div>
-
-            <!-- 新密码 -->
-            <div>
-              <label for="newPassword" class="block text-sm font-medium text-gray-700">新密码</label>
-              <div class="mt-1 relative">
-                <input :type="showNewPassword ? 'text' : 'password'" 
-                  id="newPassword" 
-                  v-model="passwordForm.newPassword"
-                  class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" 
-                />
-                <button type="button" 
-                  @click="showNewPassword = !showNewPassword"
-                  class="absolute inset-y-0 right-0 pr-3 flex items-center">
-                  <svg v-if="showNewPassword" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                  <svg v-else class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            <!-- 确认新密码 -->
-            <div>
-              <label for="confirmPassword" class="block text-sm font-medium text-gray-700">确认新密码</label>
-              <div class="mt-1 relative">
-                <input :type="showConfirmPassword ? 'text' : 'password'" 
-                  id="confirmPassword" 
-                  v-model="passwordForm.confirmPassword"
-                  class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" 
-                />
-                <button type="button" 
-                  @click="showConfirmPassword = !showConfirmPassword"
-                  class="absolute inset-y-0 right-0 pr-3 flex items-center">
-                  <svg v-if="showConfirmPassword" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                  <svg v-else class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
-        <div class="bg-gray-50 px-6 py-4 flex justify-end space-x-3 rounded-b-lg">
-          <button @click="closePasswordDialog"
-            class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">
-            取消
-          </button>
-          <button @click="handlePasswordChange"
-            class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            :disabled="passwordLoading">
-            <svg v-if="passwordLoading" class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-              </path>
-            </svg>
-            {{ passwordLoading ? '修改中...' : '确认修改' }}
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 注销确认弹窗 -->
-    <div v-if="showDeleteConfirm"
-      class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-        <div class="p-6">
-          <div class="flex items-start space-x-3 mb-4">
-            <div class="flex-shrink-0">
-              <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            </div>
-            <div>
-              <h3 class="text-lg font-medium text-gray-900">确认注销账号？</h3>
-              <p class="mt-2 text-sm text-gray-500">
-                此操作将永久删除您的账号和所有相关数据，且无法恢复。请输入您的密码以确认。
-              </p>
-            </div>
-          </div>
-
-          <div class="mt-4">
-            <label for="deletePassword" class="block text-sm font-medium text-gray-700">
-              请输入密码确认
-            </label>
-            <div class="mt-1">
-              <input type="password" id="deletePassword" v-model="deleteConfirmPassword"
-                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
-                placeholder="请输入您的登录密码" />
+            <div class="modal-footer">
+              <button 
+                class="btn btn-default" 
+                @click="closeNicknameModal"
+                :disabled="nickname.state.loading"
+              >
+                取消
+              </button>
+              <button 
+                class="btn btn-primary" 
+                @click="handleNicknameUpdate"
+                :disabled="nickname.state.loading"
+              >
+                {{ nickname.state.loading ? '更新中...' : '确认' }}
+              </button>
             </div>
           </div>
         </div>
 
-        <div class="bg-gray-50 px-6 py-4 flex justify-end space-x-3 rounded-b-lg">
-          <button @click="closeDeleteDialog"
-            class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">
-            取消
-          </button>
-          <button @click="handleDeleteAccount"
-            class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            :disabled="!deleteConfirmPassword || deleteLoading">
-            <svg v-if="deleteLoading" class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-              </path>
-            </svg>
-            {{ deleteLoading ? '注销中...' : '确认注销' }}
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 修改昵称弹窗 -->
-    <div v-if="showNicknameModal"
-      class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-        <div class="p-6">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">{{ userInfo.username ? '修改昵称' : '设置昵称' }}</h3>
-          <form @submit.prevent="handleNicknameChange" class="space-y-4">
-            <div>
-              <label for="username" class="block text-sm font-medium text-gray-700">昵称</label>
-              <input type="text" id="username" v-model="nicknameForm.username"
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                :placeholder="userInfo.username || `默认昵称：Flybird${userPhone?.slice(-4)}`" />
-              <p class="mt-1 text-xs text-gray-500">
-                您可以随时修改您的昵称
-              </p>
+        <!-- 手机号修改弹窗 -->
+        <div v-if="showPhoneModal" class="modal-overlay">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3>更换手机号</h3>
+              <button class="close-btn" @click="closePhoneModal">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
-          </form>
+            <div class="modal-body">
+              <div class="form-group">
+                <input 
+                  type="text" 
+                  v-model="phoneManager.state.value"
+                  placeholder="请输入新手机号"
+                  :disabled="phoneManager.state.loading"
+                />
+              </div>
+              <div class="form-group">
+                <div class="code-input">
+                  <input 
+                    type="text" 
+                    v-model="phoneManager.state.code"
+                    placeholder="请输入验证码"
+                    :disabled="phoneManager.state.loading"
+                  />
+                  <button 
+                    @click="phoneManager.handleSendCode"
+                    :disabled="phoneManager.state.loading || phoneManager.state.countdown > 0"
+                    class="code-btn"
+                  >
+                    {{ phoneManager.state.countdown > 0 ? `${phoneManager.state.countdown}s` : '获取验证码' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button 
+                class="btn btn-default" 
+                @click="closePhoneModal"
+                :disabled="phoneManager.state.loading"
+              >
+                取消
+              </button>
+              <button 
+                class="btn btn-primary" 
+                @click="handlePhoneUpdate"
+                :disabled="phoneManager.state.loading"
+              >
+                {{ phoneManager.state.loading ? '更新中...' : '确认' }}
+              </button>
+            </div>
+          </div>
         </div>
-        <div class="bg-gray-50 px-6 py-4 flex justify-end space-x-3 rounded-b-lg">
-          <button @click="showNicknameModal = false"
-            class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">
-            取消
-          </button>
-          <button @click="handleNicknameChange"
-            class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors"
-            :disabled="!nicknameForm.username || nicknameLoading">
-            <svg v-if="nicknameLoading" class="animate-spin -ml-1 mr-2 h-4 w-4 inline-block" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-              </path>
-            </svg>
-            {{ nicknameLoading ? '保存中...' : '保存' }}
-          </button>
-        </div>
-      </div>
-    </div>
 
+        <!-- 密码修改弹窗 -->
+        <div v-if="showPasswordModal" class="modal-overlay">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3>修改密码</h3>
+              <button class="close-btn" @click="closePasswordModal">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div class="form-group">
+                <input 
+                  type="password" 
+                  v-model="password.state.oldPassword"
+                  placeholder="请输入原密码"
+                  :disabled="password.state.loading"
+                />
+              </div>
+              <div class="form-group">
+                <input 
+                  type="password" 
+                  v-model="password.state.newPassword"
+                  placeholder="请输入新密码"
+                  :disabled="password.state.loading"
+                />
+              </div>
+              <div class="form-group">
+                <input 
+                  type="password" 
+                  v-model="password.state.confirmPassword"
+                  placeholder="请确认新密码"
+                  :disabled="password.state.loading"
+                />
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button 
+                class="btn btn-default" 
+                @click="closePasswordModal"
+                :disabled="password.state.loading"
+              >
+                取消
+              </button>
+              <button 
+                class="btn btn-primary" 
+                @click="handlePasswordUpdate"
+                :disabled="password.state.loading"
+              >
+                {{ password.state.loading ? '更新中...' : '确认' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 账户注销确认弹窗 -->
+        <div v-if="showDeleteConfirm" class="modal-overlay">
+          <div class="modal-content">
+            <div class="modal-header">
+              <div class="flex items-center space-x-2">
+                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <h3 class="text-red-700">账户注销</h3>
+              </div>
+              <button class="close-btn" @click="closeDeleteConfirm">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div class="bg-red-50 p-4 rounded-md mb-4 border border-red-100">
+                <div class="flex">
+                  <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div class="ml-3">
+                    <h3 class="text-sm font-medium text-red-800">
+                      请确认以下信息
+                    </h3>
+                    <div class="mt-2 text-sm text-red-700">
+                      <ul class="list-disc pl-5 space-y-1">
+                        <li>账户注销后将无法恢复</li>
+                        <li>所有个人数据将被永久删除</li>
+                        <li>相关服务和功能将立即停止</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <input 
+                  type="password" 
+                  v-model="deleteAccount.state.password"
+                  placeholder="请输入登录密码确认"
+                  :disabled="deleteAccount.state.loading"
+                  class="border-red-300 focus:border-red-500 focus:ring-red-500"
+                />
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button 
+                class="btn btn-default" 
+                @click="closeDeleteConfirm"
+                :disabled="deleteAccount.state.loading"
+              >
+                取消
+              </button>
+              <button 
+                class="btn btn-danger" 
+                @click="deleteAccount.handleDelete"
+                :disabled="deleteAccount.state.loading"
+              >
+                {{ deleteAccount.state.loading ? '处理中...' : '确认注销' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Teleport>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { showToast } from '@/components/ToastMessage'
-import { auth } from '@/api/auth'
-import { deleteAccount } from '@/api/user'
-import { SMS_SCENE } from '@/store'
+import { useDeleteAccount } from '@/composables/useDeleteAccount'
+import { useNickname } from '@/composables/useNickname'
+import { usePhone } from '@/composables/usePhone'
+import { useChangePassword } from '@/composables/useChangePassword'
 
 const store = useStore()
 const router = useRouter()
+// 基础信息
+const username = computed(() => store.state.userInfo?.username || '未设置')
+const uid = computed(() => store.state.userInfo?.uid || '暂无')
+const phone = computed(() => store.state.userInfo?.phone || '')
 
-// 用户信息相关的 computed 属性
-const userInfo = computed(() => {
-  const info = store.getters.getUserInfo
-  return info
-})
+// 使用 composables
+const nickname = useNickname()
+const phoneManager = usePhone()
+const deleteAccount = useDeleteAccount()
+const password = useChangePassword()
 
-// 从 store 中获取用户手机号
-const userPhone = computed(() => store.getters.getUserPhone)
+// 工具方法
+const maskPhone = (phone) => {
+  if (!phone) return '未绑定'
+  return phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2')
+}
 
-// 从 store 中获取基本信息
-const basicInfo = computed(() => store.getters.getBasicInfo)
-
-// 模态框显示状态
+// 弹窗状态
+const showNicknameModal = ref(false)
 const showPhoneModal = ref(false)
 const showPasswordModal = ref(false)
 const showDeleteConfirm = ref(false)
-const showNicknameModal = ref(false)
 
-// 加载状态
-const passwordLoading = ref(false)
-const deleteLoading = ref(false)
-const sendingCode = ref(false)
-const nicknameLoading = ref(false)
-
-// 表单数据
-const deleteConfirmPassword = ref('')
-const nicknameForm = ref({
-  username: ''
-})
-
-const phoneForm = ref({
-  newPhone: '',
-  verifyCode: '',
-  countdown: 0
-})
-
-const passwordForm = ref({
-  oldPassword: '',
-  newPassword: '',
-  confirmPassword: ''
-})
-
-// 密码显示状态
-const showold_password = ref(false)
-const showNewPassword = ref(false)
-const showConfirmPassword = ref(false)
-
-// 工具函数：信息脱敏
-const maskPhone = (userPhone) => {
-  if (!userPhone) return ''
-  return userPhone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2')
+// 打开弹窗的方法
+const openNicknameModal = () => {
+  nickname.value = store.state.userInfo?.username || ''
+  showNicknameModal.value = true
 }
 
-
-const maskWechat = (wechat) => {
-  if (!wechat) return ''
-  return wechat.substring(0, 3) + '***' + wechat.substring(wechat.length - 3)
+const openPhoneModal = () => {
+  phoneManager.state.value = ''
+  phoneManager.state.code = ''
+  showPhoneModal.value = true
 }
 
-// 关闭密码修改对话框
-const closePasswordDialog = () => {
+const openPasswordModal = () => {
+  showPasswordModal.value = true
+}
+
+const openDeleteConfirm = () => {
+  deleteAccount.state.password = ''
+  showDeleteConfirm.value = true
+}
+
+// 关闭弹窗的方法
+const closeNicknameModal = () => {
+  showNicknameModal.value = false
+  nickname.value = ''
+}
+
+const closePhoneModal = () => {
+  showPhoneModal.value = false
+  phoneManager.state.value = ''
+  phoneManager.state.code = ''
+}
+
+const closePasswordModal = () => {
   showPasswordModal.value = false
-  passwordForm.value = {
-    oldPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  }
-}
-// 注销账户
-const handleDeleteAccount = async () => {
-  if (!deleteConfirmPassword.value) {
-    showToast('请输入密码以确认注销', 'warning')
-    return
-  }
-
-  try {
-    deleteLoading.value = true
-    const response = await deleteAccount({
-      password: deleteConfirmPassword.value
-    })
-
-    if (response.data?.code === 200) {
-      showToast('账号已注销成功', 'success')
-      showDeleteConfirm.value = false
-      deleteConfirmPassword.value = ''
-      
-      // 清除登录状态并跳转
-      await store.dispatch('logout')
-      router.push({
-        path: '/login',
-        query: { source: 'account_deleted' }
-      })
-    }
-  } catch (error) {
-    console.error('注销账号失败:', error)
-    const errorMessage = error.response?.data?.message 
-      || error.response?.data?.detail
-      || error.message 
-      || '注销账号失败，请检查密码是否正确'
-    showToast(errorMessage, 'error')
-  } finally {
-    deleteLoading.value = false
-  }
 }
 
-// 关闭注销对话框
-const closeDeleteDialog = () => {
+const closeDeleteConfirm = () => {
   showDeleteConfirm.value = false
-  deleteConfirmPassword.value = ''
+  deleteAccount.state.password = ''
 }
-// 发送手机验证码
-const sendPhoneCode = async () => {
-  if (!phoneForm.value.newPhone) {
-    showToast('请输入新手机号', 'warning')
-    return
-  }
 
-  // 手机号格式验证
-  const phoneRegex = /^1[3-9]\d{9}$/
-  if (!phoneRegex.test(phoneForm.value.newPhone)) {
-    showToast('请输入正确的手机号格式', 'warning')
-    return
-  }
-
-  try {
-    sendingCode.value = true
-    console.log('Sending phone code:', {
-      phone: phoneForm.value.newPhone,
-      scene: 'change_phone'
-    })
-
-    const response = await auth.sendVerifyCode({
-      phone: phoneForm.value.newPhone.trim(),
-      scene: 'change_phone'
-    })
-    
-    if (response.data?.code === 200) {
-      showToast('验证码已发送，有效期5分钟', 'success')
-      phoneForm.value.countdown = 60
-      const timer = setInterval(() => {
-        phoneForm.value.countdown--
-        if (phoneForm.value.countdown <= 0) {
-          clearInterval(timer)
-        }
-      }, 1000)
-    }
-  } catch (error) {
-    console.error('Send code error:', error)
-    showToast(error.message, 'error')
-  } finally {
-    sendingCode.value = false
-  }
+// 处理成功回调
+const handlePasswordSuccess = () => {
+  closePasswordModal()
+  showToast('密码修改成功', 'success')
 }
-// 更换手机号
-const handlePhoneChange = async () => {
-  if (!phoneForm.value.newPhone) {
-    showToast('请输入新手机号', 'warning')
-    return
-  }
 
-  // 手机号格式验证
-  const phoneRegex = /^1[3-9]\d{9}$/
-  if (!phoneRegex.test(phoneForm.value.newPhone)) {
-    showToast('请输入正确的手机号格式', 'warning')
-    return
-  }
-
-  if (!phoneForm.value.verifyCode) {
-    showToast('请输入验证码', 'warning')
-    return
-  }
-
-  // 检查是否是同一个手机号
-  if (phoneForm.value.newPhone === userPhone.value) {
-    showToast('新手机号不能与当前手机号相同', 'warning')
-    return
-  }
-
-  try {
-    console.log('开始更换手机号:', {
-      phone: phoneForm.value.newPhone,
-      code: phoneForm.value.verifyCode
-    })
-
-    const response = await auth.changePhone({
-      phone: phoneForm.value.newPhone,
-      code: phoneForm.value.verifyCode
-    })
-
-    console.log('更换手机号响应:', response)
-
-    if (response.data?.code === 200) {
-      showToast('手机号更换成功，请重新登录', 'success')
-      showPhoneModal.value = false
-      
-      // 清空表单
-      phoneForm.value = {
-        newPhone: '',
-        verifyCode: '',
-        countdown: 0
-      }
-
-      // 登出并跳转到登录页
-      await store.dispatch('logout')
-      await router.push('/login')
-    } else {
-      throw new Error(response.data?.message || '手机号修改失败')
-    }
-  } catch (error) {
-    console.error('更换手机号失败:', error)
-    console.error('Error details:', {
-      response: error.response?.data,
-      status: error.response?.status,
-      message: error.message
-    })
-
-    // 显示错误消息
-    showToast(error.message || '更换手机号失败，请稍后重试', 'error')
+// 处理昵称更新
+const handleNicknameUpdate = async () => {
+  const success = await nickname.handleUpdate()
+  if (success) {
+    closeNicknameModal()
   }
 }
 
-// 修改密码
-const handlePasswordChange = async () => {
-  try {
-    // 表单验证
-    if (!passwordForm.value.old_password) {
-      showToast('请输入当前密码', 'warning')
-      return
-    }
-    if (!passwordForm.value.newPassword) {
-      showToast('请输入新密码', 'warning')
-      return
-    }
-    if (!passwordForm.value.confirmPassword) {
-      showToast('请确认新密码', 'warning')
-      return
-    }
-    if (passwordForm.value.newPassword !== passwordForm.value.confirmPassword) {
-      showToast('两次输入的新密码不一致', 'warning')
-      return
-    }
-    if (passwordForm.value.newPassword.length < 6) {
-      showToast('新密码长度不能少于6位', 'warning')
-      return
-    }
-    if (passwordForm.value.old_password === passwordForm.value.newPassword) {
-      showToast('新密码不能与当前密码相同', 'warning')
-      return
-    }
-
-    passwordLoading.value = true
-    const response = await changePassword({
-      old_password: passwordForm.value.old_password,
-      new_password: passwordForm.value.newPassword,
-      confirm_password: passwordForm.value.confirmPassword
-    })
-
-    if (response.data?.code === 200) {
-      showToast('密码修改成功，请重新登录', 'success')
-      showPasswordModal.value = false
-      
-      // 清空表单
-      passwordForm.value = {
-        oldPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      }
-      
-      // 登出并跳转
-      await store.dispatch('logout')
-      router.push('/login')
-    } else {
-      throw new Error(response.data?.message || '修改失败')
-    }
-  } catch (error) {
-    console.error('修改密码失败:', error)
-    const errorMessage = error.response?.data?.message 
-      || error.response?.data?.detail
-      || error.message 
-      || '修改密码失败，请检查当前密码是否正确'
-    showToast(errorMessage, 'error')
-  } finally {
-    passwordLoading.value = false
+// 处理密码更新
+const handlePasswordUpdate = async () => {
+  const success = await password.handleUpdate()
+  if (success) {
+    closePasswordModal()
+    showToast('密码修改成功', 'success')
   }
 }
 
-// 修改昵称的方法
-const handleNicknameChange = async () => {
-  const username = nicknameForm.value.username?.trim()
-  
-  if (!username) {
-    showToast('请输入昵称', 'warning')
-    return
-  }
-
-  try {
-    nicknameLoading.value = true
-    console.log('开始修改昵称:', username)
-    
-    const response = await auth.updateUsername({
-      username: username
-    })
-
-    if (response.data?.code === 200) {
-      // 修改成功后重新获取用户信息
-      await store.dispatch('fetchUserInfo')
-      showToast('昵称修改成功', 'success')
-      showNicknameModal.value = false
-      nicknameForm.value.username = ''
-    }
-  } catch (error) {
-    console.error('修改昵称失败:', error)
-    showToast(error.message || '修改昵称失败，请稍后重试', 'error')
-  } finally {
-    nicknameLoading.value = false
+// 处理手机号更新
+const handlePhoneUpdate = async () => {
+  const success = await phoneManager.handleUpdate()
+  if (success) {
+    closePhoneModal()
   }
 }
 
-// 上传头像的方法
-const handleAvatarUpload = async (file) => {
-  try {
-    const formData = new FormData()
-    formData.append('avatar', file)
-
-    const response = await auth.uploadAvatar(formData)
-    
-    if (response.data?.code === 200) {
-      // 使用正确的 mutation 名称 'SET_USER_INFO' 而不是 'setUserInfo'
-      await store.dispatch('fetchUserInfo')  // 使用 action 来更新用户信息
-      showToast('头像上传成功', 'success')
-    }
-  } catch (error) {
-    console.error('头像上传失败:', error)
-    showToast(error.message || '头像上传失败，请稍后重试', 'error')
-  }
+// 实时验证昵称
+const validateNickname = () => {
+  nickname.state.error = nickname.validateNickname(nickname.state.value)
 }
-
-// 修改监听逻辑
-watch(() => basicInfo.value, (newBasicInfo) => {
-  if (newBasicInfo) {
-    // 直接使用 store 中的基本信息
-    console.log('基本信息更新:', newBasicInfo)
-  }
-}, { deep: true })
-
-// 修改性别更新方法
-const handleGenderChange = async () => {
-  try {
-    console.log('开始更新性别:', basicInfo.value.gender)
-    
-    const response = await auth.updateBasicInfo({
-      gender: basicInfo.value.gender
-    })
-
-    if (response.data?.code === 200) {
-      // 更新成功后重新获取用户信息
-      await store.dispatch('fetchUserInfo')
-      showToast('性别更新成功', 'success')
-    }
-  } catch (error) {
-    console.error('更新性别失败:', error)
-    showToast(error.message || '性别更新失败，请稍后重试', 'error')
-  }
-}
-
-// 监听性别变化
-watch(() => basicInfo.value.gender, async (newGender, oldGender) => {
-  if (newGender !== oldGender && oldGender !== undefined) {
-    await handleGenderChange()
-  }
-})
-
 </script>
+
+<style scoped>
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.modal-content {
+  position: relative;
+  width: 91.666667%;
+  max-width: 28rem;
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.modal-header {
+  padding: 1rem 1.5rem;
+  background-color: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #111827;
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.modal-footer {
+  padding: 1rem 1.5rem;
+  background-color: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: #111827;
+  background-color: white;
+  transition: border-color 0.15s ease-in-out;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 1px #6366f1;
+}
+
+.form-group input:disabled {
+  background-color: #f3f4f6;
+  cursor: not-allowed;
+}
+
+.code-input {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.code-input input {
+  flex: 1;
+}
+
+.code-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: white;
+  background-color: #6366f1;
+  border-radius: 0.375rem;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.code-btn:not(:disabled):hover {
+  background-color: #4f46e5;
+}
+
+.code-btn:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  transition: all 0.15s ease-in-out;
+}
+
+.btn-default {
+  color: #374151;
+  background-color: white;
+  border: 1px solid #d1d5db;
+}
+
+.btn-default:not(:disabled):hover {
+  background-color: #f9fafb;
+}
+
+.btn-primary {
+  color: white;
+  background-color: #6366f1;
+  border: 1px solid transparent;
+}
+
+.btn-primary:not(:disabled):hover {
+  background-color: #4f46e5;
+}
+
+.btn-danger {
+  color: white;
+  background-color: #ef4444;
+  border: 1px solid transparent;
+}
+
+.btn-danger:not(:disabled):hover {
+  background-color: #dc2626;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 关闭按钮样式 */
+.close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.25rem;
+  color: #6b7280;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s ease-in-out;
+}
+
+.close-btn:hover {
+  color: #374151;
+}
+
+/* 注销弹窗特殊样式 */
+.bg-red-50 {
+  background-color: #fef2f2;
+}
+
+.border-red-100 {
+  border-color: #fee2e2;
+}
+
+.text-red-400 {
+  color: #f87171;
+}
+
+.text-red-600 {
+  color: #dc2626;
+}
+
+.text-red-700 {
+  color: #b91c1c;
+}
+
+.text-red-800 {
+  color: #991b1b;
+}
+
+/* 注销弹窗的输入框特殊样式 */
+.form-group input.border-red-300 {
+  border-color: #fca5a5;
+}
+
+.form-group input.focus\:border-red-500:focus {
+  border-color: #ef4444;
+}
+
+.form-group input.focus\:ring-red-500:focus {
+  box-shadow: 0 0 0 1px #ef4444;
+}
+
+.input-tips {
+  background-color: #f9fafb;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid #e5e7eb;
+}
+
+.input-tips ul li {
+  color: #6b7280;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.input-tips ul li span:first-child {
+  min-width: 1rem;
+  background-color: white;
+}
+
+.form-group input.error {
+  border-color: #ef4444;
+}
+
+.form-group input.error:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 1px #ef4444;
+}
+</style>

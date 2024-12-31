@@ -2,19 +2,44 @@ from rest_framework import serializers
 from django.core.cache import cache
 
 class ChangePasswordSerializer(serializers.Serializer):
-    old_password = serializers.CharField()
-    new_password = serializers.CharField(min_length=6)
-    confirm_password = serializers.CharField(min_length=6)
-    
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+    confirm_password = serializers.CharField(required=True)
+
     def validate_old_password(self, value):
-        if not self.context['request'].user.check_password(value):
-            raise serializers.ValidationError("原密码错误")
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError('当前密码错误，请重新输入')
         return value
 
-    def validate(self, attrs):
-        if attrs['new_password'] != attrs['confirm_password']:
-            raise serializers.ValidationError("两次输入的密码不一致")
-        return attrs
+    def validate_new_password(self, value):
+        # 密码格式验证
+        if len(value) < 8 or len(value) > 20:
+            raise serializers.ValidationError('密码长度必须在8-20位之间')
+        
+        if not any(c.islower() for c in value):
+            raise serializers.ValidationError('密码必须包含小写字母')
+            
+        if not any(c.isupper() for c in value):
+            raise serializers.ValidationError('密码必须包含大写字母')
+            
+        if not any(c.isdigit() for c in value):
+            raise serializers.ValidationError('密码必须包含数字')
+            
+        return value
+
+    def validate(self, data):
+        if data['new_password'] != data['confirm_password']:
+            raise serializers.ValidationError({
+                'confirm_password': '两次输入的密码不一致'
+            })
+            
+        if data['old_password'] == data['new_password']:
+            raise serializers.ValidationError({
+                'new_password': '新密码不能与当前密码相同'
+            })
+            
+        return data
 
 
 class ChangePhoneSerializer(serializers.Serializer):

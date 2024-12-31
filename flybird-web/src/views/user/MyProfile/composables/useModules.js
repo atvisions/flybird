@@ -1,160 +1,258 @@
 // src/views/user/MyProfile/composables/useModules.js
-import { ref, computed, onMounted } from 'vue'
-import { moduleConfig } from '../constants/moduleConfig'
-import { BriefcaseIcon } from '@heroicons/vue/24/outline'
-import { cityOptions } from '../constants/cityOptions'
+import { ref, computed } from 'vue'
+import { showToast } from '@/components/ToastMessage'
+import { user } from '@/api/user'
+import { useProfileData } from './useProfileData'
+import profile from '@/api/profile'
 import { ElMessage } from 'element-plus'
-import { profile, updateLayout } from '@/api/profile'
-import request from '@/utils/request'
+
+// 所有可用的模块配置
+const MODULES_CONFIG = {
+  job_intention: { 
+    order: 1, 
+    visible: true,
+    name: '求职意向',
+    required: false
+  },
+  work_experience: { 
+    order: 2, 
+    visible: true,
+    name: '工作经历',
+    required: false
+  },
+  education: { 
+    order: 3, 
+    visible: false,
+    name: '教育经历'
+  },
+  project: { 
+    order: 4, 
+    visible: false,
+    name: '项目经历'
+  },
+  skill: { 
+    order: 5, 
+    visible: false,
+    name: '专业技能'
+  },
+  certificate: { 
+    order: 6, 
+    visible: false,
+    name: '证书奖项'
+  },
+  language: { 
+    order: 7, 
+    visible: false,
+    name: '语言能力'
+  },
+  portfolio: { 
+    order: 8, 
+    visible: false,
+    name: '作品展示'
+  },
+  social_link: { 
+    order: 9, 
+    visible: false,
+    name: '社交主页'
+  }
+}
 
 export function useModules() {
-  const activeModules = ref([])
-  const currentModule = ref(null)
-  const isInitialized = ref(false)
+  const { fetchModuleData } = useProfileData()
+  const loading = ref(false)
+  const modules = ref(new Map())
+  const activeModulesList = ref([])
 
-  // 获取布局数据
-  const fetchLayout = async () => {
-    try {
-      const response = await request.get('/api/v1/users/profile/layout/')
-      
-      if (response.data?.code === 200 && response.data?.data?.layout) {
-        const layout = response.data.data.layout
-        
-        // 初始化模块
-        activeModules.value = moduleConfig
-          .filter(config => layout[config.id]?.visible)
-          .map(config => ({
-            ...config,
-            order: layout[config.id]?.order || config.order || 0,
-            data: config.multiple ? [] : null
-          }))
-          .sort((a, b) => a.order - b.order)
-        
-        isInitialized.value = true
+  // 计算属性保持不变，但从 activeModulesList 读取数据
+  const activeModules = computed(() => activeModulesList.value)
+  
+  // 计算属性：未激活的模块
+  const inactiveModules = computed(() => 
+    Array.from(modules.value.values())
+      .filter(m => !m.visible && !m.required)
+      .sort((a, b) => a.order - b.order)
+  )
+
+  // 初始化模块状态
+  const initModules = () => {
+    // 保存当前的模块状态
+    const currentModules = modules.value
+
+    const modulesMap = new Map()
+    Object.entries(MODULES_CONFIG).forEach(([key, config]) => {
+      // 如果已存在该模块，保持其当前状态
+      if (currentModules.has(key)) {
+        modulesMap.set(key, {
+          ...currentModules.get(key),
+          name: config.name,  // 更新可能变化的配置
+          required: config.required || false
+        })
+      } else {
+        // 新模块使用默认配置
+        modulesMap.set(key, {
+          type: key,
+          name: config.name,
+          order: config.order,
+          visible: config.visible,
+          required: config.required || false,
+          data: null
+        })
       }
+    })
+    modules.value = modulesMap
+  }
+
+  // 获取模块数据
+  const fetchModulesData = async () => {
+    try {
+      loading.value = true
+      
+      // 1. 获取布局信息
+      const layoutRes = await user.getProfileLayout()
+      if (layoutRes.data?.code === 200) {
+        const layout = layoutRes.data.data
+        // 更新模块的可见性和顺序
+        Object.entries(layout).forEach(([key, value]) => {
+          if (modules.value.has(key)) {
+            const module = modules.value.get(key)
+            module.visible = value.visible
+            module.order = value.order
+          }
+        })
+      }
+
+      // 2. 获取求职意向数据
+      const jobIntentionRes = await profile.jobIntention.get()
+      const jobIntentionData = jobIntentionRes?.data?.code === 200 
+        ? jobIntentionRes.data.data 
+        : {}
+
+      // 3. 获取工作经历数据
+      const workExperienceRes = await profile.workExperience.get()
+      const workExperienceData = workExperienceRes?.data?.code === 200 
+        ? workExperienceRes.data.data 
+        : []
+
+      // 4. 更新模块数据
+      if (modules.value.has('job_intention')) {
+        modules.value.get('job_intention').data = jobIntentionData
+      }
+      if (modules.value.has('work_experience')) {
+        modules.value.get('work_experience').data = workExperienceData
+      }
+
+      // 5. 更新激活的模块列表
+      activeModulesList.value = Array.from(modules.value.values())
+        .filter(module => module.visible)
+        .sort((a, b) => a.order - b.order)
+
     } catch (error) {
-      console.error('获取布局失败:', error)
+      console.error('获取模块数据失败:', error)
+      ElMessage.error('获取数据失败，请稍后重试')
+    } finally {
+      loading.value = false
     }
   }
 
-  const getNextOrder = () => {
-    return activeModules.value.length + 1
-  }
+  // 初始化时调用一次 initModules
+  initModules()
 
-  const inactiveModules = computed(() => {
-    const activeIds = activeModules.value.map(m => m.id)
-    return moduleConfig.filter(m => !activeIds.includes(m.id))
-  })
-
-  const editModule = (moduleId) => {
-    const module = activeModules.value.find(m => m.id === moduleId)
-    if (module) {
-      return {
-        ...module,
-        data: module.data ? {
-          ...module.data,
-          description: module.data.description || ''
-        } : null
-      }
-    }
-    return null
-  }
-
-  const addItem = (moduleId) => {
-    const module = activeModules.value.find(m => m.id === moduleId)
-    if (module) {
-      module.currentItem = null
-    }
-  }
-
-  const removeModule = async (moduleId) => {
+  // 移除模块
+  const removeModule = async (moduleType) => {
     try {
-      console.log('开始移除模块:', moduleId)
-      
-      // 更新布局，将模块设置为不可见
-      const response = await updateLayout({
-        [moduleId]: {
-          visible: false
+      const module = modules.value.get(moduleType)
+      if (!module || module.required) {
+        throw new Error('该模块不能被移除')
+      }
+
+      loading.value = true
+
+      // 1. 先更新本地状态
+      module.visible = false
+
+      // 2. 构建布局数据
+      const layout = {}
+      modules.value.forEach((module, key) => {
+        layout[key] = {
+          order: module.order,
+          visible: module.visible
         }
       })
 
+      // 3. 更新服务器布局
+      const response = await user.updateProfileLayout({ 
+        data: { layout }
+      })
+
       if (response.data?.code === 200) {
-        // 从活动模块中移除
-        const index = activeModules.value.findIndex(m => m.id === moduleId)
-        if (index > -1) {
-          activeModules.value.splice(index, 1)
-          
-          // 重新排序剩余模块
-          activeModules.value.forEach((module, idx) => {
-            module.order = idx + 1
-          })
-          
-          // 更新所有模块的顺序
-          const orderUpdates = activeModules.value.reduce((acc, module) => {
-            acc[module.id] = {
-              order: module.order,
-              visible: true
-            }
-            return acc
-          }, {})
-          
-          // 发送顺序更新请求
-          await updateLayout(orderUpdates)
-          
-          ElMessage.success('模块移除成功')
-        }
+        // 4. 重新获取数据以确保同步
+        await fetchModulesData()
+        ElMessage.success('模块已移除')
+      } else {
+        // 如果请求失败，回滚本地状态
+        module.visible = true
+        throw new Error('移除模块失败')
       }
     } catch (error) {
       console.error('移除模块失败:', error)
-      ElMessage.error('移除失败，请重试')
+      ElMessage.error(error.message || '移除模块失败，请重试')
+    } finally {
+      loading.value = false
     }
   }
 
-  // 激活模块
-  const activateModule = async (moduleId) => {
+  // 添加模块
+  const addModule = async (moduleType) => {
     try {
-      const module = moduleConfig.find(m => m.id === moduleId)
+      const module = modules.value.get(moduleType)
       if (!module) {
         throw new Error('模块不存在')
       }
 
-      const order = getNextOrder()
-      const response = await updateLayout({
-        [moduleId]: {
-          order,
-          visible: true
+      loading.value = true
+
+      // 1. 先更新本地状态
+      module.visible = true
+      module.order = activeModulesList.value.length + 1
+
+      // 2. 构建布局数据
+      const layout = {}
+      modules.value.forEach((module, key) => {
+        layout[key] = {
+          order: module.order,
+          visible: module.visible
         }
       })
 
+      // 3. 更新服务器布局
+      const response = await user.updateProfileLayout({ 
+        data: { layout }
+      })
+
       if (response.data?.code === 200) {
-        const newModule = {
-          ...module,
-          data: module.multiple ? [] : null,
-          order
-        }
-        activeModules.value.push(newModule)
+        // 4. 重新获取数据以确保同步
+        await fetchModulesData()
+        ElMessage.success('模块已添加')
+      } else {
+        // 如果请求失败，回滚本地状态
+        module.visible = false
+        module.order = MODULES_CONFIG[moduleType].order
+        throw new Error('添加模块失败')
       }
     } catch (error) {
-      console.error('激活模块失败:', error)
+      console.error('添加模块失败:', error)
+      ElMessage.error(error.message || '添加模块失败，请重试')
+    } finally {
+      loading.value = false
     }
   }
 
-  // 在组件挂载时自动获取布局
-  onMounted(() => {
-    if (!isInitialized.value) {
-      fetchLayout()
-    }
-  })
-
   return {
+    loading,
     activeModules,
     inactiveModules,
-    currentModule,
-    editModule,
-    addItem,
-    removeModule,
-    activateModule,
-    fetchLayout,
-    isInitialized
+    fetchModulesData,
+    addModule,
+    removeModule
   }
 }

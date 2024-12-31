@@ -26,9 +26,19 @@ class ChangePasswordView(APIView):
                 'code': 200,
                 'message': '密码修改成功'
             })
+            
+        # 构建更明确的错误信息
+        error_messages = []
+        for field, errors in serializer.errors.items():
+            if isinstance(errors, list):
+                error_messages.extend(errors)
+            elif isinstance(errors, dict):
+                for error in errors.values():
+                    error_messages.extend(error)
+                    
         return Response({
             'code': 400,
-            'message': '密码修改失败',
+            'message': error_messages[0] if error_messages else '密码修改失败',
             'errors': serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
 

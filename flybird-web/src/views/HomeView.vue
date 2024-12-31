@@ -3,59 +3,99 @@
     <HeadView />
     <div class="min-h-screen">
       <!-- 英雄区域 -->
-      <div class="bg-white">
+      <div class="bg-gradient-to-br from-gray-950 to-gray-900 overflow-hidden">
   <main>
     <div class="relative isolate">
-      <svg class="absolute inset-x-0 top-0 -z-10 h-[64rem] w-full stroke-gray-200 [mask-image:radial-gradient(32rem_32rem_at_center,white,transparent)]" aria-hidden="true">
-        <defs>
-          <pattern id="1f932ae7-37de-4c0a-a8b0-a6e3b4d44b84" width="200" height="200" x="50%" y="-1" patternUnits="userSpaceOnUse">
-            <path d="M.5 200V.5H200" fill="none" />
-          </pattern>
-        </defs>
-        <svg x="50%" y="-1" class="overflow-visible fill-gray-50">
-          <path d="M-200 0h201v201h-201Z M600 0h201v201h-201Z M-400 600h201v201h-201Z M200 800h201v201h-201Z" stroke-width="0" />
-        </svg>
-        <rect width="100%" height="100%" stroke-width="0" fill="url(#1f932ae7-37de-4c0a-a8b0-a6e3b4d44b84)" />
-      </svg>
-      <div class="absolute top-0 right-0 left-1/2 -z-10 -ml-24 transform-gpu overflow-hidden blur-3xl lg:ml-24 xl:ml-48" aria-hidden="true">
-        <div class="aspect-801/1036 w-[50.0625rem] bg-linear-to-tr from-[#ff80b5] to-[#9089fc] opacity-30" style="clip-path: polygon(63.1% 29.5%, 100% 17.1%, 76.6% 3%, 48.4% 0%, 44.6% 4.7%, 54.5% 25.3%, 59.8% 49%, 55.2% 57.8%, 44.4% 57.2%, 27.8% 47.9%, 35.1% 81.5%, 0% 97.7%, 39.2% 100%, 35.2% 81.4%, 97.2% 52.8%, 63.1% 29.5%)"></div>
+      <!-- 背景装饰 -->
+      <div class="absolute inset-0">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,#4f46e510,transparent_50%)]"></div>
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,#6366f110,transparent_50%)]"></div>
       </div>
-      <div class="overflow-hidden">
-        <div class="mx-auto max-w-7xl px-6 pt-36 pb-32 sm:pt-60 lg:px-8 lg:pt-32">
-          <div class="mx-auto max-w-2xl gap-x-14 lg:mx-0 lg:flex lg:max-w-none lg:items-center">
-            <div class="relative w-full lg:max-w-xl lg:shrink-0 xl:max-w-2xl">
-              <h1 class="text-5xl font-semibold tracking-tight text-pretty text-gray-900 sm:text-7xl">泡泡智造，专业的简历生成器</h1>
-              <p class="mt-8 text-lg font-medium text-pretty text-gray-500 sm:max-w-md sm:text-xl/8 lg:max-w-none">从生成要点到自动格式化，我们的简历生成器将帮助您快速轻松地制作专业的简历。</p>
-              <div class="mt-10 flex items-center gap-x-6">
-                <a href="#" class="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">创建新简历</a>
-                <a href="#" class="text-sm/6 font-semibold text-gray-900">导入简历<span aria-hidden="true">→</span></a>
+      
+      <div class="mx-auto max-w-7xl px-6 py-16 sm:py-24 lg:px-8">
+        <div class="mx-auto flex flex-col lg:flex-row gap-12 items-center">
+          <!-- 左侧轮播区域 -->
+          <div class="lg:w-2/3 relative">
+            <div class="relative h-[480px] perspective-[1500px]">
+              <TransitionGroup 
+                name="carousel"
+                tag="div"
+                class="relative h-full"
+              >
+                <div v-for="(slide, index) in slides" 
+                     :key="slide.id"
+                     v-show="currentSlide === index"
+                     class="absolute inset-0 w-full h-full"
+                     :style="{
+                       transform: `rotateY(${currentSlide === index ? 0 : -90}deg)`,
+                       transformOrigin: 'center center',
+                       backfaceVisibility: 'hidden',
+                       transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)'
+                     }"
+                >
+                  <div class="relative h-full overflow-hidden rounded-2xl shadow-2xl shadow-gray-950/50">
+                    <img :src="slide.image" 
+                         :alt="slide.title"
+                         class="w-full h-full object-cover" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/50 to-transparent">
+                      <div class="absolute bottom-0 left-0 right-0 p-10">
+                        <div class="max-w-xl">
+                          <h2 class="text-5xl font-bold text-white mb-4 leading-tight">
+                            {{ slide.title }}
+                          </h2>
+                          <p class="text-xl text-gray-300">{{ slide.description }}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </TransitionGroup>
+
+              <!-- 轮播控制器 -->
+              <div class="absolute -right-4 top-1/2 -translate-y-1/2 flex flex-col gap-3">
+                <button v-for="(_, index) in slides" 
+                        :key="index"
+                        @click="currentSlide = index"
+                        class="w-2 h-12 rounded-full transition-all duration-300 relative group"
+                        :class="currentSlide === index ? 'bg-white' : 'bg-gray-700 hover:bg-gray-600'">
+                  <span class="absolute right-full mr-4 py-1 px-2 rounded bg-gray-800 text-white text-sm opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                    {{ slides[index].title }}
+                  </span>
+                </button>
               </div>
             </div>
-            <div class="mt-14 flex justify-end gap-8 sm:-mt-44 sm:justify-start sm:pl-20 lg:mt-0 lg:pl-0">
-              <div class="ml-auto w-44 flex-none space-y-8 pt-32 sm:ml-0 sm:pt-80 lg:order-last lg:pt-36 xl:order-none xl:pt-80">
-                <div class="relative">
-                  <img src="https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&h=528&q=80" alt="" class="aspect-2/3 w-full rounded-xl bg-gray-900/5 object-cover shadow-lg">
-                  <div class="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-gray-900/10 ring-inset"></div>
+          </div>
+
+          <!-- 右侧新闻公告 -->
+          <div class="lg:w-1/3 h-[480px]">
+            <div class="bg-gray-900/50 backdrop-blur rounded-2xl h-full border border-gray-800">
+              <div class="p-8">
+                <div class="flex items-center justify-between mb-8">
+                  <h2 class="text-2xl font-bold text-white">最新动态</h2>
+                  <a href="#" class="text-gray-400 text-sm hover:text-white transition-colors flex items-center gap-1">
+                    全部
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </a>
                 </div>
-              </div>
-              <div class="mr-auto w-44 flex-none space-y-8 sm:mr-0 sm:pt-52 lg:pt-36">
-                <div class="relative">
-                  <img src="https://images.unsplash.com/photo-1485217988980-11786ced9454?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&h=528&q=80" alt="" class="aspect-2/3 w-full rounded-xl bg-gray-900/5 object-cover shadow-lg">
-                  <div class="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-gray-900/10 ring-inset"></div>
-                </div>
-                <div class="relative">
-                  <img src="https://images.unsplash.com/photo-1559136555-9303baea8ebd?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&crop=focalpoint&fp-x=.4&w=396&h=528&q=80" alt="" class="aspect-2/3 w-full rounded-xl bg-gray-900/5 object-cover shadow-lg">
-                  <div class="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-gray-900/10 ring-inset"></div>
-                </div>
-              </div>
-              <div class="w-44 flex-none space-y-8 pt-32 sm:pt-0">
-                <div class="relative">
-                  <img src="https://images.unsplash.com/photo-1670272504528-790c24957dda?ixlib=rb-4.0.3&ixid=MnwxMjA3fDF8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&crop=left&w=400&h=528&q=80" alt="" class="aspect-2/3 w-full rounded-xl bg-gray-900/5 object-cover shadow-lg">
-                  <div class="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-gray-900/10 ring-inset"></div>
-                </div>
-                <div class="relative">
-                  <img src="https://images.unsplash.com/photo-1670272505284-8faba1c31f7d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDF8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&h=528&q=80" alt="" class="aspect-2/3 w-full rounded-xl bg-gray-900/5 object-cover shadow-lg">
-                  <div class="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-gray-900/10 ring-inset"></div>
+                <div class="space-y-6 overflow-auto max-h-[360px] pr-2 custom-scrollbar">
+                  <a v-for="notice in notices" 
+                     :key="notice.id"
+                     href="#"
+                     class="block group p-4 rounded-xl transition-all duration-300 hover:bg-gray-800">
+                    <div class="flex flex-col">
+                      <h3 class="text-gray-100 group-hover:text-white transition-colors text-lg font-medium">
+                        {{ notice.title }}
+                      </h3>
+                      <p class="text-gray-400 mt-2 line-clamp-2 group-hover:text-gray-300">
+                        {{ notice.content }}
+                      </p>
+                      <span class="text-sm text-gray-500 mt-3 group-hover:text-gray-400">
+                        {{ notice.date }}
+                      </span>
+                    </div>
+                  </a>
                 </div>
               </div>
             </div>
@@ -175,6 +215,7 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 import HeadView from '../components/HeadView.vue'
 import FootView from '../components/FootView.vue'
 import { StarIcon } from '@heroicons/vue/20/solid'
@@ -275,10 +316,107 @@ const reviews = [
     avatar: 'https://picsum.photos/40/40?random=3'
   }
 ]
+
+// 轮播图数据
+const slides = [
+  {
+    id: 1,
+    title: "简历制作新体验",
+    description: "AI驱动的智能简历生成器",
+    image: "https://picsum.photos/800/450?random=1"
+  },
+  {
+    id: 2,
+    title: "专业模板库更新",
+    description: "新增多个行业定制模板",
+    image: "https://picsum.photos/800/450?random=2"
+  },
+  {
+    id: 3,
+    title: "求职季特别活动",
+    description: "限时优惠，助力求职成功",
+    image: "https://picsum.photos/800/450?random=3"
+  }
+]
+
+// 新闻公告数据
+const notices = [
+  {
+    id: 1,
+    title: "系统升级公告：新增AI简历优化功能",
+    content: "为提供更好的服务体验，我们新增了AI驱动的简历优化建议功能...",
+    date: "2024-03-15"
+  },
+  {
+    id: 2,
+    title: "简历制作技巧分享会即将开始",
+    content: "3月20日晚8点，资深HR将在线分享简历制作要点和注意事项...",
+    date: "2024-03-14"
+  },
+  {
+    id: 3,
+    title: "新增多个行业简历模板",
+    content: "针对IT、金融、教育等行业新增20+专业简历模板...",
+    date: "2024-03-13"
+  },
+  {
+    id: 4,
+    title: "求职季活动开启",
+    content: "春季求职黄金期，会员服务限时优惠...",
+    date: "2024-03-12"
+  }
+]
+
+// 轮播图当前索引
+const currentSlide = ref(0)
+
+// 自动轮播
+onMounted(() => {
+  setInterval(() => {
+    currentSlide.value = (currentSlide.value + 1) % slides.length
+  }, 5000)
+})
 </script>
 
 <style scoped>
-.gradient-bg {
-  background: linear-gradient(to right, var(--primary-500), var(--primary-600));
+.perspective-[1500px] {
+  perspective: 1500px;
+}
+
+.carousel-enter-active,
+.carousel-leave-active {
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.carousel-enter-from {
+  opacity: 0;
+  transform: rotateY(-90deg);
+}
+
+.carousel-leave-to {
+  opacity: 0;
+  transform: rotateY(90deg);
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.2);
 }
 </style>
