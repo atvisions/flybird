@@ -1,6 +1,6 @@
 <!-- src/views/user/MyProfile/dialogs/EditBasicDialog.vue -->
 <template>
-  <TransitionRoot appear :show="modelValue" as="template">
+  <TransitionRoot appear :show="!!modelValue" as="template">
     <Dialog as="div" class="relative z-50" @close="handleClose">
       <!-- 背景遮罩 -->
       <TransitionChild
@@ -45,13 +45,23 @@
                   <!-- 第一行：姓名和性别 -->
                   <div class="grid grid-cols-2 gap-4">
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">姓名</label>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">
+                        姓名<span class="text-red-500">*</span>
+                      </label>
                       <input
                         v-model="formData.name"
                         type="text"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        class="w-full px-3 py-2 border rounded-lg"
+                        :class="[
+                          formErrors.name 
+                            ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
+                            : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                        ]"
                         placeholder="请输入姓名"
                       />
+                      <p v-if="formErrors.name" class="mt-1 text-sm text-red-500">
+                        {{ formErrors.name }}
+                      </p>
                     </div>
                     <div>
                       <label class="block text-sm font-medium text-gray-700 mb-1">性别</label>
@@ -159,7 +169,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, reactive } from 'vue'
 import {
   Dialog,
   DialogPanel,
@@ -179,6 +189,18 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue', 'submit'])
+
+// 表单验证规则
+const rules = {
+  name: [{ required: true, message: '请输入姓名' }],
+  gender: [{ required: true, message: '请选择性别' }],
+  birth_date: [{ required: true, message: '请选择出生日期' }],
+  phone: [{ required: true, message: '请输入手机号码' }],
+  email: [{ required: true, message: '请输入邮箱' }]
+}
+
+// 表单错误信息
+const formErrors = ref({})
 
 const formData = ref({
   name: '',
@@ -201,8 +223,54 @@ const handleClose = () => {
   emit('update:modelValue', false)
 }
 
-const handleSubmit = () => {
-  emit('submit', formData.value)
+// 验证表单
+const validateForm = () => {
+  formErrors.value = {}
+  let isValid = true
+
+  Object.keys(rules).forEach(field => {
+    const fieldRules = rules[field]
+    const value = formData.value[field]
+
+    for (const rule of fieldRules) {
+      if (rule.required && !value) {
+        formErrors.value[field] = rule.message
+        isValid = false
+        break
+      }
+    }
+  })
+
+  return isValid
+}
+
+const handleSubmit = async () => {
+  try {
+    if (!validateForm()) {
+      ElMessage.error('请填写必填项')
+      return
+    }
+    
+    // 构建提交数据
+    const submitData = {
+      name: formData.value.name,
+      gender: formData.value.gender,
+      birth_date: formData.value.birth_date,
+      phone: formData.value.phone,
+      email: formData.value.email,
+      location: formData.value.location,
+      personal_summary: formData.value.personal_summary
+    }
+    
+    // 如果有 ID，添加到提交数据中
+    if (props.initialData?.id) {
+      submitData.id = props.initialData.id
+    }
+    
+    emit('submit', submitData)
+  } catch (error) {
+    console.error('表单验证失败:', error)
+  }
 }
 
 // 性别选项

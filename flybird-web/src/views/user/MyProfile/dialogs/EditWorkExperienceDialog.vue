@@ -1,9 +1,10 @@
 <template>
-  <TransitionRoot appear :show="modelValue" as="template">
+  <TransitionRoot appear :show="modelValue" as="div">
     <Dialog as="div" class="relative z-50" @close="handleClose">
       <!-- 背景遮罩 -->
       <TransitionChild
-        as="template"
+        as="div"
+        :show="true"
         enter="duration-300 ease-out"
         enter-from="opacity-0"
         enter-to="opacity-100"
@@ -26,7 +27,9 @@
             leave-from="opacity-100 scale-100"
             leave-to="opacity-0 scale-95"
           >
-            <DialogPanel class="w-full max-w-2xl transform overflow-hidden rounded-xl bg-white text-left align-middle shadow-xl transition-all">
+            <DialogPanel 
+              class="w-full max-w-2xl transform overflow-hidden rounded-xl bg-white text-left align-middle shadow-xl transition-all"
+            >
               <!-- 头部 -->
               <DialogTitle 
                 as="div" 
@@ -212,12 +215,18 @@ import {
 import { XMarkIcon, CalendarIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
-  modelValue: Boolean,
+  modelValue: {
+    type: Boolean,
+    default: false
+  },
   initialData: {
     type: Object,
     default: () => ({})
   },
-  loading: Boolean
+  loading: {
+    type: Boolean,
+    default: false
+  }
 })
 
 const emit = defineEmits(['update:modelValue', 'submit'])
@@ -239,11 +248,22 @@ const form = ref({
 // 监听初始数据变化
 watch(() => props.initialData, (newVal) => {
   if (newVal) {
+    // 确保所有字段都有默认值
     form.value = {
-      ...newVal
+      id: newVal.id || null,
+      company: newVal.company || '',
+      position: newVal.position || '',
+      department: newVal.department || '',
+      start_date: newVal.start_date?.split('T')[0] || null,
+      end_date: newVal.end_date?.split('T')[0] || null,
+      is_current: newVal.is_current || false,
+      description: newVal.description || '',
+      achievements: newVal.achievements || '',
+      technologies: newVal.technologies || ''
     }
+    console.log('Form initialized:', form.value)
   }
-}, { immediate: true })
+}, { immediate: true, deep: true })
 
 const handleClose = () => {
   emit('update:modelValue', false)
@@ -317,6 +337,7 @@ const handleSubmit = () => {
     return
   }
   
+  console.log('Submitting form:', form.value)
   const formData = {
     ...form.value,
     // 处理日期格式
@@ -328,6 +349,7 @@ const handleSubmit = () => {
     technologies: form.value.technologies?.trim() || ''
   }
   
+  console.log('Formatted form data:', formData)
   emit('submit', formData)
 }
 </script>

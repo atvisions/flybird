@@ -1,83 +1,90 @@
 <template>
-  <div class="p-4">
-    <!-- 主要信息 -->
-    <div class="grid grid-cols-2 gap-4">
-      <!-- 工作类型 -->
-      <div class="bg-gray-50 rounded-lg p-3 transition-all hover:bg-gray-100">
-        <div class="flex items-start space-x-3">
-          <div class="p-2 bg-blue-50 rounded-lg">
-            <BriefcaseIcon class="w-5 h-5 text-blue-600" />
+  <div>
+    <template v-if="data">
+      <div class="grid grid-cols-2 gap-6">
+        <!-- 求职状态 -->
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-blue-50">
+            <div class="relative">
+              <UserCircleIcon class="w-6 h-6 text-blue-500" />
+              <div :class="[
+                'absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white',
+                getStatusColor(data.job_status)
+              ]"></div>
+            </div>
           </div>
           <div>
-            <span class="text-sm font-medium text-gray-500">工作类型</span>
-            <div class="mt-1 text-gray-900">{{ getJobTypeLabel(data?.job_type) }}</div>
+            <div class="text-xs text-gray-400">求职状态</div>
+            <div class="mt-0.5 text-sm text-gray-700">{{ getJobStatusLabel(data.job_status) }}</div>
+          </div>
+        </div>
+
+        <!-- 工作类型 -->
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-indigo-50">
+            <BriefcaseIcon class="w-6 h-6 text-indigo-500" />
+          </div>
+          <div>
+            <div class="text-xs text-gray-400">工作类型</div>
+            <div class="mt-0.5 text-sm text-gray-700">{{ getJobTypeLabel(data.job_type) }}</div>
+          </div>
+        </div>
+
+        <!-- 期望薪资 -->
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-emerald-50">
+            <CurrencyYenIcon class="w-6 h-6 text-emerald-500" />
+          </div>
+          <div>
+            <div class="text-xs text-gray-400">期望薪资</div>
+            <div class="mt-0.5 text-sm text-gray-700">{{ formatSalary(data.expected_salary) }}</div>
+          </div>
+        </div>
+
+        <!-- 期望城市 -->
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-rose-50">
+            <MapPinIcon class="w-6 h-6 text-rose-500" />
+          </div>
+          <div>
+            <div class="text-xs text-gray-400">期望城市</div>
+            <div class="mt-0.5 text-sm text-gray-700">{{ formatCity(data.expected_city) }}</div>
           </div>
         </div>
       </div>
 
-      <!-- 求职状态 -->
-      <div class="bg-gray-50 rounded-lg p-3 transition-all hover:bg-gray-100">
-        <div class="flex items-start space-x-3">
-          <div class="p-2 bg-green-50 rounded-lg">
-            <UserCircleIcon class="w-5 h-5 text-green-600" />
+      <!-- 期望行业 -->
+      <div class="mt-6 border-t border-gray-100 pt-4">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-purple-50">
+            <BuildingOfficeIcon class="w-6 h-6 text-purple-500" />
           </div>
-          <div>
-            <span class="text-sm font-medium text-gray-500">求职状态</span>
-            <div class="mt-1 text-gray-900">{{ getJobStatusLabel(data?.job_status) }}</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 期望薪资 -->
-      <div class="bg-gray-50 rounded-lg p-3 transition-all hover:bg-gray-100">
-        <div class="flex items-start space-x-3">
-          <div class="p-2 bg-purple-50 rounded-lg">
-            <CurrencyYenIcon class="w-5 h-5 text-purple-600" />
-          </div>
-          <div>
-            <span class="text-sm font-medium text-gray-500">期望薪资</span>
-            <div class="mt-1 text-gray-900">{{ getSalaryLabel(data?.expected_salary) }}</div>
+          <div class="flex-1">
+            <div class="text-xs text-gray-400">期望行业</div>
+            <!-- 已选行业标签 -->
+            <div class="mt-2 flex flex-wrap gap-2">
+              <div
+                v-for="industry in industryList"
+                :key="industry"
+                class="px-2 py-1 text-xs rounded-full bg-purple-50 text-purple-600"
+              >
+                {{ industry }}
+              </div>
+            </div>
           </div>
         </div>
       </div>
-
-      <!-- 期望城市 -->
-      <div class="bg-gray-50 rounded-lg p-3 transition-all hover:bg-gray-100">
-        <div class="flex items-start space-x-3">
-          <div class="p-2 bg-orange-50 rounded-lg">
-            <MapPinIcon class="w-5 h-5 text-orange-600" />
-          </div>
-          <div>
-            <span class="text-sm font-medium text-gray-500">期望城市</span>
-            <div class="mt-1 text-gray-900">{{ formatCity(data?.expected_city) }}</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 期望行业 -->
-    <div class="mt-4 bg-gray-50 rounded-lg p-3 transition-all hover:bg-gray-100">
-      <div class="flex items-start space-x-3">
-        <div class="p-2 bg-indigo-50 rounded-lg">
-          <BuildingOfficeIcon class="w-5 h-5 text-indigo-600" />
-        </div>
-        <div>
-          <span class="text-sm font-medium text-gray-500">期望行业</span>
-          <div class="mt-1 text-gray-900">{{ formatIndustries(data?.industries) }}</div>
-        </div>
-      </div>
-    </div>
+    </template>
 
     <!-- 空状态 -->
-    <div v-if="!data" class="flex flex-col items-center justify-center py-8">
+    <div v-else class="flex flex-col items-center justify-center py-12 bg-gray-50 rounded-lg">
       <DocumentPlusIcon class="w-12 h-12 text-gray-300" />
-      <p class="mt-2 text-gray-400">暂无求职意向，点击编辑按钮添加</p>
+      <p class="mt-2 text-sm text-gray-400">暂无求职意向，点击编辑按钮添加</p>
     </div>
   </div>
 </template>
 
 <script setup>
-import { JOB_TYPE_OPTIONS, JOB_STATUS_OPTIONS, SALARY_OPTIONS } from '../constants/jobOptions'
 import { 
   BriefcaseIcon,
   UserCircleIcon,
@@ -86,39 +93,34 @@ import {
   BuildingOfficeIcon,
   DocumentPlusIcon
 } from '@heroicons/vue/24/outline'
+import { onMounted, watch, computed } from 'vue'
 
 const props = defineProps({
   data: {
     type: Object,
-    default: null
+    default: () => ({})
   }
 })
 
-// 添加调试日志
-console.log('JobIntentionContent 接收到的数据:', props.data)
-
 // 获取工作类型标签
 const getJobTypeLabel = (value) => {
-  const option = JOB_TYPE_OPTIONS.find(opt => opt.value === value)
-  return option ? option.label : '未设置'
+  const typeMap = {
+    'full_time': '全职',
+    'part_time': '兼职',
+    'internship': '实习',
+    'freelance': '自由职业'
+  }
+  return typeMap[value] || '未设置'
 }
 
 // 获取求职状态标签
 const getJobStatusLabel = (value) => {
   const statusMap = {
-    'unemployed_looking': '离职-找工作',
-    'employed_not_looking': '在职-暂不考虑',
-    'employed_looking': '在职-看机会',
-    'student_internship': '在校-找实习',
-    'fresh_graduate': '应届生'
+    'actively_looking': '正在积极找工作',
+    'open_to_offers': '对机会持开放态度',
+    'not_looking': '暂时不找工作'
   }
   return statusMap[value] || '未设置'
-}
-
-// 获取薪资标签
-const getSalaryLabel = (value) => {
-  const option = SALARY_OPTIONS.find(opt => opt.value === value)
-  return option ? option.label : '未设置'
 }
 
 // 格式化城市
@@ -127,42 +129,55 @@ const formatCity = (city) => {
   return city.split('-').join('、')
 }
 
-// 格式化行业
-const formatIndustries = (industries) => {
-  if (!industries) return '未设置'
-  return industries.split(',').join('、')
+// 获取状态对应的颜色
+const getStatusColor = (status) => {
+  const colorMap = {
+    'actively_looking': 'bg-green-500',  // 正在积极找工作 - 绿色
+    'open_to_offers': 'bg-blue-500',     // 对机会持开放态度 - 蓝色
+    'not_looking': 'bg-gray-400'         // 暂时不找工作 - 灰色
+  }
+  return colorMap[status] || 'bg-gray-400'
 }
+
+// 格式化薪资
+const formatSalary = (salary) => {
+  if (!salary) return '未设置'
+  // 如果已经包含 'K' 或其他单位，直接返回
+  if (typeof salary === 'string' && (salary.includes('K') || salary.includes('k'))) {
+    return salary
+  }
+  // 否则添加 'K'
+  return `${salary}K`
+}
+
+// 计算已选择的行业列表
+const industryList = computed(() => {
+  if (!props.data?.industries) return ['未设置']
+  return props.data.industries.split(',').filter(Boolean)
+})
+
+// 调试日志
+onMounted(() => {
+  console.log('JobIntentionContent mounted, data:', props.data)
+})
+
+watch(() => props.data, (newData) => {
+  console.log('JobIntentionContent data changed:', newData)
+}, { deep: true })
 </script>
 
 <style scoped>
-/* 移动端适配 */
-@media (max-width: 640px) {
-  .grid {
-    @apply grid-cols-1 gap-3;
-  }
-  
-  .p-4 {
-    @apply p-3;
-  }
-}
-
-/* 悬浮效果 */
-.bg-gray-50 {
-  transition: all 0.2s ease;
-}
-
-/* 图标容器 */
-.p-2 {
-  transition: all 0.2s ease;
-}
-
-.bg-gray-50:hover .p-2 {
-  transform: scale(1.1);
-}
-
-/* 图标容器悬浮效果 */
-.bg-gray-50:hover .p-2 {
-  transform: scale(1.1);
+.w-10 {
   transition: transform 0.2s ease;
 }
-</style> 
+
+.flex:hover .w-10 {
+  transform: scale(1.1);
+}
+
+@media (max-width: 640px) {
+  .grid-cols-2 {
+    @apply grid-cols-1 gap-4;
+  }
+}
+</style>

@@ -91,10 +91,7 @@ const getProficiencyPercentage = (proficiency) => {
 
 // 添加数据监听
 watch(() => props.data, (newData) => {
-  console.log('【LanguageContent】数据变化:', {
-    数据长度: newData?.length,
-    详细数据: newData
-  })
+
 }, { immediate: true, deep: true })
 </script>
 

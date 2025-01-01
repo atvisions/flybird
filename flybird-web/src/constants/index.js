@@ -8,16 +8,46 @@ export const SMS_SCENE = {
 
 // 所有可用的模块类型
 export const ALL_MODULES = {
-  basic_info: '基本信息',
-  job_intention: '求职意向',
-  work_experience: '工作经历',
-  education: '教育经历',
-  project: '项目经历',
-  skill: '专业技能',
-  certificate: '证书奖项',
-  language: '语言能力',
-  portfolio: '作品展示',
-  social_link: '社交主页'
+  basic_info: {
+    name: '基本信息',
+    showInInactive: false
+  },
+  job_intention: {
+    name: '求职意向',
+    showInInactive: true
+  },
+  work_experience: {
+    name: '工作经历',
+    showInInactive: true
+  },
+  education: {
+    name: '教育经历',
+    showInInactive: true
+  },
+  project: {
+    name: '项目经历',
+    showInInactive: true
+  },
+  skill: {
+    name: '专业技能',
+    showInInactive: true
+  },
+  certificate: {
+    name: '证书奖项',
+    showInInactive: true
+  },
+  language: {
+    name: '语言能力',
+    showInInactive: true
+  },
+  portfolio: {
+    name: '作品展示',
+    showInInactive: true
+  },
+  social_link: {
+    name: '社交主页',
+    showInInactive: true
+  }
 }
 
 // 核心模块（默认显示）

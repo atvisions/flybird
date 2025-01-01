@@ -21,24 +21,35 @@
         </div>
   
         <!-- 总进度条 -->
-        <div class="bg-gray-200 rounded-full h-2.5 mb-4">
+        <div class="relative h-2.5 mb-4 bg-gray-200 rounded-full overflow-hidden">
           <div 
-            class="h-2.5 rounded-full transition-all duration-500"
-            :class="progressColorClass"
-            :style="{ width: `${totalScore}%` }"
-          ></div>
+            class="h-full flex transition-all duration-500 gap-[2px]"
+          >
+            <div 
+              v-for="n in 20" 
+              :key="n"
+              class="h-full flex-1"
+              :class="[n <= Math.ceil(totalScore / 5) ? progressColorClass : 'bg-gray-200']"
+            ></div>
+          </div>
         </div>
   
         <!-- 维度得分 -->
         <div class="space-y-3 mb-6">
           <div v-for="(dimension, key) in dimensions" :key="key" class="flex items-center">
             <span class="text-sm text-gray-600 w-24">{{ getDimensionName(key) }}</span>
-            <div class="flex-1 mx-2">
-              <div class="bg-gray-200 rounded-full h-1.5">
+            <div class="flex-1 mx-2 relative">
+              <div class="bg-gray-200 rounded-full h-1.5 overflow-hidden">
                 <div 
-                  class="h-1.5 rounded-full bg-blue-500"
-                  :style="{ width: `${dimension.score}%` }"
-                ></div>
+                  class="h-full flex transition-all duration-500 gap-[2px]"
+                >
+                  <div 
+                    v-for="n in 20" 
+                    :key="n"
+                    class="h-full flex-1"
+                    :class="[n <= Math.ceil(dimension.score / 5) ? 'bg-blue-500' : 'bg-gray-200']"
+                  ></div>
+                </div>
               </div>
             </div>
             <span class="text-sm text-gray-500">{{ dimension.score }}%</span>
@@ -82,39 +93,65 @@
     </div>
   
     <!-- 预览对话框 -->
-    <el-dialog
-      v-model="showPreview"
-      :width="dialogWidth"
-      :fullscreen="isMobile"
-      :close-on-click-modal="false"
-      :show-close="false"
-      class="preview-dialog"
-      destroy-on-close
-    >
-      <div class="dialog-container">
-        <!-- 头部 -->
-        <div class="dialog-header">
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-medium text-gray-900">简历预览</h3>
-            <button
-              @click="showPreview = false"
-              class="p-1 rounded-full hover:bg-gray-100 transition-colors duration-200"
-              title="关闭"
+    <TransitionRoot appear :show="!!showPreview" as="template">
+      <Dialog as="div" class="relative z-50" @close="showPreview = false">
+        <TransitionChild
+          as="template"
+          :show="true"
+          enter="duration-300 ease-out"
+          enter-from="opacity-0"
+          enter-to="opacity-100"
+          leave="duration-200 ease-in"
+          leave-from="opacity-100"
+          leave-to="opacity-0"
+        >
+          <div class="fixed inset-0 bg-black/25" />
+        </TransitionChild>
+
+        <div class="fixed inset-0 overflow-y-auto">
+          <div class="flex min-h-full items-center justify-center p-4 text-center">
+            <TransitionChild
+              as="template"
+              :show="true"
+              enter="duration-300 ease-out"
+              enter-from="opacity-0 scale-95"
+              enter-to="opacity-100 scale-100"
+              leave="duration-200 ease-in"
+              leave-from="opacity-100 scale-100"
+              leave-to="opacity-0 scale-95"
             >
-              <XMarkIcon class="w-6 h-6 text-gray-500" />
-            </button>
+              <DialogPanel 
+                class="w-full transform overflow-hidden rounded-xl bg-white text-left align-middle shadow-xl transition-all"
+                :class="[isMobile ? 'h-full' : 'max-w-4xl']"
+              >
+                <!-- 头部 -->
+                <div class="dialog-header">
+                  <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-medium text-gray-900">简历预览</h3>
+                    <button
+                      @click="showPreview = false"
+                      class="p-1 rounded-full hover:bg-gray-100 transition-colors duration-200"
+                      title="关闭"
+                    >
+                      <XMarkIcon class="w-6 h-6 text-gray-500" />
+                    </button>
+                  </div>
+                </div>
+
+                <!-- 内容区域 -->
+                <div class="dialog-body">
+                  <ProfilePreview />
+                </div>
+              </DialogPanel>
+            </TransitionChild>
           </div>
         </div>
-  
-        <!-- 内容区域 -->
-        <div class="dialog-body">
-          <ProfilePreview />
-        </div>
-      </div>
-    </el-dialog>
+      </Dialog>
+    </TransitionRoot>
   
     <!-- AI优化对话框 -->
     <AIOptimizeDialog
+      v-if="showOptimize"
       v-model="showOptimize"
       :profile-data="props.profileData"
       @apply="handleOptimizeApply"
@@ -133,20 +170,22 @@
   } from '@heroicons/vue/24/outline'
   import ProfilePreview from './ProfilePreview.vue'
   import AIOptimizeDialog from '../dialogs/AIOptimizeDialog.vue'
+  import {
+    Dialog,
+    DialogPanel,
+    DialogTitle,
+    TransitionChild,
+    TransitionRoot
+  } from '@headlessui/vue'
 
   const props = defineProps({
     completionData: {
       type: Object,
-      required: true,
-      default: () => ({
-        total_score: 0,
-        dimensions: {},
-        suggestions: []
-      })
+      default: () => ({})
     },
     profileData: {
       type: Object,
-      required: true
+      default: () => ({})
     },
     loading: {
       type: Boolean,

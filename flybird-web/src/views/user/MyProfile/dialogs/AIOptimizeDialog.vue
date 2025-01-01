@@ -1,214 +1,238 @@
 <template>
-  <el-dialog
-    v-model="dialogVisible"
-    :width="dialogWidth"
-    :fullscreen="isMobile"
-    :close-on-click-modal="false"
-    :show-close="false"
-    class="optimize-dialog"
-    destroy-on-close
-  >
-    <!-- 主容器 -->
-    <div class="flex flex-col h-[700px] sm:h-[700px] bg-white">
-      <!-- 头部 -->
-      <div class="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
-        <div class="flex items-center space-x-2 sm:space-x-3">
-          <h3 class="text-base sm:text-lg font-medium text-gray-900">AI 优化</h3>
-          <div v-if="isOptimizing" class="flex items-center space-x-1 text-xs sm:text-sm text-gray-500">
-            <span>已完成</span>
-            <span class="font-medium text-blue-600">{{ completedCount }}</span>
-            <span>/</span>
-            <span>{{ totalFields }}</span>
-          </div>
-        </div>
-        <button
-          @click="handleClose"
-          class="text-gray-400 hover:text-gray-500"
-        >
-          <XMarkIcon class="h-5 w-5 sm:h-6 sm:w-6" />
-        </button>
-      </div>
+  <TransitionRoot appear :show="modelValue" as="div">
+    <Dialog as="div" class="relative z-50" @close="handleClose">
+      <TransitionChild
+        as="div"
+        :show="true"
+        enter="duration-300 ease-out"
+        enter-from="opacity-0"
+        enter-to="opacity-100"
+        leave="duration-200 ease-in"
+        leave-from="opacity-100"
+        leave-to="opacity-0"
+      >
+        <div class="fixed inset-0 bg-black/25" />
+      </TransitionChild>
 
-      <!-- 内容区域 -->
-      <div class="flex-1 overflow-hidden">
-        <div ref="scrollContainer" class="h-full overflow-y-auto scroll-smooth">
-          <!-- 移动端视图 -->
-          <div v-if="isMobile" class="divide-y divide-gray-100">
-            <div 
-              v-for="field in displayFields" 
-              :key="field.name"
-              class="p-4 space-y-2 field-row"
-            >
-              <!-- 字段名和状态 -->
-              <div class="flex justify-between items-center">
-                <div class="font-medium text-sm text-gray-900">{{ field.label }}</div>
-                <div class="flex items-center">
-                  <template v-if="field.status === 'success'">
-                    <CheckCircleIcon class="w-5 h-5 text-green-500" />
-                  </template>
-                  <template v-else-if="field.status === 'failed'">
-                    <XCircleIcon class="w-5 h-5 text-red-500" />
-                  </template>
-                  <template v-else-if="field.status === 'processing'">
-                    <div class="animate-spin rounded-full h-5 w-5 border-2 border-gray-300 border-t-blue-600"></div>
-                  </template>
-                  <template v-else>
-                    <MinusCircleIcon class="w-5 h-5 text-gray-300" />
-                  </template>
-                </div>
-              </div>
-              
-              <!-- 当前内容 -->
-              <div class="text-sm text-gray-500">
-                <div class="font-medium text-xs text-gray-400 mb-1">当前内容</div>
-                <div class="break-words">{{ field.currentValue || '未填写' }}</div>
-              </div>
-              
-              <!-- 优化建议 -->
-              <div class="text-sm text-gray-900">
-                <div class="font-medium text-xs text-gray-400 mb-1">优化建议</div>
-                <div class="break-words">
-                  <template v-if="field.status === 'processing'">
-                    <div class="flex items-center space-x-2 text-gray-500">
-                      <div class="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-blue-600"></div>
-                      <span>优化中...</span>
+      <div class="fixed inset-0 overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-4 text-center">
+          <TransitionChild
+            as="div"
+            :show="true"
+            enter="duration-300 ease-out"
+            enter-from="opacity-0 scale-95"
+            enter-to="opacity-100 scale-100"
+            leave="duration-200 ease-in"
+            leave-from="opacity-100 scale-100"
+            leave-to="opacity-0 scale-95"
+          >
+            <DialogPanel class="w-full max-w-2xl transform overflow-hidden rounded-xl bg-white text-left align-middle shadow-xl transition-all">
+              <!-- 主容器 -->
+              <div class="flex flex-col h-[700px] sm:h-[700px] bg-white">
+                <!-- 头部 -->
+                <div class="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+                  <div class="flex items-center space-x-2 sm:space-x-3">
+                    <h3 class="text-base sm:text-lg font-medium text-gray-900">AI 优化</h3>
+                    <div v-if="isOptimizing" class="flex items-center space-x-1 text-xs sm:text-sm text-gray-500">
+                      <span>已完成</span>
+                      <span class="font-medium text-blue-600">{{ completedCount }}</span>
+                      <span>/</span>
+                      <span>{{ totalFields }}</span>
                     </div>
-                  </template>
-                  <template v-else>
-                    <div class="flex items-center justify-between">
-                      <div>{{ field.optimizedValue || '等待优化' }}</div>
-                      <button
-                        v-if="field.status === 'failed'"
-                        @click="retryOptimize(field)"
-                        :disabled="isOptimizing"
-                        class="ml-2 px-2 py-1 text-xs text-blue-600 hover:text-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  </div>
+                  <button
+                    @click="handleClose"
+                    class="text-gray-400 hover:text-gray-500"
+                  >
+                    <XMarkIcon class="h-5 w-5 sm:h-6 sm:w-6" />
+                  </button>
+                </div>
+
+                <!-- 内容区域 -->
+                <div class="flex-1 overflow-hidden">
+                  <div ref="scrollContainer" class="h-full overflow-y-auto scroll-smooth">
+                    <!-- 移动端视图 -->
+                    <div v-if="isMobile" class="divide-y divide-gray-100">
+                      <div 
+                        v-for="field in displayFields" 
+                        :key="field.name"
+                        class="p-4 space-y-2 field-row"
                       >
-                        重新优化
+                        <!-- 字段名和状态 -->
+                        <div class="flex justify-between items-center">
+                          <div class="font-medium text-sm text-gray-900">{{ field.label }}</div>
+                          <div class="flex items-center">
+                            <template v-if="field.status === 'success'">
+                              <CheckCircleIcon class="w-5 h-5 text-green-500" />
+                            </template>
+                            <template v-else-if="field.status === 'failed'">
+                              <XCircleIcon class="w-5 h-5 text-red-500" />
+                            </template>
+                            <template v-else-if="field.status === 'processing'">
+                              <div class="animate-spin rounded-full h-5 w-5 border-2 border-gray-300 border-t-blue-600"></div>
+                            </template>
+                            <template v-else>
+                              <MinusCircleIcon class="w-5 h-5 text-gray-300" />
+                            </template>
+                          </div>
+                        </div>
+                        
+                        <!-- 当前内容 -->
+                        <div class="text-sm text-gray-500">
+                          <div class="font-medium text-xs text-gray-400 mb-1">当前内容</div>
+                          <div class="break-words">{{ field.currentValue || '未填写' }}</div>
+                        </div>
+                        
+                        <!-- 优化建议 -->
+                        <div class="text-sm text-gray-900">
+                          <div class="font-medium text-xs text-gray-400 mb-1">优化建议</div>
+                          <div class="break-words">
+                            <template v-if="field.status === 'processing'">
+                              <div class="flex items-center space-x-2 text-gray-500">
+                                <div class="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-blue-600"></div>
+                                <span>优化中...</span>
+                              </div>
+                            </template>
+                            <template v-else>
+                              <div class="flex items-center justify-between">
+                                <div>{{ field.optimizedValue || '等待优化' }}</div>
+                                <button
+                                  v-if="field.status === 'failed'"
+                                  @click="retryOptimize(field)"
+                                  :disabled="isOptimizing"
+                                  class="ml-2 px-2 py-1 text-xs text-blue-600 hover:text-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  重新优化
+                                </button>
+                              </div>
+                            </template>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 桌面端表格视图 -->
+                    <div v-else class="min-w-full">
+                      <!-- 表格头部 -->
+                      <div class="sticky top-0 z-10 bg-gray-50 border-b border-gray-200">
+                        <div class="grid grid-cols-12 gap-0">
+                          <div class="col-span-2 py-3 px-4 text-left text-sm font-medium text-gray-900">字段</div>
+                          <div class="col-span-4 py-3 px-4 text-left text-sm font-medium text-gray-900">当前内容</div>
+                          <div class="col-span-5 py-3 px-4 text-left text-sm font-medium text-gray-900">优化建议</div>
+                          <div class="col-span-1 py-3 px-4 text-center text-sm font-medium text-gray-900">状态</div>
+                        </div>
+                      </div>
+
+                      <!-- 表格内容 -->
+                      <div class="bg-white">
+                        <div class="transition-all duration-300">
+                          <div
+                            v-for="field in displayFields" 
+                            :key="field.name"
+                            class="grid grid-cols-12 gap-0 border-b border-gray-100 hover:bg-gray-50 field-row"
+                          >
+                            <!-- 字段名 -->
+                            <div class="col-span-2 py-3 px-4 text-sm text-gray-900">
+                              {{ field.label }}
+                            </div>
+                            
+                            <!-- 当前内容 -->
+                            <div class="col-span-4 py-3 px-4 text-sm text-gray-500">
+                              <div class="break-words">
+                                {{ field.currentValue || '未填写' }}
+                              </div>
+                            </div>
+                            
+                            <!-- 优化建议 -->
+                            <div class="col-span-5 py-3 px-4 text-sm text-gray-900">
+                              <div class="break-words">
+                                <template v-if="field.status === 'processing'">
+                                  <div class="flex items-center space-x-2 text-gray-500">
+                                    <div class="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-blue-600"></div>
+                                    <span>优化中...</span>
+                                  </div>
+                                </template>
+                                <template v-else>
+                                  <div class="flex items-center justify-between">
+                                    <div>{{ field.optimizedValue || '等待优化' }}</div>
+                                    <button
+                                      v-if="field.status === 'failed'"
+                                      @click="retryOptimize(field)"
+                                      :disabled="isOptimizing"
+                                      class="ml-2 px-2 py-1 text-xs text-blue-600 hover:text-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                      重新优化
+                                    </button>
+                                  </div>
+                                </template>
+                              </div>
+                            </div>
+                            
+                            <!-- 状态 -->
+                            <div class="col-span-1 py-3 px-4 flex items-center justify-center">
+                              <template v-if="field.status === 'success'">
+                                <CheckCircleIcon class="w-5 h-5 text-green-500" />
+                              </template>
+                              <template v-else-if="field.status === 'failed'">
+                                <XCircleIcon class="w-5 h-5 text-red-500" />
+                              </template>
+                              <template v-else-if="field.status === 'processing'">
+                                <div class="animate-spin rounded-full h-5 w-5 border-2 border-gray-300 border-t-blue-600"></div>
+                              </template>
+                              <template v-else>
+                                <MinusCircleIcon class="w-5 h-5 text-gray-300" />
+                              </template>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 底部 -->
+                <div class="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200">
+                  <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
+                    <div class="text-xs sm:text-sm text-gray-500">
+                      {{ footerText }}
+                    </div>
+                    <div class="flex space-x-2 sm:space-x-3">
+                      <button
+                        @click="handleClose"
+                        :disabled="isOptimizing"
+                        class="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        取消
+                      </button>
+                      <button v-if="!isOptimizing"
+                        @click="startOptimize"
+                        class="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700"
+                      >
+                        一键优化
+                      </button>
+                      <button v-else-if="hasFailedFields && !hasProcessingFields"
+                        @click="retryFailedOptimizations"
+                        class="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700"
+                      >
+                        继续优化
+                      </button>
+                      <button v-else
+                        @click="handleApply"
+                        :disabled="!canApply"
+                        class="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        应用优化
                       </button>
                     </div>
-                  </template>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 桌面端表格视图 -->
-          <div v-else class="min-w-full">
-            <!-- 表格头部 -->
-            <div class="sticky top-0 z-10 bg-gray-50 border-b border-gray-200">
-              <div class="grid grid-cols-12 gap-0">
-                <div class="col-span-2 py-3 px-4 text-left text-sm font-medium text-gray-900">字段</div>
-                <div class="col-span-4 py-3 px-4 text-left text-sm font-medium text-gray-900">当前内容</div>
-                <div class="col-span-5 py-3 px-4 text-left text-sm font-medium text-gray-900">优化建议</div>
-                <div class="col-span-1 py-3 px-4 text-center text-sm font-medium text-gray-900">状态</div>
-              </div>
-            </div>
-
-            <!-- 表格内容 -->
-            <div class="bg-white">
-              <TransitionGroup name="list" tag="div">
-                <div 
-                  v-for="field in displayFields" 
-                  :key="field.name"
-                  class="grid grid-cols-12 gap-0 border-b border-gray-100 hover:bg-gray-50 field-row"
-                >
-                  <!-- 字段名 -->
-                  <div class="col-span-2 py-3 px-4 text-sm text-gray-900">
-                    {{ field.label }}
-                  </div>
-                  
-                  <!-- 当前内容 -->
-                  <div class="col-span-4 py-3 px-4 text-sm text-gray-500">
-                    <div class="break-words">
-                      {{ field.currentValue || '未填写' }}
-                    </div>
-                  </div>
-                  
-                  <!-- 优化建议 -->
-                  <div class="col-span-5 py-3 px-4 text-sm text-gray-900">
-                    <div class="break-words">
-                      <template v-if="field.status === 'processing'">
-                        <div class="flex items-center space-x-2 text-gray-500">
-                          <div class="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-blue-600"></div>
-                          <span>优化中...</span>
-                        </div>
-                      </template>
-                      <template v-else>
-                        <div class="flex items-center justify-between">
-                          <div>{{ field.optimizedValue || '等待优化' }}</div>
-                          <button
-                            v-if="field.status === 'failed'"
-                            @click="retryOptimize(field)"
-                            :disabled="isOptimizing"
-                            class="ml-2 px-2 py-1 text-xs text-blue-600 hover:text-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            重新优化
-                          </button>
-                        </div>
-                      </template>
-                    </div>
-                  </div>
-                  
-                  <!-- 状态 -->
-                  <div class="col-span-1 py-3 px-4 flex items-center justify-center">
-                    <template v-if="field.status === 'success'">
-                      <CheckCircleIcon class="w-5 h-5 text-green-500" />
-                    </template>
-                    <template v-else-if="field.status === 'failed'">
-                      <XCircleIcon class="w-5 h-5 text-red-500" />
-                    </template>
-                    <template v-else-if="field.status === 'processing'">
-                      <div class="animate-spin rounded-full h-5 w-5 border-2 border-gray-300 border-t-blue-600"></div>
-                    </template>
-                    <template v-else>
-                      <MinusCircleIcon class="w-5 h-5 text-gray-300" />
-                    </template>
                   </div>
                 </div>
-              </TransitionGroup>
-            </div>
-          </div>
+              </div>
+            </DialogPanel>
+          </TransitionChild>
         </div>
       </div>
-
-      <!-- 底部 -->
-      <div class="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200">
-        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
-          <div class="text-xs sm:text-sm text-gray-500">
-            {{ footerText }}
-          </div>
-          <div class="flex space-x-2 sm:space-x-3">
-            <button
-              @click="handleClose"
-              :disabled="isOptimizing"
-              class="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              取消
-            </button>
-            <button v-if="!isOptimizing"
-              @click="startOptimize"
-              class="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700"
-            >
-              一键优化
-            </button>
-            <button v-else-if="hasFailedFields && !hasProcessingFields"
-              @click="retryFailedOptimizations"
-              class="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700"
-            >
-              继续优化
-            </button>
-            <button v-else
-              @click="handleApply"
-              :disabled="!canApply"
-              class="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              应用优化
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </el-dialog>
+    </Dialog>
+  </TransitionRoot>
 </template>
 
 <script setup>
@@ -221,12 +245,22 @@ import {
   MinusCircleIcon
 } from '@heroicons/vue/24/solid'
 import { ElMessageBox, ElMessage } from 'element-plus'
+import {
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+  TransitionChild,
+  TransitionRoot
+} from '@headlessui/vue'
 
 const props = defineProps({
-  modelValue: Boolean,
+  modelValue: {
+    type: Boolean,
+    default: false
+  },
   profileData: {
     type: Object,
-    required: true
+    default: () => ({})
   }
 })
 

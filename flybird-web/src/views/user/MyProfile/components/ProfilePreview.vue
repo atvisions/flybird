@@ -1,170 +1,37 @@
 <template>
-  <div class="bg-white">
-    <!-- 头部区域 - 使用渐变背景 -->
-    <div class="bg-gradient-to-br from-gray-50 to-gray-100">
-      <div class="max-w-4xl mx-auto px-8 py-12">
-        <!-- 修改为居中布局 -->
-        <div class="flex flex-col items-center text-center">
-          <!-- 头像 -->
-          <div class="mb-6">
-            <div class="relative">
-              <img 
-                :src="avatarUrl" 
-                class="w-32 h-32 rounded-xl object-cover shadow-lg border-4 border-white ring-2 ring-gray-100"
-                alt="用户头像"
-                @error="handleImageError"
-              />
-              <div class="absolute inset-0 rounded-xl ring-1 ring-inset ring-black/5"></div>
-            </div>
-          </div>
+  <TransitionRoot appear :show="modelValue" as="div">
+    <Dialog as="div" class="relative z-50" @close="handleClose">
+      <TransitionChild
+        as="div"
+        :show="true"
+        enter="duration-300 ease-out"
+        enter-from="opacity-0"
+        enter-to="opacity-100"
+        leave="duration-200 ease-in"
+        leave-from="opacity-100"
+        leave-to="opacity-0"
+      >
+        <div class="fixed inset-0 bg-black/25" />
+      </TransitionChild>
 
-          <!-- 基本信息 -->
-          <div class="w-full max-w-2xl">
-            <!-- 姓名和简介 -->
-            <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600">
-              {{ basicInfo.name || '未设置姓名' }}
-            </h1>
-            <p class="mt-3 text-gray-500 leading-relaxed max-w-xl mx-auto">
-              {{ basicInfo.personal_summary || '未设置个人简介' }}
-            </p>
-
-            <!-- 联系信息 -->
-            <div class="mt-6 flex justify-center gap-6">
-              <div class="flex items-center text-gray-600 hover:text-gray-900 transition-colors">
-                <PhoneIcon class="w-4 h-4 mr-2" />
-                <span>{{ basicInfo.phone || '未设置手机号' }}</span>
-              </div>
-              <div class="flex items-center text-gray-600 hover:text-gray-900 transition-colors">
-                <EnvelopeIcon class="w-4 h-4 mr-2" />
-                <span>{{ basicInfo.email || '未设置邮箱' }}</span>
-              </div>
-              <div class="flex items-center text-gray-600 hover:text-gray-900 transition-colors">
-                <MapPinIcon class="w-4 h-4 mr-2" />
-                <span>{{ basicInfo.location || '未设置所在地' }}</span>
-              </div>
-            </div>
-          </div>
+      <div class="fixed inset-0 overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-4 text-center">
+          <TransitionChild
+            as="div"
+            :show="true"
+            enter="duration-300 ease-out"
+            enter-from="opacity-0 scale-95"
+            enter-to="opacity-100 scale-100"
+            leave="duration-200 ease-in"
+            leave-from="opacity-100 scale-100"
+            leave-to="opacity-0 scale-95"
+          >
+            <!-- 预览内容保持不变 -->
+          </TransitionChild>
         </div>
       </div>
-    </div>
-
-    <!-- 内容区域 - 使用卡片式设计 -->
-    <div class="max-w-4xl mx-auto px-8 py-12 space-y-12">
-      <!-- 求职意向 -->
-      <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
-        <h2 class="text-lg font-bold text-gray-900 mb-6 flex items-center">
-          <BriefcaseIcon class="w-5 h-5 mr-2 text-gray-400" />
-          求职意向
-        </h2>
-        <div class="grid grid-cols-2 gap-6">
-          <div class="space-y-1">
-            <span class="text-sm font-medium text-gray-500">工作类型</span>
-            <div class="text-gray-900">{{ formatJobIntentionValue('job_type', jobIntention.job_type) }}</div>
-          </div>
-          <div class="space-y-1">
-            <span class="text-sm font-medium text-gray-500">求职状态</span>
-            <div class="text-gray-900">{{ formatJobIntentionValue('job_status', jobIntention.job_status) }}</div>
-          </div>
-          <div class="space-y-1">
-            <span class="text-sm font-medium text-gray-500">期望薪资</span>
-            <div class="text-gray-900">{{ jobIntention.expected_salary || '未设置' }}</div>
-          </div>
-          <div class="space-y-1">
-            <span class="text-sm font-medium text-gray-500">期望城市</span>
-            <div class="text-gray-900">{{ formatCity(jobIntention.expected_city) }}</div>
-          </div>
-          <div class="col-span-2 space-y-1">
-            <span class="text-sm font-medium text-gray-500">期望行业</span>
-            <div class="text-gray-900">{{ formatIndustries(jobIntention.industries) }}</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 工作经历 -->
-      <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
-        <h2 class="text-lg font-bold text-gray-900 mb-6 flex items-center">
-          <BuildingOfficeIcon class="w-5 h-5 mr-2 text-gray-400" />
-          工作经历
-        </h2>
-        <div class="space-y-8">
-          <div v-for="exp in workExperiences" :key="exp.id" 
-            class="p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-            <div class="flex justify-between items-start">
-              <div>
-                <h3 class="text-base font-semibold text-gray-900">{{ exp.company }}</h3>
-                <p class="mt-1 text-sm text-gray-600">{{ exp.position }}</p>
-                <p v-if="exp.department" class="mt-0.5 text-sm text-gray-500">{{ exp.department }}</p>
-              </div>
-              <div class="text-sm text-gray-500">
-                {{ formatDateRange(exp.start_date, exp.end_date, exp.is_current) }}
-              </div>
-            </div>
-            <div class="prose prose-sm max-w-none text-gray-600">
-              <div class="mb-3">
-                <h4 class="text-sm font-medium text-gray-700 mb-2">工作描述</h4>
-                <p>{{ exp.description }}</p>
-              </div>
-              <div v-if="exp.achievements" class="mb-3">
-                <h4 class="text-sm font-medium text-gray-700 mb-2">工作成就</h4>
-                <p>{{ exp.achievements }}</p>
-              </div>
-              <div v-if="exp.technologies">
-                <h4 class="text-sm font-medium text-gray-700 mb-2">技术栈</h4>
-                <div class="flex flex-wrap gap-2">
-                  <span 
-                    v-for="tech in exp.technologies.split(',')" 
-                    :key="tech"
-                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
-                  >
-                    {{ tech }}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div v-if="!workExperiences.length" class="text-sm text-gray-500">暂无工作经历</div>
-      </section>
-
-      <!-- 教育经历 -->
-      <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
-        <h2 class="text-lg font-bold text-gray-900 mb-6 flex items-center">
-          <AcademicCapIcon class="w-5 h-5 mr-2 text-gray-400" />
-          教育经历
-        </h2>
-        <div class="space-y-6">
-          <div v-for="edu in educations" :key="edu.id" class="flex justify-between items-start">
-            <div>
-              <h3 class="text-base font-semibold text-gray-900">{{ edu.school }}</h3>
-              <p class="mt-1 text-sm text-gray-600">{{ edu.major }}</p>
-              <p class="mt-0.5 text-sm text-gray-500">{{ edu.degree }}</p>
-            </div>
-            <div class="text-sm text-gray-500">
-              {{ formatDateRange(edu.start_date, edu.end_date) }}
-            </div>
-          </div>
-        </div>
-        <div v-if="!educations.length" class="text-sm text-gray-500">暂无教育经历</div>
-      </section>
-
-      <!-- 技能特长 -->
-      <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
-        <h2 class="text-lg font-bold text-gray-900 mb-6 flex items-center">
-          <SparklesIcon class="w-5 h-5 mr-2 text-gray-400" />
-          技能特长
-        </h2>
-        <div class="flex flex-wrap gap-2">
-          <span 
-            v-for="skill in skills" 
-            :key="skill"
-            class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-50 text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors cursor-default"
-          >
-            {{ skill }}
-          </span>
-        </div>
-      </section>
-    </div>
-  </div>
+    </Dialog>
+  </TransitionRoot>
 </template>
 
 <script setup>

@@ -218,12 +218,18 @@ import {
 } from '@heroicons/vue/24/outline'
 import profile from '@/api/profile'
 import { eventBus } from '@/utils/eventBus'
+import {
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+  TransitionChild,
+  TransitionRoot
+} from '@headlessui/vue'
 
 // 1. 首先声明 props
 const props = defineProps({
   resumeData: {
     type: Object,
-    required: true,
     default: () => ({})
   },
   loading: {
@@ -268,7 +274,7 @@ const formatBasicInfo = computed(() => {
 const userAvatar = computed(() => {
   const avatar = props.resumeData?.avatar
   if (!avatar) return defaultAvatarImage
-  return avatar.startsWith('http') ? avatar : `${MEDIA_URL}${avatar}`
+  return avatar.startsWith('http') || avatar.startsWith('data:') ? avatar : `${MEDIA_URL}${avatar}`
 })
 
 const currentGender = computed(() => {
@@ -303,16 +309,8 @@ const handleFileChange = async (event) => {
   const file = event.target.files[0]
   if (!file) return
 
-  // 验证文件类型
-  if (!file.type.startsWith('image/')) {
-    showToast('请选择图片文件', 'error')
-    return
-  }
-
-  // 验证文件大小（例如限制为 2MB）
-  const maxSize = 2 * 1024 * 1024 // 2MB
-  if (file.size > maxSize) {
-    showToast('图片大小不能超过 2MB', 'error')
+  // 验证文件
+  if (!validateFile(file)) {
     return
   }
 
@@ -324,7 +322,7 @@ const handleFileChange = async (event) => {
 
 const handleEdit = () => {
   console.log('BasicInfo handleEdit - 当前数据:', props.resumeData)
-  emit('edit', 'basic_info', props.resumeData)  // 修改为传递 'basic_info' 类型
+  emit('edit', 'basic_info', props.resumeData)
 }
 
 const toggleBioExpand = () => {
@@ -396,8 +394,13 @@ const handleAvatarUpload = async (file) => {
       showToast('头像上传成功', 'success')
       // 触发父组件更新
       emit('update')
-      // 触发全局头像更新事件
-      eventBus.emit('avatar-updated', response.data.data.avatar)
+      // 获取完整的头像URL
+      const avatarUrl = response.data.data.avatar
+      eventBus.emit('avatar-updated', avatarUrl)
+      // 更新本地数据
+      if (props.resumeData) {
+        props.resumeData.avatar = avatarUrl
+      }
     } else {
       throw new Error(response.data?.message || '上传失败')
     }
@@ -417,5 +420,23 @@ const triggerUpload = () => {
 // 添加图片加载错误处理
 const handleImageError = (e) => {
   e.target.src = defaultAvatarImage
+}
+
+// 添加文件验证
+const validateFile = (file) => {
+  // 验证文件类型
+  if (!file.type.startsWith('image/')) {
+    showToast('请选择图片文件', 'error')
+    return false
+  }
+
+  // 验证文件大小（例如限制为 2MB）
+  const maxSize = 2 * 1024 * 1024 // 2MB
+  if (file.size > maxSize) {
+    showToast('图片大小不能超过 2MB', 'error')
+    return false
+  }
+
+  return true
 }
 </script>

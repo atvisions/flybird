@@ -2,7 +2,8 @@
   <TransitionRoot appear :show="modelValue" as="template">
     <Dialog as="div" class="relative z-50" @close="handleClose">
       <TransitionChild
-        as="template"
+        as="div"
+        :show="true"
         enter="duration-300 ease-out"
         enter-from="opacity-0"
         enter-to="opacity-100"
@@ -14,7 +15,7 @@
       </TransitionChild>
 
       <div class="fixed inset-0 overflow-y-auto">
-        <div class="flex min-h-full items-center justify-center p-4">
+        <div class="flex min-h-full items-center justify-center p-4 text-center">
           <TransitionChild
             as="template"
             enter="duration-300 ease-out"
@@ -24,7 +25,7 @@
             leave-from="opacity-100 scale-100"
             leave-to="opacity-0 scale-95"
           >
-            <DialogPanel class="w-full max-w-2xl transform overflow-hidden rounded-lg bg-white shadow-xl transition-all">
+            <DialogPanel class="w-full max-w-2xl transform overflow-hidden rounded-xl bg-white text-left align-middle shadow-xl transition-all">
               <!-- 头部 -->
               <DialogTitle as="div" class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
                 <h3 class="text-lg font-medium text-gray-900">
@@ -79,19 +80,46 @@
                       <label class="block text-sm font-medium text-gray-700 mb-1">
                         学历
                       </label>
-                      <select
-                        v-model="formData.degree"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        required
-                      >
-                        <option value="">请选择学历</option>
-                        <option value="high_school">高中</option>
-                        <option value="junior_college">大专</option>
-                        <option value="bachelor">本科</option>
-                        <option value="master">硕士</option>
-                        <option value="doctor">博士</option>
-                        <option value="other">其他</option>
-                      </select>
+                      <Listbox v-model="formData.degree">
+                        <div class="relative">
+                          <ListboxButton class="relative w-full cursor-pointer rounded-lg bg-white py-2 pl-3 pr-10 text-left border border-gray-300 hover:border-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                            <span class="block truncate">{{ getDegreeLabel(formData.degree) || '请选择学历' }}</span>
+                            <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                              <ChevronUpDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
+                            </span>
+                          </ListboxButton>
+                          <transition
+                            leave-active-class="transition duration-100 ease-in"
+                            leave-from-class="opacity-100"
+                            leave-to-class="opacity-0"
+                          >
+                            <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg bg-white py-1 text-sm shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                              <ListboxOption
+                                v-for="option in degreeOptions"
+                                :key="option.value"
+                                :value="option.value"
+                                v-slot="{ active, selected }"
+                                as="template"
+                              >
+                                <li :class="[
+                                  active ? 'bg-blue-50' : 'text-gray-900',
+                                  'relative cursor-pointer select-none py-2 pl-3 pr-9'
+                                ]">
+                                  <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">
+                                    {{ option.label }}
+                                  </span>
+                                  <span v-if="selected" :class="[
+                                    'text-blue-600',
+                                    'absolute inset-y-0 right-0 flex items-center pr-4'
+                                  ]">
+                                    <CheckIcon class="h-5 w-5" aria-hidden="true" />
+                                  </span>
+                                </li>
+                              </ListboxOption>
+                            </ListboxOptions>
+                          </transition>
+                        </div>
+                      </Listbox>
                     </div>
 
                     <!-- 在读状态 -->
@@ -116,6 +144,7 @@
                       <input
                         v-model="formData.start_date"
                         type="month"
+                        placeholder="YYYY-MM"
                         class="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                         required
                       />
@@ -127,6 +156,7 @@
                       <input
                         v-model="formData.end_date"
                         type="month"
+                        placeholder="YYYY-MM"
                         class="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                         :min="formData.start_date"
                         :disabled="formData.is_current"
@@ -197,18 +227,26 @@ import {
   DialogPanel,
   DialogTitle,
   TransitionRoot,
-  TransitionChild
+  TransitionChild,
+  Listbox,
+  ListboxButton,
+  ListboxOptions,
+  ListboxOption
 } from '@headlessui/vue'
-import { XMarkIcon } from '@heroicons/vue/24/outline'
+import { 
+  XMarkIcon,
+  ChevronUpDownIcon,
+  CheckIcon 
+} from '@heroicons/vue/24/outline'
 
 const props = defineProps({
   modelValue: {
     type: Boolean,
-    required: true
+    default: false
   },
   initialData: {
     type: Object,
-    default: null
+    default: () => ({})
   },
   loading: {
     type: Boolean,
@@ -232,7 +270,7 @@ const formData = ref({
 
 // 监听初始数据变化
 watch(() => props.initialData, (newData) => {
-  console.log('【教育经历】编辑表单初始数据:', newData)
+  
   if (newData) {
     formData.value = {
       ...newData,
@@ -242,7 +280,7 @@ watch(() => props.initialData, (newData) => {
       description: newData.description || '',  // 确保字段名一致
       achievements: newData.achievements || '' // 确保字段名一致
     }
-    console.log('【教育经历】表单数据设置后:', formData.value)
+    
   } else {
     formData.value = {
       school: '',
@@ -308,6 +346,22 @@ const handleSubmit = () => {
   })
 
   emit('submit', submitData)
+}
+
+// 学历选项
+const degreeOptions = [
+  { value: 'high_school', label: '高中' },
+  { value: 'junior_college', label: '大专' },
+  { value: 'bachelor', label: '本科' },
+  { value: 'master', label: '硕士' },
+  { value: 'doctor', label: '博士' },
+  { value: 'other', label: '其他' }
+]
+
+// 获取学历显示文本
+const getDegreeLabel = (value) => {
+  const option = degreeOptions.find(opt => opt.value === value)
+  return option ? option.label : ''
 }
 </script>
 

@@ -1,7 +1,6 @@
 <template>
   <TransitionRoot appear :show="modelValue" as="template">
     <Dialog as="div" class="relative z-50" @close="handleClose">
-      <!-- 背景遮罩 -->
       <TransitionChild
         as="template"
         enter="duration-300 ease-out"
@@ -14,7 +13,6 @@
         <div class="fixed inset-0 bg-black/25" />
       </TransitionChild>
 
-      <!-- 对话框 -->
       <div class="fixed inset-0 overflow-y-auto">
         <div class="flex min-h-full items-center justify-center p-4 text-center">
           <TransitionChild
@@ -28,16 +26,13 @@
           >
             <DialogPanel class="w-full max-w-2xl transform overflow-hidden rounded-xl bg-white text-left align-middle shadow-xl transition-all">
               <!-- 头部 -->
-              <DialogTitle 
-                as="div" 
-                class="flex items-center justify-between border-b border-gray-200 px-6 py-4"
-              >
+              <DialogTitle as="div" class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
                 <h3 class="text-lg font-medium text-gray-900">
                   {{ initialData?.id ? '编辑语言能力' : '添加语言能力' }}
                 </h3>
                 <button
                   @click="handleClose"
-                  class="rounded-full p-1 hover:bg-gray-100 transition-colors"
+                  class="p-1 rounded-full hover:bg-gray-100 transition-colors"
                 >
                   <XMarkIcon class="w-5 h-5 text-gray-400" />
                 </button>
@@ -45,116 +40,107 @@
 
               <!-- 表单内容 -->
               <form @submit.prevent="handleSubmit" class="p-6">
-                <div class="space-y-6">
+                <div class="space-y-4">
                   <!-- 语言名称 -->
-                  <div class="space-y-1">
-                    <label class="block text-sm font-medium text-gray-700">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
                       语言名称 <span class="text-red-500">*</span>
                     </label>
                     <input
+                      v-model="formData.name"
                       type="text"
-                      v-model="form.name"
+                      class="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      placeholder="请输入语言名称"
                       required
-                      :class="[
-                        'w-full rounded-lg border py-2.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/10',
-                        errors.name ? 'border-red-300 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
-                      ]"
-                      placeholder="请输入语言名称，如：英语、日语等"
                     />
-                    <p v-if="errors.name" class="text-sm text-red-500 mt-1">{{ errors.name }}</p>
                   </div>
 
-                  <!-- 掌握程度 -->
-                  <div class="space-y-1">
-                    <label class="block text-sm font-medium text-gray-700">
-                      掌握程度 <span class="text-red-500">*</span>
+                  <!-- 熟练程度 -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                      熟练程度 <span class="text-red-500">*</span>
                     </label>
-                    <select
-                      v-model="form.proficiency"
-                      required
-                      :class="[
-                        'w-full rounded-lg border py-2.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/10',
-                        errors.proficiency ? 'border-red-300 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
-                      ]"
-                    >
-                      <option value="">请选择掌握程度</option>
-                      <option v-for="option in PROFICIENCY_OPTIONS" 
-                        :key="option.value" 
-                        :value="option.value"
-                      >
-                        {{ option.label }}
-                      </option>
-                    </select>
-                    <p v-if="errors.proficiency" class="text-sm text-red-500 mt-1">{{ errors.proficiency }}</p>
-                  </div>
-
-                  <!-- 语言描述 -->
-                  <div class="space-y-1">
-                    <label class="block text-sm font-medium text-gray-700">
-                      补充说明
-                    </label>
-                    <el-input
-                      v-model="form.description"
-                      type="textarea"
-                      :rows="4"
-                      placeholder="请描述语言能力的具体情况，如：通过了某项语言考试等（选填）"
-                      :class="[
-                        '!w-full',
-                        errors.description ? 'is-error' : ''
-                      ]"
-                    />
-                    <p v-if="errors.description" class="text-sm text-red-500 mt-1">{{ errors.description }}</p>
+                    <Listbox v-model="formData.proficiency" as="div">
+                      <div class="relative">
+                        <ListboxButton class="relative w-full cursor-pointer rounded-lg bg-white py-2 pl-3 pr-10 text-left border border-gray-300 hover:border-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                          <span class="block truncate">
+                            {{ proficiencyMap[formData.proficiency] || '请选择熟练程度' }}
+                          </span>
+                          <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                            <ChevronUpDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
+                          </span>
+                        </ListboxButton>
+                        <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg bg-white py-1 text-sm shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                          <ListboxOption
+                            v-for="[value, label] in Object.entries(proficiencyMap)"
+                            :key="value"
+                            :value="value"
+                            v-slot="{ active, selected }"
+                            as="template"
+                          >
+                            <li :class="[
+                              active ? 'bg-blue-50' : 'text-gray-900',
+                              'relative cursor-pointer select-none py-2 pl-3 pr-9'
+                            ]">
+                              <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">
+                                {{ label }}
+                              </span>
+                              <span v-if="selected" :class="[
+                                'text-blue-600',
+                                'absolute inset-y-0 right-0 flex items-center pr-4'
+                              ]">
+                                <CheckIcon class="h-5 w-5" aria-hidden="true" />
+                              </span>
+                            </li>
+                          </ListboxOption>
+                        </ListboxOptions>
+                      </div>
+                    </Listbox>
                   </div>
 
                   <!-- 语言证书 -->
-                  <div class="space-y-1">
-                    <label class="block text-sm font-medium text-gray-700">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
                       语言证书
                     </label>
                     <input
+                      v-model="formData.certification"
                       type="text"
-                      v-model="form.certification"
-                      :class="[
-                        'w-full rounded-lg border py-2.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/10',
-                        errors.certification ? 'border-red-300 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
-                      ]"
-                      placeholder="如：托福、雅思等（选填）"
+                      class="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      placeholder="请输入语言证书，如：托福、雅思等"
                     />
                   </div>
 
-                  <!-- 考试分数 -->
-                  <div class="space-y-1">
-                    <label class="block text-sm font-medium text-gray-700">
-                      考试分数
+                  <!-- 证书分数 -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                      证书分数
                     </label>
                     <input
+                      v-model="formData.score"
                       type="text"
-                      v-model="form.score"
-                      :class="[
-                        'w-full rounded-lg border py-2.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/10',
-                        errors.score ? 'border-red-300 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
-                      ]"
-                      placeholder="如：100分、7.0分等（选填）"
+                      class="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      placeholder="请输入证书分数"
                     />
                   </div>
+                </div>
 
-                  <!-- 底部按钮 -->
-                  <div class="flex justify-end space-x-3 pt-6">
-                    <button
-                      type="button"
-                      @click="handleClose"
-                      class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-                    >
-                      取消
-                    </button>
-                    <button
-                      type="submit"
-                      :disabled="loading"
-                      class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {{ loading ? '保存中...' : '确认' }}
-                    </button>
-                  </div>
+                <!-- 底部按钮 -->
+                <div class="mt-6 flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    @click="handleClose"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    取消
+                  </button>
+                  <button
+                    type="submit"
+                    :disabled="loading"
+                    class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {{ loading ? '保存中...' : '确认' }}
+                  </button>
                 </div>
               </form>
             </DialogPanel>
@@ -174,7 +160,13 @@ import {
   TransitionRoot,
   TransitionChild
 } from '@headlessui/vue'
-import { XMarkIcon } from '@heroicons/vue/24/outline'
+import { XMarkIcon, ChevronUpDownIcon, CheckIcon } from '@heroicons/vue/24/outline'
+import {
+  Listbox,
+  ListboxButton,
+  ListboxOptions,
+  ListboxOption
+} from '@headlessui/vue'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -188,26 +180,17 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'submit'])
 
 // 表单数据
-const form = ref({
-  id: null,
-  name: '',
-  proficiency: '',
-  certification: '',
-  score: ''
-})
-
-// 错误状态
-const errors = ref({
-  name: '',
-  proficiency: '',
-  certification: '',
-  score: ''
+const formData = ref({
+  name: '',          // 语言名称
+  proficiency: '',   // 熟练程度
+  certification: '', // 语言证书
+  score: ''         // 证书分数
 })
 
 // 监听初始数据变化
 watch(() => props.initialData, (newVal) => {
   if (newVal) {
-    form.value = {
+    formData.value = {
       id: newVal.id || null,
       name: newVal.name || '',
       proficiency: newVal.proficiency || '',
@@ -215,62 +198,33 @@ watch(() => props.initialData, (newVal) => {
       score: newVal.score || ''
     }
   }
-}, { immediate: true, deep: true })
+}, { immediate: true })
 
 const handleClose = () => {
   emit('update:modelValue', false)
 }
 
-// 验证表单
-const validateForm = () => {
-  let isValid = true
-  errors.value = {
-    name: '',
-    proficiency: ''
-  }
-
-  if (!form.value.name?.trim()) {
-    errors.value.name = '请输入语言名称'
-    isValid = false
-  }
-
-  if (!form.value.proficiency) {
-    errors.value.proficiency = '请选择掌握程度'
-    isValid = false
-  }
-
-  return isValid
-}
-
-// 提交处理
 const handleSubmit = () => {
-  if (!validateForm()) {
-    return
-  }
-
-  console.log('【EditLanguageDialog】准备提交数据:', form.value)
-
-  const formData = {
-    ...form.value,
-    name: form.value.name.trim(),
-    proficiency: form.value.proficiency
+  const data = {
+    ...formData.value,
+    name: formData.value.name.trim(),
+    certification: formData.value.certification?.trim() || '',
+    score: formData.value.score?.trim() || ''
   }
 
   // 如果是新建，不传 id
-  if (!formData.id) {
-    delete formData.id
+  if (!data.id) {
+    delete data.id
   }
 
-  console.log('【EditLanguageDialog】处理后的提交数据:', formData)
-
-  emit('submit', formData)
+  emit('submit', data)
 }
 
-// 添加 level 选项的映射
-const PROFICIENCY_OPTIONS = [
-  { value: 'elementary', label: '入门' },
-  { value: 'intermediate', label: '中级' },
-  { value: 'advanced', label: '高级' },
-  { value: 'native', label: '母语' }
-]
+// 熟练程度映射
+const proficiencyMap = {
+  'native': '母语',
+  'advanced': '高级',
+  'intermediate': '中级',
+  'basic': '初级'
+}
 </script> 

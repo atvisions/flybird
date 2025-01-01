@@ -1,9 +1,10 @@
 <template>
-  <TransitionRoot appear :show="modelValue" as="template">
+  <TransitionRoot appear :show="modelValue" as="div">
     <Dialog as="div" class="relative z-50" @close="handleClose">
       <!-- 背景遮罩 -->
       <TransitionChild
-        as="template"
+        as="div"
+        :show="true"
         enter="duration-300 ease-out"
         enter-from="opacity-0"
         enter-to="opacity-100"
@@ -18,7 +19,8 @@
       <div class="fixed inset-0 overflow-y-auto">
         <div class="flex min-h-full items-center justify-center p-4 text-center">
           <TransitionChild
-            as="template"
+            as="div"
+            :show="true"
             enter="duration-300 ease-out"
             enter-from="opacity-0 scale-95"
             enter-to="opacity-100 scale-100"
@@ -231,6 +233,20 @@
                         placeholder="请输入期望行业，多个行业用逗号分隔"
                         class="w-full rounded-lg border border-gray-300 py-2.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500"
                       />
+                      <!-- 热门行业标签 -->
+                      <div class="mt-2 flex flex-wrap gap-2">
+                        <div
+                          v-for="industry in industryTags"
+                          :key="industry"
+                          class="px-2 py-1 text-xs rounded-full bg-blue-50 text-blue-600 flex items-center space-x-1"
+                        >
+                          <span>{{ industry }}</span>
+                          <XMarkIcon 
+                            class="w-3 h-3 cursor-pointer hover:text-blue-800" 
+                            @click="removeIndustry(industry)"
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -262,7 +278,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import {
   Dialog,
   DialogPanel,
@@ -306,12 +322,18 @@ const SALARY_OPTIONS = [
 ]
 
 const props = defineProps({
-  modelValue: Boolean,
+  modelValue: {
+    type: Boolean,
+    default: false
+  },
   initialData: {
     type: Object,
     default: () => ({})
   },
-  loading: Boolean
+  loading: {
+    type: Boolean,
+    default: false
+  }
 })
 
 const emit = defineEmits(['update:modelValue', 'submit'])
@@ -327,7 +349,7 @@ const form = ref({
 
 // 修改 watch 逻辑
 watch(() => props.initialData, (newVal) => {
-  console.log('【EditJobIntentionDialog】初始数据变化:', newVal)
+
   
   if (newVal) {
     // 处理 industries 数据,确保是字符串格式
@@ -340,11 +362,6 @@ watch(() => props.initialData, (newVal) => {
       ? newVal.expected_city.join(',')
       : newVal.expected_city || ''
 
-    console.log('【EditJobIntentionDialog】处理后的数据:', {
-      原始数据: newVal,
-      处理后城市: expected_city,
-      处理后行业: industries
-    })
 
     form.value = {
       ...newVal,
@@ -356,7 +373,7 @@ watch(() => props.initialData, (newVal) => {
       expected_salary: newVal.expected_salary || ''
     }
 
-    console.log('【EditJobIntentionDialog】表单数据:', form.value)
+   
   }
 }, { immediate: true, deep: true })
 
@@ -365,7 +382,7 @@ const handleClose = () => {
 }
 
 const handleSubmit = () => {
-  console.log('【EditJobIntentionDialog】提交前表单数据:', form.value)
+  
   
   // 提交前处理数据格式
   const formData = {
@@ -375,7 +392,7 @@ const handleSubmit = () => {
     expected_city: form.value.expected_city?.split(',').filter(Boolean).join(',') || ''
   }
   
-  console.log('【EditJobIntentionDialog】提交的数据:', formData)
+ 
   emit('submit', formData)
 }
 
@@ -393,6 +410,17 @@ const getJobStatusLabel = (value) => {
 const getSalaryLabel = (value) => {
   const option = SALARY_OPTIONS.find(opt => opt.value === value)
   return option ? option.label : '请选择期望薪资'
+}
+
+// 计算当前已选择的行业标签
+const industryTags = computed(() => {
+  return form.value.industries?.split(',').filter(Boolean) || []
+})
+
+// 移除行业标签
+const removeIndustry = (industry) => {
+  const industries = form.value.industries?.split(',').filter(Boolean) || []
+  form.value.industries = industries.filter(i => i !== industry).join(',')
 }
 </script>
 

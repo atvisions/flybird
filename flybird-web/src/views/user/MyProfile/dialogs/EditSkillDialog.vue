@@ -69,27 +69,55 @@
                     <label class="block text-sm font-medium text-gray-700">
                       熟练度 <span class="text-red-500">*</span>
                     </label>
-                    <select
+                    <Listbox
                       v-model="form.level"
-                      required
-                      :class="[
-                        'w-full rounded-lg border py-2.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/10',
-                        errors.level ? 'border-red-300 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
-                      ]"
                     >
-                      <option value="">请选择熟练度</option>
-                      <option value="beginner">入门</option>
-                      <option value="intermediate">熟练</option>
-                      <option value="advanced">精通</option>
-                      <option value="expert">专家</option>
-                    </select>
+                      <div class="relative">
+                        <ListboxButton class="relative w-full cursor-pointer rounded-lg bg-white py-2 pl-3 pr-10 text-left border border-gray-300 hover:border-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                          <span class="block truncate">{{ form.level || '请选择熟练度' }}</span>
+                          <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                            <ChevronUpDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
+                          </span>
+                        </ListboxButton>
+                        <transition
+                          leave-active-class="transition duration-100 ease-in"
+                          leave-from-class="opacity-100"
+                          leave-to-class="opacity-0"
+                        >
+                          <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg bg-white py-1 text-sm shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                            <ListboxOption
+                              v-for="option in levelOptions"
+                              :key="option.value"
+                              :value="option.value"
+                              v-slot="{ active, selected }"
+                              as="template"
+                            >
+                              <li :class="[
+                                active ? 'bg-blue-50' : 'text-gray-900',
+                                'relative cursor-pointer select-none py-2 pl-3 pr-9'
+                              ]">
+                                <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">
+                                  {{ option.label }}
+                                </span>
+                                <span v-if="selected" :class="[
+                                  'text-blue-600',
+                                  'absolute inset-y-0 right-0 flex items-center pr-4'
+                                ]">
+                                  <CheckIcon class="h-5 w-5" aria-hidden="true" />
+                                </span>
+                              </li>
+                            </ListboxOption>
+                          </ListboxOptions>
+                        </transition>
+                      </div>
+                    </Listbox>
                     <p v-if="errors.level" class="text-sm text-red-500 mt-1">{{ errors.level }}</p>
                   </div>
 
                   <!-- 技能描述 -->
                   <div class="space-y-1">
                     <label class="block text-sm font-medium text-gray-700">
-                      技能描述 <span class="text-red-500">*</span>
+                      技能描述
                     </label>
                     <el-input
                       v-model="form.description"
@@ -138,9 +166,13 @@ import {
   DialogPanel,
   DialogTitle,
   TransitionRoot,
-  TransitionChild
+  TransitionChild,
+  Listbox,
+  ListboxButton,
+  ListboxOptions,
+  ListboxOption
 } from '@headlessui/vue'
-import { XMarkIcon } from '@heroicons/vue/24/outline'
+import { XMarkIcon, ChevronUpDownIcon, CheckIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -168,6 +200,14 @@ const errors = ref({
   description: ''
 })
 
+// 技能等级选项
+const levelOptions = [
+  { value: '初级', label: '初级' },
+  { value: '中级', label: '中级' },
+  { value: '高级', label: '高级' },
+  { value: '专家', label: '专家' }
+]
+
 // 监听初始数据变化
 watch(() => props.initialData, (newVal) => {
   if (newVal) {
@@ -193,20 +233,25 @@ const validateForm = () => {
     description: ''
   }
 
+  // 验证名称
   if (!form.value.name?.trim()) {
     errors.value.name = '请输入技能名称'
     isValid = false
+  } else if (form.value.name.length > 50) {
+    errors.value.name = '技能名称不能超过50个字符'
+    isValid = false
   }
 
+  // 验证等级
   if (!form.value.level) {
     errors.value.level = '请选择熟练度'
     isValid = false
-  }
-
-  if (!form.value.description?.trim()) {
-    errors.value.description = '请输入技能描述'
+  } else if (!levelOptions.map(opt => opt.value).includes(form.value.level)) {
+    errors.value.level = '请选择有效的熟练度'
     isValid = false
   }
+
+  // description 是可选的，不需要验证
 
   return isValid
 }
@@ -220,7 +265,8 @@ const handleSubmit = () => {
   const formData = {
     ...form.value,
     name: form.value.name.trim(),
-    description: form.value.description.trim()
+    level: form.value.level,
+    description: form.value.description?.trim() || ''  // 确保为空字符串而不是 null
   }
 
   // 如果是新建，不传 id

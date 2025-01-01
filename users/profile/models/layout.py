@@ -1,3 +1,5 @@
+# users/profile/models/layout.py
+
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
@@ -27,5 +29,9 @@ class ProfileLayout(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.pk and not self.layout:
-            self.layout = self.DEFAULT_LAYOUT
+            self.layout = self.DEFAULT_LAYOUT.copy()
         super().save(*args, **kwargs)
+
+    class Meta:
+        verbose_name = '档案布局'
+        verbose_name_plural = verbose_name

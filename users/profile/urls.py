@@ -12,7 +12,7 @@ from .views.portfolio import PortfolioView, PortfolioDetailView
 from .views.social import SocialLinkView, SocialLinkDetailView
 from .views.completeness import ProfileCompletenessView
 from .views.content_quality import ContentQualityView
-from .views.profile import CompleteProfileView
+from .views.profile import ProfileDataView
 app_name = 'profile'
 
 urlpatterns = [
@@ -64,6 +64,8 @@ urlpatterns = [
     
     # 内容质量
     path('content-quality/', ContentQualityView.as_view()),
-    path('complete/', CompleteProfileView.as_view(), name='complete-profile'),
+    path('data/', ProfileDataView.as_view(), name='profile-data'),
+    path('<str:module_type>/', ProfileDataView.as_view(), name='profile-module'),
+    path('<str:module_type>/<int:pk>/', ProfileDataView.as_view(), name='profile-module-detail'),
 
 ]

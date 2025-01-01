@@ -17,7 +17,7 @@ class Portfolio(models.Model):
         related_name='portfolios',
         verbose_name='用户'
     )
-    title = models.CharField('作品标题', max_length=100)
+    title = models.CharField(max_length=100, null=True, blank=True, verbose_name='标题')
     type = models.CharField(
         '作品类型',
         max_length=20,
@@ -30,7 +30,7 @@ class Portfolio(models.Model):
     highlights = models.TextField('项目亮点', blank=True)
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
     updated_at = models.DateTimeField('更新时间', auto_now=True)
-
+    order = models.IntegerField(default=0, verbose_name='排序')
     class Meta:
         verbose_name = '作品集'
         verbose_name_plural = verbose_name
