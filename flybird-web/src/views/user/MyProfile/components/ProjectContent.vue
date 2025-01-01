@@ -18,8 +18,8 @@
         <div class="flex flex-col space-y-2">
           <!-- 项目名称和操作按钮 -->
           <div class="flex items-start justify-between">
-            <div>
-              <h4 class="text-base font-medium text-gray-900">{{ project.name }}</h4>
+            <div class="flex-1 min-w-0">
+              <h4 class="text-base font-medium text-gray-900 break-words">{{ project.name }}</h4>
               <div class="text-sm text-gray-500 mt-1">
                 {{ formatDate(project.start_date) }} - {{ project.is_current ? '至今' : formatDate(project.end_date) }}
               </div>
@@ -41,17 +41,17 @@
           </div>
 
           <!-- 角色 -->
-          <div class="text-sm font-medium text-blue-600">
+          <div class="text-sm font-medium text-blue-600 break-words">
             {{ project.role }}
           </div>
 
           <!-- 项目描述 -->
           <div class="mt-3 space-y-2">
             <div class="flex items-center space-x-2">
-              <DocumentTextIcon class="w-4 h-4 text-gray-400" />
+              <DocumentTextIcon class="w-4 h-4 text-gray-400 flex-shrink-0" />
               <span class="text-sm text-gray-500">项目描述</span>
             </div>
-            <div class="text-sm leading-relaxed text-gray-600 pl-6">
+            <div class="text-sm leading-relaxed text-gray-600 pl-6 break-words whitespace-pre-wrap">
               {{ project.description }}
             </div>
           </div>
@@ -59,10 +59,10 @@
           <!-- 项目成就 -->
           <div v-if="project.achievement" class="mt-3 space-y-2">
             <div class="flex items-center space-x-2">
-              <TrophyIcon class="w-4 h-4 text-yellow-500" />
+              <TrophyIcon class="w-4 h-4 text-yellow-500 flex-shrink-0" />
               <span class="text-sm text-gray-500">项目成就</span>
             </div>
-            <div class="text-sm leading-relaxed text-gray-600 pl-6">
+            <div class="text-sm leading-relaxed text-gray-600 pl-6 break-words whitespace-pre-wrap">
               {{ project.achievement }}
             </div>
           </div>

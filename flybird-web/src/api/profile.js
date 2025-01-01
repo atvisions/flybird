@@ -169,33 +169,53 @@ const profile = {
 
   // 专业技能
   skill: {
-    get() {
-      return request.get('/api/v1/users/profile/skills/')
-    },
-    add(data) {
-      return request.post('/api/v1/users/profile/skills/', data)
-    },
-    update(id, data) {
-      return request.put(`/api/v1/users/profile/skills/${id}/`, data)
-    },
-    delete(id) {
-      return request.delete(`/api/v1/users/profile/skills/${id}/`)
-    }
+    get: () => request({
+      url: '/api/v1/users/profile/skills/',
+      method: 'get'
+    }),
+    add: (data) => request({
+      url: '/api/v1/users/profile/skills/',
+      method: 'post',
+      data
+    }),
+    update: (id, data) => request({
+      url: `/api/v1/users/profile/skills/${id}/`,
+      method: 'put',
+      data
+    }),
+    delete: (id) => request({
+      url: `/api/v1/users/profile/skills/${id}/`,
+      method: 'delete'
+    })
   },
 
   // 证书奖项
   certificate: {
     get() {
-      return request.get('/api/v1/users/profile/certificates/')
+      return request({
+        url: '/api/v1/users/profile/certificates/',
+        method: 'get'
+      })
     },
     add(data) {
-      return request.post('/api/v1/users/profile/certificates/', data)
+      return request({
+        url: '/api/v1/users/profile/certificates/',
+        method: 'post',
+        data
+      })
     },
     update(id, data) {
-      return request.put(`/api/v1/users/profile/certificates/${id}/`, data)
+      return request({
+        url: `/api/v1/users/profile/certificates/${id}/`,
+        method: 'put',
+        data
+      })
     },
     delete(id) {
-      return request.delete(`/api/v1/users/profile/certificates/${id}/`)
+      return request({
+        url: `/api/v1/users/profile/certificates/${id}/`,
+        method: 'delete'
+      })
     }
   },
 
@@ -205,10 +225,21 @@ const profile = {
       return request.get('/api/v1/users/profile/languages/')
     },
     add(data) {
-      return request.post('/api/v1/users/profile/languages/', data)
+      console.log('【Language API】准备提交数据:', data)
+      return request.post('/api/v1/users/profile/languages/', {
+        name: data.name,
+        proficiency: data.proficiency,
+        certification: data.certification || '',
+        score: data.score || ''
+      })
     },
     update(id, data) {
-      return request.put(`/api/v1/users/profile/languages/${id}/`, data)
+      return request.put(`/api/v1/users/profile/languages/${id}/`, {
+        name: data.name,
+        proficiency: data.proficiency,
+        certification: data.certification || '',
+        score: data.score || ''
+      })
     },
     delete(id) {
       return request.delete(`/api/v1/users/profile/languages/${id}/`)

@@ -234,44 +234,12 @@
 
         <!-- 专业技能模块 -->
         <template v-else-if="module.type === 'skill' && module.data">
-          <div class="text-gray-600 px-4 pb-4">
-            <!-- 添加调试信息 -->
-            <pre class="text-xs text-gray-500 mb-2">{{ JSON.stringify(module.data, null, 2) }}</pre>
-            
-            <!-- 原有的模块内容 -->
-            <div class="space-y-4">
-              <div v-for="(skill, index) in module.data" :key="index" 
-                class="bg-gray-50 rounded-lg p-4">
-                <div class="flex items-center justify-between">
-                  <div class="font-medium">{{ skill.name }}</div>
-                  <div class="flex items-center space-x-2">
-                    <button
-                      @click="handleEdit(module.type, skill)"
-                      class="p-1 hover:bg-white rounded-full transition-colors"
-                    >
-                      <PencilSquareIcon class="w-4 h-4 text-gray-400" />
-                    </button>
-                    <button
-                      @click="handleDelete(module.type, skill.id)"
-                      class="p-1 hover:bg-white rounded-full transition-colors"
-                    >
-                      <TrashIcon class="w-4 h-4 text-gray-400" />
-                    </button>
-                  </div>
-                </div>
-                <div class="mt-2 text-sm text-gray-500">{{ skill.description }}</div>
-              </div>
-            </div>
-            
-            <!-- 添加按钮 -->
-            <button
-              @click="handleAdd(module.type)"
-              class="mt-4 w-full flex items-center justify-center px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-all"
-            >
-              <PlusIcon class="w-4 h-4 mr-2" />
-              添加专业技能
-            </button>
-          </div>
+          <SkillContent
+            :data="module.data"
+            @edit="item => handleEdit('skill', item)"
+            @delete="id => handleItemDelete('skill', id)"
+            @add="() => handleAdd('skill')"
+          />
         </template>
 
         <!-- 项目经历模块 -->
@@ -286,79 +254,22 @@
 
         <!-- 证书奖项模块 -->
         <template v-else-if="module.type === 'certificate' && module.data">
-          <div class="text-gray-600 px-4 pb-4">
-            <div class="space-y-4">
-              <div v-for="(cert, index) in module.data" :key="index" 
-                class="bg-gray-50 rounded-lg p-4">
-                <div class="flex items-center justify-between mb-2">
-                  <div class="font-medium">{{ cert.name }}</div>
-                  <div class="flex items-center space-x-2">
-                    <button
-                      @click="handleEdit(module.type, cert)"
-                      class="p-1 hover:bg-white rounded-full transition-colors"
-                    >
-                      <PencilSquareIcon class="w-4 h-4 text-gray-400" />
-                    </button>
-                    <button
-                      @click="handleDelete(module.type, cert.id)"
-                      class="p-1 hover:bg-white rounded-full transition-colors"
-                    >
-                      <TrashIcon class="w-4 h-4 text-gray-400" />
-                    </button>
-                  </div>
-                </div>
-                <div class="text-sm text-gray-500">{{ cert.date }}</div>
-                <div class="mt-2 text-sm text-gray-600">{{ cert.description }}</div>
-              </div>
-            </div>
-            
-            <button
-              @click="handleAdd(module.type)"
-              class="mt-4 w-full flex items-center justify-center px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-all"
-            >
-              <PlusIcon class="w-4 h-4 mr-2" />
-              添加证书奖项
-            </button>
-          </div>
+          <CertificateContent
+            :data="module.data"
+            @edit="item => handleEdit('certificate', item)"
+            @delete="id => handleItemDelete('certificate', id)"
+            @add="() => handleAdd('certificate')"
+          />
         </template>
 
         <!-- 语言能力模块 -->
         <template v-else-if="module.type === 'language' && module.data">
-          <div class="text-gray-600 px-4 pb-4">
-            <div class="space-y-4">
-              <div v-for="(lang, index) in module.data" :key="index" 
-                class="bg-gray-50 rounded-lg p-4">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <div class="font-medium">{{ lang.name }}</div>
-                    <div class="text-sm text-gray-500 mt-1">{{ lang.level }}</div>
-                  </div>
-                  <div class="flex items-center space-x-2">
-                    <button
-                      @click="handleEdit(module.type, lang)"
-                      class="p-1 hover:bg-white rounded-full transition-colors"
-                    >
-                      <PencilSquareIcon class="w-4 h-4 text-gray-400" />
-                    </button>
-                    <button
-                      @click="handleDelete(module.type, lang.id)"
-                      class="p-1 hover:bg-white rounded-full transition-colors"
-                    >
-                      <TrashIcon class="w-4 h-4 text-gray-400" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <button
-              @click="handleAdd(module.type)"
-              class="mt-4 w-full flex items-center justify-center px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-all"
-            >
-              <PlusIcon class="w-4 h-4 mr-2" />
-              添加语言能力
-            </button>
-          </div>
+          <LanguageContent
+            :data="module.data"
+            @edit="item => handleEdit('language', item)"
+            @delete="id => handleItemDelete('language', id)"
+            @add="() => handleAdd('language')"
+          />
         </template>
 
         <!-- 作品展示模块 -->
@@ -651,6 +562,9 @@ import EditSocialLinkDialog from '../dialogs/EditSocialLinkDialog.vue'
 import EditWorkExperienceDialog from '../dialogs/EditWorkExperienceDialog.vue'
 import EditJobIntentionDialog from '../dialogs/EditJobIntentionDialog.vue'
 import ProjectContent from './ProjectContent.vue'
+import SkillContent from './SkillContent.vue'
+import CertificateContent from './CertificateContent.vue'
+import LanguageContent from './LanguageContent.vue'
 
 const props = defineProps({
   activeModules: {
@@ -986,6 +900,16 @@ const handleSubmit = async (data) => {
             }
             break
             
+          case 'language':
+            console.log('【ModuleList】提交语言数据:', data)
+            if (data.id) {
+              response = await profile.language.update(data.id, data)
+            } else {
+              response = await profile.language.add(data)
+            }
+            console.log('【ModuleList】语言保存响应:', response)
+            break
+            
           default:
             // 其他模块的处理
             if (profile[type]) {
@@ -999,29 +923,26 @@ const handleSubmit = async (data) => {
             }
         }
 
-        if (response?.status === 200 || response?.status === 201) {
+        if (response?.data?.code === 200) {
           showEditModal.value = false
           console.log('【ModuleList】准备重新获取数据')
           await props.fetchModulesData()
           console.log('【ModuleList】数据重新获取完成')
           ElMessage.success(data.id ? '更新成功' : '添加成功')
         } else {
-          throw new Error(response?.data?.message || '保存失败')
+          const errorMsg = response?.data?.errors 
+            ? Object.values(response.data.errors).flat().join(', ')
+            : response?.data?.message || '保存失败'
+          throw new Error(errorMsg)
         }
       } catch (error) {
-        console.error('保存失败:', error)
-        ElMessage.error(error.message || '保存失败，请稍后重试')
-        return false
+        console.error('【ModuleList】保存失败详情:', error.response?.data || error)
+        ElMessage.error(`保存失败: ${error.message}`)
       }
     }
-  } catch (error) {
-    console.error('保存失败:', error)
-    ElMessage.error(error.message || '保存失败，请稍后重试')
-    return false
   } finally {
     loading.value = false
   }
-  return true
 }
 
 // 在 script setup 的开头添加这些变量

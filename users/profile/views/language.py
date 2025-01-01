@@ -14,24 +14,30 @@ class LanguageView(APIView):
     def get(self, request):
         """获取语言能力列表"""
         try:
+            logger.info(f"Language GET request from user: {request.user}")
             languages = request.user.languages.all()
             serializer = LanguageSerializer(languages, many=True)
+            logger.info(f"Found {languages.count()} languages")
+            
             return Response({
                 'code': 200,
                 'message': '获取成功',
                 'data': serializer.data
             })
         except Exception as e:
-            logger.error(f"Error in LanguageView: {str(e)}", exc_info=True)
+            logger.error(f"Error in LanguageView GET: {str(e)}", exc_info=True)
             return Response({
                 'code': 500,
                 'message': str(e),
                 'data': None
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
+        
     def post(self, request):
         """添加语言能力"""
         try:
+            # 添加请求数据的日志
+            logger.info(f"Language POST request data: {request.data}")
+            
             serializer = LanguageSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save(user=request.user)
@@ -40,18 +46,23 @@ class LanguageView(APIView):
                     'message': '添加成功',
                     'data': serializer.data
                 })
+            
+            # 添加验证错误的日志
+            logger.error(f"Language serializer validation errors: {serializer.errors}")
             return Response({
                 'code': 400,
                 'message': '数据验证失败',
                 'errors': serializer.errors
             }, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            logger.error(f"Error in LanguageView: {str(e)}", exc_info=True)
+            # 添加详细的异常信息
+            logger.error(f"Error in LanguageView POST: {str(e)}", exc_info=True)
             return Response({
                 'code': 500,
                 'message': str(e),
                 'data': None
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class LanguageDetailView(APIView):
     permission_classes = [IsAuthenticated]
@@ -135,4 +146,4 @@ class LanguageDetailView(APIView):
                 'code': 500,
                 'message': str(e),
                 'data': None
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR) 
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

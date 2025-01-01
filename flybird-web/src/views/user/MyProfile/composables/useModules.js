@@ -104,59 +104,75 @@ export function useModules() {
                 break;
 
               case 'skill':
-                // 检查 API 是否存在
-                if (profile.skills?.get) {
-                  promise = profile.skills.get()
-                    .then(response => {
-                      console.log('【ModuleList】获取专业技能数据:', response)
-                      return {
-                        type,
-                        name: ALL_MODULES[type],
-                        data: response.data?.code === 200 ? response.data.data : [],
-                        visible: true,
-                        order: config.order
-                      }
-                    })
-                    .catch(error => {
-                      console.error('【ModuleList】获取专业技能失败:', error)
-                      return {
-                        type,
-                        name: ALL_MODULES[type],
-                        data: [],
-                        visible: true,
-                        order: config.order
-                      }
-                    })
-                } else {
-                  // 如果 API 未实现，使用默认数据
-                  promise = Promise.resolve({
-                    type,
-                    name: ALL_MODULES[type],
-                    data: [],
-                    visible: true,
-                    order: config.order
+                promise = profile.skill.get()
+                  .then(response => {
+                    console.log('【ModuleList】获取专业技能数据:', response)
+                    return {
+                      type,
+                      name: ALL_MODULES[type],
+                      data: response.data?.data || [],
+                      visible: true,
+                      order: config.order
+                    }
                   })
-                }
+                  .catch(error => {
+                    console.error('【ModuleList】获取专业技能失败:', error)
+                    return {
+                      type,
+                      name: ALL_MODULES[type],
+                      data: [],
+                      visible: true,
+                      order: config.order
+                    }
+                  });
                 break;
 
               case 'certificate':
-                promise = Promise.resolve({
-                  type,
-                  name: ALL_MODULES[type],
-                  data: [],
-                  visible: true,
-                  order: config.order
-                });
+                promise = profile.certificate.get()
+                  .then(response => {
+                    console.log('【ModuleList】获取证书数据:', response)
+                    return {
+                      type,
+                      name: ALL_MODULES[type],
+                      data: response.data?.code === 200 ? response.data.data : [],
+                      visible: true,
+                      order: config.order
+                    }
+                  })
+                  .catch(error => {
+                    console.error('【ModuleList】获取证书数据失败:', error)
+                    return {
+                      type,
+                      name: ALL_MODULES[type],
+                      data: [],
+                      visible: true,
+                      order: config.order
+                    }
+                  });
                 break;
 
               case 'language':
-                promise = Promise.resolve({
-                  type,
-                  name: ALL_MODULES[type],
-                  data: [],
-                  visible: true,
-                  order: config.order
-                });
+                promise = profile.language.get()
+                  .then(response => {
+                    console.log('【ModuleList】获取语言数据:', response)
+                    return {
+                      type,
+                      name: ALL_MODULES[type],
+                      data: response.data?.data || [],
+                      visible: true,
+                      order: config.order
+                    }
+                  })
+                  .catch(error => {
+                    console.error('【ModuleList】获取语言数据失败:', error)
+                    return {
+                      type,
+                      name: ALL_MODULES[type],
+                      data: [],
+                      visible: true,
+                      order: config.order
+                    }
+                  });
                 break;
 
               case 'portfolio':

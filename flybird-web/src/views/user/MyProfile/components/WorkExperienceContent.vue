@@ -3,8 +3,8 @@
     <div v-for="item in data" :key="item.id" class="bg-gray-50 rounded-lg p-4">
       <!-- 标题栏 -->
       <div class="flex items-center justify-between mb-3">
-        <div class="flex-1">
-          <h4 class="text-base font-medium text-gray-900">{{ item.company }}</h4>
+        <div class="flex-1 min-w-0">
+          <h4 class="text-base font-medium text-gray-900 break-words">{{ item.company }}</h4>
         </div>
         <div class="flex items-center space-x-2">
           <!-- 编辑按钮 -->

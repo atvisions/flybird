@@ -14,72 +14,56 @@
       
       <!-- 内容卡片 -->
       <div class="bg-gray-50 rounded-lg border border-gray-100 p-4 hover:shadow-sm transition-shadow">
-        <!-- 头部信息 -->
-        <div class="flex items-center justify-between mb-3">
-          <div class="flex-1">
-            <div class="text-sm text-gray-500">
-              {{ formatDate(edu.start_date) }} - {{ edu.end_date ? formatDate(edu.end_date) : '至今' }}
-            </div>
-            <div class="flex items-center justify-between mt-1.5">
-              <span class="text-base font-medium text-gray-900">{{ edu.school }}</span>
-              <div class="flex items-center space-x-2">
-                <button
-                  @click="handleEdit(edu)"
-                  class="p-1 hover:bg-white rounded-full transition-colors"
-                >
-                  <PencilSquareIcon class="w-4 h-4 text-gray-400" />
-                </button>
-                <button
-                  @click="handleDelete(edu.id)"
-                  class="p-1 hover:bg-white rounded-full transition-colors"
-                >
-                  <TrashIcon class="w-4 h-4 text-gray-400" />
-                </button>
-              </div>
+        <div class="flex flex-col space-y-2">
+          <!-- 学校和专业信息 -->
+          <div class="flex items-start justify-between">
+            <div class="flex-1 min-w-0">
+              <h4 class="text-base font-medium text-gray-900 break-words">{{ edu.school }}</h4>
+              <div class="text-sm font-medium text-blue-600 mt-1 break-words">{{ edu.major }}</div>
             </div>
           </div>
-        </div>
 
-        <!-- 专业 -->
-        <div class="text-sm font-medium text-blue-600 mb-3">
-          {{ edu.major }}
-        </div>
-
-        <!-- 学历 -->
-        <div class="space-y-2">
-          <div class="flex items-center space-x-2">
-            <AcademicCapIcon class="w-4 h-4 text-gray-400" />
-            <span class="text-sm text-gray-500">{{ getDegreeLabel(edu.degree) }}</span>
-          </div>
-        </div>
-
-        <!-- 在校经历 -->
-        <div v-if="edu.description !== undefined" class="mt-3 space-y-2">
-          <div class="flex items-center space-x-2">
-            <DocumentTextIcon class="w-4 h-4 text-gray-400" />
-            <span class="text-sm text-gray-500">在校经历</span>
-          </div>
-          <div class="text-sm leading-relaxed text-gray-600 pl-6">
+          <!-- 教育经历描述 -->
+          <div class="text-sm leading-relaxed text-gray-600 break-words whitespace-pre-wrap">
             {{ edu.description }}
           </div>
-        </div>
 
-        <!-- 在校成就 -->
-        <div v-if="edu.achievements !== undefined" class="mt-3 space-y-2">
-          <div class="flex items-center space-x-2">
-            <TrophyIcon class="w-4 h-4 text-yellow-500" />
-            <span class="text-sm text-gray-500">在校成就</span>
+          <!-- 学历 -->
+          <div class="space-y-2">
+            <div class="flex items-center space-x-2">
+              <AcademicCapIcon class="w-4 h-4 text-gray-400" />
+              <span class="text-sm text-gray-500">{{ getDegreeLabel(edu.degree) }}</span>
+            </div>
           </div>
-          <div class="text-sm leading-relaxed text-gray-600 pl-6">
-            {{ edu.achievements }}
-          </div>
-        </div>
 
-        <!-- 调试信息 -->
-        <div v-if="showDebug" class="mt-2 text-xs text-gray-400">
-          <div>description: {{ typeof edu.description }} = "{{ edu.description }}"</div>
-          <div>achievements: {{ typeof edu.achievements }} = "{{ edu.achievements }}"</div>
-          <div>字段列表: {{ Object.keys(edu).join(', ') }}</div>
+          <!-- 在校经历 -->
+          <div v-if="edu.description !== undefined" class="mt-3 space-y-2">
+            <div class="flex items-center space-x-2">
+              <DocumentTextIcon class="w-4 h-4 text-gray-400" />
+              <span class="text-sm text-gray-500">在校经历</span>
+            </div>
+            <div class="text-sm leading-relaxed text-gray-600 pl-6">
+              {{ edu.description }}
+            </div>
+          </div>
+
+          <!-- 在校成就 -->
+          <div v-if="edu.achievements !== undefined" class="mt-3 space-y-2">
+            <div class="flex items-center space-x-2">
+              <TrophyIcon class="w-4 h-4 text-yellow-500" />
+              <span class="text-sm text-gray-500">在校成就</span>
+            </div>
+            <div class="text-sm leading-relaxed text-gray-600 pl-6">
+              {{ edu.achievements }}
+            </div>
+          </div>
+
+          <!-- 调试信息 -->
+          <div v-if="showDebug" class="mt-2 text-xs text-gray-400">
+            <div>description: {{ typeof edu.description }} = "{{ edu.description }}"</div>
+            <div>achievements: {{ typeof edu.achievements }} = "{{ edu.achievements }}"</div>
+            <div>字段列表: {{ Object.keys(edu).join(', ') }}</div>
+          </div>
         </div>
       </div>
     </div>
