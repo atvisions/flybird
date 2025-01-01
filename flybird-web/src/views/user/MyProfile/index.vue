@@ -222,24 +222,26 @@ defineEmits([
 
 // 初始化数据
 onMounted(async () => {
+  
   try {
     // 获取基本信息
     await fetchBasicInfo()
-    console.log('传递给 BasicInfo 组件的数据:', basicInfo.value)
     
     // 获取模块数据
     await fetchModulesData()
-    console.log('模块数据:', {
-      active: activeModules.value,
-      inactive: inactiveModules.value
-    })
-
+  
     // 获取完整度数据
     await fetchCompletionData()
-    console.log('完整度数据:', completionData.value)
+  
   } catch (error) {
     console.error('初始化数据失败:', error)
-    ElMessage.error('获取数据失败，请稍后重试')
+    if (error.response) {
+      console.error('API 错误响应:', error.response)
+    } else if (error.request) {
+      console.error('未收到响应:', error.request)
+    } else {
+      console.error('请求配置错误:', error.message)
+    }
   }
 })
 
@@ -424,4 +426,5 @@ const handleAddModule = async (moduleType) => {
 const getModuleName = (type) => {
   return ALL_MODULES[type] || type
 }
+
 </script>

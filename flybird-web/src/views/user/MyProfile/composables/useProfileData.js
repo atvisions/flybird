@@ -3,7 +3,8 @@ import { ElMessage } from 'element-plus'
 import profile from '@/api/profile'
 
 export function useProfileData() {
-  const loading = ref(false)
+  
+  const loading = ref(true)
   const basicInfo = ref({})
   const profileData = ref({})
   const completionData = ref({
@@ -17,7 +18,6 @@ export function useProfileData() {
     try {
       loading.value = true
       const response = await profile.getBasicInfo()
-      console.log('基本信息响应:', response)
       
       if (response?.data?.code === 200) {
         // 合并 user 和 basic_info 数据
@@ -25,16 +25,20 @@ export function useProfileData() {
           ...response.data.data.user,
           ...response.data.data.basic_info
         }
+    
         
         // 更新 profileData
         profileData.value = { 
           ...profileData.value, 
           basic: basicInfo.value 
         }
+        
+      } else {
+        console.warn('基本信息 API 响应码不是 200:', response?.data?.code)
       }
     } catch (error) {
       console.error('获取基本信息失败:', error)
-      ElMessage.error('获取基本信息失败，请稍后重试')
+      console.error('错误详情:', error.response || error)
     } finally {
       loading.value = false
     }

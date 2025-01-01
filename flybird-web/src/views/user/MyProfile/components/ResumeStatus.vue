@@ -236,11 +236,19 @@
   }
 
   // 监听 profileData 变化，确保数据有效
-  watch(() => props.profileData, (newVal) => {
-    if (!newVal || Object.keys(newVal).length === 0) {
-      console.warn('profileData is empty')
+  watch(
+    () => props.profileData,
+    (newVal) => {
+      if (!newVal || Object.keys(newVal).length === 0) {
+        return
+      }
+      // 处理数据...
+    },
+    { 
+      immediate: true,
+      deep: true 
     }
-  }, { immediate: true })
+  )
   </script>
 
 <style scoped>

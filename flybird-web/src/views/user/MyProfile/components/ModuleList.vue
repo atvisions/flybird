@@ -328,9 +328,8 @@ const confirmRemove = () => {
 watch(() => props.activeModules, (newModules) => {
   console.log('ModuleList - 活动模块更新:', {
     active: newModules,
-    inactive: props.inactiveModules,
-    activeCount: newModules.length,
-    inactiveCount: props.inactiveModules?.length
+    workExperience: newModules.find(m => m.type === 'work_experience')?.data,
+    jobIntention: newModules.find(m => m.type === 'job_intention')?.data
   })
 }, { deep: true })
 

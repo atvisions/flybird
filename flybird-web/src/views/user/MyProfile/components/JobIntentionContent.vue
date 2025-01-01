@@ -94,6 +94,9 @@ const props = defineProps({
   }
 })
 
+// 添加调试日志
+console.log('JobIntentionContent 接收到的数据:', props.data)
+
 // 获取工作类型标签
 const getJobTypeLabel = (value) => {
   const option = JOB_TYPE_OPTIONS.find(opt => opt.value === value)

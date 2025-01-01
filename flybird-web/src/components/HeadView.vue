@@ -488,16 +488,6 @@ const fetchUserInfo = async () => {
   if (store.state.isAuthenticated) {
     await store.dispatch('fetchUserInfo')
     
-    // 打印 API 返回的数据
-    console.log('API Response - BasicInfo:', store.state.basicInfo)
-    console.log('API Response - UserInfo:', store.state.userInfo)
-    
-    // 打印 store 中的状态
-    console.log('Store State:', {
-      basicInfo: store.state.basicInfo,
-      userInfo: store.state.userInfo,
-      isAuthenticated: store.state.isAuthenticated
-    })
 
     userBasicInfo.value = {
       ...store.state.basicInfo?.basic_info,
@@ -508,13 +498,11 @@ const fetchUserInfo = async () => {
 
 // 添加 watch 来监控数据变化
 watch(() => store.state.basicInfo, (newVal) => {
-  console.log('BasicInfo Changed:', newVal)
-  console.log('Avatar URL:', avatarUrl.value)
-  console.log('Base URL:', process.env.VUE_APP_API_BASE_URL)
+
 }, { deep: true })
 
 watch(() => store.state.userInfo, (newVal) => {
-  console.log('UserInfo Changed:', newVal)
+  
 }, { deep: true })
 
 // 生命周期钩子

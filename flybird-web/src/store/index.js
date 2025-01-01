@@ -132,7 +132,6 @@ export default createStore({
     async fetchUserInfo({ commit }) {
       try {
         const response = await auth.getUserInfo()
-        console.log('User info response:', response)
         
         if (response.data?.code === 200) {
           const { user, basic_info } = response.data.data
