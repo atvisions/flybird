@@ -13,6 +13,7 @@ class EducationSerializer(serializers.ModelSerializer):
             'end_date',
             'is_current',
             'description',
+            'achievements',  
             'created_at',
             'updated_at'
         ]

@@ -318,35 +318,65 @@ const emit = defineEmits(['update:modelValue', 'submit'])
 
 // 表单数据
 const form = ref({
-  job_type: '',           // 工作类型
-  job_status: '',         // 求职状态
-  expected_salary: '',    // 期望薪资
-  expected_city: '',      // 期望城市
-  industries: [],         // 期望行业
-  arrival_time: '',       // 到岗时间
-  job_nature: '',         // 工作性质
-  work_type: ''          // 工作方式
+  job_type: '',           
+  job_status: '',         
+  expected_salary: '',    
+  expected_city: '',      
+  industries: '',         // 改为字符串类型,因为后端接收的是逗号分隔的字符串
 })
 
-// 初始化表单数据
+// 修改 watch 逻辑
 watch(() => props.initialData, (newVal) => {
+  console.log('【EditJobIntentionDialog】初始数据变化:', newVal)
+  
   if (newVal) {
+    // 处理 industries 数据,确保是字符串格式
+    const industries = Array.isArray(newVal.industries) 
+      ? newVal.industries.join(',')
+      : newVal.industries || ''
+
+    // 处理 expected_city 数据,确保是字符串格式  
+    const expected_city = Array.isArray(newVal.expected_city)
+      ? newVal.expected_city.join(',')
+      : newVal.expected_city || ''
+
+    console.log('【EditJobIntentionDialog】处理后的数据:', {
+      原始数据: newVal,
+      处理后城市: expected_city,
+      处理后行业: industries
+    })
+
     form.value = {
+      ...newVal,
+      industries,
+      expected_city,
+      // 确保所有必需字段都有默认值
       job_type: newVal.job_type || '',
       job_status: newVal.job_status || '',
-      expected_salary: newVal.expected_salary || '',
-      expected_city: newVal.expected_city || '',
-      industries: newVal.industries || []
+      expected_salary: newVal.expected_salary || ''
     }
+
+    console.log('【EditJobIntentionDialog】表单数据:', form.value)
   }
-}, { immediate: true })
+}, { immediate: true, deep: true })
 
 const handleClose = () => {
   emit('update:modelValue', false)
 }
 
 const handleSubmit = () => {
-  emit('submit', form.value)
+  console.log('【EditJobIntentionDialog】提交前表单数据:', form.value)
+  
+  // 提交前处理数据格式
+  const formData = {
+    ...form.value,
+    // 确保 industries 和 expected_city 是字符串格式
+    industries: form.value.industries?.split(',').filter(Boolean).join(',') || '',
+    expected_city: form.value.expected_city?.split(',').filter(Boolean).join(',') || ''
+  }
+  
+  console.log('【EditJobIntentionDialog】提交的数据:', formData)
+  emit('submit', formData)
 }
 
 // 标签获取方法

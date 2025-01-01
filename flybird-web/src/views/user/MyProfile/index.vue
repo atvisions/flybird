@@ -23,6 +23,7 @@
         :active-modules="activeModules"
         :inactive-modules="inactiveModules"
         :loading="modulesLoading"
+        :fetch-modules-data="fetchModulesData"
         @edit="handleEdit"
         @remove="handleModuleRemove"
         @edit-item="handleEditItem"
@@ -57,11 +58,10 @@
 
       <!-- 求职意向编辑弹窗 -->
       <EditJobIntentionDialog
-        v-if="currentModule?.type === 'job_intention'"
-        v-model="showEditModal"
-        :initial-data="editFormData"
+        v-model="showJobIntentionDialog"
+        :initial-data="editJobIntentionData"
         :loading="profileLoading"
-        @submit="handleSubmit"
+        @submit="handleJobIntentionSubmit"
       />
 
       <!-- 基本信息编辑弹窗 -->
@@ -146,6 +146,14 @@
           </div>
         </Dialog>
       </TransitionRoot>
+
+      <!-- 教育经历编辑弹窗 -->
+      <EditEducationDialog
+        v-model="showEducationDialog"
+        :initial-data="editEducationData"
+        :loading="profileLoading"
+        @submit="handleEducationSubmit"
+      />
     </div>
   </div>
 </template>
@@ -170,6 +178,7 @@ import EditBasicDialog from './dialogs/EditBasicDialog.vue'
 import EditJobIntentionDialog from './dialogs/EditJobIntentionDialog.vue'
 import EditWorkExperienceDialog from './dialogs/EditWorkExperienceDialog.vue'
 import AIOptimizeDialog from './dialogs/AIOptimizeDialog.vue'
+import EditEducationDialog from './dialogs/EditEducationDialog.vue'
 
 // 使用模块管理
 const { 
@@ -248,7 +257,7 @@ onMounted(async () => {
 // 工作经历相关
 const showWorkExperienceDialog = ref(false)
 const currentEditData = ref({})
-const { loading: submitLoading, withLoading } = useLoading()
+const { loading, withLoading } = useLoading()
 
 // 统一处理编辑事件
 const handleEdit = (type, item = null) => {
@@ -278,7 +287,16 @@ const handleEdit = (type, item = null) => {
 // 处理编辑具体项目
 const handleEditItem = (type, item) => {
   console.log('handleEditItem - type:', type, 'item:', item)
-  handleEdit(type, item)
+  if (type === 'job_intention') {
+    editJobIntentionData.value = item || {}
+    showJobIntentionDialog.value = true
+  } else if (type === 'education') {
+    editEducationData.value = item || {}
+    showEducationDialog.value = true
+  } else if (type === 'work_experience') {  // 添加工作经历的处理
+    currentEditData.value = item || {}
+    showWorkExperienceDialog.value = true
+  }
 }
 
 // 删除确认弹窗状态
@@ -334,13 +352,19 @@ const handleWorkExperienceSubmit = async (data) => {
 const handleJobIntentionSubmit = async (data) => {
   try {
     await withLoading(async () => {
-      await profile.jobIntention.update(data)
-      ElMessage.success('保存成功')
-      showEditModal.value = false
-      await fetchModulesData()
+      const response = await profile.jobIntention.update(data)
+      
+      if (response?.data?.code === 200) {
+        showJobIntentionDialog.value = false
+        // 重新获取所有模块数据
+        await fetchModulesData()
+        ElMessage.success('保存成功')
+      } else {
+        throw new Error(response?.data?.message || '操作失败')
+      }
     })
   } catch (error) {
-    console.error('保存失败:', error)
+    console.error('保存求职意向失败:', error)
     ElMessage.error('保存失败，请稍后重试')
   }
 }
@@ -414,17 +438,116 @@ const handleUpdate = async () => {
 
 // 处理模块移除
 const handleModuleRemove = async (moduleType) => {
-  await removeModule(moduleType)
+  try {
+    await withLoading(async () => {
+      // 获取当前所有模块的配置（除了要移除的）
+      const updatedModules = {}
+      activeModules.value
+        .filter(module => module.type !== moduleType)
+        .forEach((module, index) => {
+          updatedModules[module.type] = {
+            visible: true,
+            order: index + 1  // 重新排序剩余模块
+          }
+        })
+      
+      // 添加要移除的模块配置
+      const layoutUpdate = {
+        ...updatedModules,
+        [moduleType]: {
+          visible: false,
+          order: 999  // 移到未激活模块区域
+        }
+      }
+      
+      const response = await profile.layout.update(layoutUpdate)
+      if (response?.data?.code === 200) {
+        await fetchModulesData()
+        ElMessage.success('模块已移除')
+      } else {
+        throw new Error(response.data?.message || '移除失败')
+      }
+    })
+  } catch (error) {
+    console.error('移除模块失败:', error)
+    ElMessage.error('移除失败，请稍后重试')
+  }
 }
 
 // 处理添加模块
 const handleAddModule = async (moduleType) => {
-  await addModule(moduleType)
+  try {
+    await withLoading(async () => {
+      // 获取当前所有可见模块的配置
+      const visibleModules = {}
+      activeModules.value.forEach((module, index) => {
+        visibleModules[module.type] = {
+          visible: true,
+          order: index + 1  // 保持现有模块的顺序
+        }
+      })
+      
+      // 添加新模块到最后
+      const layoutUpdate = {
+        ...visibleModules,  // 保持现有模块的配置
+        [moduleType]: {
+          visible: true,
+          order: activeModules.value.length + 1  // 新模块放在最后
+        }
+      }
+      
+      const response = await profile.layout.update(layoutUpdate)
+      if (response?.data?.code === 200) {
+        await fetchModulesData()
+        ElMessage.success('模块已添加')
+      } else {
+        throw new Error(response.data?.message || '添加失败')
+      }
+    })
+  } catch (error) {
+    console.error('添加模块失败:', error)
+    ElMessage.error('添加失败，请稍后重试')
+  }
 }
 
 // 获取模块显示名称
 const getModuleName = (type) => {
   return ALL_MODULES[type] || type
 }
+
+// 教育经历相关
+const showEducationDialog = ref(false)
+const editEducationData = ref({})
+
+// 处理教育经历提交
+const handleEducationSubmit = async (data) => {
+  try {
+    await withLoading(async () => {
+      let response
+      
+      if (data.id) {
+        response = await profile.education.update(data.id, data)
+      } else {
+        response = await profile.education.add(data)
+      }
+      
+      if (response?.data?.code === 200) {
+        showEducationDialog.value = false
+        // 重新获取所有模块数据
+        await fetchModulesData()
+        ElMessage.success(data.id ? '更新成功' : '添加成功')
+      } else {
+        throw new Error(response?.data?.message || '操作失败')
+      }
+    })
+  } catch (error) {
+    console.error('保存教育经历失败:', error)
+    ElMessage.error('保存失败，请稍后重试')
+  }
+}
+
+// 求职意向相关
+const showJobIntentionDialog = ref(false)
+const editJobIntentionData = ref({})
 
 </script>

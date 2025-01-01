@@ -105,7 +105,166 @@ const profile = {
     update: (data) => {
       return request.put('/api/v1/users/profile/layout/', data)
     }
-  }
+  },
+
+  // 教育经历相关
+  education: {
+    get() {
+      return request.get('/api/v1/users/profile/educations/')
+    },
+
+    add(data) {
+      return request({
+        url: '/api/v1/users/profile/educations/',
+        method: 'post',
+        data
+      })
+    },
+
+    update(id, data) {
+      return request({
+        url: `/api/v1/users/profile/educations/${id}/`,
+        method: 'put',
+        data
+      })
+    },
+
+    delete(id) {
+      return request({
+        url: `/api/v1/users/profile/educations/${id}/`,
+        method: 'delete'
+      })
+    }
+  },
+
+  // 项目经历
+  project: {
+    get() {
+      return request({
+        url: '/api/v1/users/profile/projects/',
+        method: 'get'
+      })
+    },
+    add(data) {
+      return request({
+        url: '/api/v1/users/profile/projects/',
+        method: 'post',
+        data
+      })
+    },
+    update(id, data) {
+      return request({
+        url: `/api/v1/users/profile/projects/${id}/`,
+        method: 'put',
+        data
+      })
+    },
+    delete(id) {
+      return request({
+        url: `/api/v1/users/profile/projects/${id}/`,
+        method: 'delete'
+      })
+    }
+  },
+
+  // 专业技能
+  skill: {
+    get() {
+      return request.get('/api/v1/users/profile/skills/')
+    },
+    add(data) {
+      return request.post('/api/v1/users/profile/skills/', data)
+    },
+    update(id, data) {
+      return request.put(`/api/v1/users/profile/skills/${id}/`, data)
+    },
+    delete(id) {
+      return request.delete(`/api/v1/users/profile/skills/${id}/`)
+    }
+  },
+
+  // 证书奖项
+  certificate: {
+    get() {
+      return request.get('/api/v1/users/profile/certificates/')
+    },
+    add(data) {
+      return request.post('/api/v1/users/profile/certificates/', data)
+    },
+    update(id, data) {
+      return request.put(`/api/v1/users/profile/certificates/${id}/`, data)
+    },
+    delete(id) {
+      return request.delete(`/api/v1/users/profile/certificates/${id}/`)
+    }
+  },
+
+  // 语言能力
+  language: {
+    get() {
+      return request.get('/api/v1/users/profile/languages/')
+    },
+    add(data) {
+      return request.post('/api/v1/users/profile/languages/', data)
+    },
+    update(id, data) {
+      return request.put(`/api/v1/users/profile/languages/${id}/`, data)
+    },
+    delete(id) {
+      return request.delete(`/api/v1/users/profile/languages/${id}/`)
+    }
+  },
+
+  // 作品展示
+  portfolio: {
+    get() {
+      return request.get('/api/v1/users/profile/portfolios/')
+    },
+    add(data) {
+      return request.post('/api/v1/users/profile/portfolios/', data)
+    },
+    update(id, data) {
+      return request.put(`/api/v1/users/profile/portfolios/${id}/`, data)
+    },
+    delete(id) {
+      return request.delete(`/api/v1/users/profile/portfolios/${id}/`)
+    }
+  },
+
+  // 社交主页
+  social_link: {
+    get() {
+      return request.get('/api/v1/users/profile/social-links/')
+    },
+    add(data) {
+      return request.post('/api/v1/users/profile/social-links/', data)
+    },
+    update(id, data) {
+      return request.put(`/api/v1/users/profile/social-links/${id}/`, data)
+    },
+    delete(id) {
+      return request.delete(`/api/v1/users/profile/social-links/${id}/`)
+    }
+  },
+
+  // 求职意向相关方法
+  jobIntention: {
+    // 更新求职意向
+    update: (data) => {
+      return request({
+        url: '/api/v1/users/profile/job-intention/',
+        method: 'put',
+        data
+      })
+    },
+
+    get() {
+      return request({
+        url: '/api/v1/users/profile/job-intention/',
+        method: 'get'
+      })
+    }
+  },
 }
 
 // 导出 profile 对象

@@ -1,18 +1,64 @@
 <!-- src/views/user/MyProfile/components/ModuleList.vue -->
 <template>
   <div class="space-y-4">
+    <!-- 未激活的模块按钮组 -->
+    <div v-if="inactiveModules.length > 0" class="bg-white rounded-lg shadow">
+      <div class="px-4 py-3">
+        <h3 class="text-sm font-medium text-gray-900">添加更多模块</h3>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button
+            v-for="module in inactiveModules"
+            :key="module.type"
+            @click="handleAdd(module.type)"
+            class="inline-flex items-center px-3 py-1.5 text-sm text-gray-600 bg-gray-50 hover:bg-gray-100 rounded border border-gray-200"
+          >
+            {{ module.name }}
+            <PlusIcon class="w-4 h-4 ml-1 text-gray-400" />
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 激活的模块列表 -->
     <div v-for="module in activeModules" :key="module.type" class="bg-white rounded-lg shadow">
       <div class="flex items-center justify-between px-4 py-3">
-        <h3 class="text-base font-medium text-gray-900">{{ module.name }}</h3>
+        <h3 class="text-base font-medium text-gray-900">
+          {{ module.name }}
+        </h3>
         <div class="flex items-center space-x-2">
+          <!-- 展开/关闭按钮 -->
           <button
+            @click="toggleModule(module.type)"
+            class="p-1 hover:bg-gray-100 rounded-full"
+          >
+            <ChevronUpIcon
+              v-if="!collapsedModules[module.type]"
+              class="w-5 h-5 text-gray-400"
+            />
+            <ChevronDownIcon
+              v-else
+              class="w-5 h-5 text-gray-400"
+            />
+          </button>
+          <!-- 添加按钮 -->
+          <button
+            v-if="shouldShowAddButton(module.type)"
+            @click="handleAdd(module.type)"
+            class="p-1 hover:bg-gray-100 rounded-full"
+          >
+            <PlusIcon class="w-5 h-5 text-gray-400" />
+          </button>
+          <!-- 编辑按钮 -->
+          <button
+            v-if="module.type === 'job_intention'"
             @click="handleModuleEdit(module.type)"
             class="p-1 hover:bg-gray-100 rounded-full"
           >
             <PencilSquareIcon class="w-5 h-5 text-gray-400" />
           </button>
+          <!-- 删除按钮 -->
           <button
-            @click="handleRemove(module.type)"
+            @click="handleModuleRemove(module.type)"
             class="p-1 hover:bg-gray-100 rounded-full"
           >
             <TrashIcon class="w-5 h-5 text-gray-400" />
@@ -20,7 +66,8 @@
         </div>
       </div>
       
-      <div class="px-4 pb-4">
+      <!-- 使用 v-show 控制内容显示/隐藏 -->
+      <div class="px-4 pb-4" v-show="!collapsedModules[module.type]">
         <!-- 求职意向模块 -->
         <template v-if="module.type === 'job_intention' && module.data">
           <div class="text-gray-600">
@@ -121,7 +168,7 @@
                           <PencilSquareIcon class="w-4 h-4 text-gray-400" />
                         </button>
                         <button
-                          @click="handleDelete(module.type, exp.id)"
+                          @click="handleItemDelete(module.type, exp.id)"
                           class="p-1 hover:bg-white rounded-full transition-colors"
                         >
                           <TrashIcon class="w-4 h-4 text-gray-400" />
@@ -174,6 +221,238 @@
           </div>
         </template>
 
+        <!-- 教育经历模块 -->
+        <template v-else-if="module.type === 'education' && module.data">
+          <EducationContent 
+            :key="educationKey"
+            :data="module.data"
+            @edit="item => handleEdit('education', item)"
+            @delete="id => handleItemDelete('education', id)"
+            @add="() => handleEdit('education', null)"
+          />
+        </template>
+
+        <!-- 专业技能模块 -->
+        <template v-else-if="module.type === 'skill' && module.data">
+          <div class="text-gray-600 px-4 pb-4">
+            <!-- 添加调试信息 -->
+            <pre class="text-xs text-gray-500 mb-2">{{ JSON.stringify(module.data, null, 2) }}</pre>
+            
+            <!-- 原有的模块内容 -->
+            <div class="space-y-4">
+              <div v-for="(skill, index) in module.data" :key="index" 
+                class="bg-gray-50 rounded-lg p-4">
+                <div class="flex items-center justify-between">
+                  <div class="font-medium">{{ skill.name }}</div>
+                  <div class="flex items-center space-x-2">
+                    <button
+                      @click="handleEdit(module.type, skill)"
+                      class="p-1 hover:bg-white rounded-full transition-colors"
+                    >
+                      <PencilSquareIcon class="w-4 h-4 text-gray-400" />
+                    </button>
+                    <button
+                      @click="handleDelete(module.type, skill.id)"
+                      class="p-1 hover:bg-white rounded-full transition-colors"
+                    >
+                      <TrashIcon class="w-4 h-4 text-gray-400" />
+                    </button>
+                  </div>
+                </div>
+                <div class="mt-2 text-sm text-gray-500">{{ skill.description }}</div>
+              </div>
+            </div>
+            
+            <!-- 添加按钮 -->
+            <button
+              @click="handleAdd(module.type)"
+              class="mt-4 w-full flex items-center justify-center px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-all"
+            >
+              <PlusIcon class="w-4 h-4 mr-2" />
+              添加专业技能
+            </button>
+          </div>
+        </template>
+
+        <!-- 项目经历模块 -->
+        <template v-else-if="module.type === 'project' && module.data">
+          <ProjectContent
+            :data="module.data"
+            @edit="item => handleEdit('project', item)"
+            @delete="id => handleItemDelete('project', id)"
+            @add="() => handleAdd('project')"
+          />
+        </template>
+
+        <!-- 证书奖项模块 -->
+        <template v-else-if="module.type === 'certificate' && module.data">
+          <div class="text-gray-600 px-4 pb-4">
+            <div class="space-y-4">
+              <div v-for="(cert, index) in module.data" :key="index" 
+                class="bg-gray-50 rounded-lg p-4">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="font-medium">{{ cert.name }}</div>
+                  <div class="flex items-center space-x-2">
+                    <button
+                      @click="handleEdit(module.type, cert)"
+                      class="p-1 hover:bg-white rounded-full transition-colors"
+                    >
+                      <PencilSquareIcon class="w-4 h-4 text-gray-400" />
+                    </button>
+                    <button
+                      @click="handleDelete(module.type, cert.id)"
+                      class="p-1 hover:bg-white rounded-full transition-colors"
+                    >
+                      <TrashIcon class="w-4 h-4 text-gray-400" />
+                    </button>
+                  </div>
+                </div>
+                <div class="text-sm text-gray-500">{{ cert.date }}</div>
+                <div class="mt-2 text-sm text-gray-600">{{ cert.description }}</div>
+              </div>
+            </div>
+            
+            <button
+              @click="handleAdd(module.type)"
+              class="mt-4 w-full flex items-center justify-center px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-all"
+            >
+              <PlusIcon class="w-4 h-4 mr-2" />
+              添加证书奖项
+            </button>
+          </div>
+        </template>
+
+        <!-- 语言能力模块 -->
+        <template v-else-if="module.type === 'language' && module.data">
+          <div class="text-gray-600 px-4 pb-4">
+            <div class="space-y-4">
+              <div v-for="(lang, index) in module.data" :key="index" 
+                class="bg-gray-50 rounded-lg p-4">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="font-medium">{{ lang.name }}</div>
+                    <div class="text-sm text-gray-500 mt-1">{{ lang.level }}</div>
+                  </div>
+                  <div class="flex items-center space-x-2">
+                    <button
+                      @click="handleEdit(module.type, lang)"
+                      class="p-1 hover:bg-white rounded-full transition-colors"
+                    >
+                      <PencilSquareIcon class="w-4 h-4 text-gray-400" />
+                    </button>
+                    <button
+                      @click="handleDelete(module.type, lang.id)"
+                      class="p-1 hover:bg-white rounded-full transition-colors"
+                    >
+                      <TrashIcon class="w-4 h-4 text-gray-400" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <button
+              @click="handleAdd(module.type)"
+              class="mt-4 w-full flex items-center justify-center px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-all"
+            >
+              <PlusIcon class="w-4 h-4 mr-2" />
+              添加语言能力
+            </button>
+          </div>
+        </template>
+
+        <!-- 作品展示模块 -->
+        <template v-else-if="module.type === 'portfolio' && module.data">
+          <div class="text-gray-600 px-4 pb-4">
+            <div class="space-y-4">
+              <div v-for="(work, index) in module.data" :key="index" 
+                class="bg-gray-50 rounded-lg p-4">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="font-medium">{{ work.name }}</div>
+                  <div class="flex items-center space-x-2">
+                    <button
+                      @click="handleEdit(module.type, work)"
+                      class="p-1 hover:bg-white rounded-full transition-colors"
+                    >
+                      <PencilSquareIcon class="w-4 h-4 text-gray-400" />
+                    </button>
+                    <button
+                      @click="handleDelete(module.type, work.id)"
+                      class="p-1 hover:bg-white rounded-full transition-colors"
+                    >
+                      <TrashIcon class="w-4 h-4 text-gray-400" />
+                    </button>
+                  </div>
+                </div>
+                <div class="mt-2 text-sm text-gray-600">{{ work.description }}</div>
+                <a 
+                  v-if="work.link" 
+                  :href="work.link" 
+                  target="_blank"
+                  class="inline-flex items-center mt-2 text-sm text-blue-600 hover:text-blue-800"
+                >
+                  查看链接
+                  <ArrowTopRightOnSquareIcon class="w-4 h-4 ml-1" />
+                </a>
+              </div>
+            </div>
+            
+            <button
+              @click="handleAdd(module.type)"
+              class="mt-4 w-full flex items-center justify-center px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-all"
+            >
+              <PlusIcon class="w-4 h-4 mr-2" />
+              添加作品展示
+            </button>
+          </div>
+        </template>
+
+        <!-- 社交主页模块 -->
+        <template v-else-if="module.type === 'social_link' && module.data">
+          <div class="text-gray-600 px-4 pb-4">
+            <div class="space-y-4">
+              <div v-for="(social, index) in module.data" :key="index" 
+                class="bg-gray-50 rounded-lg p-4">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="font-medium">{{ social.platform }}</div>
+                    <a 
+                      :href="social.url" 
+                      target="_blank"
+                      class="text-sm text-blue-600 hover:text-blue-800 mt-1 inline-flex items-center"
+                    >
+                      {{ social.username }}
+                      <ArrowTopRightOnSquareIcon class="w-4 h-4 ml-1" />
+                    </a>
+                  </div>
+                  <div class="flex items-center space-x-2">
+                    <button
+                      @click="handleEdit(module.type, social)"
+                      class="p-1 hover:bg-white rounded-full transition-colors"
+                    >
+                      <PencilSquareIcon class="w-4 h-4 text-gray-400" />
+                    </button>
+                    <button
+                      @click="handleDelete(module.type, social.id)"
+                      class="p-1 hover:bg-white rounded-full transition-colors"
+                    >
+                      <TrashIcon class="w-4 h-4 text-gray-400" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <button
+              @click="handleAdd(module.type)"
+              class="mt-4 w-full flex items-center justify-center px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-all"
+            >
+              <PlusIcon class="w-4 h-4 mr-2" />
+              添加社交主页
+            </button>
+          </div>
+        </template>
+
         <!-- 默认显示 -->
         <div v-else-if="!module.data" class="text-center text-gray-400 py-4">
           暂无内容，点击编辑添加
@@ -186,7 +465,7 @@
   </div>
 
   <!-- 删除确认弹窗 -->
-  <TransitionRoot appear :show="showDeleteConfirm" as="template">
+  <TransitionRoot :show="showDeleteConfirm" as="template">
     <Dialog as="div" class="relative z-50" @close="showDeleteConfirm = false">
       <!-- 背景遮罩 -->
       <TransitionChild
@@ -221,10 +500,10 @@
                   </div>
                   <div class="flex-1">
                     <DialogTitle as="h3" class="text-lg font-medium text-gray-900">
-                      确认移除板块？
+                      确认删除教育经历？
                     </DialogTitle>
                     <p class="mt-2 text-sm text-gray-500">
-                      移除板块后，该板块将移至"更多模块"中，您可以随时重新添加。
+                      删除后将无法恢复，请确认是否继续。
                     </p>
                   </div>
                 </div>
@@ -239,10 +518,10 @@
                   </button>
                   <button
                     type="button"
-                    @click="confirmRemove"
+                    @click="confirmDelete"
                     class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                   >
-                    确认移除
+                    确认删除
                   </button>
                 </div>
               </div>
@@ -252,10 +531,85 @@
       </div>
     </Dialog>
   </TransitionRoot>
+
+  <!-- 添加教育经历编辑弹窗 -->
+  <EditEducationDialog
+    v-if="currentModule?.type === 'education'"
+    v-model="showEditModal"
+    :initial-data="editFormData"
+    :loading="loading"
+    @submit="handleSubmit"
+  />
+
+  <!-- 添加所有编辑弹窗 -->
+  <EditProjectDialog
+    v-if="currentModule?.type === 'project'"
+    v-model="showEditModal"
+    :initial-data="editFormData"
+    :loading="loading"
+    @submit="handleSubmit"
+  />
+
+  <EditSkillDialog
+    v-if="currentModule?.type === 'skill'"
+    v-model="showEditModal"
+    :initial-data="editFormData"
+    :loading="loading"
+    @submit="handleSubmit"
+  />
+
+  <EditCertificateDialog
+    v-if="currentModule?.type === 'certificate'"
+    v-model="showEditModal"
+    :initial-data="editFormData"
+    :loading="loading"
+    @submit="handleSubmit"
+  />
+
+  <EditLanguageDialog
+    v-if="currentModule?.type === 'language'"
+    v-model="showEditModal"
+    :initial-data="editFormData"
+    :loading="loading"
+    @submit="handleSubmit"
+  />
+
+  <EditPortfolioDialog
+    v-if="currentModule?.type === 'portfolio'"
+    v-model="showEditModal"
+    :initial-data="editFormData"
+    :loading="loading"
+    @submit="handleSubmit"
+  />
+
+  <EditSocialLinkDialog
+    v-if="currentModule?.type === 'social_link'"
+    v-model="showEditModal"
+    :initial-data="editFormData"
+    :loading="loading"
+    @submit="handleSubmit"
+  />
+
+  <!-- 工作经历编辑弹窗 -->
+  <EditWorkExperienceDialog
+    v-if="currentModule?.type === 'work_experience'"
+    v-model="showEditModal"
+    :initial-data="editFormData"
+    :loading="loading"
+    @submit="handleSubmit"
+  />
+
+  <EditJobIntentionDialog
+    v-if="currentModule?.type === 'job_intention'"
+    v-model="showEditModal"
+    :initial-data="editFormData"
+    :loading="loading"
+    @submit="handleSubmit"
+  />
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted, nextTick, computed } from 'vue'
 import { 
   PencilSquareIcon, 
   TrashIcon,
@@ -267,7 +621,10 @@ import {
   BuildingOfficeIcon,
   CalendarIcon,
   DocumentTextIcon,
-  TrophyIcon
+  TrophyIcon,
+  ArrowTopRightOnSquareIcon,
+  ChevronUpIcon,
+  ChevronDownIcon
 } from '@heroicons/vue/24/outline'
 import { ALL_MODULES } from '@/constants'
 import JobIntentionContent from './JobIntentionContent.vue'
@@ -280,6 +637,20 @@ import {
   TransitionRoot,
   TransitionChild
 } from '@headlessui/vue'
+import EducationContent from './EducationContent.vue'
+import EditEducationDialog from '../dialogs/EditEducationDialog.vue'
+import { ElMessage } from 'element-plus'
+import profile from '@/api/profile'
+import { useModules } from '../composables/useModules'
+import EditProjectDialog from '../dialogs/EditProjectDialog.vue'
+import EditSkillDialog from '../dialogs/EditSkillDialog.vue'
+import EditCertificateDialog from '../dialogs/EditCertificateDialog.vue'
+import EditLanguageDialog from '../dialogs/EditLanguageDialog.vue'
+import EditPortfolioDialog from '../dialogs/EditPortfolioDialog.vue'
+import EditSocialLinkDialog from '../dialogs/EditSocialLinkDialog.vue'
+import EditWorkExperienceDialog from '../dialogs/EditWorkExperienceDialog.vue'
+import EditJobIntentionDialog from '../dialogs/EditJobIntentionDialog.vue'
+import ProjectContent from './ProjectContent.vue'
 
 const props = defineProps({
   activeModules: {
@@ -293,6 +664,10 @@ const props = defineProps({
   loading: {
     type: Boolean,
     default: false
+  },
+  fetchModulesData: {
+    type: Function,
+    required: true
   }
 })
 
@@ -305,16 +680,17 @@ const getModuleName = (type) => {
 
 // 删除确认相关
 const showDeleteConfirm = ref(false)
+const itemToDelete = ref(null)
 const moduleToDelete = ref(null)
 
-// 处理移除按钮点击
+// 处理移除模块按钮点击
 const handleRemove = (moduleType) => {
   console.log('准备移除模块:', moduleType)
   moduleToDelete.value = moduleType
   showDeleteConfirm.value = true
 }
 
-// 确认移除
+// 确认移除模块
 const confirmRemove = () => {
   if (moduleToDelete.value) {
     console.log('确认移除模块:', moduleToDelete.value)
@@ -322,6 +698,53 @@ const confirmRemove = () => {
     showDeleteConfirm.value = false
     moduleToDelete.value = null
   }
+}
+
+// 处理删除具体项目
+const handleDelete = (type, itemId) => {
+  console.log('【ModuleList】准备删除项目:', { type, itemId })
+  itemToDelete.value = { type, id: itemId }
+  showDeleteConfirm.value = true
+}
+
+// 确认删除项目
+const confirmDelete = async () => {
+  try {
+    if (itemToDelete.value) {
+      const { type, id } = itemToDelete.value
+      console.log('【ModuleList】确认删除项目:', { type, id })
+      
+      if (type === 'work_experience') {
+        console.log('【ModuleList】删除工作经历')
+        await profile.workExperience.delete(id)
+      } else if (type === 'education') {
+        console.log('【ModuleList】删除教育经历')
+        await profile.education.delete(id)
+      } else if (profile[type]?.delete) {
+        console.log('【ModuleList】删除其他类型项目:', type)
+        await profile[type].delete(id)
+      } else {
+        throw new Error('不支持的模块类型')
+      }
+      
+      await props.fetchModulesData()
+      ElMessage.success('删除成功')
+    }
+  } catch (error) {
+    console.error('【ModuleList】删除失败:', error)
+    ElMessage.error(error.message || '删除失败，请稍后重试')
+  } finally {
+    showDeleteConfirm.value = false
+    itemToDelete.value = null
+  }
+}
+
+// 定义模块组件映射
+const moduleComponents = {
+  job_intention: JobIntentionContent,
+  work_experience: WorkExperienceContent,
+  education: EducationContent,
+  // 在这里添加其他模块组件的映射
 }
 
 // 监听模块变化
@@ -443,34 +866,281 @@ const formatDate = (dateString) => {
   return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}`
 }
 
-// 添加事件处理方法
+// 处理编辑
 const handleEdit = (type, item) => {
-  console.log('ModuleList handleEdit:', type, item)
+  console.log('【ModuleList】处理编辑:', { type, item })
+  currentModule.value = { type }
+  
+  // 如果是求职意向模块，直接使用数据对象
   if (type === 'job_intention') {
-    // 找到求职意向模块的数据
-    const jobModule = props.activeModules.find(m => m.type === 'job_intention')
-    emit('edit-item', type, jobModule?.data)
+    editFormData.value = item || props.activeModules.find(m => m.type === type)?.data || {}
   } else {
-    emit('edit-item', type, item)
+    editFormData.value = item || {}
   }
+  
+  showEditModal.value = true
 }
 
 // 处理顶部编辑按钮点击
 const handleModuleEdit = (type) => {
-  console.log('ModuleList handleModuleEdit:', type)
-  const module = props.activeModules.find(m => m.type === type)
-  emit('edit', type, module?.data)
+  console.log('【ModuleList】处理模块编辑:', { type })
+  currentModule.value = { type }
+  
+  // 获取当前模块的数据
+  const currentModuleData = props.activeModules.find(m => m.type === type)?.data
+  console.log('【ModuleList】当前模块数据:', currentModuleData)
+  
+  // 如果是求职意向模块，直接使用数据对象
+  if (type === 'job_intention') {
+    editFormData.value = currentModuleData || {}
+  } else {
+    editFormData.value = {}
+  }
+  
+  showEditModal.value = true
 }
 
-const handleDelete = (type, itemId) => {
-  emit('remove-item', type, itemId)
-}
-
+// 处理添加按钮点击
 const handleAdd = (type) => {
-  emit('edit', type)
+  console.log('【ModuleList】处理添加:', {
+    type,
+    时间: new Date().toISOString(),
+    当前模块类型: type
+  })
+  
+  // 根据不同类型设置不同的初始值
+  let initialData = {}
+  if (type === 'skill') {
+    initialData = {
+      name: '',
+      level: '',
+      description: ''
+    }
+  } else if (type === 'project') {
+    initialData = {
+      name: '',
+      role: '',
+      start_date: '',
+      end_date: '',
+      is_current: false,
+      description: '',
+      achievement: ''
+    }
+  }
+  
+  currentModule.value = { type }
+  editFormData.value = initialData
+  showEditModal.value = true
+}
+
+// 添加一个 key 来强制更新教育组件
+const educationKey = ref(0)
+
+// 修改提交处理
+const handleSubmit = async (data) => {
+  try {
+    if (currentModule.value?.type) {
+      loading.value = true
+      const type = currentModule.value.type
+      
+      try {
+        let response
+        
+        // 根据不同模块类型处理
+        switch (type) {
+          case 'job_intention':
+            response = await profile.jobIntention.update(data)
+            break
+            
+          case 'work_experience':
+            if (data.id) {
+              response = await profile.workExperience.update(data.id, data)
+            } else {
+              response = await profile.workExperience.add(data)
+            }
+            break
+            
+          case 'project':
+            console.log('【ModuleList】提交项目数据:', data)
+            if (data.id) {
+              response = await profile.project.update(data.id, data)
+            } else {
+              response = await profile.project.add(data)
+            }
+            console.log('【ModuleList】项目保存响应:', response)
+            break
+            
+          case 'education':
+            if (data.id) {
+              response = await profile.education.update(data.id, data)
+            } else {
+              response = await profile.education.add(data)
+            }
+            break
+            
+          case 'skill':
+            if (data.id) {
+              response = await profile.skill.update(data.id, data)
+            } else {
+              response = await profile.skill.add(data)
+            }
+            break
+            
+          default:
+            // 其他模块的处理
+            if (profile[type]) {
+              if (data.id) {
+                response = await profile[type].update(data.id, data)
+              } else {
+                response = await profile[type].add(data)
+              }
+            } else {
+              throw new Error(`未知的模块类型: ${type}`)
+            }
+        }
+
+        if (response?.status === 200 || response?.status === 201) {
+          showEditModal.value = false
+          console.log('【ModuleList】准备重新获取数据')
+          await props.fetchModulesData()
+          console.log('【ModuleList】数据重新获取完成')
+          ElMessage.success(data.id ? '更新成功' : '添加成功')
+        } else {
+          throw new Error(response?.data?.message || '保存失败')
+        }
+      } catch (error) {
+        console.error('保存失败:', error)
+        ElMessage.error(error.message || '保存失败，请稍后重试')
+        return false
+      }
+    }
+  } catch (error) {
+    console.error('保存失败:', error)
+    ElMessage.error(error.message || '保存失败，请稍后重试')
+    return false
+  } finally {
+    loading.value = false
+  }
+  return true
+}
+
+// 在 script setup 的开头添加这些变量
+const currentModule = ref(null)
+const editFormData = ref({})
+const showEditModal = ref(false)
+const loading = ref(false)
+
+// 添加初始化数据的调用
+onMounted(async () => {
+  // 调用父组件的 fetchModulesData
+  await props.fetchModulesData()
+  // 添加调试日志
+  console.log('【ModuleList】模块数据:', props.activeModules)
+})
+
+// 监听对话框关闭
+watch(showEditModal, (newVal) => {
+  if (!newVal) {
+    // 清理状态
+    currentModule.value = null
+    editFormData.value = {}
+  }
+})
+
+// 监听模块数据变化
+watch(() => props.activeModules, async (newModules) => {
+  console.log('【ModuleList】模块数据变化:', {
+    时间: new Date().toISOString(),
+    模块数量: newModules?.length,
+    模块列表: newModules?.map(m => ({
+      类型: m.type,
+      名称: m.name,
+      数据长度: Array.isArray(m.data) ? m.data.length : (m.data ? 1 : 0)
+    }))
+  })
+}, { deep: true, immediate: true })
+
+// 处理模块项目的删除
+const handleItemDelete = async (type, itemId) => {
+  itemToDelete.value = { type, id: itemId }
+  showDeleteConfirm.value = true
+}
+
+// 处理整个模块的移除
+const handleModuleRemove = (type) => {
+  emit('remove', type)
+}
+
+// 监听对话框关闭
+watch(showDeleteConfirm, (newVal) => {
+  if (!newVal) {
+    moduleToDelete.value = null
+    itemToDelete.value = null
+  }
+})
+
+// 添加调试日志
+watch(() => props.activeModules, (newModules) => {
+  console.log('【ModuleList】模块数据变化详情:', {
+    时间: new Date().toISOString(),
+    模块数量: newModules?.length,
+    模块列表: newModules?.map(m => ({
+      类型: m.type,
+      名称: m.name,
+      数据: m.data,
+      可见性: m.visible
+    }))
+  })
+}, { deep: true, immediate: true })
+
+// 添加调试代码
+watch(() => showEditModal.value, (val) => {
+  console.log('【ModuleList】编辑弹窗状态变化:', {
+    显示: val,
+    当前模块: currentModule.value,
+    编辑数据: editFormData.value
+  })
+})
+
+// 添加折叠状态管理
+const collapsedModules = ref({})
+
+// 切换模块展开/关闭状态
+const toggleModule = (type) => {
+  collapsedModules.value[type] = !collapsedModules.value[type]
+}
+
+// 初始化时从 localStorage 读取折叠状态
+onMounted(() => {
+  try {
+    const savedState = localStorage.getItem('moduleCollapseState')
+    if (savedState) {
+      collapsedModules.value = JSON.parse(savedState)
+    }
+  } catch (error) {
+    console.error('读取模块折叠状态失败:', error)
+  }
+})
+
+// 监听折叠状态变化并保存到 localStorage
+watch(collapsedModules, (newState) => {
+  try {
+    localStorage.setItem('moduleCollapseState', JSON.stringify(newState))
+  } catch (error) {
+    console.error('保存模块折叠状态失败:', error)
+  }
+}, { deep: true })
+
+// 判断是否显示添加按钮
+const shouldShowAddButton = (type) => {
+  // 求职意向不显示添加按钮，因为只能有一条记录
+  if (type === 'job_intention') {
+    return false
+  }
+  // 其他模块都显示添加按钮
+  return true
 }
 </script>
-
 <style scoped>
 .delete-confirm-dialog :deep(.el-dialog__body) {
   @apply p-0;
@@ -540,5 +1210,14 @@ button:hover .text-gray-400 {
     #e5e7eb 90%,
     transparent 100%
   );
+}
+
+/* 添加展开/关闭按钮动画 */
+.transition-transform {
+  transition: transform 0.2s ease-in-out;
+}
+
+button:hover .text-gray-400 {
+  @apply text-gray-600;
 }
 </style>

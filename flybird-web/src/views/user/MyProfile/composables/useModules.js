@@ -12,89 +12,230 @@ export function useModules() {
   const fetchModulesData = async () => {
     try {
       loading.value = true
+      console.log('【ModuleList】开始获取模块数据')
       const response = await profile.layout.update()
-      console.log('【模块数据】服务器返回的布局数据:', response.data)
 
       if (response?.data?.code === 200) {
         const layoutData = response.data.data.layout
-        
-        // 处理活动和非活动模块
-        const active = []
-        const inactive = []
-        
-        // 过滤掉特殊字段
-        const moduleEntries = Object.entries(layoutData).filter(([key]) => 
-          !['layout', 'modules', 'timestamp'].includes(key)
-        )
-        
-        // 获取各模块数据
+        console.log('【ModuleList】布局数据:', layoutData)
         const moduleDataPromises = []
         
-        // 如果求职意向模块可见，获取数据
-        if (layoutData.job_intention?.visible) {
-          moduleDataPromises.push(
-            profile.jobIntention.get()
-              .then(response => ({
-                type: 'job_intention',
-                data: response.data?.code === 200 ? response.data.data : null
-              }))
-              .catch(error => {
-                console.error('获取求职意向数据失败:', error)
-                return { type: 'job_intention', data: null }
-              })
-          )
+        // 获取所有可见模块的数据
+        for (const [type, config] of Object.entries(layoutData)) {
+          if (config.visible) {
+            let promise;
+            switch (type) {
+              case 'education':
+                promise = profile.education.get()
+                  .then(response => ({
+                    type,
+                    name: ALL_MODULES[type],
+                    data: response.data?.code === 200 ? response.data.data : [],
+                    visible: true,
+                    order: config.order
+                  }))
+                  .catch(() => ({
+                    type,
+                    name: ALL_MODULES[type],
+                    data: [],
+                    visible: true,
+                    order: config.order
+                  }));
+                break;
+                
+              case 'job_intention':
+                promise = profile.jobIntention.get()
+                  .then(response => ({
+                    type,
+                    name: ALL_MODULES[type],
+                    data: response.data?.code === 200 ? response.data.data : null,
+                    visible: true,
+                    order: config.order
+                  }))
+                  .catch(() => ({
+                    type,
+                    name: ALL_MODULES[type],
+                    data: null,
+                    visible: true,
+                    order: config.order
+                  }));
+                break;
+                
+              case 'work_experience':
+                promise = profile.workExperience.get()
+                  .then(response => ({
+                    type,
+                    name: ALL_MODULES[type],
+                    data: response.data?.code === 200 ? response.data.data : [],
+                    visible: true,
+                    order: config.order
+                  }))
+                  .catch(() => ({
+                    type,
+                    name: ALL_MODULES[type],
+                    data: [],
+                    visible: true,
+                    order: config.order
+                  }));
+                break;
+
+              case 'project':
+                promise = profile.project.get()
+                  .then(response => {
+                    console.log('【ModuleList】获取项目数据响应:', response)
+                    return {
+                      type,
+                      name: ALL_MODULES[type],
+                      data: response.data?.data || [],
+                      visible: true,
+                      order: config.order
+                    }
+                  })
+                  .catch(error => {
+                    console.error('【ModuleList】获取项目数据失败:', error)
+                    return {
+                      type,
+                      name: ALL_MODULES[type],
+                      data: [],
+                      visible: true,
+                      order: config.order
+                    }
+                  });
+                break;
+
+              case 'skill':
+                // 检查 API 是否存在
+                if (profile.skills?.get) {
+                  promise = profile.skills.get()
+                    .then(response => {
+                      console.log('【ModuleList】获取专业技能数据:', response)
+                      return {
+                        type,
+                        name: ALL_MODULES[type],
+                        data: response.data?.code === 200 ? response.data.data : [],
+                        visible: true,
+                        order: config.order
+                      }
+                    })
+                    .catch(error => {
+                      console.error('【ModuleList】获取专业技能失败:', error)
+                      return {
+                        type,
+                        name: ALL_MODULES[type],
+                        data: [],
+                        visible: true,
+                        order: config.order
+                      }
+                    })
+                } else {
+                  // 如果 API 未实现，使用默认数据
+                  promise = Promise.resolve({
+                    type,
+                    name: ALL_MODULES[type],
+                    data: [],
+                    visible: true,
+                    order: config.order
+                  })
+                }
+                break;
+
+              case 'certificate':
+                promise = Promise.resolve({
+                  type,
+                  name: ALL_MODULES[type],
+                  data: [],
+                  visible: true,
+                  order: config.order
+                });
+                break;
+
+              case 'language':
+                promise = Promise.resolve({
+                  type,
+                  name: ALL_MODULES[type],
+                  data: [],
+                  visible: true,
+                  order: config.order
+                });
+                break;
+
+              case 'portfolio':
+                promise = Promise.resolve({
+                  type,
+                  name: ALL_MODULES[type],
+                  data: [],
+                  visible: true,
+                  order: config.order
+                });
+                break;
+
+              case 'social_link':
+                promise = Promise.resolve({
+                  type,
+                  name: ALL_MODULES[type],
+                  data: [],
+                  visible: true,
+                  order: config.order
+                });
+                break;
+
+              default:
+                // 对于未知类型，返回空数据
+                promise = Promise.resolve({
+                  type,
+                  name: ALL_MODULES[type] || type,
+                  data: null,
+                  visible: true,
+                  order: config.order
+                });
+                break;
+            }
+            
+            if (promise) {
+              moduleDataPromises.push(promise);
+            }
+          }
         }
-        
-        // 如果工作经历模块可见，获取数据
-        if (layoutData.work_experience?.visible) {
-          moduleDataPromises.push(
-            profile.workExperience.get()
-              .then(response => ({
-                type: 'work_experience',
-                data: response.data?.code === 200 ? response.data.data : null
-              }))
-              .catch(error => {
-                console.error('获取工作经历数据失败:', error)
-                return { type: 'work_experience', data: null }
-              })
-          )
-        }
-        
+
         // 等待所有数据获取完成
         const modulesData = await Promise.all(moduleDataPromises)
-        const moduleDataMap = modulesData.reduce((acc, { type, data }) => {
-          acc[type] = data
-          return acc
-        }, {})
-        
-        // 处理模块数据
-        moduleEntries.forEach(([type, config]) => {
-          const moduleData = {
-            type,
-            name: ALL_MODULES[type] || type,
-            order: config.order,
-            timestamp: layoutData.timestamp,
-            data: moduleDataMap[type] || null
-          }
-          
-          if (config.visible) {
-            active.push(moduleData)
-          } else {
-            inactive.push(moduleData)
-          }
-        })
-        
-        // 根据 order 排序活动模块
-        activeModules.value = active.sort((a, b) => a.order - b.order)
-        inactiveModules.value = inactive
+        console.log('【ModuleList】所有模块数据:', modulesData)
 
-        console.log('【模块数据】处理后的活动模块:', activeModules.value)
-        console.log('【模块数据】处理后的未激活模块:', inactiveModules.value)
+        // 更新模块数据
+        activeModules.value = modulesData
+          .sort((a, b) => a.order - b.order)
+          .map(module => ({
+            type: module.type,
+            name: module.name,
+            data: module.data,
+            visible: true,
+            order: module.order
+          }));
+
+        // 检查项目模块数据
+        const projectModule = activeModules.value.find(m => m.type === 'project')
+        console.log('【ModuleList】项目模块数据:', projectModule)
+
+        // 更新未激活模块列表
+        inactiveModules.value = Object.entries(ALL_MODULES)
+          .filter(([type]) => {
+            // 过滤掉基本信息和已激活的模块
+            return type !== 'basic_info' && !activeModules.value.some(m => m.type === type)
+          })
+          .map(([type, name]) => ({
+            type,
+            name,
+            visible: false,
+            order: 999
+          }));
+
+        console.log('【ModuleList】模块数据处理完成:', {
+          活动模块: activeModules.value,
+          未激活模块: inactiveModules.value
+        })
       }
     } catch (error) {
-      console.error('获取模块数据失败:', error)
-      activeModules.value = []
-      inactiveModules.value = []
+      console.error('【模块数据】获取失败:', error)
     } finally {
       loading.value = false
     }
@@ -178,36 +319,12 @@ export function useModules() {
     }
   }
 
-  // 更新模块顺序
-  const updateModuleOrder = async (modules) => {
-    try {
-      loading.value = true
-      const layoutUpdate = modules.reduce((acc, module, index) => {
-        acc[module.type] = {
-          visible: true,
-          order: index + 1
-        }
-        return acc
-      }, {})
-      
-      const response = await profile.layout.update(layoutUpdate)
-      if (response?.data?.code === 200) {
-        await fetchModulesData()
-      }
-    } catch (error) {
-      console.error('更新模块顺序失败:', error)
-    } finally {
-      loading.value = false
-    }
-  }
-
   return {
     loading,
     activeModules,
     inactiveModules,
     fetchModulesData,
-    addModule,
-    removeModule,
-    updateModuleOrder
+    addModule,     // 确保导出这两个方法
+    removeModule
   }
 }
