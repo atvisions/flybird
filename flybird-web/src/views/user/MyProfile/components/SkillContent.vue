@@ -32,11 +32,14 @@
         <div class="mb-3">
           <div class="flex items-center justify-between mb-1">
             <span class="text-sm text-gray-500">熟练度</span>
-            <span class="text-sm font-medium text-blue-600">{{ getLevelLabel(skill.level) }}</span>
+            <span class="text-sm font-medium" :class="getLevelColor(skill.level).replace('bg-', 'text-')">
+              {{ getLevelLabel(skill.level) }}
+            </span>
           </div>
-          <div class="w-full bg-gray-200 rounded-full h-2">
+          <div class="w-full bg-gray-100 rounded-full h-2">
             <div 
-              class="bg-blue-600 h-2 rounded-full transition-all"
+              class="h-2 rounded-full transition-all duration-300"
+              :class="getLevelColor(skill.level)"
               :style="{ width: getLevelPercentage(skill.level) }"
             ></div>
           </div>
@@ -142,26 +145,40 @@ defineProps({
 
 const emit = defineEmits(['edit', 'delete', 'add'])
 
-// 获取熟练度标签
-const getLevelLabel = (level) => {
-  const levelMap = {
-    'beginner': '入门',
-    'intermediate': '熟练',
-    'advanced': '精通',
-    'expert': '专家'
+// 修改获取熟练度标签和进度条百分比的方法
+const SKILL_LEVELS = {
+  '初级': {
+    label: '入门',
+    percentage: '20%',
+    color: 'bg-blue-200'
+  },
+  '中级': {
+    label: '熟练',
+    percentage: '50%',
+    color: 'bg-blue-400'
+  },
+  '高级': {
+    label: '精通',
+    percentage: '80%',
+    color: 'bg-blue-500'
+  },
+  '专家': {
+    label: '专家',
+    percentage: '100%',
+    color: 'bg-blue-600'
   }
-  return levelMap[level] || level
 }
 
-// 获取熟练度进度条百分比
+const getLevelLabel = (level) => {
+  return SKILL_LEVELS[level]?.label || level || '未知'
+}
+
 const getLevelPercentage = (level) => {
-  const percentageMap = {
-    'beginner': '25%',
-    'intermediate': '50%',
-    'advanced': '75%',
-    'expert': '100%'
-  }
-  return percentageMap[level] || '0%'
+  return SKILL_LEVELS[level]?.percentage || '0%'
+}
+
+const getLevelColor = (level) => {
+  return SKILL_LEVELS[level]?.color || 'bg-gray-200'
 }
 
 // 删除相关
@@ -201,5 +218,10 @@ const confirmDelete = async () => {
   .grid-cols-2 {
     grid-template-columns: 1fr;
   }
+}
+
+/* 优化进度条动画 */
+.h-2 {
+  transition: all 0.3s ease-in-out;
 }
 </style> 

@@ -101,28 +101,34 @@
                     <div class="flex items-center space-x-4">
                       <div class="relative flex-1">
                         <input
+                          ref="startDateInput"
                           v-model="form.start_date"
                           type="date"
                           :class="[
-                            'w-full rounded-lg border py-2.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/10',
+                            'w-full rounded-lg border py-2.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/10 cursor-pointer',
                             errors.start_date ? 'border-red-300 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
                           ]"
                         />
-                        <CalendarIcon class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                        <div class="absolute inset-0 flex items-center justify-end pr-3 pointer-events-none">
+                          <CalendarIcon class="w-5 h-5 text-gray-400" />
+                        </div>
                       </div>
                       
                       <span v-if="!form.is_current" class="text-gray-500">至</span>
                       
                       <div v-if="!form.is_current" class="relative flex-1">
                         <input
+                          ref="endDateInput"
                           v-model="form.end_date"
                           type="date"
                           :class="[
-                            'w-full rounded-lg border py-2.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/10',
+                            'w-full rounded-lg border py-2.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/10 cursor-pointer',
                             errors.end_date ? 'border-red-300 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
                           ]"
                         />
-                        <CalendarIcon class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                        <div class="absolute inset-0 flex items-center justify-end pr-3 pointer-events-none">
+                          <CalendarIcon class="w-5 h-5 text-gray-400" />
+                        </div>
                       </div>
                     </div>
                     <p v-if="errors.start_date || errors.end_date" class="text-sm text-red-500 mt-1">
@@ -145,7 +151,7 @@
                     <textarea
                       v-model="form.description"
                       rows="4"
-                      placeholder="请详细描述您的工作职责和内容（至少50字）"
+                      placeholder="请详细描述您的工作职责和内容（至少20字）"
                       :class="[
                         'w-full rounded-lg border py-2.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/10',
                         errors.description ? 'border-red-300 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
@@ -311,9 +317,9 @@ const validateForm = () => {
     isValid = false
   }
 
-  // 工作描述至少50字
-  if (!form.value.description?.trim() || form.value.description.length < 50) {
-    errors.value.description = '工作描述至少需要50个字符'
+  // 工作描述至少20字
+  if (!form.value.description?.trim() || form.value.description.length < 20) {
+    errors.value.description = '工作描述至少需要20个字符'
     isValid = false
   }
 
@@ -350,6 +356,10 @@ const handleSubmit = () => {
   emit('submit', formData)
 }
 
+// 添加 ref 引用
+const startDateInput = ref(null)
+const endDateInput = ref(null)
+
 onMounted(() => {
   // 初始化表单数据
   if (props.initialData) {
@@ -382,10 +392,6 @@ input:focus, textarea:focus {
 }
 
 /* 错误提示文字渐入动画 */
-.text-red-500 {
-  @apply animate-fade-in;
-}
-
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -397,7 +403,26 @@ input:focus, textarea:focus {
   }
 }
 
-.animate-fade-in {
+.text-red-500 {
   animation: fade-in 0.2s ease-out;
+}
+
+/* 隐藏浏览器默认的日历图标 */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 2.5rem;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* 让日期输入框可点击 */
+input[type="date"] {
+  cursor: pointer;
+  position: relative;
+  background-color: transparent;
 }
 </style> 

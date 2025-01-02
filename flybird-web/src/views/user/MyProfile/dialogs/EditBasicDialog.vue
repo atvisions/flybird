@@ -65,19 +65,45 @@
                     </div>
                     <div>
                       <label class="block text-sm font-medium text-gray-700 mb-1">性别</label>
-                      <div class="flex flex-wrap gap-2">
+                      <div class="flex gap-2 w-full">
                         <button
                           v-for="option in genderOptions"
                           :key="option.value"
                           type="button"
-                          class="px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
+                          class="flex items-center justify-center flex-1 px-2 py-2 text-sm font-medium rounded-lg border transition-colors min-w-[60px]"
                           :class="[
                             formData.gender === option.value
-                              ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
+                              ? option.value === 'female'
+                                ? 'bg-pink-50 text-pink-700 border-pink-200 hover:bg-pink-100'
+                                : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
                               : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                           ]"
                           @click="formData.gender = option.value"
                         >
+                          <!-- 男性图标 -->
+                          <svg 
+                            v-if="option.value === 'male'" 
+                            class="w-4 h-4 mr-1" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            :stroke="formData.gender === 'male' ? 'currentColor' : '#6B7280'"
+                          >
+                            <circle cx="12" cy="12" r="5" stroke-width="2"/>
+                            <path d="M16 8L21 3" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M21 3H16M21 3V8" stroke-width="2" stroke-linecap="round"/>
+                          </svg>
+                          <!-- 女性图标 -->
+                          <svg 
+                            v-else 
+                            class="w-4 h-4 mr-1" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            :stroke="formData.gender === 'female' ? 'currentColor' : '#6B7280'"
+                          >
+                            <circle cx="12" cy="10" r="5" stroke-width="2"/>
+                            <path d="M12 15V21" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M9 18H15" stroke-width="2" stroke-linecap="round"/>
+                          </svg>
                           {{ option.label }}
                         </button>
                       </div>
@@ -91,6 +117,7 @@
                       <input
                         v-model="formData.birth_date"
                         type="date"
+                        :max="maxDate"
                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
                     </div>
@@ -99,9 +126,17 @@
                       <input
                         v-model="formData.phone"
                         type="tel"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        class="w-full px-3 py-2 border rounded-lg"
+                        :class="[
+                          formErrors.phone 
+                            ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
+                            : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                        ]"
                         placeholder="请输入手机号码"
                       />
+                      <p v-if="formErrors.phone" class="mt-1 text-sm text-red-500">
+                        {{ formErrors.phone }}
+                      </p>
                     </div>
                   </div>
 
@@ -112,18 +147,34 @@
                       <input
                         v-model="formData.email"
                         type="email"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        class="w-full px-3 py-2 border rounded-lg"
+                        :class="[
+                          formErrors.email 
+                            ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
+                            : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                        ]"
                         placeholder="请输入邮箱"
                       />
+                      <p v-if="formErrors.email" class="mt-1 text-sm text-red-500">
+                        {{ formErrors.email }}
+                      </p>
                     </div>
                     <div>
                       <label class="block text-sm font-medium text-gray-700 mb-1">所在城市</label>
                       <input
                         v-model="formData.location"
                         type="text"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        class="w-full px-3 py-2 border rounded-lg"
+                        :class="[
+                          formErrors.location 
+                            ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
+                            : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                        ]"
                         placeholder="请输入所在城市"
                       />
+                      <p v-if="formErrors.location" class="mt-1 text-sm text-red-500">
+                        {{ formErrors.location }}
+                      </p>
                     </div>
                   </div>
 
@@ -133,9 +184,17 @@
                     <textarea
                       v-model="formData.personal_summary"
                       rows="4"
-                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="请输入个人简介"
+                      class="w-full px-3 py-2 border rounded-lg"
+                      :class="[
+                        formErrors.personal_summary 
+                          ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
+                          : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                      ]"
+                      placeholder="请输入个人简介（100-300字）"
                     ></textarea>
+                    <p v-if="formErrors.personal_summary" class="mt-1 text-sm text-red-500">
+                      {{ formErrors.personal_summary }}
+                    </p>
                   </div>
                 </form>
               </div>
@@ -169,7 +228,7 @@
 </template>
 
 <script setup>
-import { ref, watch, reactive } from 'vue'
+import { ref, watch, reactive, computed } from 'vue'
 import {
   Dialog,
   DialogPanel,
@@ -192,11 +251,75 @@ const emit = defineEmits(['update:modelValue', 'submit'])
 
 // 表单验证规则
 const rules = {
-  name: [{ required: true, message: '请输入姓名' }],
-  gender: [{ required: true, message: '请选择性别' }],
-  birth_date: [{ required: true, message: '请选择出生日期' }],
-  phone: [{ required: true, message: '请输入手机号码' }],
-  email: [{ required: true, message: '请输入邮箱' }]
+  name: [
+    { required: true, message: '请输入姓名' },
+    { 
+      validator: (value) => {
+        if (!value) return true
+        if (value.length < 2 || value.length > 20) {
+          return '姓名长度需要在2-20个字符之间'
+        }
+        const nameRegex = /^[\u4e00-\u9fa5a-zA-Z\s]+$/
+        if (!nameRegex.test(value)) {
+          return '姓名只能包含中文或英文字符'
+        }
+        return true
+      }
+    }
+  ],
+  phone: [
+    { 
+      validator: (value) => {
+        if (!value) return true // 选填
+        // 中国大陆手机号格式验证
+        const phoneRegex = /^1[3-9]\d{9}$/
+        if (!phoneRegex.test(value)) {
+          return '请输入正确的手机号码格式'
+        }
+        return true
+      }
+    }
+  ],
+  personal_summary: [
+    {
+      validator: (value) => {
+        if (!value) return true // 选填
+        const length = value.trim().length
+        if (length < 100 || length > 300) {
+          return '个人简介需要在100-300个字符之间'
+        }
+        return true
+      }
+    }
+  ],
+  location: [
+    {
+      validator: (value) => {
+        if (!value) return true // 选填
+        // 城市名称验证：2-20个字符，只允许中文、英文和空格
+        if (value.length < 2 || value.length > 20) {
+          return '城市名称长度需要在2-20个字符之间'
+        }
+        const cityRegex = /^[\u4e00-\u9fa5a-zA-Z\s]+$/
+        if (!cityRegex.test(value)) {
+          return '城市名称只能包含中文或英文字符'
+        }
+        return true
+      }
+    }
+  ],
+  email: [
+    {
+      validator: (value) => {
+        if (!value) return true // 选填
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (!emailRegex.test(value)) {
+          return '请输入正确的邮箱格式'
+        }
+        return true
+      }
+    }
+  ]
 }
 
 // 表单错误信息
@@ -228,15 +351,23 @@ const validateForm = () => {
   formErrors.value = {}
   let isValid = true
 
-  Object.keys(rules).forEach(field => {
-    const fieldRules = rules[field]
+  Object.entries(rules).forEach(([field, fieldRules]) => {
     const value = formData.value[field]
-
+    
     for (const rule of fieldRules) {
       if (rule.required && !value) {
         formErrors.value[field] = rule.message
         isValid = false
         break
+      }
+      
+      if (rule.validator) {
+        const validationResult = rule.validator(value, formData.value)
+        if (typeof validationResult === 'string') {
+          formErrors.value[field] = validationResult
+          isValid = false
+          break
+        }
       }
     }
   })
@@ -247,7 +378,6 @@ const validateForm = () => {
 const handleSubmit = async () => {
   try {
     if (!validateForm()) {
-      ElMessage.error('请填写必填项')
       return
     }
     
@@ -278,6 +408,35 @@ const genderOptions = [
   { value: 'male', label: '男' },
   { value: 'female', label: '女' }
 ]
+
+// 添加实时验证函数
+const validateEmail = () => {
+  const emailRules = rules.email
+  const value = formData.value.email
+  
+  formErrors.value.email = undefined // 清除之前的错误
+  
+  for (const rule of emailRules) {
+    if (rule.validator) {
+      const validationResult = rule.validator(value)
+      if (typeof validationResult === 'string') {
+        formErrors.value.email = validationResult
+        break
+      }
+    }
+  }
+}
+
+// 监听邮箱值的变化
+watch(() => formData.value.email, () => {
+  validateEmail()
+})
+
+// 添加最大日期计算
+const maxDate = computed(() => {
+  const today = new Date()
+  return today.toISOString().split('T')[0]  // 格式化为 YYYY-MM-DD
+})
 </script>
 
 <style scoped>

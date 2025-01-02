@@ -13,19 +13,16 @@ class ChangePasswordSerializer(serializers.Serializer):
         return value
 
     def validate_new_password(self, value):
-        # 密码格式验证
+    # 密码格式验证
         if len(value) < 8 or len(value) > 20:
             raise serializers.ValidationError('密码长度必须在8-20位之间')
         
-        if not any(c.islower() for c in value):
-            raise serializers.ValidationError('密码必须包含小写字母')
-            
-        if not any(c.isupper() for c in value):
-            raise serializers.ValidationError('密码必须包含大写字母')
+        if not any(c.isalpha() for c in value):
+            raise serializers.ValidationError('密码必须包含字母')
             
         if not any(c.isdigit() for c in value):
             raise serializers.ValidationError('密码必须包含数字')
-            
+                
         return value
 
     def validate(self, data):

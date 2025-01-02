@@ -70,7 +70,7 @@ class User(AbstractUser):
             super().save(*args, **kwargs)
             # 生成 uid (保证7位数字)
             if not self.uid:
-                self.uid = f"{1000000 + self.pk:07d}"  # 格式化为7位数字
+                self.uid = f"{10000 + self.pk:07d}"  # 格式化为5位数字
             # 设置默认用户名
             if not self.username:
                 self.username = f"Flybird{self.phone[-4:]}"  # 使用手机号后4位作为默认用户名

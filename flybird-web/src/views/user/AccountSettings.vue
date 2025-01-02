@@ -272,7 +272,43 @@
                   v-model="password.state.newPassword"
                   placeholder="请输入新密码"
                   :disabled="password.state.loading"
+                  @input="handlePasswordInput"
                 />
+                <div v-if="password.state.error" class="text-sm text-red-500 mt-1">
+                  {{ password.state.error }}
+                </div>
+                
+                <!-- 密码强度指示器 -->
+                <div class="mt-2">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-xs text-gray-500">密码强度</span>
+                    <span class="text-xs" :class="strengthTextClass">{{ strengthText }}</span>
+                  </div>
+                  <div class="flex gap-1 h-1">
+                    <div 
+                      v-for="n in 4" 
+                      :key="n"
+                      class="flex-1 rounded-full transition-colors duration-200"
+                      :class="[
+                        n <= password.state.strength 
+                          ? strengthColorClass 
+                          : 'bg-gray-200'
+                      ]"
+                    ></div>
+                  </div>
+                </div>
+                
+                <!-- 密码规则提示 -->
+                <div class="text-xs text-gray-400 mt-2 space-y-1">
+                  <div>密码要求：</div>
+                  <div>• 长度在8-20个字符之间</div>
+                  <div>• 必须包含字母</div>
+                  <div>• 必须包含数字</div>
+                  <div>• 不能与当前密码相同</div>
+                  <div>建议包含（可选）：</div>
+                  <div>• 大小写字母</div>
+                  <div>• 特殊字符（!@#$%^&*）</div>
+                </div>
               </div>
               <div class="form-group">
                 <input 
@@ -280,7 +316,11 @@
                   v-model="password.state.confirmPassword"
                   placeholder="请确认新密码"
                   :disabled="password.state.loading"
+                  @input="validateConfirmPassword"
                 />
+                <div v-if="confirmPasswordError" class="text-sm text-red-500 mt-1">
+                  {{ confirmPasswordError }}
+                </div>
               </div>
             </div>
             <div class="modal-footer">
@@ -392,6 +432,14 @@
                 />
               </div>
               <div class="form-group">
+                <input 
+                  type="password" 
+                  v-model="emailManager.state.password"
+                  placeholder="请输入登录密码"
+                  :disabled="emailManager.state.loading"
+                />
+              </div>
+              <div class="form-group">
                 <div class="code-input">
                   <input 
                     type="text" 
@@ -400,21 +448,16 @@
                     :disabled="emailManager.state.loading"
                   />
                   <button 
-                    @click="emailManager.handleSendCode"
-                    :disabled="emailManager.state.loading || emailManager.state.countdown > 0"
+                    @click="handleSendCode"
+                    :disabled="isCodeButtonDisabled"
                     class="code-btn"
                   >
-                    {{ emailManager.state.countdown > 0 ? `${emailManager.state.countdown}s` : '获取验证码' }}
+                    {{ emailManager.state.countdown > 0 
+                      ? `${emailManager.state.countdown}s` 
+                      : (isRequestingCode ? '发送中...' : '获取验证码') 
+                    }}
                   </button>
                 </div>
-              </div>
-              <div class="form-group" v-if="email">
-                <input 
-                  type="password" 
-                  v-model="emailManager.state.password"
-                  placeholder="请输入登录密码"
-                  :disabled="emailManager.state.loading"
-                />
               </div>
             </div>
             <div class="modal-footer">
@@ -534,8 +577,39 @@ const handleNicknameUpdate = async () => {
   }
 }
 
-// 处理密码更新
+// 添加密码验证相关的状态和方法
+const confirmPasswordError = ref('')
+
+const validateNewPassword = () => {
+  // 使用 composable 中的验证方法
+  password.state.error = password.validatePassword(password.state.newPassword)
+  // 如果新密码变化，也要检查确认密码
+  if (password.state.confirmPassword) {
+    validateConfirmPassword()
+  }
+}
+
+const validateConfirmPassword = () => {
+  if (!password.state.confirmPassword) {
+    confirmPasswordError.value = ''
+  } else if (password.state.confirmPassword !== password.state.newPassword) {
+    confirmPasswordError.value = '两次输入的密码不一致'
+  } else {
+    confirmPasswordError.value = ''
+  }
+}
+
+// 修改密码更新方法
 const handlePasswordUpdate = async () => {
+  // 先验证一次
+  validateNewPassword()
+  validateConfirmPassword()
+  
+  // 如果有错误就不提交
+  if (password.state.error || confirmPasswordError.value) {
+    return
+  }
+  
   const success = await password.handleUpdate()
   if (success) {
     closePasswordModal()
@@ -585,22 +659,81 @@ const isEmailFormValid = computed(() => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   const isValidEmail = emailRegex.test(emailManager.state.value)
   
-  // 检查是否有必填字段且邮箱格式正确
-  const hasRequiredFields = emailManager.state.value && 
-                          emailManager.state.code && 
-                          isValidEmail
-  
-  // 如果是更换邮箱，还需要密码
-  if (email) {
-    return hasRequiredFields && 
-           emailManager.state.password && 
-           !emailManager.state.loading
-  }
-  
-  // 绑定邮箱只需要邮箱和验证码
-  return hasRequiredFields && 
+  // 检查所有必填字段
+  return emailManager.state.value && 
+         emailManager.state.code && 
+         emailManager.state.password &&  // 密码必填
+         isValidEmail && 
          !emailManager.state.loading
 })
+
+// 添加防重复点击状态
+const isRequestingCode = ref(false)
+
+// 修改发送验证码的处理方法
+const handleSendCode = async () => {
+  if (isRequestingCode.value) {
+    return
+  }
+
+  if (!emailManager.state.value || !emailManager.state.password) {
+    ElMessage.error('请先输入邮箱地址和登录密码')
+    return
+  }
+
+  try {
+    isRequestingCode.value = true
+    // 传递邮箱和密码参数
+    await emailManager.handleSendCode({
+      email: emailManager.state.value,
+      password: emailManager.state.password
+    })
+  } catch (error) {
+    console.error('发送验证码失败:', error)
+    ElMessage.error(error.response?.data?.detail || '发送验证码失败')
+  } finally {
+    isRequestingCode.value = false
+  }
+}
+
+// 修改按钮禁用状态
+const isCodeButtonDisabled = computed(() => {
+  return emailManager.state.loading || 
+         emailManager.state.countdown > 0 || 
+         !emailManager.state.password || 
+         !emailManager.state.value ||
+         isRequestingCode.value
+})
+
+// 密码强度相关
+const strengthText = computed(() => {
+  const strength = password.state.strength
+  if (strength === 0) return '弱'
+  if (strength <= 2) return '中'
+  if (strength <= 4) return '强'
+  return '非常强'
+})
+
+const strengthTextClass = computed(() => {
+  const strength = password.state.strength
+  if (strength === 0) return 'text-red-500'
+  if (strength <= 2) return 'text-yellow-500'
+  if (strength <= 4) return 'text-green-500'
+  return 'text-green-600'
+})
+
+const strengthColorClass = computed(() => {
+  const strength = password.state.strength
+  if (strength === 0) return 'bg-red-500'
+  if (strength <= 2) return 'bg-yellow-500'
+  if (strength <= 4) return 'bg-green-500'
+  return 'bg-green-600'
+})
+
+const handlePasswordInput = () => {
+  validateNewPassword()
+  password.updatePasswordStrength(password.state.newPassword)
+}
 </script>
 
 <style scoped>

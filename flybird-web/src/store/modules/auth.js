@@ -26,11 +26,24 @@ export default {
 
     async logout({ commit }) {
       try {
-        await authManager.logout()
-      } finally {
-        storage.clearAuth()
-        commit('SET_AUTH', false)
-        commit('SET_USER_INFO', null)
+        // 先清除本地存储的认证信息
+        commit('SET_TOKEN', null)
+        commit('SET_USER', null)
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+
+        // 然后尝试发送退出请求，但不等待响应
+        try {
+          await api.post('/users/auth/logout/')
+        } catch (error) {
+          // 忽略退出请求的错误，因为用户已经退出
+          console.log('Logout request failed, but user is already logged out locally')
+        }
+
+        // 返回成功
+        return Promise.resolve()
+      } catch (error) {
+        return Promise.reject(error)
       }
     }
   }

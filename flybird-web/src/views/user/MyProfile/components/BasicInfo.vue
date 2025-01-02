@@ -11,12 +11,22 @@
       <div class="absolute top-4 right-4">
         <button
           @click="triggerBackgroundUpload"
-          class="p-2 bg-white bg-opacity-80 rounded-full hover:bg-opacity-100 transition-all"
+          class="flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white bg-opacity-90 rounded-lg hover:bg-opacity-100 transition-all shadow-sm"
         >
-          <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-              d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+          <svg 
+            class="w-4 h-4 mr-1.5 text-gray-600" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path 
+              stroke-linecap="round" 
+              stroke-linejoin="round" 
+              stroke-width="2" 
+              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
           </svg>
+          更换背景
         </button>
       </div>
       <input
@@ -45,20 +55,31 @@
           >
             <CameraIcon class="w-8 h-8 text-white" />
           </div>
-          <input
-            ref="fileInput"
-            type="file"
-            accept="image/*"
-            class="hidden"
-            @change="handleFileChange"
-          />
           <!-- 性别标识 -->
           <div class="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow">
-            <svg v-if="currentGender === 'male'" class="w-6 h-6 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C9.243 2 7 4.243 7 7v2h10V7c0-2.757-2.243-5-5-5zM9 11H7v9c0 1.654 1.346 3 3 3h4c1.654 0 3-1.346 3-3v-9h-2v9c0 .552-.448 1-1 1h-4c-.552 0-1-.448-1-1v-9z"/>
+            <!-- 男性图标 -->
+            <svg 
+              v-if="currentGender === 'male'" 
+              class="w-6 h-6 text-blue-500" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor"
+            >
+              <circle cx="12" cy="12" r="5" stroke-width="2"/>
+              <path d="M16 8L21 3" stroke-width="2" stroke-linecap="round"/>
+              <path d="M21 3H16M21 3V8" stroke-width="2" stroke-linecap="round"/>
             </svg>
-            <svg v-else-if="currentGender === 'female'" class="w-6 h-6 text-pink-500" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C9.243 2 7 4.243 7 7v2h10V7c0-2.757-2.243-5-5-5zM9 11H7v5h10v-5h-2v3H9v-3z"/>
+            <!-- 女性图标 -->
+            <svg 
+              v-else-if="currentGender === 'female'" 
+              class="w-6 h-6 text-pink-500" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor"
+            >
+              <circle cx="12" cy="10" r="5" stroke-width="2"/>
+              <path d="M12 15V21" stroke-width="2" stroke-linecap="round"/>
+              <path d="M9 18H15" stroke-width="2" stroke-linecap="round"/>
             </svg>
           </div>
         </div>
@@ -112,6 +133,13 @@
       </div>
     </div>
   </div>
+
+  <!-- 添加头像上传弹窗 -->
+  <AvatarUploadDialog
+    v-model="showAvatarUpload"
+    :loading="loading"
+    @upload="handleAvatarUpload"
+  />
 </template>
 
 <script setup>
@@ -148,6 +176,7 @@ import {
   TransitionChild,
   TransitionRoot
 } from '@headlessui/vue'
+import AvatarUploadDialog from '../dialogs/AvatarUploadDialog.vue'
 
 // 1. 首先声明 props
 const props = defineProps({
@@ -175,7 +204,6 @@ const emit = defineEmits(['update', 'edit', 'toggleBioExpand'])
 // 3. 导入和初始化其他变量
 const store = useStore()
 const loading = ref(true)
-const fileInput = ref(null)
 const basicInfo = ref({})
 
 // 4. 计算属性
@@ -329,19 +357,16 @@ const handleAvatarUpload = async (file) => {
     const formData = new FormData()
     formData.append('avatar', file)
     
-    // 使用 profile API 直接上传
     const response = await profile.uploadAvatar(formData)
     if (response.data?.code === 200) {
       showToast('头像上传成功', 'success')
-      // 触发父组件更新
       emit('update')
-      // 获取完整的头像URL
       const avatarUrl = response.data.data.avatar
       eventBus.emit('avatar-updated', avatarUrl)
-      // 更新本地数据
       if (props.resumeData) {
         props.resumeData.avatar = avatarUrl
       }
+      showAvatarUpload.value = false // 关闭弹窗
     } else {
       throw new Error(response.data?.message || '上传失败')
     }
@@ -355,7 +380,7 @@ const handleAvatarUpload = async (file) => {
 
 // 添加触发文件选择的方法
 const triggerUpload = () => {
-  fileInput.value.click()
+  showAvatarUpload.value = true
 }
 
 // 添加图片加载错误处理
@@ -427,4 +452,7 @@ const handleBackgroundChange = async (event) => {
 const handleBackgroundError = (e) => {
   e.target.src = defaultBackground
 }
+
+// 添加状态
+const showAvatarUpload = ref(false)
 </script>

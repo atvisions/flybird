@@ -207,6 +207,8 @@ const typeMap = {
   'website': '网站',
   'app': '应用',
   'article': '文章',
+  'design': '设计',
+  'video': '视频',
   'other': '其他'
 }
 
