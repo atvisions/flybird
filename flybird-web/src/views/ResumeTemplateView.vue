@@ -1,10 +1,7 @@
 <template>
     <div>
         <HeadView />
-        <!-- 主要内容区域 -->
-        <div class="min-h-screen "
-            style="padding-top: calc(var(--navbar-height) + 2rem);">
-
+        <div class="min-h-screen relative overflow-hidden" style="padding-top: calc(var(--navbar-height) + 2rem);">
             <!-- 页面标题区域 -->
             <div class="text-center mb-12">
                 <h1 class="text-4xl font-bold text-gray-900 mb-4">专业简历模板</h1>
@@ -13,44 +10,51 @@
 
             <!-- 筛选器区域 -->
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
-                <div class="bg-white rounded-lg shadow-sm p-4">
+                <div class="bg-white rounded-xl p-6 border-2 border-gray-100">
                     <div class="flex flex-wrap gap-4 items-center">
                         <!-- 搜索框 -->
-                        <div class="flex-1 min-w-[200px]">
-                            <input type="text" placeholder="搜索模板..."
-                                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
-                                v-model="searchQuery" />
+                        <div class="flex-1 min-w-[200px] relative">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <MagnifyingGlassIcon class="h-5 w-5 text-gray-400" />
+                            </div>
+                            <input 
+                                type="text" 
+                                placeholder="搜索模板..." 
+                                v-model="searchQuery"
+                                class="w-full pl-11 pr-4 py-3 bg-white text-gray-900 rounded-xl border-0 ring-1 ring-gray-200 focus:ring-2 focus:ring-black shadow-sm transition-all"
+                            />
                         </div>
 
                         <!-- 分类筛选 -->
                         <div class="flex gap-2">
-                            <button v-for="category in categories" :key="category.id"
+                            <button 
+                                v-for="category in categories" 
+                                :key="category.id"
                                 @click="selectCategory(category.id)"
-                                class="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border" :class="[
+                                class="px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200"
+                                :class="[
                                     selectedCategory === category.id
-                                        ? 'gradient-bg text-white border-transparent'
-                                        : 'bg-white text-gray-700 hover:shadow-sm border-gray-200'
-                                ]">
+                                        ? 'bg-black text-white'
+                                        : 'bg-white text-gray-700 hover:bg-gray-50 border-2 border-gray-100'
+                                ]"
+                            >
                                 {{ category.name }}
                             </button>
                         </div>
 
                         <!-- 会员筛选 -->
                         <div class="flex items-center gap-2">
-                            <button @click="toggleMemberFilter"
-                                class="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200"
+                            <button 
+                                @click="toggleMemberFilter"
+                                class="px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200"
                                 :class="[
                                     showMemberOnly
-                                        ? 'gradient-bg text-white shadow-sm'
-                                        : 'bg-white text-gray-700 hover:shadow-sm border border-gray-200'
-                                ]">
+                                        ? 'bg-black text-white'
+                                        : 'bg-white text-gray-700 hover:bg-gray-50 border-2 border-gray-100'
+                                ]"
+                            >
                                 <div class="flex items-center gap-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" 
-                                         class="w-4 h-4" 
-                                         viewBox="0 0 24 24" 
-                                         fill="currentColor">
-                                        <path d="M2.5 4.5l4.5 4.5L12 3l5 6 4.5-4.5L19 16H5L2.5 4.5z"/>
-                                    </svg>
+                                    <StarIcon class="w-4 h-4" />
                                     会员模板
                                 </div>
                             </button>
@@ -60,7 +64,8 @@
                         <Listbox v-model="sortBy">
                             <div class="relative">
                                 <ListboxButton
-                                    class="relative w-full cursor-pointer rounded-lg bg-white py-2 pl-3 pr-10 text-left border border-gray-200 hover:shadow-sm">
+                                    class="relative w-full cursor-pointer rounded-xl bg-white py-3 pl-4 pr-10 text-left ring-1 ring-gray-200 hover:ring-2 hover:ring-black transition-all"
+                                >
                                     <span class="block truncate">{{ sortOptions[sortBy] }}</span>
                                     <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                                         <ChevronUpDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
@@ -69,22 +74,23 @@
                                 <transition leave-active-class="transition duration-100 ease-in"
                                     leave-from-class="opacity-100" leave-to-class="opacity-0">
                                     <ListboxOptions
-                                        class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                        <ListboxOption v-for="[key, name] in Object.entries(sortOptions)" :key="key"
-                                            :value="key" v-slot="{ active, selected }">
+                                        class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-xl bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                                    >
+                                        <ListboxOption 
+                                            v-for="[key, name] in Object.entries(sortOptions)" 
+                                            :key="key"
+                                            :value="key" 
+                                            v-slot="{ active, selected }"
+                                        >
                                             <li :class="[
-                                                active ? 'bg-primary-50 text-primary-600' : 'text-gray-900',
+                                                active ? 'bg-gray-50' : 'text-gray-900',
                                                 'relative cursor-pointer select-none py-2 pl-3 pr-9'
                                             ]">
-                                                <span
-                                                    :class="[selected ? 'font-medium' : 'font-normal', 'block truncate']">
+                                                <span :class="[selected ? 'font-medium' : 'font-normal', 'block truncate']">
                                                     {{ name }}
                                                 </span>
-                                                <span v-if="selected" :class="[
-                                                    active ? 'text-primary-600' : 'text-primary-500',
-                                                    'absolute inset-y-0 right-0 flex items-center pr-4'
-                                                ]">
-                                                    <CheckIcon class="h-5 w-5" aria-hidden="true" />
+                                                <span v-if="selected" class="absolute inset-y-0 right-0 flex items-center pr-4">
+                                                    <CheckIcon class="h-5 w-5 text-black" aria-hidden="true" />
                                                 </span>
                                             </li>
                                         </ListboxOption>
@@ -99,52 +105,47 @@
             <!-- 模板网格 -->
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div v-for="template in filteredTemplates" :key="template.id"
-                        class="group relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300">
+                    <div 
+                        v-for="template in filteredTemplates" 
+                        :key="template.id"
+                        class="group relative bg-white rounded-xl overflow-hidden border-2 border-gray-100 hover:border-black transition-all duration-300"
+                    >
                         <!-- 模板预览图 -->
                         <div class="aspect-[3/4] relative">
                             <img :src="template.preview" :alt="template.name" class="w-full h-full object-cover" />
                             <!-- 会员标识 -->
                             <div v-if="template.isPremium" 
-                                 class="absolute top-3 right-3 p-2 bg-black bg-opacity-50 rounded-full shadow-sm backdrop-blur-sm">
-                                <svg xmlns="http://www.w3.org/2000/svg" 
-                                     class="w-4 h-4 text-yellow-400" 
-                                     viewBox="0 0 24 24" 
-                                     fill="currentColor">
-                                    <path d="M2.5 4.5l4.5 4.5L12 3l5 6 4.5-4.5L19 16H5L2.5 4.5z"/>
-                                </svg>
+                                class="absolute top-3 right-3 p-2 bg-black rounded-full shadow-sm"
+                            >
+                                <StarIcon class="w-4 h-4 text-white" />
                             </div>
                             <!-- 悬停时显示的操作按钮 -->
-                            <div
-                                class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-4">
-                                <button class="px-4 py-2 bg-white text-gray-900 rounded-md hover:bg-gray-100">
+                            <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-4">
+                                <button class="px-4 py-2 bg-white text-gray-900 rounded-lg hover:bg-gray-100 transition-colors">
                                     预览
                                 </button>
-                                <button class="px-4 py-2 gradient-bg text-white rounded-md hover:opacity-90 transition-opacity">
+                                <button class="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors">
                                     使用模板
                                 </button>
                             </div>
                         </div>
                         <!-- 模板信息 -->
-                        <div class="p-4">
-                            <div class="flex items-center justify-between">
+                        <div class="p-6">
+                            <div class="flex items-center justify-between mb-2">
                                 <h3 class="text-lg font-medium text-gray-900">{{ template.name }}</h3>
-                                <svg v-if="template.isPremium" 
-                                     xmlns="http://www.w3.org/2000/svg" 
-                                     class="w-5 h-5 text-yellow-500" 
-                                     viewBox="0 0 24 24" 
-                                     fill="currentColor">
-                                    <path d="M2.5 4.5l4.5 4.5L12 3l5 6 4.5-4.5L19 16H5L2.5 4.5z"/>
-                                </svg>
+                                <StarIcon v-if="template.isPremium" class="w-5 h-5 text-black" />
                             </div>
-                            <p class="text-sm text-gray-500 mt-1">{{ template.description }}</p>
-                        </div>
-                        <!-- 标签 -->
-                        <div class="px-4 pb-4 flex flex-wrap gap-2">
-                            <span v-for="tag in template.tags" :key="tag"
-                                class="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-md">
-                                {{ tag }}
-                            </span>
+                            <p class="text-sm text-gray-600">{{ template.description }}</p>
+                            <!-- 标签 -->
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <span 
+                                    v-for="tag in template.tags" 
+                                    :key="tag"
+                                    class="px-2 py-1 text-xs bg-gray-50 text-gray-600 rounded-md"
+                                >
+                                    {{ tag }}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -153,7 +154,7 @@
             <!-- 分页组件 -->
             <div class="flex justify-center mt-12">
                 <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                    <!-- ���一页 -->
+                    <!-- 上一页 -->
                     <button @click="currentPage > 1 && (currentPage--)" :disabled="currentPage === 1"
                         class="relative inline-flex items-center px-3 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium"
                         :class="[
@@ -201,7 +202,7 @@ import { ref, computed } from 'vue'
 import HeadView from '../components/HeadView.vue'
 import FootView from '../components/FootView.vue'
 import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/vue'
-import { ChevronUpDownIcon, ChevronLeftIcon, ChevronRightIcon, CheckIcon } from '@heroicons/vue/20/solid'
+import { ChevronUpDownIcon, ChevronLeftIcon, ChevronRightIcon, CheckIcon, MagnifyingGlassIcon, StarIcon } from '@heroicons/vue/20/solid'
 // 状态管理
 const searchQuery = ref('')
 const selectedCategory = ref('all')

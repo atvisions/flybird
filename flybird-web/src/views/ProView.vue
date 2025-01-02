@@ -1,22 +1,21 @@
 <template>
   <div>
     <HeadView />
-    <div class="min-h-screen  relative overflow-hidden"
-      style="padding-top: calc(var(--navbar-height) + 2rem);">
-      <!-- 标题部分 -->
-      <div class="text-center mb-8">
-        <h2 class="text-3xl font-bold tracking-tight text-gray-900">选择会员方案</h2>
-        <p class="mt-4 text-lg text-gray-600">根据您的需求选择合适的会员类型</p>
+    <div class="min-h-screen relative overflow-hidden" style="padding-top: calc(var(--navbar-height) + 2rem);">
+      <!-- 页面标题区域 -->
+      <div class="text-center mb-12">
+        <h2 class="text-4xl font-bold text-gray-900 mb-4">选择会员计划</h2>
+        <p class="text-xl text-gray-600">Select the best membership plan for you</p>
       </div>
 
       <!-- Tab 导航 -->
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 relative z-20">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
         <div class="flex justify-center">
           <div class="inline-flex rounded-full bg-white p-1 shadow-sm">
             <button v-for="tab in tabs" :key="tab.id" @click="handleTabClick(tab.id)" :class="[
               'px-6 py-2 text-sm font-medium rounded-full whitespace-nowrap',
               activeTab === tab.id
-                ? 'gradient-bg text-white'
+                ? 'bg-black text-white'
                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
             ]">
               {{ tab.name }}
@@ -24,246 +23,328 @@
           </div>
         </div>
       </div>
-  
+
       <!-- 内容区域 -->
       <div class="relative z-20">
-        <div class="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
-          <!-- 直接购买会员面板 -->
-          <div v-if="activeTab === 'purchase'">
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6 mt-8">
-              <div
-                v-for="plan in plans"
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <!-- 会员计划部分 -->
+          <div v-if="activeTab === 'purchase'" class="max-w-7xl mx-auto">
+            <!-- 会员卡片列表 -->
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-3 mt-12">
+              <div 
+                v-for="plan in plans" 
                 :key="plan.id"
-                class="relative rounded-lg bg-white hover-card" 
+                class="relative bg-white rounded-xl transition-all duration-300 hover:-translate-y-1"
                 :class="[
                   plan.hot 
-                    ? 'card-gradient-border' 
-                    : 'border-2 border-gray-200'
+                    ? 'border-2 border-black shadow-lg' 
+                    : 'border border-gray-200 hover:border-black'
                 ]"
               >
                 <!-- 热门标签 -->
-                <div v-if="plan.hot"
-                  class="absolute -top-3 left-1/2 transform -translate-x-1/2 text-white text-xs px-3 py-1 rounded-full gradient-bg">
-                  最热门选择
+                <div 
+                  v-if="plan.hot"
+                  class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-4 py-1 rounded-full font-medium"
+                >
+                  热门 / Popular
                 </div>
 
                 <div class="p-6">
-                  <!-- 图标 -->
-                  <div class="flex justify-center mb-4">
-                    <component :is="plan.icon" class="w-10 h-10 text-[#F85072]" />
+                  <!-- 标题 -->
+                  <div class="text-center mb-6">
+                    <component :is="plan.icon" class="w-8 h-8 mx-auto mb-3 text-gray-900" />
+                    <h3 class="text-xl font-bold text-gray-900">{{ plan.name }}</h3>
                   </div>
 
-                  <!-- 标题 -->
-                  <h3 class="text-lg font-medium text-center text-gray-900 mb-2">{{ plan.name }}</h3>
-
                   <!-- 价格 -->
-                  <div class="text-center mb-4">
+                  <div class="text-center mb-6">
                     <div class="text-gray-400 line-through text-sm">¥{{ plan.originalPrice }}</div>
-                    <div class="text-2xl font-bold text-[#F85072]">¥{{ plan.price }}</div>
-                    <div class="text-sm text-gray-500">{{ plan.period }}</div>
+                    <div class="flex items-center justify-center">
+                      <span class="text-sm">¥</span>
+                      <span class="text-4xl font-bold mx-1">{{ plan.price }}</span>
+                      <span class="text-gray-500">/{{ plan.period }}</span>
+                    </div>
                   </div>
 
                   <!-- 功能列表 -->
                   <ul class="space-y-3 mb-6">
-                    <li v-for="feature in plan.features" :key="feature" class="flex items-start">
-                      <CheckIcon class="h-5 w-5 text-[#F85072] shrink-0 mt-0.5" />
-                      <span class="ml-2 text-sm text-gray-600">{{ feature }}</span>
+                    <li 
+                      v-for="feature in plan.features" 
+                      :key="feature"
+                      class="flex items-start text-sm text-gray-600"
+                    >
+                      <CheckIcon class="h-5 w-5 text-black shrink-0 mr-2" />
+                      <span>{{ feature }}</span>
                     </li>
                   </ul>
 
                   <!-- 按钮 -->
                   <button
                     @click="openPaymentModal(plan)"
-                    class="w-full px-4 py-2.5 text-sm font-medium rounded-md"
+                    class="w-full py-3 text-center rounded-lg font-medium transition-colors duration-200"
                     :class="[
                       plan.hot 
-                        ? 'gradient-bg text-white' 
-                        : 'border border-black'
+                        ? 'bg-black text-white hover:bg-gray-800' 
+                        : 'border-2 border-black text-black hover:bg-black hover:text-white'
                     ]"
                   >
-                    立即开通
+                    开通 / Subscribe
                   </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 会员特权 -->
+            <div class="mt-20">
+              <h3 class="text-2xl font-bold text-center mb-12">会员特权 / Benefits</h3>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div 
+                  v-for="feature in memberFeatures"
+                  :key="feature.id"
+                  class="p-6 bg-white border border-gray-200 rounded-lg hover:border-black transition-colors duration-200"
+                >
+                  <component 
+                    :is="feature.icon"
+                    class="w-8 h-8 text-black mb-4"
+                  />
+                  <h4 class="font-bold mb-2">{{ feature.name }}</h4>
+                  <p class="text-sm text-gray-600">{{ feature.description }}</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- 学生认证面板 -->
-          <div v-else-if="activeTab === 'student'" class="max-w-3xl mx-auto">
-            <div class="text-center">
-              <h2 class="text-3xl font-bold tracking-tight text-gray-900">大学生认证</h2>
-              <p class="mt-4 text-lg text-gray-600">
-                认证大学生身份即可获得 <span class="text-primary-600 font-medium">年会员特权</span>
-              </p>
-            </div>
+          <!-- 学生认证部分 -->
+          <div v-else-if="activeTab === 'student'" class="max-w-3xl mx-auto px-4 sm:px-0">
+            <div class="mt-12 bg-white rounded-xl p-6 sm:p-12 shadow-lg">
+              <!-- 顶部区域 -->
+              <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 sm:mb-12 border-b border-gray-100 pb-4 sm:pb-8">
+                <div>
+                  <h3 class="text-xl sm:text-2xl font-bold text-gray-900">学生专属特权</h3>
+                  <p class="mt-2 text-gray-500">认证后即可获得 1 年会员资格</p>
+                </div>
+                <div class="flex items-center space-x-2 mt-4 sm:mt-0">
+                  <span class="text-sm text-gray-400">认证时长</span>
+                  <span class="text-xl sm:text-2xl font-bold text-black">365</span>
+                  <span class="text-sm text-gray-400">天</span>
+                </div>
+              </div>
 
-            <div class="mt-12 bg-white rounded-lg p-8 shadow-sm">
-              <!-- 认证步骤 -->
-              <div class="space-y-8">
-                <div class="flex items-start space-x-4">
-                  <div class="flex-shrink-0">
-                    <div class="h-12 w-12 rounded-full bg-primary-100 flex items-center justify-center">
-                      <AcademicCapIcon class="h-6 w-6 text-primary-600" />
+              <!-- 认证方式选择 -->
+              <div class="space-y-4">
+                <!-- 教育邮箱认证 -->
+                <div 
+                  class="group relative p-4 sm:p-6 border-2 rounded-xl cursor-pointer transition-all duration-300"
+                  :class="[
+                    selectedMethod === 'edu_email' 
+                      ? 'border-black' 
+                      : 'border-gray-100 hover:border-black'
+                  ]"
+                  @click="selectedMethod = 'edu_email'"
+                >
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                      <div class="w-10 sm:w-12 h-10 sm:h-12 bg-gray-50 rounded-lg flex items-center justify-center">
+                        <EnvelopeIcon class="w-5 sm:w-6 h-5 sm:h-6 text-gray-900" />
+                      </div>
+                      <div>
+                        <h4 class="font-medium text-gray-900">教育邮箱认证</h4>
+                        <p class="text-sm text-gray-500 mt-1">使用学校邮箱，在线自动认证</p>
+                      </div>
+                    </div>
+                    <div class="w-5 sm:w-6 h-5 sm:h-6 rounded-full border-2 border-gray-200 group-hover:border-black flex items-center justify-center">
+                      <div 
+                        class="w-2 sm:w-3 h-2 sm:h-3 rounded-full transition-all duration-300"
+                        :class="selectedMethod === 'edu_email' ? 'bg-black' : 'bg-transparent'"
+                      ></div>
                     </div>
                   </div>
-                  <div class="flex-1">
-                    <h3 class="text-lg font-medium text-gray-900">认证方式</h3>
-                    <div class="mt-4 space-y-6">
-                      <!-- 学生证认证 -->
-                      <div class="bg-gray-50 rounded-lg p-4">
-                        <h4 class="font-medium text-gray-900">方式一：学生证认证</h4>
-                        <p class="mt-2 text-sm text-gray-600">
-                          上传学生证照片，包含姓名、学校、有效期等信息
-                        </p>
-                      </div>
-
-                      <!-- 教育邮箱认证 -->
-                      <div class="bg-gray-50 rounded-lg p-4">
-                        <h4 class="font-medium text-gray-900">方式二：教育邮箱认证</h4>
-                        <p class="mt-2 text-sm text-gray-600">
-                          使用学校分配的教育邮箱（edu.cn）进行验证
-                        </p>
-                      </div>
-                    </div>
+                  <!-- 详细说明 - 默认展开 -->
+                  <div class="mt-4 text-sm text-gray-500">
+                    <ul class="list-disc pl-5 space-y-1">
+                      <li>输入教育邮箱，系统校验域名</li>
+                      <li>发送验证码到教育邮箱</li>
+                      <li>输入验证码完成认证</li>
+                      <li>自动化程度高，用户体验好</li>
+                    </ul>
                   </div>
                 </div>
 
-                <!-- 认证说明 -->
-                <div class="rounded-md bg-primary-50 p-4">
-                  <div class="flex">
-                    <InformationCircleIcon class="h-5 w-5 text-primary-400" />
-                    <div class="ml-3">
-                      <h3 class="text-sm font-medium text-primary-800">认证说明</h3>
-                      <div class="mt-2 text-sm text-primary-700">
-                        <ul class="list-disc pl-5 space-y-1">
-                          <li>认证通过后即可获得年会员特权</li>
-                          <li>认证有效期为一年</li>
-                          <li>到期前可重新认证延长有效期</li>
-                        </ul>
+                <!-- 学生证认证 -->
+                <div 
+                  class="group relative p-4 sm:p-6 border-2 rounded-xl cursor-pointer transition-all duration-300"
+                  :class="[
+                    selectedMethod === 'student_card' 
+                      ? 'border-black' 
+                      : 'border-gray-100 hover:border-black'
+                  ]"
+                  @click="selectedMethod = 'student_card'"
+                >
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                      <div class="w-10 sm:w-12 h-10 sm:h-12 bg-gray-50 rounded-lg flex items-center justify-center">
+                        <IdentificationIcon class="w-5 sm:w-6 h-5 sm:h-6 text-gray-900" />
+                      </div>
+                      <div>
+                        <h4 class="font-medium text-gray-900">学生证认证</h4>
+                        <p class="text-sm text-gray-500 mt-1">上传学生证照片，快速完成认证</p>
                       </div>
                     </div>
+                    <div class="w-5 sm:w-6 h-5 sm:h-6 rounded-full border-2 border-gray-200 group-hover:border-black flex items-center justify-center">
+                      <div 
+                        class="w-2 sm:w-3 h-2 sm:h-3 rounded-full transition-all duration-300"
+                        :class="selectedMethod === 'student_card' ? 'bg-black' : 'bg-transparent'"
+                      ></div>
+                    </div>
+                  </div>
+                  <!-- 详细说明 -->
+                  <div v-if="selectedMethod === 'student_card'" class="mt-4 text-sm text-gray-500">
+                    <ul class="list-disc pl-5 space-y-1">
+                      <li>上传学生证正面和手持学生证自拍照</li>
+                      <li>OCR识别学生证信息</li>
+                      <li>人脸识别对比自拍照与用户头像</li>
+                      <li>仅认可正规高校</li>
+                    </ul>
                   </div>
                 </div>
+              </div>
 
-                <!-- 认证按钮 -->
-                <button @click="handleVerification"
-                  class="w-full flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700">
+              <!-- 底部说明和按钮 -->
+              <div class="mt-8 sm:mt-12 flex flex-col sm:flex-row items-center justify-between">
+                <div class="flex items-center space-x-2 text-sm text-gray-500 mb-4 sm:mb-0">
+                  <InformationCircleIcon class="w-5 h-5" />
+                  <span>认证通过后立即生效</span>
+                </div>
+                <button 
+                  @click="handleVerification"
+                  class="w-full sm:w-auto px-8 py-3 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200"
+                >
                   开始认证
                 </button>
               </div>
             </div>
           </div>
 
-          <!-- 邀请好友面板 -->
-          <div v-else-if="activeTab === 'invite'" class="max-w-3xl mx-auto">
-            <div class="text-center">
-              <h2 class="text-3xl font-bold tracking-tight text-gray-900">邀请好友</h2>
-              <p class="mt-4 text-lg text-gray-600">
-                邀请好友注册使用，双方都可获得会员奖励
-              </p>
-            </div>
-
-            <div class="mt-12 bg-white rounded-lg p-8 shadow-sm">
-              <div class="space-y-8">
-                <!-- 邀请进度 -->
+          <!-- 邀请好友部分 -->
+          <div v-else-if="activeTab === 'invite'" class="max-w-3xl mx-auto px-4 sm:px-0">
+            <div class="mt-12 bg-white rounded-xl p-6 sm:p-12 shadow-lg">
+              <!-- 顶部区域 -->
+              <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 sm:mb-12 border-b border-gray-100 pb-4 sm:pb-8">
                 <div>
-                  <div class="flex items-center justify-between text-sm font-medium text-gray-900">
-                    <span>邀请进度</span>
-                    <span class="text-primary-600">{{ inviteCount }}/{{ requiredInvites }} 人</span>
+                  <h3 class="text-xl sm:text-2xl font-bold text-gray-900">邀请好友特权</h3>
+                  <p class="mt-2 text-gray-500">邀请好友注册，双方都可获得会员奖励</p>
+                </div>
+                <div class="flex items-center space-x-2 mt-4 sm:mt-0">
+                  <span class="text-sm text-gray-400">已邀请</span>
+                  <span class="text-xl sm:text-2xl font-bold text-black">{{ inviteCount }}</span>
+                  <span class="text-sm text-gray-400">人</span>
+                </div>
+              </div>
+
+              <!-- 邀请方式选择 -->
+              <div class="space-y-4">
+                <!-- 分享链接 -->
+                <div class="group relative p-4 sm:p-6 border-2 rounded-xl cursor-pointer transition-all duration-300"
+                  :class="[
+                    selectedInviteMethod === 'share_link' 
+                      ? 'border-black' 
+                      : 'border-gray-100 hover:border-black'
+                  ]"
+                  @click="selectedInviteMethod = 'share_link'"
+                >
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                      <div class="w-10 sm:w-12 h-10 sm:h-12 bg-gray-50 rounded-lg flex items-center justify-center">
+                        <LinkIcon class="w-5 sm:w-6 h-5 sm:h-6 text-gray-900" />
+                      </div>
+                      <div>
+                        <h4 class="font-medium text-gray-900">分享邀请链接</h4>
+                        <p class="text-sm text-gray-500 mt-1">复制链接分享给好友</p>
+                      </div>
+                    </div>
+                    <div class="w-5 sm:w-6 h-5 sm:h-6 rounded-full border-2 border-gray-200 group-hover:border-black flex items-center justify-center">
+                      <div class="w-2 sm:w-3 h-2 sm:h-3 rounded-full transition-all duration-300"
+                        :class="selectedInviteMethod === 'share_link' ? 'bg-black' : 'bg-transparent'"
+                      ></div>
+                    </div>
                   </div>
-                  <div class="mt-2 relative">
-                    <div class="h-2 bg-gray-100 rounded-full">
-                      <div class="h-2 bg-primary-600 rounded-full transition-all duration-300"
-                        :style="{ width: `${inviteProgress}%` }"></div>
+                  <!-- 详细说明 -->
+                  <div class="mt-4">
+                    <div class="flex items-center space-x-2 bg-gray-50 rounded-lg p-3">
+                      <input 
+                        type="text" 
+                        :value="inviteLink" 
+                        readonly 
+                        class="flex-1 bg-transparent border-none text-sm text-gray-600 focus:ring-0"
+                      >
+                      <button 
+                        @click.stop="handleCopyLink"
+                        class="px-4 py-1.5 bg-black text-white text-sm rounded-lg hover:bg-gray-800"
+                      >
+                        复制链接
+                      </button>
                     </div>
                   </div>
                 </div>
 
-                <!-- 奖励规则 -->
-                <div class="rounded-md bg-gray-50 p-6">
-                  <h3 class="text-lg font-medium text-gray-900 mb-4">邀请奖励规则</h3>
-                  <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
-                    <!-- 月会员奖励 -->
-                    <div class="text-center p-4 rounded-lg bg-white shadow-sm">
-                      <div class="text-xl font-bold text-primary-600 mb-2">2人</div>
-                      <div class="text-sm text-gray-600">获得1个月会员</div>
+                <!-- 社交分享 -->
+                <div class="group relative p-4 sm:p-6 border-2 rounded-xl cursor-pointer transition-all duration-300"
+                  :class="[
+                    selectedInviteMethod === 'social_share' 
+                      ? 'border-black' 
+                      : 'border-gray-100 hover:border-black'
+                  ]"
+                  @click="selectedInviteMethod = 'social_share'"
+                >
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                      <div class="w-10 sm:w-12 h-10 sm:h-12 bg-gray-50 rounded-lg flex items-center justify-center">
+                        <ShareIcon class="w-5 sm:w-6 h-5 sm:h-6 text-gray-900" />
+                      </div>
+                      <div>
+                        <h4 class="font-medium text-gray-900">社交分享</h4>
+                        <p class="text-sm text-gray-500 mt-1">分享到社交平台</p>
+                      </div>
                     </div>
-
-                    <!-- 年会员奖励 -->
-                    <div class="text-center p-4 rounded-lg bg-white shadow-sm">
-                      <div class="text-xl font-bold text-primary-600 mb-2">5人</div>
-                      <div class="text-sm text-gray-600">获得1年会员</div>
-                    </div>
-
-                    <!-- 终身会员奖励 -->
-                    <div class="text-center p-4 rounded-lg bg-white shadow-sm">
-                      <div class="text-xl font-bold text-primary-600 mb-2">10人</div>
-                      <div class="text-sm text-gray-600">获得终身会员</div>
+                    <div class="w-5 sm:w-6 h-5 sm:h-6 rounded-full border-2 border-gray-200 group-hover:border-black flex items-center justify-center">
+                      <div class="w-2 sm:w-3 h-2 sm:h-3 rounded-full transition-all duration-300"
+                        :class="selectedInviteMethod === 'social_share' ? 'bg-black' : 'bg-transparent'"
+                      ></div>
                     </div>
                   </div>
-                </div>
-
-                <!-- 邀请方式 -->
-                <div class="space-y-4">
-                  <h3 class="text-lg font-medium text-gray-900">邀请方式</h3>
-                  <!-- 复制链接 -->
-                  <div class="flex items-center space-x-4">
-                    <input type="text" :value="inviteLink" readonly
-                      class="flex-1 min-w-0 block w-full px-3 py-2 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm" />
-                    <button @click="handleCopyLink"
-                      class="inline-flex items-center px-4 py-2 border border-primary-500 text-sm font-medium rounded-md text-primary-600 bg-white hover:bg-primary-50">
-                      复制链接
+                  <!-- 详细说明 -->
+                  <div v-if="selectedInviteMethod === 'social_share'" class="mt-4">
+                    <button 
+                      @click.stop="handleShare"
+                      class="w-full py-2 bg-black text-white rounded-lg hover:bg-gray-800"
+                    >
+                      一键分享
                     </button>
                   </div>
-
-                  <!-- 分享按钮 -->
-                  <button @click="handleShare"
-                    class="w-full flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700">
-                    分享给好友
-                  </button>
                 </div>
+              </div>
 
-                <!-- 邀请记录 -->
-                <div v-if="inviteHistory.length > 0">
-                  <h3 class="text-lg font-medium text-gray-900 mb-4">邀请记录</h3>
-                  <div class="space-y-3">
-                    <div v-for="record in inviteHistory" :key="record.id"
-                      class="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
-                      <div class="flex items-center">
-                        <img :src="record.avatar" alt="" class="h-8 w-8 rounded-full">
-                        <span class="ml-3 text-sm text-gray-900">{{ record.name }}</span>
-                      </div>
-                      <span class="text-sm text-gray-500">{{ record.date }}</span>
-                    </div>
+              <!-- 奖励规则 -->
+              <div class="mt-8 sm:mt-12 space-y-6">
+                <h4 class="font-medium text-gray-900">奖励规则</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div class="p-4 bg-gray-50 rounded-lg text-center">
+                    <div class="text-xl font-bold text-black mb-1">2人</div>
+                    <div class="text-sm text-gray-500">获得1个月会员</div>
+                  </div>
+                  <div class="p-4 bg-gray-50 rounded-lg text-center">
+                    <div class="text-xl font-bold text-black mb-1">5人</div>
+                    <div class="text-sm text-gray-500">获得1年会员</div>
+                  </div>
+                  <div class="p-4 bg-gray-50 rounded-lg text-center">
+                    <div class="text-xl font-bold text-black mb-1">10人</div>
+                    <div class="text-sm text-gray-500">获得终身会员</div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      <!-- 会员特权展示 -->
-<div class="mb-12">
-  <h3 class="text-lg font-medium text-center text-gray-900 mb-8">会员特权</h3>
-  <div class="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-6">
-    <div v-for="feature in memberFeatures" 
-         :key="feature.id" 
-         class="flex items-start space-x-4 bg-white rounded-lg p-6 hover:shadow-lg transition-shadow duration-300">
-      <!-- 图标 -->
-      <div class="flex-shrink-0">
-        <component 
-          :is="feature.icon" 
-          class="w-8 h-8 text-[#F85072]"
-        />
-      </div>
-      <!-- 文字内容 -->
-      <div>
-        <h4 class="text-gray-900 font-medium mb-1">{{ feature.name }}</h4>
-        <p class="text-sm text-gray-500 leading-relaxed">{{ feature.description }}</p>
-      </div>
-    </div>
-  </div>
-</div>
-      
       </div>
     </div>
 
@@ -393,7 +474,12 @@ import {
   DocumentDuplicateIcon,
   AcademicCapIcon,
   ChatBubbleLeftRightIcon,
-  InformationCircleIcon
+  InformationCircleIcon,
+  GiftIcon,
+  IdentificationIcon,
+  EnvelopeIcon,
+  LinkIcon,
+  ShareIcon
 } from '@heroicons/vue/24/outline'
 const router = useRouter()
 const store = useStore()
@@ -482,20 +568,34 @@ const memberFeatures = [
 const plans = [
   {
     id: 'monthly',
-    name: '月会员',
+    name: '月度会员',
     icon: CalendarIcon,
     price: '19.9',
     originalPrice: '39.9',
-    period: '月'
+    period: '月',
+    features: [
+      'AI简历优化 5 次/月',
+      '简历模板无限制使用',
+      '求职数据分析',
+      '会员专属客服'
+    ]
   },
   {
     id: 'yearly',
-    name: '年会员',
+    name: '年度会员',
     icon: StarIcon,
     price: '99',
     originalPrice: '199',
     period: '年',
-    hot: true
+    hot: true,
+    features: [
+      'AI简历优化无限次数',
+      '简历模板无限制使用',
+      '求职数据分析',
+      '一对一简历指导',
+      '会员专属客服',
+      '优先体验新功能'
+    ]
   },
   {
     id: 'lifetime',
@@ -503,7 +603,15 @@ const plans = [
     icon: SparklesIcon,
     price: '299',
     originalPrice: '599',
-    period: '终身'
+    period: '终身',
+    features: [
+      '包含年度会员所有特权',
+      '终身享受会员权益',
+      'VIP专属标识',
+      '简历制作课程',
+      '面试辅导服务',
+      '会员价格锁定'
+    ]
   }
 ]
 
@@ -684,45 +792,48 @@ watch(activeTab, async (newTab) => {
     await fetchInviteData()
   }
 })
+
+// 添加选择方式的状态
+const selectedMethod = ref('edu_email')
+
+// 添加邀请方式的状态
+const selectedInviteMethod = ref('share_link')
 </script>
 <style>
 /* 渐变背景 */
 .gradient-bg {
-  background: linear-gradient(135deg, #F85072, #FF9446);
+  background: linear-gradient(135deg, #000000, #1a1a1a);
 }
 
-/* 卡片基础样式 */
+/* 卡片悬浮效果 */
 .hover-card {
-  position: relative;
-  background: white;
-  border: 2px solid #e5e7eb; /* 默认边框颜色 */
-  height: 100%;
+  transition: all 0.3s ease;
 }
 
-/* 热门卡片默认样式 */
-.card-gradient-border {
-  border: 2px solid transparent;
-  background: linear-gradient(white, white) padding-box,
-              linear-gradient(135deg, #F85072, #FF9446) border-box;
-}
-
-/* hover 效果 */
 .hover-card:hover {
-  border: 2px solid transparent;
-  background: linear-gradient(white, white) padding-box,
-              linear-gradient(135deg, #F85072, #FF9446) border-box;
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
 
-/* 按钮 hover 效果 */
-.hover-card:hover button {
-  background: linear-gradient(135deg, #F85072, #FF9446);
-  color: white;
-  border: none;
+/* 按钮样式 */
+.btn-hover-effect {
+  position: relative;
+  overflow: hidden;
 }
 
-/* 按钮基础样式 */
-.hover-card button {
-  transition: background-color 0.3s ease, color 0.3s ease;
+.btn-hover-effect:after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
 }
 
+.btn-hover-effect:hover:after {
+  transform: translateX(0);
+}
 </style>
