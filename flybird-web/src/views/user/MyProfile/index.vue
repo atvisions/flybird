@@ -288,6 +288,7 @@ import {
   PlusIcon,
   ExclamationTriangleIcon
 } from '@heroicons/vue/24/outline'
+import { ALL_MODULES } from '@/constants'
 
 // 组件导入
 import BasicInfo from './components/BasicInfo.vue'
@@ -314,6 +315,11 @@ const showBioExpandButton = ref(false)
 
 // 布局数据
 const layoutData = ref({})
+
+// 布局状态
+const layoutStatus = computed(() => {
+  return layoutData.value || {}
+})
 
 // 使用组合式函数
 const { 
@@ -383,10 +389,6 @@ const activeModules = computed(() => {
     const orderB = layoutData.value[b.type]?.order || 999
     return orderA - orderB
   })
-  console.log('Active modules:', active)
-  if (active.find(m => m.type === 'job_intention')) {
-    console.log('Job intention module:', active.find(m => m.type === 'job_intention'))
-  }
   return active
 })
 
@@ -398,16 +400,11 @@ const inactiveModules = computed(() => {
     const layout = layoutData.value[module.type]
     return layout?.visible === false
   })
-  console.log('未激活的模块:', {
-    count: inactive.length,
-    modules: inactive.map(m => ({
-      type: m.type,
-      name: m.name,
-      visible: layoutData.value[m.type]?.visible
-    }))
-  })
   return inactive
 })
+
+// 定义模块类型
+const moduleTypes = Object.keys(ALL_MODULES)
 
 // 初始化数据
 const initData = async () => {
@@ -449,7 +446,6 @@ const handleUpdate = async () => {
 
 // 处理编辑
 const handleEdit = (type, data) => {
-  console.log('处理编辑:', { type, data })
   // 根据类型显示对应的弹窗
   switch (type) {
     case 'basic_info':
@@ -507,33 +503,13 @@ const toggleBioExpand = () => {
 // 处理工作经历提交
 const handleWorkExperienceSubmit = async (data) => {
   try {
-    await withLoading(async () => {
-      if (data.id) {
-        const response = await profile.updateModule('work_experience', data)
-        if (response.data?.code !== 200) {
-          throw new Error(response.data?.message || '更新失败')
-        }
-        ElMessage.success('更新成功')
-      } else {
-        const response = await profile.addModuleItem('work_experience', data)
-        if (response.data?.code !== 200) {
-          throw new Error(response.data?.message || '添加失败')
-        }
-        ElMessage.success('添加成功')
-      }
-      showWorkExperienceDialog.value = false
-      await initData()
-    })
+    await profile.updateModule('work_experience', data)
+    ElMessage.success('保存成功')
+    showWorkExperienceDialog.value = false
+    await initData()
   } catch (error) {
     console.error('保存失败:', error)
-    if (error.response?.data?.errors) {
-      const errorMessages = Object.entries(error.response.data.errors)
-        .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
-        .join('\n')
-      ElMessage.error(errorMessages)
-    } else {
-      ElMessage.error('保存失败，请稍后重试')
-    }
+    ElMessage.error('保存失败，请重试')
   }
 }
 
@@ -561,96 +537,119 @@ const handleSubmit = async (data) => {
       const type = currentModule.value?.type
       console.log('提交数据:', { type, data })
 
-      // 处理基本信息提交
-      if (type === 'basic_info') {
-        const response = await profile.updateModule('basic_info', data)
-        if (response.data?.code === 200) {
-          ElMessage.success('保存成功')
-          showEditModal.value = false
-          // 重新获取数据
-          await initData()
-        } else {
-          throw new Error(response.data?.message || '保存失败')
-        }
-        return
-      }
-
-      // 处理其他类型的提交
-      if (data.id) {
-        await profile.updateModule(type, data)
-        ElMessage.success('更新成功')
-      } else {
-        await profile.addModuleItem(type, data)
-        ElMessage.success('添加成功')
-      }
+      // 使用统一的 updateModule 方法
+      const response = await profile.updateModule(type, data)
       
-      showEditModal.value = false
-      await initData()
+      if (response.data?.code === 200) {
+        ElMessage.success('保存成功')
+        showEditModal.value = false
+        // 重新获取数据
+        await initData()
+      } else {
+        throw new Error(response.data?.message || '保存失败')
+      }
     })
   } catch (error) {
     console.error('保存失败:', error)
-    if (error.response) {
-      console.error('错误响应:', {
-        status: error.response.status,
-        statusText: error.response.statusText,
-        data: error.response.data,
-        errors: error.response.data?.errors,
-        headers: error.response.headers
-      })
-      if (error.response.data?.errors) {
-        const errorMessages = Object.entries(error.response.data.errors)
-          .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
-          .join('\n')
-        ElMessage.error(errorMessages)
-      } else {
-        ElMessage.error(error.response.data?.message || '保存失败，请重试')
-      }
-    } else if (error.request) {
-      console.error('请求未收到响应:', error.request)
-      ElMessage.error('网络请求失败，请检查网络连接')
+    if (error.response?.data?.errors) {
+      const errorMessages = Object.entries(error.response.data.errors)
+        .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+        .join('\n')
+      ElMessage.error(errorMessages)
     } else {
-      console.error('请求配置错误:', error.message)
-      ElMessage.error('保存失败，请重试')
+      ElMessage.error(error.message || '保存失败，请重试')
     }
   }
 }
 
 // 处理添加
 const handleAdd = (type) => {
-  console.log('处理添加:', type)
   currentModule.value = { type }
-  editFormData.value = {}  // 清空表单数据
   
-  // 根据类型显示对应的弹窗
+  // 根据类型显示对应的弹窗并清空数据
   switch (type) {
     case 'work_experience':
+      editWorkExperienceData.value = {  // 重置为空对象
+        name: '',
+        company: '',
+        position: '',
+        start_date: null,
+        end_date: null,
+        description: '',
+        is_current: false
+      }
       showWorkExperienceDialog.value = true
       break
+      
     case 'education':
+      editEducationData.value = {  // 重置为空对象
+        school: '',
+        major: '',
+        degree: '',
+        start_date: null,
+        end_date: null,
+        description: ''
+      }
       showEducationDialog.value = true
       break
-    case 'job_intention':
-      showJobIntentionDialog.value = true
-      break
+      
     case 'project':
-      editProjectData.value = {}
+      editProjectData.value = {  // 重置为空对象
+        name: '',
+        role: '',
+        start_date: null,
+        end_date: null,
+        description: '',
+        technologies: ''
+      }
       showProjectDialog.value = true
       break
+      
     case 'certificate':
-      editCertificateData.value = {}
+      editCertificateData.value = {  // 重置为空对象
+        name: '',
+        issuing_authority: '',
+        issue_date: null,
+        expiry_date: null,
+        description: ''
+      }
       showCertificateDialog.value = true
       break
+      
     case 'skill':
-      editSkillData.value = {}
+      editSkillData.value = {  // 重置为空对象
+        name: '',
+        level: '初级',
+        description: '',
+        projects: '',
+        order: 0
+      }
       showSkillDialog.value = true
       break
+      
     case 'language':
-      editLanguageData.value = {}
+      editLanguageData.value = {  // 重置为空对象
+        language: '',
+        proficiency: '',
+        certificates: ''
+      }
       showLanguageDialog.value = true
       break
-    case 'social_link':
-    case 'portfolio':
+      
+    case 'job_intention':
+      editJobIntentionData.value = {  // 重置为空对象
+        position: '',
+        industry: '',
+        location: '',
+        salary_range: '',
+        job_type: '',
+        description: ''
+      }
+      showJobIntentionDialog.value = true
+      break
+      
     default:
+      editFormData.value = {}  // 其他类型直接清空
       showEditModal.value = true
       break
   }
@@ -660,11 +659,8 @@ const handleAdd = (type) => {
 const handleModuleRemove = async (type, id) => {
   try {
     if (id) {
-      // 删除具体的模块项
-      console.log('Deleting item:', { type, id })
-      await profile.deleteModuleItem(type, id)
-      ElMessage.success('删除成功')
-      await initData()
+      // 显示删除确认对话框
+      showDeleteConfirm(type, id)
     } else {
       // 获取当前所有可见模块的配置（除了要移除的）
       const updatedModules = {}
@@ -698,12 +694,29 @@ const handleModuleRemove = async (type, id) => {
       await initData()
     }
   } catch (error) {
-    console.error('删除失败:', error)
-    if (error.response?.data?.message) {
-      ElMessage.error(error.response.data.message)
-    } else {
-      ElMessage.error('删除失败，请重试')
+    if (error !== 'cancel') {
+      console.error('删除失败:', error)
+      if (error.response?.data?.message) {
+        ElMessage.error(error.response.data.message)
+      } else {
+        ElMessage.error('删除失败，请重试')
+      }
     }
+  }
+}
+
+// 处理删除确认
+const handleDeleteConfirm = async () => {
+  try {
+    const { type, id } = currentDeleteItem.value
+    await profile.deleteModuleItem(type, id)
+    ElMessage.success('删除成功')
+    await initData()
+  } catch (error) {
+    console.error('删除失败:', error)
+    ElMessage.error('删除失败，请重试')
+  } finally {
+    closeDeleteConfirm()
   }
 }
 
@@ -723,11 +736,7 @@ const handleJobIntentionSubmit = async (data) => {
 // 处理教育经历提交
 const handleEducationSubmit = async (data) => {
   try {
-    if (data.id) {
-      await profile.updateModule('education', data)
-    } else {
-      await profile.addModuleItem('education', data)
-    }
+    await profile.updateModule('education', data)
     ElMessage.success('保存成功')
     showEducationDialog.value = false
     await initData()
@@ -794,11 +803,7 @@ const handleAddModule = async (type) => {
 // 处理项目经历提交
 const handleProjectSubmit = async (data) => {
   try {
-    if (data.id) {
-      await profile.updateModule('project', data)
-    } else {
-      await profile.addModuleItem('project', data)
-    }
+    await profile.updateModule('project', data)
     ElMessage.success('保存成功')
     showProjectDialog.value = false
     await initData()
@@ -811,11 +816,7 @@ const handleProjectSubmit = async (data) => {
 // 处理证书奖项提交
 const handleCertificateSubmit = async (data) => {
   try {
-    if (data.id) {
-      await profile.updateModule('certificate', data)
-    } else {
-      await profile.addModuleItem('certificate', data)
-    }
+    await profile.updateModule('certificate', data)
     ElMessage.success('保存成功')
     showCertificateDialog.value = false
     await initData()
@@ -828,28 +829,41 @@ const handleCertificateSubmit = async (data) => {
 // 处理专业技能提交
 const handleSkillSubmit = async (data) => {
   try {
-    if (data.id) {
-      await profile.updateModule('skill', data)
-    } else {
-      await profile.addModuleItem('skill', data)
+    // 确保数据格式正确
+    const skillData = {
+      name: data.name?.trim(),
+      level: data.level || '初级',
+      description: data.description?.trim() || '',
+      projects: data.projects || '',
+      order: data.order || 0
     }
+
+    if (data.id) {
+      await profile.updateModule('skills', { ...skillData, id: data.id })
+    } else {
+      await profile.updateModule('skills', skillData)
+    }
+    
     ElMessage.success('保存成功')
     showSkillDialog.value = false
     await initData()
   } catch (error) {
     console.error('保存失败:', error)
-    ElMessage.error('保存失败，请重试')
+    if (error.response?.data?.errors) {
+      const errorMessages = Object.entries(error.response.data.errors)
+        .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+        .join('\n')
+      ElMessage.error(errorMessages)
+    } else {
+      ElMessage.error('保存失败，请重试')
+    }
   }
 }
 
 // 处理语言能力提交
 const handleLanguageSubmit = async (data) => {
   try {
-    if (data.id) {
-      await profile.updateModule('language', data)
-    } else {
-      await profile.addModuleItem('language', data)
-    }
+    await profile.updateModule('language', data)
     ElMessage.success('保存成功')
     showLanguageDialog.value = false
     await initData()
@@ -859,14 +873,44 @@ const handleLanguageSubmit = async (data) => {
   }
 }
 
-// 添加调试日志
-watch(() => activeModules.value, (newModules) => {
-  console.log('Active modules changed:', newModules)
-  const jobIntention = newModules.find(m => m.type === 'job_intention')
-  if (jobIntention) {
-    console.log('Job intention module:', jobIntention)
+// 监听数据变化
+watch(() => profileData.value, (newData) => {
+  if (newData) {
+    updateModules(newData)
   }
 }, { deep: true })
+
+// 处理模块数据更新
+const updateModules = (data) => {
+  if (!data) return
+  
+  const activeModulesList = moduleTypes
+    .filter(type => layoutStatus.value[type]?.visible)
+    .map(type => ({
+      type,
+      data: data[type],
+      name: ALL_MODULES[type].name,
+      editable: true
+    }))
+  
+  // 更新 activeModules 的引用而不是直接修改计算属性
+  modules.value = activeModulesList
+  
+  // 处理未激活模块
+  const inactiveCount = moduleTypes
+    .filter(type => !layoutStatus.value[type]?.visible).length
+  const inactiveModulesList = {
+    count: inactiveCount,
+    modules: moduleTypes
+      .filter(type => !layoutStatus.value[type]?.visible)
+      .map(type => ({
+        type,
+        name: ALL_MODULES[type].name
+      }))
+  }
+  // 更新 inactiveModules 的引用
+  modules.value = [...activeModulesList, ...inactiveModulesList.modules]
+}
 
 // 初始化
 onMounted(() => {
@@ -882,6 +926,52 @@ const handleDelete = async (type, id) => {
   } catch (error) {
     console.error('刷新数据失败:', error)
     ElMessage.error('刷新数据失败')
+  }
+}
+
+// 处理模块数据保存
+const handleModuleSave = async (type, data) => {
+  try {
+    showEditDialog.value = false
+    
+    let response
+    if (data.id) {
+      // 编辑
+      response = await profile.updateModule(type, data)
+    } else {
+      // 新增
+      response = await profile.addModuleItem(type, data)
+    }
+
+    // 确保返回数据正确
+    if (response && response.data) {
+      // 刷新模块数据
+      await fetchModulesData()
+      ElMessage.success(data.id ? '更新成功' : '添加成功')
+    } else {
+      throw new Error('保存失败')
+    }
+  } catch (error) {
+    console.error('保存失败:', error)
+    ElMessage.error(error.message || '保存失败')
+  }
+}
+
+const handleModuleEdit = async (type, data) => {
+  try {
+    if (type === 'basic_info') {
+      await store.dispatch('updateBasicInfo', {
+        type: 'basic',
+        data
+      })
+      // 更新成功后重新获取数据
+      await fetchData()
+      showToast('保存成功', 'success')
+    }
+    // ... 其他模块的处理
+  } catch (error) {
+    console.error('保存失败:', error)
+    showToast(error.message || '保存失败', 'error')
   }
 }
 </script>

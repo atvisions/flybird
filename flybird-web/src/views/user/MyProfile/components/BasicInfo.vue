@@ -1,201 +1,124 @@
 <!-- src/views/user/MyProfile/components/BasicInfo.vue -->
 <template>
-    <div class="bg-white rounded-lg shadow">
-      <!-- 骨架图加载状态 -->
-      <template v-if="loading">
-        <div class="p-4">
-          <div class="flex items-start space-x-5">
-            <!-- 头像骨架 -->
-            <div class="relative">
-              <div class="w-20 h-20 rounded-full bg-gray-200 animate-pulse"></div>
-              <div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gray-200 animate-pulse"></div>
-            </div>
-            
-            <!-- 信息骨架 -->
-            <div class="flex-1 min-w-0">
-              <!-- 名字骨架 -->
-              <div class="flex items-center justify-between mb-3">
-                <div class="h-6 w-24 bg-gray-200 rounded animate-pulse"></div>
-              </div>
-              
-              <!-- 基本信息骨架 -->
-              <div class="grid grid-cols-2 gap-3">
-                <div class="flex items-center">
-                  <div class="w-4 h-4 bg-gray-200 rounded mr-1.5 animate-pulse"></div>
-                  <div class="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
-                </div>
-                <div class="flex items-center">
-                  <div class="w-4 h-4 bg-gray-200 rounded mr-1.5 animate-pulse"></div>
-                  <div class="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
-                </div>
-                <div class="flex items-center">
-                  <div class="w-4 h-4 bg-gray-200 rounded mr-1.5 animate-pulse"></div>
-                  <div class="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
-                </div>
-                <div class="flex items-center">
-                  <div class="w-4 h-4 bg-gray-200 rounded mr-1.5 animate-pulse"></div>
-                  <div class="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
-                </div>
-              </div>
-              
-              <!-- 个人简介骨架 -->
-              <div class="mt-3">
-                <div class="flex items-center mb-2">
-                  <div class="w-4 h-4 bg-gray-200 rounded mr-1.5 animate-pulse"></div>
-                  <div class="h-4 w-16 bg-gray-200 rounded animate-pulse"></div>
-                </div>
-                <div class="bg-gray-50 rounded-md p-4">
-                  <div class="space-y-2">
-                    <div class="h-4 bg-gray-200 rounded animate-pulse"></div>
-                    <div class="h-4 bg-gray-200 rounded animate-pulse"></div>
-                    <div class="h-4 w-2/3 bg-gray-200 rounded animate-pulse"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </template>
-
-      <!-- 实际内容 -->
-      <template v-else>
-        <div class="p-4">
-          <div class="flex items-start space-x-5">
-            <!-- 头像部分 -->
-            <div class="relative group">
-              <img 
-                  :src="userAvatar" 
-                  class="w-20 h-20 rounded-full object-cover border-2 border-white shadow"
-                  alt="用户头像"
-                  @error="handleImageError"
-                  />
-                  <!-- 性别图标 -->
-                  <div class="absolute -bottom-1 -right-1 bg-white rounded-full p-1 shadow">
-                    <svg v-if="currentGender === 'male'" 
-                      class="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C9.243 2 7 4.243 7 7v2h10V7c0-2.757-2.243-5-5-5zM9 11H7v9c0 1.654 1.346 3 3 3h4c1.654 0 3-1.346 3-3v-9h-2v9c0 .552-.448 1-1 1h-4c-.552 0-1-.448-1-1v-9z"/>
-                    </svg>
-                    <svg v-else-if="currentGender === 'female'" 
-                      class="w-4 h-4 text-pink-500" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C9.243 2 7 4.243 7 7v2h10V7c0-2.757-2.243-5-5-5zM9 11H7v5h10v-5h-2v3H9v-3z"/>
-                    </svg>
-                  </div>
-                  <div 
-                  @click="triggerUpload"
-                  class="absolute inset-0 flex items-center justify-center rounded-full bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity duration-200"
-                  >
-                    <template v-if="loading">
-                      <div class="animate-spin rounded-full h-8 w-8 border-2 border-white border-t-transparent"></div>
-                    </template>
-                    <template v-else>
-                      <CameraIcon class="w-8 h-8 text-white" />
-                    </template>
-                  </div>
-                  <input
-                  ref="fileInput"
-                  type="file"
-                  accept="image/*"
-                  class="hidden"
-                  @change="handleFileChange"
-                  />
-            </div>
-    
-            <!-- 用户信息 -->
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center justify-between mb-3">
-                <h2 class="text-lg font-medium text-gray-900">
-                  {{ formatBasicInfo.name }}
-                </h2>
-                <div class="flex items-center space-x-2">
-                  <!-- 使用 heroicons 的编辑图标 -->
-                  <button
-                    @click="handleEdit"
-                    class="p-1 rounded-full hover:bg-gray-100 transition-colors duration-200"
-                    title="编辑基本信息"
-                  >
-                    <PencilSquareIcon class="w-5 h-5 text-gray-500 hover:text-gray-700" />
-                  </button>
-                </div>
-              </div>
-    
-              <!-- 基本信息列表 -->
-              <div class="grid grid-cols-2 gap-3">
-                <!-- 手机号 -->
-                <div class="flex items-center text-gray-600">
-                  <PhoneIcon class="w-4 h-4 text-gray-400 mr-1.5" />
-                  <span class="text-sm truncate">{{ formatBasicInfo.phone }}</span>
-                </div>
-    
-                <!-- 邮箱 -->
-                <div class="flex items-center text-gray-600">
-                  <EnvelopeIcon class="w-4 h-4 text-gray-400 mr-1.5" />
-                  <span class="text-sm truncate">{{ formatBasicInfo.email }}</span>
-                </div>
-    
-                <!-- 所在地 -->
-                <div class="flex items-center text-gray-600">
-                  <MapPinIcon class="w-4 h-4 text-gray-400 mr-1.5" />
-                  <span class="text-sm truncate">{{ formatBasicInfo.location }}</span>
-                </div>
-    
-                <!-- 年龄 -->
-                <div class="flex items-center text-gray-600">
-                  <CakeIcon class="w-4 h-4 text-gray-400 mr-1.5" />
-                  <span class="text-sm truncate">{{ formatBasicInfo.age }}</span>
-                </div>
-              </div>
-    
-              <!-- 个人简介 -->
-              <div class="mt-3">
-                <div class="flex items-center text-gray-600 mb-2">
-                  <DocumentTextIcon class="w-4 h-4 text-gray-400 mr-1.5" />
-                  <span class="text-sm font-medium">个人简介</span>
-                </div>
-                <div class="bg-gray-50 rounded-md p-4">
-                  <div class="relative">
-                    <template v-if="formatBasicInfo.personal_summary !== '未填写'">
-                      <p 
-                        class="text-sm text-gray-600 leading-relaxed min-h-[4.5em] line-clamp-3"
-                        :class="{ 'line-clamp-none': bioExpanded }"
-                      >
-                        {{ formatBasicInfo.personal_summary }}
-                      </p>
-                      <button
-                        v-if="showBioExpandButton"
-                        @click="toggleBioExpand"
-                        class="text-xs text-primary-600 hover:text-primary-700 mt-2 inline-flex items-center"
-                      >
-                        {{ bioExpanded ? '收起' : '展开全部' }}
-                        <ChevronDownIcon 
-                          v-if="!bioExpanded" 
-                          class="w-4 h-4 ml-0.5" 
-                        />
-                        <ChevronUpIcon 
-                          v-else 
-                          class="w-4 h-4 ml-0.5" 
-                        />
-                      </button>
-                    </template>
-                    <p 
-                      v-else 
-                      class="text-sm text-gray-400 text-center min-h-[4.5em] flex items-center justify-center"
-                    >
-                      你还没有设置个人简介
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </template>
+  <div class="bg-white rounded-lg shadow">
+    <!-- 背景图部分 -->
+    <div class="relative h-48 overflow-hidden rounded-t-lg">
+      <img 
+        :src="backgroundUrl" 
+        class="w-full h-full object-cover"
+        @error="handleBackgroundError"
+      >
+      <div class="absolute top-4 right-4">
+        <button
+          @click="triggerBackgroundUpload"
+          class="p-2 bg-white bg-opacity-80 rounded-full hover:bg-opacity-100 transition-all"
+        >
+          <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+              d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+          </svg>
+        </button>
+      </div>
+      <input
+        ref="backgroundInput"
+        type="file"
+        accept="image/*"
+        class="hidden"
+        @change="handleBackgroundChange"
+      >
     </div>
-  </template>
-  
-  <script setup>
+
+    <!-- 个人信息卡片 -->
+    <div class="relative px-6 pb-6">
+      <!-- 头像部分 - 上移到背景图上 -->
+      <div class="absolute -top-16 left-6">
+        <div class="relative group">
+          <img 
+            :src="userAvatar" 
+            class="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
+            alt="用户头像"
+            @error="handleImageError"
+          />
+          <div 
+            @click="triggerUpload"
+            class="absolute inset-0 flex items-center justify-center rounded-full bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity duration-200"
+          >
+            <CameraIcon class="w-8 h-8 text-white" />
+          </div>
+          <input
+            ref="fileInput"
+            type="file"
+            accept="image/*"
+            class="hidden"
+            @change="handleFileChange"
+          />
+          <!-- 性别标识 -->
+          <div class="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow">
+            <svg v-if="currentGender === 'male'" class="w-6 h-6 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C9.243 2 7 4.243 7 7v2h10V7c0-2.757-2.243-5-5-5zM9 11H7v9c0 1.654 1.346 3 3 3h4c1.654 0 3-1.346 3-3v-9h-2v9c0 .552-.448 1-1 1h-4c-.552 0-1-.448-1-1v-9z"/>
+            </svg>
+            <svg v-else-if="currentGender === 'female'" class="w-6 h-6 text-pink-500" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C9.243 2 7 4.243 7 7v2h10V7c0-2.757-2.243-5-5-5zM9 11H7v5h10v-5h-2v3H9v-3z"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- 基本信息部分 -->
+      <div class="pt-20">
+        <!-- 名字和编辑按钮 -->
+        <div class="flex items-center justify-between mb-4">
+          <h1 class="text-2xl font-bold text-gray-900">{{ formatBasicInfo.name }}</h1>
+          <button
+            @click="handleEdit"
+            class="p-2 rounded-full hover:bg-gray-100 transition-colors"
+          >
+            <PencilSquareIcon class="w-5 h-5 text-gray-500" />
+          </button>
+        </div>
+
+        <!-- 个人简介 -->
+        <p class="text-gray-600 mb-6">{{ formatBasicInfo.personal_summary || '这个人很懒，还没有填写个人简介' }}</p>
+
+        <!-- 信息网格 -->
+        <div class="grid grid-cols-2 gap-6 mb-6">
+          <!-- 联系方式 -->
+          <div class="space-y-3">
+            <h2 class="text-sm font-semibold text-gray-900 mb-2">联系方式</h2>
+            <div class="flex items-center space-x-2">
+              <PhoneIcon class="w-5 h-5 text-gray-400" />
+              <span class="text-gray-600">{{ formatBasicInfo.phone }}</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <EnvelopeIcon class="w-5 h-5 text-gray-400" />
+              <span class="text-gray-600">{{ formatBasicInfo.email }}</span>
+            </div>
+          </div>
+
+          <!-- 基本资料 -->
+          <div class="space-y-3">
+            <h2 class="text-sm font-semibold text-gray-900 mb-2">基本资料</h2>
+            <div class="flex items-center space-x-2">
+              <MapPinIcon class="w-5 h-5 text-gray-400" />
+              <span class="text-gray-600">{{ formatBasicInfo.location }}</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <CakeIcon class="w-5 h-5 text-gray-400" />
+              <span class="text-gray-600">{{ formatBasicInfo.age }}</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
 import { ref, computed, nextTick, watch, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import defaultAvatarImage from '@/assets/images/default-avatar.png'
+import defaultBackground from '@/assets/images/default-background.jpg'
 import { useStore } from 'vuex'
 import { MEDIA_URL } from '@/config'
 import { showToast } from '@/components/ToastMessage'
@@ -304,6 +227,14 @@ onMounted(async () => {
   }
 })
 
+onMounted(async () => {
+  try {
+    await store.dispatch('fetchCompleteness')
+  } catch (error) {
+    console.error('Failed to fetch completeness:', error)
+  }
+})
+
 // 7. 方法定义
 const handleFileChange = async (event) => {
   const file = event.target.files[0]
@@ -322,7 +253,17 @@ const handleFileChange = async (event) => {
 
 const handleEdit = () => {
   console.log('BasicInfo handleEdit - 当前数据:', props.resumeData)
-  emit('edit', 'basic_info', props.resumeData)
+  // 确保传递正确的数据结构
+  const editData = {
+    name: props.resumeData.name,
+    gender: props.resumeData.gender,
+    birth_date: props.resumeData.birth_date,
+    phone: props.resumeData.phone,
+    email: props.resumeData.email,
+    location: props.resumeData.location,
+    personal_summary: props.resumeData.personal_summary
+  }
+  emit('edit', 'basic_info', editData)
 }
 
 const toggleBioExpand = () => {
@@ -438,5 +379,52 @@ const validateFile = (file) => {
   }
 
   return true
+}
+
+// 背景图相关
+const backgroundInput = ref(null)
+const backgroundUrl = computed(() => {
+  const background = store.state.userInfo?.data?.basic_info?.background
+  if (!background) return defaultBackground
+  
+  if (background.startsWith('http') || background.startsWith('data:')) {
+    return background
+  }
+  
+  return `${MEDIA_URL}${background}`
+})
+
+const triggerBackgroundUpload = () => {
+  backgroundInput.value.click()
+}
+
+const handleBackgroundChange = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+  
+  // 验证文件
+  if (!validateFile(file)) {
+    return
+  }
+  
+  const formData = new FormData()
+  formData.append('background', file)
+  
+  try {
+    loading.value = true
+    await store.dispatch('updateBackground', formData)
+    showToast('背景图更新成功', 'success')
+  } catch (error) {
+    console.error('Failed to update background:', error)
+    showToast('背景图更新失败', 'error')
+  } finally {
+    loading.value = false
+    // 清空文件选择器
+    event.target.value = ''
+  }
+}
+
+const handleBackgroundError = (e) => {
+  e.target.src = defaultBackground
 }
 </script>

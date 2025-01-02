@@ -226,54 +226,38 @@ const handleClose = () => {
 
 // 验证表单
 const validateForm = () => {
-  let isValid = true
-  errors.value = {
-    name: '',
-    level: '',
-    description: ''
-  }
-
-  // 验证名称
+  const errors = {}
+  
   if (!form.value.name?.trim()) {
-    errors.value.name = '请输入技能名称'
-    isValid = false
-  } else if (form.value.name.length > 50) {
-    errors.value.name = '技能名称不能超过50个字符'
-    isValid = false
+    errors.name = '技能名称不能为空'
   }
-
-  // 验证等级
-  if (!form.value.level) {
-    errors.value.level = '请选择熟练度'
-    isValid = false
-  } else if (!levelOptions.map(opt => opt.value).includes(form.value.level)) {
-    errors.value.level = '请选择有效的熟练度'
-    isValid = false
+  if (form.value.name?.length > 50) {
+    errors.name = '技能名称不能超过50个字符'
   }
-
-  // description 是可选的，不需要验证
-
-  return isValid
+  if (!['初级', '中级', '高级', '专家'].includes(form.value.level)) {
+    errors.level = '请选择有效的技能等级'
+  }
+  
+  return Object.keys(errors).length === 0 ? null : errors
 }
 
 // 提交处理
-const handleSubmit = () => {
-  if (!validateForm()) {
+const handleSubmit = async () => {
+  const errors = validateForm()
+  if (errors) {
+    Object.entries(errors).forEach(([field, message]) => {
+      ElMessage.error(message)
+    })
     return
   }
 
-  const formData = {
-    ...form.value,
-    name: form.value.name.trim(),
+  emit('submit', {
+    id: props.initialData?.id,
+    name: form.value.name?.trim(),
     level: form.value.level,
-    description: form.value.description?.trim() || ''  // 确保为空字符串而不是 null
-  }
-
-  // 如果是新建，不传 id
-  if (!formData.id) {
-    delete formData.id
-  }
-
-  emit('submit', formData)
+    description: form.value.description?.trim(),
+    projects: form.value.projects?.trim(),
+    order: form.value.order || 0
+  })
 }
 </script> 

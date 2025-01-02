@@ -93,7 +93,7 @@ import {
   BuildingOfficeIcon,
   DocumentPlusIcon
 } from '@heroicons/vue/24/outline'
-import { onMounted, watch, computed } from 'vue'
+import { onMounted, watch, computed, ref } from 'vue'
 
 const props = defineProps({
   data: {
@@ -101,6 +101,9 @@ const props = defineProps({
     default: () => ({})
   }
 })
+
+// 表单数据
+const form = ref({})
 
 // 获取工作类型标签
 const getJobTypeLabel = (value) => {
@@ -158,12 +161,10 @@ const industryList = computed(() => {
 
 // 调试日志
 onMounted(() => {
-  console.log('JobIntentionContent mounted, data:', props.data)
+  if (props.data) {
+    form.value = { ...props.data }
+  }
 })
-
-watch(() => props.data, (newData) => {
-  console.log('JobIntentionContent data changed:', newData)
-}, { deep: true })
 </script>
 
 <style scoped>

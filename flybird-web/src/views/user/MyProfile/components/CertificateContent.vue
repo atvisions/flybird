@@ -85,6 +85,12 @@ const formatDate = (dateString) => {
   const date = new Date(dateString)
   return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}`
 }
+
+// 处理删除
+const handleDelete = async (id) => {
+  // 直接触发删除事件，让父组件处理确认弹窗
+  emit('delete', id)
+}
 </script>
 
 <style scoped>

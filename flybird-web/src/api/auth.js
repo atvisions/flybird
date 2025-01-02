@@ -20,8 +20,17 @@ export const auth = {
   },
   
   // 获取用户信息
-  getUserInfo: () => {
-    return request.get('/api/v1/users/profile/basic/')
+  getUserInfo() {
+    return request.get('/api/v1/users/profile/data/')
+      .then(response => {
+        // 重新组织数据结构
+        const processedData = {
+          code: response.data.code,
+          message: response.data.message,
+          data: response.data.data
+        }
+        return processedData
+      })
   },
   
   // 退出登录
@@ -57,7 +66,6 @@ export const auth = {
   
   // 发送验证码
   sendVerifyCode: (data) => {
-    console.log('Sending verification code with data:', data)
     return request({
       url: '/api/v1/users/auth/sms/send/',
       method: 'post',
@@ -95,15 +103,6 @@ export const auth = {
   
   // 重置密码
   resetPassword: async (data) => {
-    console.log('API 重置密码请求:', {
-      url: '/api/v1/users/auth/password/reset/',
-      data: {
-        phone: data.phone,
-        code: data.code,
-        new_password: data.new_password,
-        confirm_password: data.confirm_password
-      }
-    })
     return request.post('/api/v1/users/auth/password/reset/', {
       phone: data.phone,
       code: data.code,
@@ -114,15 +113,6 @@ export const auth = {
   
   // 注册
   register: async (data) => {
-    console.log('API 注册请求:', {
-      url: '/api/v1/users/auth/register/',
-      data: {
-        phone: data.phone,
-        code: data.code,
-        password: data.password,
-        confirm_password: data.confirm_password
-      }
-    })
     return request.post('/api/v1/users/auth/register/', {
       phone: data.phone,
       code: data.code,

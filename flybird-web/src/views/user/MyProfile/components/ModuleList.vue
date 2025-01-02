@@ -9,8 +9,7 @@
     >
       <!-- 模块头部 -->
       <div 
-        @click="toggleModule(module.type)"
-        class="flex items-center justify-between px-4 py-3 cursor-pointer"
+        class="flex items-center justify-between px-4 py-3"
       >
         <h3 class="text-base font-medium text-gray-900">
           {{ getModuleName(module.type) }}
@@ -19,7 +18,7 @@
           <!-- 添加按钮 -->
           <button
             v-if="shouldShowAddButton(module.type)"
-            @click.stop="$emit('add', module.type)"
+            @click="$emit('add', module.type)"
             class="p-1 rounded-full hover:bg-gray-100 transition-colors duration-200 group relative"
           >
             <PlusIcon class="w-5 h-5 text-gray-500 hover:text-gray-700" />
@@ -30,7 +29,7 @@
           <!-- 编辑按钮 -->
           <button
             v-if="module.type === 'basic_info' || module.type === 'job_intention'"
-            @click.stop="$emit('edit', module.type, module.data)"
+            @click="$emit('edit', module.type, module.data)"
             class="p-1 rounded-full hover:bg-gray-100 transition-colors duration-200 group relative"
           >
             <PencilSquareIcon class="w-5 h-5 text-gray-500 hover:text-gray-700" />
@@ -38,20 +37,21 @@
               编辑
             </div>
           </button>
-          <!-- 移除模块按钮 -->
+          <!-- 删除按钮 -->
           <button
-            @click.stop="$emit('remove', module.type)"
+            v-if="shouldShowDeleteButton(module.type)"
+            @click="$emit('remove', module.type)"
             class="p-1 rounded-full hover:bg-gray-100 transition-colors duration-200 group relative"
           >
             <MinusCircleIcon class="w-5 h-5 text-gray-500 hover:text-gray-700" />
             <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none transition-opacity duration-150">
-              移除模块
+              删除
             </div>
           </button>
           <!-- 展开/收起按钮 -->
           <button
-            @click.stop="toggleModule(module.type)"
-            class="p-1 rounded-full hover:bg-gray-100 transition-colors duration-200 group relative"
+            @click="toggleModule(module)"
+            class="p-1 rounded-full hover:bg-gray-100 transition-colors duration-200 group relative cursor-pointer"
           >
             <ChevronUpIcon
               v-if="expandedModules[module.type]"
@@ -179,7 +179,6 @@ const shouldShowAddButton = (type) => {
 
 // 获取组件 props 的方法
 const getComponentProps = (module) => {
-  console.log('ModuleList getComponentProps:', module.type, module.data)
   switch (module.type) {
     case 'basic_info':
       return {
@@ -189,7 +188,6 @@ const getComponentProps = (module) => {
         showBioExpandButton: false
       }
     case 'job_intention':
-      console.log('Job intention data:', module.data)
       return {
         data: module.data
       }
@@ -244,7 +242,8 @@ const initExpandedState = (modules) => {
 }
 
 // 切换模块展开状态
-const toggleModule = (type) => {
+const toggleModule = (module) => {
+  const type = module.type
   expandedModules.value[type] = !expandedModules.value[type]
   // 保存新状态
   saveState(expandedModules.value)
@@ -270,7 +269,7 @@ const handleItemDelete = async (type, itemId) => {
     // 通知父组件数据已更新
     emit('delete', type, itemId)
     ElMessage.success('删除成功')
-  } catch (error) {
+    }  catch (error) {
     console.error('删除失败:', error)
     ElMessage.error(error.message || '删除失败')
   }
@@ -318,6 +317,17 @@ const handleAdd = (type) => {
   
   // 触发父组件的添加事件
   emit('edit', type, initialData)
+}
+
+// 添加删除按钮的判断逻辑
+const shouldShowDeleteButton = (type) => {
+  return ['work_experience', 'education', 'project', 'skill', 'certificate', 'language', 'social_link', 'portfolio'].includes(type)
+}
+
+// 处理删除按钮点击
+const handleDelete = (type, id) => {
+  // 触发父组件的删除事件
+  emit('remove', type, id)
 }
 </script>
 

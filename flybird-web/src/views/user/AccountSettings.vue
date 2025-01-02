@@ -368,9 +368,9 @@ import { useChangePassword } from '@/composables/useChangePassword'
 const store = useStore()
 const router = useRouter()
 // 基础信息
-const username = computed(() => store.state.userInfo?.username || '未设置')
-const uid = computed(() => store.state.userInfo?.uid || '暂无')
-const phone = computed(() => store.state.userInfo?.phone || '')
+const username = computed(() => store.state.userInfo?.data?.user?.username || '未设置')
+const uid = computed(() => store.state.userInfo?.data?.user?.uid || '暂无')
+const phone = computed(() => store.state.userInfo?.data?.user?.phone || '')
 
 // 使用 composables
 const nickname = useNickname()

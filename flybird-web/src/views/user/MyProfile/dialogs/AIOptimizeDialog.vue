@@ -358,61 +358,68 @@ const mockOptimize = async (field, value) => {
 
 // 修改处理字段数据的方法
 const processFields = () => {
-  const result = []
+  if (!props.profileData) return []
   
-  if (!props.profileData) {
-    console.warn('profileData is undefined')
-    return result
+  const allFields = []
+  
+  // 基本信息
+  if (props.profileData.basic_info) {
+    allFields.push({
+      name: 'basic_info.bio',
+      label: '个人简介',
+      currentValue: props.profileData.basic_info.bio,
+      optimizedValue: '',
+      status: 'pending'
+    })
   }
-
-  fieldConfig.forEach(field => {
-    if (field.isArray) {
-      const items = props.profileData[field.name] || []
-      items.forEach((item, index) => {
-        if (field.fields) {
-          field.fields.forEach(subField => {
-            const fieldPath = `${field.name}.${index}.${subField.name}`
-            const currentValue = item[subField.name] || ''
-            result.push({
-              name: fieldPath,
-              label: `${field.label} ${index + 1} - ${subField.label}`,
-              currentValue,
-              group: field.group,
-              optimizedValue: '',
-              // 如果字段没有值，直接设置为 success 状态
-              status: currentValue ? 'pending' : 'success'
-            })
-          })
-        } else {
-          const [category, key] = field.name.split('.')
-          const currentValue = props.profileData[category]?.[key] || ''
-          result.push({
-            name: field.name,
-            label: field.label,
-            currentValue,
-            group: field.group,
-            optimizedValue: '',
-            // 如果字段没有值，直接设置为 success 状态
-            status: currentValue ? 'pending' : 'success'
-          })
-        }
-      })
-    } else {
-      const [category, key] = field.name.split('.')
-      const currentValue = props.profileData[category]?.[key] || ''
-      result.push({
-        name: field.name,
-        label: field.label,
-        currentValue,
-        group: field.group,
+  
+  // 工作经历
+  if (props.profileData.work_experiences?.length) {
+    props.profileData.work_experiences.forEach((exp, index) => {
+      allFields.push({
+        name: `work_experiences.${index}.description`,
+        label: `工作描述 ${index + 1}`,
+        currentValue: exp.description,
         optimizedValue: '',
-        // 如果字段没有值，直接设置为 success 状态
-        status: currentValue ? 'pending' : 'success'
+        status: 'pending'
       })
-    }
-  })
-
-  return result
+      
+      if (exp.achievements) {
+        allFields.push({
+          name: `work_experiences.${index}.achievements`,
+          label: `工作成就 ${index + 1}`,
+          currentValue: exp.achievements,
+          optimizedValue: '',
+          status: 'pending'
+        })
+      }
+    })
+  }
+  
+  // 项目经历
+  if (props.profileData.projects?.length) {
+    props.profileData.projects.forEach((project, index) => {
+      allFields.push({
+        name: `projects.${index}.description`,
+        label: `项目描述 ${index + 1}`,
+        currentValue: project.description,
+        optimizedValue: '',
+        status: 'pending'
+      })
+      
+      if (project.achievements) {
+        allFields.push({
+          name: `projects.${index}.achievements`,
+          label: `项目成就 ${index + 1}`,
+          currentValue: project.achievements,
+          optimizedValue: '',
+          status: 'pending'
+        })
+      }
+    })
+  }
+  
+  return allFields
 }
 
 const fields = ref(processFields())
@@ -616,9 +623,11 @@ const dialogWidth = computed(() => {
   return '1000px'  // 增加宽度以适应内容
 })
 
-// 移除 onMounted 中的自动开始优化
+// 移除 onMounted 中的自动处理
 onMounted(() => {
-  fields.value = processFields()
+  if (props.profileData) {
+    fields.value = processFields()
+  }
 })
 
 // 监听对话框显示状态

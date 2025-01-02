@@ -82,19 +82,6 @@ export function useModules(layoutData) {
             isArray: true
           }
         ]
-        console.log('模块数据更新:', {
-          modules: modules.value,
-          types: modules.value.map(m => m.type),
-          hasData: modules.value.every(m => m.data !== undefined),
-          ...(layoutData && {
-            layoutStatus: modules.value.map(m => ({
-              type: m.type,
-              name: m.name,
-              isActive: layoutData.value?.[m.type]?.visible === true,
-              order: layoutData.value?.[m.type]?.order || 999
-            }))
-          })
-        })
       }
     } catch (error) {
       console.error('获取模块数据失败:', error)

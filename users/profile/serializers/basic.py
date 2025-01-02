@@ -25,7 +25,7 @@ class BasicInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = BasicInfo
         fields = [
-            'id', 'name', 'avatar', 'gender', 'birth_date', 
+            'id', 'name', 'avatar', 'gender', 'birth_date',
             'phone', 'email', 'location', 'personal_summary'
         ]
         extra_kwargs = {

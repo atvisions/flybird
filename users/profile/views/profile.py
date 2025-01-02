@@ -46,6 +46,11 @@ class ProfileDataView(APIView):
                 
                 # 序列化数据
                 data = {
+                    'user': {
+                        'uid': user.uid,
+                        'username': user.username,
+                        'phone': user.phone
+                    },
                     'basic_info': BasicInfoSerializer(user.basic_info).data if hasattr(user, 'basic_info') else None,
                     'job_intention': JobIntentionSerializer(user.job_intention).data if hasattr(user, 'job_intention') else None,
                     'work_experience': WorkExperienceSerializer(user.work_experiences.all(), many=True).data,
@@ -97,7 +102,7 @@ class ProfileDataView(APIView):
                 'work_experience': (WorkExperienceSerializer, WorkExperience),
                 'education': (EducationSerializer, Education),
                 'project': (ProjectSerializer, Project),
-                'skill': (SkillSerializer, Skill),  # 改为 skill 和 Skill
+                'skills': (SkillSerializer, Skill),  # 改回 'skills'
                 'certificate': (CertificateSerializer, Certificate),
                 'language': (LanguageSerializer, Language),
                 'portfolio': (PortfolioSerializer, Portfolio),
@@ -136,7 +141,7 @@ class ProfileDataView(APIView):
                 'data': None
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def put(self, request, module_type):
+    def put(self, request, module_type, pk=None):
         """更新模块数据"""
         try:
             user = request.user
@@ -149,7 +154,7 @@ class ProfileDataView(APIView):
                 'work_experience': (WorkExperienceSerializer, WorkExperience),
                 'education': (EducationSerializer, Education),
                 'project': (ProjectSerializer, Project),
-                'skills': (SkillSerializer, Skills),
+                'skills': (SkillSerializer, Skill),  # 确保这里是 'skills'
                 'certificate': (CertificateSerializer, Certificate),
                 'language': (LanguageSerializer, Language),
                 'portfolio': (PortfolioSerializer, Portfolio),
@@ -164,12 +169,25 @@ class ProfileDataView(APIView):
             
             SerializerClass, ModelClass = serializer_map[module_type]
             
-            # 处理更新
-            instance = ModelClass.objects.filter(user=user, id=data.get('id')).first()
-            if instance:
-                serializer = SerializerClass(instance, data=data, partial=True)
+            # 特殊处理 basic_info（一对一关系）
+            if module_type == 'basic_info':
+                instance = ModelClass.objects.filter(user=user).first()
+                if instance:
+                    serializer = SerializerClass(instance, data=data, partial=True)
+                else:
+                    serializer = SerializerClass(data=data)
             else:
-                serializer = SerializerClass(data=data)
+                # 其他模块的处理
+                if pk:
+                    instance = ModelClass.objects.filter(user=user, id=pk).first()
+                    if not instance:
+                        return Response({
+                            'code': 404,
+                            'message': '记录不存在'
+                        }, status=status.HTTP_404_NOT_FOUND)
+                    serializer = SerializerClass(instance, data=data, partial=True)
+                else:
+                    serializer = SerializerClass(data=data)
             
             if serializer.is_valid():
                 serializer.save(user=user)
@@ -205,7 +223,7 @@ class ProfileDataView(APIView):
                 'work_experience': WorkExperience,
                 'education': Education,
                 'project': Project,
-                'skill': Skill,
+                'skills': Skill,  # 修改这里，使用 'skills'
                 'certificate': Certificate,
                 'language': Language,
                 'portfolio': Portfolio,

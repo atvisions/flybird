@@ -239,6 +239,7 @@ watch(() => props.initialData, (newVal) => {
       url: newVal.url || '',
       description: newVal.description || ''
     }
+    console.log('初始化表单数据:', formData.value)
   }
 }, { immediate: true })
 
@@ -247,11 +248,7 @@ watch(() => formData.value.platform, (newPlatform) => {
   if (newPlatform && platformMap[newPlatform]) {
     // 如果是新建或者当前 URL 是其他平台的前缀，则更新 URL
     const currentUrl = formData.value.url || ''
-    const isOtherPlatformUrl = Object.values(platformMap).some(
-      platform => platform.urlPrefix && currentUrl.startsWith(platform.urlPrefix)
-    )
-    
-    if (!currentUrl || isOtherPlatformUrl) {
+    if (!currentUrl) {
       formData.value.url = platformMap[newPlatform].urlPrefix
     }
   }
@@ -268,16 +265,24 @@ const handleSubmit = () => {
     return
   }
 
+  // 验证 URL
+  if (!formData.value.url) {
+    ElMessage.error('请输入主页链接')
+    return
+  }
+
   // 验证 URL 格式
   if (formData.value.platform !== 'other' && formData.value.platform !== 'website') {
     const expectedPrefix = platformMap[formData.value.platform].urlPrefix
-    if (!formData.value.url.startsWith(expectedPrefix)) {
-      formData.value.url = expectedPrefix + formData.value.url.replace(/^https?:\/\/[^/]+\//, '')
-    }
+    // 如果用户输入的是完整URL，提取用户名部分
+    const userMatch = formData.value.url.match(/^https?:\/\/[^/]+\/(.+)/)
+    const username = userMatch ? userMatch[1] : formData.value.url
+    formData.value.url = expectedPrefix + username.replace(/^\/+|\/+$/g, '')
   }
 
   const data = {
     ...formData.value,
+    platform: formData.value.platform,  // 不需要 trim，保持原始值
     url: formData.value.url.trim(),
     description: formData.value.description?.trim() || ''
   }
@@ -287,7 +292,21 @@ const handleSubmit = () => {
     delete data.id
   }
 
-  emit('submit', data)
+  // 确保数据格式与后端一致
+  const submitData = {
+    platform: data.platform,
+    url: data.url,
+    description: data.description
+  }
+
+  if (data.id) {
+    submitData.id = data.id
+  }
+
+  // 确保数据格式正确
+  console.log('提交的数据:', submitData)
+
+  emit('submit', submitData)
 }
 
 const handleIconError = (event) => {

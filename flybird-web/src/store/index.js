@@ -25,7 +25,12 @@ export default createStore({
     },
 
     SET_USER_INFO(state, userInfo) {
-      state.userInfo = userInfo
+      // 确保数据结构正确
+      state.userInfo = {
+        code: userInfo.code,
+        message: userInfo.message,
+        data: userInfo.data
+      }
     },
 
     SET_BASIC_INFO(state, basicInfo) {
@@ -70,24 +75,45 @@ export default createStore({
 
     CLEAR_BASIC_INFO(state) {
       state.basicInfo = null
+    },
+
+    UPDATE_BASIC_INFO(state, basicInfo) {
+      if (state.userInfo?.data) {
+        state.userInfo.data.basic_info = {
+          ...state.userInfo.data.basic_info,
+          ...basicInfo
+        }
+      }
+    },
+
+    UPDATE_AVATAR(state, avatarUrl) {
+      if (state.userInfo?.data?.basic_info) {
+        state.userInfo.data.basic_info.avatar = avatarUrl
+      }
+    },
+
+    UPDATE_BACKGROUND(state, backgroundUrl) {
+      if (state.userInfo?.data?.basic_info) {
+        state.userInfo.data.basic_info.background = backgroundUrl
+      }
     }
   },
 
   getters: {
     userAvatar: state => {
-      return state.basicInfo?.avatar || defaultAvatar
+      return state.userInfo?.data?.basic_info?.avatar || defaultAvatar
     },
 
     userName: state => {
-      return state.basicInfo?.name || state.userInfo?.username || '未设置昵称'
+      return state.userInfo?.data?.basic_info?.nickname || '未设置昵称'
     },
 
     userNickname: state => {
-      return state.userInfo?.username || '未设置昵称'
+      return state.userInfo?.data?.basic_info?.nickname || '未设置昵称'
     },
 
     userPhone: state => {
-      return state.basicInfo?.phone || state.userInfo?.phone
+      return state.userInfo?.data?.basic_info?.phone
     },
 
     profileCompleteness: state => {
@@ -129,26 +155,16 @@ export default createStore({
       }
     },
 
-    async fetchUserInfo({ commit }) {
+    async fetchUserInfo({ commit, state }) {
       try {
         const response = await auth.getUserInfo()
         
-        if (response.data?.code === 200) {
-          const { user, basic_info } = response.data.data
-          if (user) {
-            commit('SET_USER_INFO', {
-              uid: user.uid,
-              username: user.username,
-              phone: user.phone
-            })
-          }
-          if (basic_info) {
-            commit('SET_BASIC_INFO', basic_info)
-          }
-          return response.data.data
+        if (response.code === 200) {
+          commit('SET_USER_INFO', response)
+          return response.data
         }
       } catch (error) {
-        console.error('Failed to get user info:', error.response || error)
+        console.error('获取用户信息失败:', error)
         throw error
       }
     },
@@ -158,22 +174,28 @@ export default createStore({
         let response
         if (type === 'avatar') {
           response = await profile.uploadAvatar(data)
+        } else if (type === 'background') {
+          response = await profile.uploadBackground(data)
         } else if (type === 'basic') {
-          response = await profile.updateBasicInfo(data)
+          response = await profile.updateModule('basic_info', data)
         } else {
           throw new Error('未知的更新类型')
         }
 
         if (response?.data?.code === 200) {
-          if (type === 'avatar') {
+          if (type === 'avatar' || type === 'background') {
             commit('SET_AVATAR_UPDATE_TIME', Date.now())
           }
-          const { user, basic_info } = response.data.data
-          if (user) {
-            commit('SET_USER_INFO', user)
-          }
-          if (basic_info) {
-            commit('SET_BASIC_INFO', basic_info)
+          if (type === 'basic') {
+            commit('UPDATE_BASIC_INFO', response.data.data)
+          } else {
+            const { user, basic_info } = response.data.data
+            if (user) {
+              commit('SET_USER_INFO', user)
+            }
+            if (basic_info) {
+              commit('SET_BASIC_INFO', basic_info)
+            }
           }
           return response
         }
@@ -213,27 +235,18 @@ export default createStore({
       try {
         const response = await profile.getCompleteness()
         if (response.data?.code === 200) {
-          commit('SET_COMPLETENESS', response.data.data)
+          commit('SET_COMPLETENESS', response.data)
+          return response.data
         }
       } catch (error) {
-        console.error('Failed to get completeness:', error)
+        console.error('获取完整度失败:', error)
       }
     },
 
     async login({ commit }, { access, refresh, rememberMe = false }) {
       try {
-        // 添加调试信息
-        console.log('Store login action called with rememberMe:', rememberMe)
-        
         // 使用 storage 服务保存认证信息，它会处理过期时间
         storage.saveAuth({ access, refresh }, rememberMe)
-        
-        // 添加调试信息
-        console.log('After storage.saveAuth:', {
-          rememberMe,
-          tokenInfo: getExpirationInfo(),
-          savedRememberMe: localStorage.getItem(STORAGE_KEYS.REMEMBER_ME)
-        })
         
         // 设置请求头
         request.defaults.headers.common['Authorization'] = `Bearer ${access}`
@@ -296,6 +309,36 @@ export default createStore({
         storage.clearAuth()
         
         return false
+      }
+    },
+
+    async updateAvatar({ commit }, formData) {
+      try {
+        const response = await profile.uploadAvatar(formData)
+        if (response.data?.code === 200) {
+          const avatarUrl = response.data.data.avatar
+          commit('UPDATE_AVATAR', avatarUrl)
+          return avatarUrl
+        }
+        throw new Error(response.data?.message || '更新头像失败')
+      } catch (error) {
+        console.error('Failed to update avatar:', error)
+        throw error
+      }
+    },
+
+    async updateBackground({ commit }, formData) {
+      try {
+        const response = await profile.uploadBackground(formData)
+        if (response.data?.code === 200) {
+          const backgroundUrl = response.data.data.background
+          commit('UPDATE_BACKGROUND', backgroundUrl)
+          return backgroundUrl
+        }
+        throw new Error(response.data?.message || '更新背景图失败')
+      } catch (error) {
+        console.error('Failed to update background:', error)
+        throw error
       }
     }
   }

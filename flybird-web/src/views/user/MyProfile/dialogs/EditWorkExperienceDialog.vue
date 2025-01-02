@@ -204,7 +204,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import {
   Dialog,
   DialogPanel,
@@ -261,7 +261,6 @@ watch(() => props.initialData, (newVal) => {
       achievements: newVal.achievements || '',
       technologies: newVal.technologies || ''
     }
-    console.log('Form initialized:', form.value)
   }
 }, { immediate: true, deep: true })
 
@@ -337,7 +336,6 @@ const handleSubmit = () => {
     return
   }
   
-  console.log('Submitting form:', form.value)
   const formData = {
     ...form.value,
     // 处理日期格式
@@ -349,9 +347,15 @@ const handleSubmit = () => {
     technologies: form.value.technologies?.trim() || ''
   }
   
-  console.log('Formatted form data:', formData)
   emit('submit', formData)
 }
+
+onMounted(() => {
+  // 初始化表单数据
+  if (props.initialData) {
+    form.value = { ...props.initialData }
+  }
+})
 </script>
 
 <style scoped>

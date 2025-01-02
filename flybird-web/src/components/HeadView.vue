@@ -132,7 +132,7 @@
                 alt="用户头像"
               />
               <span class="hidden lg:inline">
-                {{ store.state.userInfo?.username || '未设置昵称' }}
+                {{ username }}
               </span>
               <svg class="h-5 w-5" :class="{ 'rotate-180': userMenuOpen }" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd"
@@ -175,7 +175,7 @@
             @error="handleImageError" 
           />
           <div>
-            <div class="text-base font-medium text-gray-900">{{ store.state.userInfo?.username || '未设置昵称' }}</div>
+            <div class="text-base font-medium text-gray-900">{{ username }}</div>
             <div class="text-sm text-gray-500">{{ userType }}</div>
           </div>
         </div>
@@ -322,6 +322,7 @@ import { MEDIA_URL } from '@/config'
 import { eventBus } from '@/utils/eventBus'
 import { authService } from '@/services/authService'
 import { useLogout } from '@/composables/useLogout'
+import { API_URL } from '@/config'
 
 // 导入所需的图标
 import {
@@ -397,16 +398,16 @@ const { handleLogout } = useLogout()
 
 // 监听 store 中的用户信息变化
 watch(
-  () => [store.state.userInfo, store.state.basicInfo],
-  ([newUserInfo, newBasicInfo]) => {
-    if (newUserInfo || newBasicInfo) {
+  () => store.state.userInfo,
+  (newUserInfo) => {
+    if (newUserInfo?.data?.basic_info) {
       userBasicInfo.value = {
-        ...newBasicInfo,
-        ...newUserInfo
+        ...newUserInfo.data.basic_info,
+        ...newUserInfo.data.user
       }
     }
   },
-  { immediate: true }
+  { immediate: true, deep: true }
 )
 
 // 响应式计算
@@ -467,31 +468,33 @@ const isAuthenticated = computed(() => store.state.isAuthenticated)
 
 // 用户昵称计算属性
 const username = computed(() => {
-  return store.state.userInfo?.username || '未设置昵称'
+  const username = store.state.userInfo?.data?.user?.username
+  return username || '未设置昵称'
 })
 
 // 头像 URL 计算属性
 const avatarUrl = computed(() => {
-  const avatar = store.state.basicInfo?.avatar
-  const baseUrl = process.env.VUE_APP_API_BASE_URL || 'http://192.168.3.16:8000'
+  const avatar = store.state.userInfo?.data?.basic_info?.avatar
+  if (!avatar) return defaultAvatarImage
   
-  // 如果有头像且是相对路径，添加 API 基础路径
-  if (avatar && !avatar.startsWith('http')) {
-    return `${baseUrl}${avatar}`
+  if (avatar.startsWith('http') || avatar.startsWith('data:')) {
+    return avatar
   }
   
-  return avatar || defaultAvatarImage
+  return `${API_URL}${avatar}`
 })
 
 // 获取用户信息的函数
 const fetchUserInfo = async () => {
   if (store.state.isAuthenticated) {
-    await store.dispatch('fetchUserInfo')
-    
-
-    userBasicInfo.value = {
-      ...store.state.basicInfo?.basic_info,
-      ...store.state.userInfo?.user
+    try {
+      await store.dispatch('fetchUserInfo')
+      userBasicInfo.value = {
+        ...store.state.userInfo?.data?.basic_info,
+        ...store.state.userInfo?.data?.user
+      }
+    } catch (error) {
+      console.error('Failed to fetch user info:', error)
     }
   }
 }
@@ -542,9 +545,15 @@ const handleResize = () => {
 
 // 简化头像更新处理方法
 const handleAvatarUpdate = (newAvatar) => {
-  store.commit('SET_BASIC_INFO', {
-    ...store.state.basicInfo,
-    avatar: newAvatar
+  store.commit('SET_USER_INFO', {
+    ...store.state.userInfo,
+    data: {
+      ...store.state.userInfo?.data,
+      basic_info: {
+        ...store.state.userInfo?.data?.basic_info,
+        avatar: newAvatar
+      }
+    }
   })
 }
 

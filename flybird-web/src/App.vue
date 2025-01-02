@@ -25,16 +25,9 @@ const { startTokenRefresh } = useTokenRefresh()
 
 onMounted(async () => {
   try {
-    // 先检查认证状态
-    const isAuthenticated = await store.dispatch('checkAuth')
-    
-    // 不再需要在这里获取用户信息
-    // 用户信息的获取已经移到各个需要的组件中
-    if (isAuthenticated) {
-      startTokenRefresh()
-    }
+    await store.dispatch('checkAuth')
   } catch (error) {
-    console.error('初始化用户信息失败:', error)
+    console.error('初始化失败:', error)
   }
 })
 </script>

@@ -28,12 +28,10 @@ export function useModules() {
           }))
           .sort((a, b) => a.order - b.order)
 
-        // 处理未激活的模块 - 只处理服务器返回的模块
+        // 处理未激活的模块
         inactiveModules.value = Object.entries(layoutData)
           .filter(([type, config]) => {
-            // 基本信息不显示在未激活列表中
             if (type === 'basic_info') return false
-            // 只包含未激活的模块
             return !config.visible
           })
           .map(([type, config]) => ({
@@ -44,7 +42,7 @@ export function useModules() {
           }))
       }
     } catch (error) {
-      console.error('获取模块数据失败:', error)
+      throw new Error('获取模块数据失败')
     } finally {
       loading.value = false
     }

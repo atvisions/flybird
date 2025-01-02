@@ -55,20 +55,6 @@
                     />
                   </div>
 
-                  <!-- 作品链接 -->
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                      作品链接 <span class="text-red-500">*</span>
-                    </label>
-                    <input
-                      v-model="formData.url"
-                      type="url"
-                      class="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      placeholder="请输入作品链接"
-                      required
-                    />
-                  </div>
-
                   <!-- 作品类型 -->
                   <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -110,6 +96,20 @@
                         </ListboxOptions>
                       </div>
                     </Listbox>
+                  </div>
+
+                  <!-- 作品链接 -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                      作品链接 <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                      v-model="formData.url"
+                      type="url"
+                      class="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      placeholder="请输入作品链接"
+                      required
+                    />
                   </div>
 
                   <!-- 作品描述 -->

@@ -18,6 +18,7 @@ class BasicInfo(models.Model):
     )
     name = models.CharField('姓名', max_length=50, blank=True)
     avatar = models.ImageField('头像', upload_to='avatars/', blank=True)
+    background = models.ImageField('背景图', upload_to='backgrounds/', blank=True)
     gender = models.CharField('性别', max_length=10, choices=GENDER_CHOICES, blank=True)
     birth_date = models.DateField('出生日期', null=True, blank=True, default=None)
     phone = models.CharField('手机号', max_length=11, blank=True)
@@ -39,5 +40,12 @@ class BasicInfo(models.Model):
         """获取头像URL"""
         if self.avatar:
             return self.avatar.url
+        return None
+
+    @property
+    def background_url(self):
+        """获取背景图URL"""
+        if self.background:
+            return self.background.url
         return None
 

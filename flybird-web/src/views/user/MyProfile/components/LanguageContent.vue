@@ -20,7 +20,7 @@
               <PencilSquareIcon class="w-4 h-4 text-gray-400" />
             </button>
             <button
-              @click="$emit('delete', lang.id)"
+              @click="handleDelete(lang.id)"
               class="p-1 hover:bg-white rounded-full transition-colors"
             >
               <TrashIcon class="w-4 h-4 text-gray-400" />
@@ -62,12 +62,81 @@
       <PlusIcon class="w-4 h-4 mr-2" />
       添加语言能力
     </button>
+
+    <!-- 删除确认弹窗 -->
+    <TransitionRoot appear :show="showDeleteConfirm" as="template">
+      <Dialog as="div" class="relative z-50" @close="showDeleteConfirm = false">
+        <TransitionChild
+          as="template"
+          enter="duration-300 ease-out"
+          enter-from="opacity-0"
+          enter-to="opacity-100"
+          leave="duration-200 ease-in"
+          leave-from="opacity-100"
+          leave-to="opacity-0"
+        >
+          <div class="fixed inset-0 bg-black/25" />
+        </TransitionChild>
+        
+        <div class="fixed inset-0 overflow-y-auto">
+          <div class="flex min-h-full items-center justify-center p-4 text-center">
+            <DialogPanel class="w-full max-w-md transform overflow-hidden rounded-xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+              <div>
+                <div class="flex items-start space-x-3">
+                  <div class="p-2 bg-red-50 rounded-full flex-shrink-0">
+                    <ExclamationTriangleIcon class="w-6 h-6 text-red-600" />
+                  </div>
+                  <div class="flex-1">
+                    <DialogTitle as="h3" class="text-lg font-medium text-gray-900">
+                      确认删除语言能力？
+                    </DialogTitle>
+                    <p class="mt-2 text-sm text-gray-500">
+                      删除后将无法恢复，请确认是否继续。
+                    </p>
+                  </div>
+                </div>
+                
+                <div class="mt-6 flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    @click="showDeleteConfirm = false"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    取消
+                  </button>
+                  <button
+                    type="button"
+                    @click="confirmDelete"
+                    class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700"
+                  >
+                    确定删除
+                  </button>
+                </div>
+              </div>
+            </DialogPanel>
+          </div>
+        </div>
+      </Dialog>
+    </TransitionRoot>
   </div>
 </template>
 
 <script setup>
-import { PencilSquareIcon, TrashIcon, PlusIcon } from '@heroicons/vue/24/outline'
-import { watch } from 'vue'
+import { 
+  PencilSquareIcon, 
+  TrashIcon, 
+  PlusIcon,
+  ExclamationTriangleIcon 
+} from '@heroicons/vue/24/outline'
+import { 
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+  TransitionRoot,
+  TransitionChild
+} from '@headlessui/vue'
+import { ref } from 'vue'
+import { ElMessage } from 'element-plus'
 
 const props = defineProps({
   data: {
@@ -76,7 +145,7 @@ const props = defineProps({
   }
 })
 
-defineEmits(['edit', 'delete', 'add'])
+const emit = defineEmits(['edit', 'delete', 'add'])
 
 // 获取等级进度条百分比
 const getProficiencyPercentage = (proficiency) => {
@@ -89,10 +158,24 @@ const getProficiencyPercentage = (proficiency) => {
   return percentageMap[proficiency] || '0%'
 }
 
-// 添加数据监听
-watch(() => props.data, (newData) => {
+// 删除相关
+const showDeleteConfirm = ref(false)
+const deleteId = ref(null)
 
-}, { immediate: true, deep: true })
+const handleDelete = (id) => {
+  deleteId.value = id
+  showDeleteConfirm.value = true
+}
+
+const confirmDelete = async () => {
+  try {
+    await emit('delete', deleteId.value)
+    showDeleteConfirm.value = false
+  } catch (error) {
+    console.error('删除失败:', error)
+    ElMessage.error('删除失败')
+  }
+}
 </script>
 
 <style scoped>
