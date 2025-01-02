@@ -119,6 +119,18 @@ export const auth = {
       password: data.password,
       confirm_password: data.confirm_password
     })
+  },
+  
+  // 密码登录
+  passwordLogin(data) {
+    return request({
+      url: '/api/v1/users/auth/login/password/',
+      method: 'post',
+      data: {
+        account: data.account,
+        password: data.password
+      }
+    })
   }
 }
 

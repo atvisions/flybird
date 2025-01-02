@@ -10,10 +10,10 @@ logger = logging.getLogger('users')
 User = get_user_model()
 
 class PasswordLoginSerializer(serializers.Serializer):
-    phone = serializers.CharField(
+    account = serializers.CharField(
         error_messages={
-            'required': '请输入手机号',
-            'blank': '手机号不能为空'
+            'required': '请输入账号',
+            'blank': '账号不能为空'
         }
     )
     password = serializers.CharField(
@@ -23,18 +23,36 @@ class PasswordLoginSerializer(serializers.Serializer):
         }
     )
 
-    def validate_phone(self, value):
-        # 验证手机号格式
-        if not re.match(r'^1[3-9]\d{9}$', value):
-            raise serializers.ValidationError('请输入正确的手机号格式')
+    def validate_account(self, value):
+        # 验证账号格式
+        # 手机号格式: 1开头的11位数字
+        # 邮箱格式: 包含@的字符串
+        # UID格式: 纯数字
+        if not (
+            re.match(r'^1[3-9]\d{9}$', value) or  # 手机号
+            re.match(r'^[^\s@]+@[^\s@]+\.[^\s@]+$', value) or  # 邮箱
+            re.match(r'^\d+$', value)  # UID
+        ):
+            raise serializers.ValidationError('请输入正确的手机号/邮箱/UID')
         return value
 
     def validate(self, attrs):
-        phone = attrs.get('phone')
+        account = attrs.get('account')
         password = attrs.get('password')
 
         try:
-            user = User.objects.get(phone=phone)
+            # 根据不同格式查找用户
+            if re.match(r'^1[3-9]\d{9}$', account):
+                user = User.objects.get(phone=account)
+            elif re.match(r'^[^\s@]+@[^\s@]+\.[^\s@]+$', account):
+                # 确保邮箱不为空且已验证
+                user = User.objects.get(email=account, email__isnull=False)
+            elif re.match(r'^\d+$', account):
+                # 移除前导零，因为 uid 格式是 1000000 + pk
+                cleaned_uid = str(int(account))
+                user = User.objects.get(uid=cleaned_uid)
+            else:
+                raise User.DoesNotExist
             
             if not user.check_password(password):
                 raise serializers.ValidationError({
@@ -43,16 +61,16 @@ class PasswordLoginSerializer(serializers.Serializer):
             
             if not user.is_active:
                 raise serializers.ValidationError({
-                    'phone': ['该账号已被禁用，请联系客服']
+                    'account': ['该账号已被禁用，请联系客服']
                 })
             
         except User.DoesNotExist:
             raise serializers.ValidationError({
-                'phone': ['该手机号未注册，请先注册']
+                'account': ['账号未注册，请先注册']
             })
 
         # 打印调试信息
-        print(f"Login attempt - Phone: {phone}, User found: {user.uid}")
+        logger.info(f"Login attempt - Account: {account}, User found: {user.uid}")
         
         attrs['user'] = user
         return attrs

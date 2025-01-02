@@ -25,11 +25,23 @@ export default createStore({
     },
 
     SET_USER_INFO(state, userInfo) {
-      // 确保数据结构正确
-      state.userInfo = {
-        code: userInfo.code,
-        message: userInfo.message,
-        data: userInfo.data
+      // 深度合并更新
+      if (state.userInfo) {
+        state.userInfo = {
+          ...state.userInfo,
+          code: userInfo.code,
+          message: userInfo.message,
+          data: {
+            ...state.userInfo.data,
+            user: {
+              ...state.userInfo.data?.user,
+              ...userInfo.data?.user
+            },
+            ...userInfo.data
+          }
+        }
+      } else {
+        state.userInfo = userInfo
       }
     },
 
@@ -338,6 +350,20 @@ export default createStore({
         throw new Error(response.data?.message || '更新背景图失败')
       } catch (error) {
         console.error('Failed to update background:', error)
+        throw error
+      }
+    },
+
+    async fetchUserInfo({ commit }) {
+      try {
+        const response = await auth.getUserInfo()
+        
+        if (response.code === 200) {
+          commit('SET_USER_INFO', response)
+          return response.data
+        }
+      } catch (error) {
+        console.error('获取用户信息失败:', error)
         throw error
       }
     }

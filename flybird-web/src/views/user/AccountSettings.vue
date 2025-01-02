@@ -11,7 +11,7 @@
           <!-- UID -->
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-2">
-              <span class="text-sm font-medium text-gray-500">用户 ID</span>
+              <span class="text-sm font-medium text-gray-500">UID</span>
               <span class="text-sm text-gray-900">{{ uid }}</span>
             </div>
             <div class="text-xs text-gray-500">用户唯一标识</div>
@@ -47,13 +47,33 @@
         </div>
         
         <div class="p-6 space-y-6">
+          <!-- 邮箱 -->
+          <div class="flex items-center justify-between">
+            <div class="flex-1">
+              <div class="flex items-center space-x-2">
+                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <span class="text-sm font-medium text-gray-900">邮箱</span>
+              </div>
+              <p class="mt-1 text-sm text-gray-500">{{ email || '未绑定' }}</p>
+            </div>
+            <button 
+              @click="openEmailModal"
+              class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-indigo-600 border border-indigo-600 
+              hover:bg-indigo-50 transition-colors rounded-md">
+              {{ email ? '更换邮箱' : '绑定邮箱' }}
+            </button>
+          </div>
+
           <!-- 手机号 -->
           <div class="flex items-center justify-between">
             <div class="flex-1">
               <div class="flex items-center space-x-2">
                 <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                    d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
                 <span class="text-sm font-medium text-gray-900">手机号</span>
               </div>
@@ -350,6 +370,71 @@
             </div>
           </div>
         </div>
+
+        <!-- 邮箱绑定弹窗 -->
+        <div v-if="showEmailModal" class="modal-overlay">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3>{{ email ? '更换邮箱' : '绑定邮箱' }}</h3>
+              <button class="close-btn" @click="closeEmailModal">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div class="form-group">
+                <input 
+                  type="email" 
+                  v-model="emailManager.state.value"
+                  placeholder="请输入邮箱地址"
+                  :disabled="emailManager.state.loading"
+                />
+              </div>
+              <div class="form-group">
+                <div class="code-input">
+                  <input 
+                    type="text" 
+                    v-model="emailManager.state.code"
+                    placeholder="请输入验证码"
+                    :disabled="emailManager.state.loading"
+                  />
+                  <button 
+                    @click="emailManager.handleSendCode"
+                    :disabled="emailManager.state.loading || emailManager.state.countdown > 0"
+                    class="code-btn"
+                  >
+                    {{ emailManager.state.countdown > 0 ? `${emailManager.state.countdown}s` : '获取验证码' }}
+                  </button>
+                </div>
+              </div>
+              <div class="form-group" v-if="email">
+                <input 
+                  type="password" 
+                  v-model="emailManager.state.password"
+                  placeholder="请输入登录密码"
+                  :disabled="emailManager.state.loading"
+                />
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button 
+                class="btn btn-default" 
+                @click="closeEmailModal"
+                :disabled="emailManager.state.loading"
+              >
+                取消
+              </button>
+              <button 
+                class="btn btn-primary" 
+                @click="handleEmailUpdate"
+                :disabled="!isEmailFormValid"
+              >
+                {{ emailManager.state.loading ? (email ? '更换中...' : '绑定中...') : '确认' }}
+              </button>
+            </div>
+          </div>
+        </div>
       </Teleport>
     </div>
   </div>
@@ -363,6 +448,7 @@ import { showToast } from '@/components/ToastMessage'
 import { useDeleteAccount } from '@/composables/useDeleteAccount'
 import { useNickname } from '@/composables/useNickname'
 import { usePhone } from '@/composables/usePhone'
+import { useEmail } from '@/composables/useEmail'
 import { useChangePassword } from '@/composables/useChangePassword'
 
 const store = useStore()
@@ -371,10 +457,12 @@ const router = useRouter()
 const username = computed(() => store.state.userInfo?.data?.user?.username || '未设置')
 const uid = computed(() => store.state.userInfo?.data?.user?.uid || '暂无')
 const phone = computed(() => store.state.userInfo?.data?.user?.phone || '')
+const email = computed(() => store.state.userInfo?.data?.user?.email || '')
 
 // 使用 composables
 const nickname = useNickname()
 const phoneManager = usePhone()
+const emailManager = useEmail()
 const deleteAccount = useDeleteAccount()
 const password = useChangePassword()
 
@@ -467,6 +555,52 @@ const handlePhoneUpdate = async () => {
 const validateNickname = () => {
   nickname.state.error = nickname.validateNickname(nickname.state.value)
 }
+
+// 邮箱相关
+const showEmailModal = ref(false)
+
+const openEmailModal = () => {
+  emailManager.state.value = ''
+  emailManager.state.code = ''
+  showEmailModal.value = true
+}
+
+const closeEmailModal = () => {
+  showEmailModal.value = false
+  emailManager.state.value = ''
+  emailManager.state.code = ''
+  emailManager.state.password = ''
+}
+
+const handleEmailUpdate = async () => {
+  const success = await emailManager.handleUpdate()
+  if (success) {
+    closeEmailModal()
+  }
+}
+
+// 添加计算属性控制邮箱表单按钮状态
+const isEmailFormValid = computed(() => {
+  // 检查邮箱格式
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  const isValidEmail = emailRegex.test(emailManager.state.value)
+  
+  // 检查是否有必填字段且邮箱格式正确
+  const hasRequiredFields = emailManager.state.value && 
+                          emailManager.state.code && 
+                          isValidEmail
+  
+  // 如果是更换邮箱，还需要密码
+  if (email) {
+    return hasRequiredFields && 
+           emailManager.state.password && 
+           !emailManager.state.loading
+  }
+  
+  // 绑定邮箱只需要邮箱和验证码
+  return hasRequiredFields && 
+         !emailManager.state.loading
+})
 </script>
 
 <style scoped>

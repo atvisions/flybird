@@ -49,7 +49,8 @@ class ProfileDataView(APIView):
                     'user': {
                         'uid': user.uid,
                         'username': user.username,
-                        'phone': user.phone
+                        'phone': user.phone,
+                        'email': user.email
                     },
                     'basic_info': BasicInfoSerializer(user.basic_info).data if hasattr(user, 'basic_info') else None,
                     'job_intention': JobIntentionSerializer(user.job_intention).data if hasattr(user, 'job_intention') else None,

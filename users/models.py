@@ -51,6 +51,14 @@ class User(AbstractUser):
     # 手机号字段
     phone = models.CharField(_('手机号'), max_length=11, unique=True)
     
+    # 确保 email 是唯一的
+    email = models.EmailField(
+        _('email address'),
+        unique=True,
+        null=True,
+        blank=True
+    )
+    
     USERNAME_FIELD = 'phone'
     REQUIRED_FIELDS = []
     

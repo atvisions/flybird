@@ -7,7 +7,8 @@ export const STORAGE_KEYS = {
   USER_INFO: 'user_info',
   TOKEN_EXPIRES: 'token_expires',
   REMEMBER_ME: 'remember_me',
-  REMEMBERED_PHONE: 'remembered_phone'
+  REMEMBERED_PHONE: 'remembered_phone',
+  ACCOUNT: 'account'
 }
 
 export const storage = {
@@ -62,11 +63,18 @@ export const storage = {
     localStorage.removeItem(STORAGE_KEYS.USER_INFO)
   },
 
-  // 保存手机号
-  savePhone(phone, remember = false) {
+  // 保存账号
+  saveAccount(account, remember = false) {
     if (remember) {
-      localStorage.setItem(STORAGE_KEYS.REMEMBERED_PHONE, phone)
+      localStorage.setItem(STORAGE_KEYS.ACCOUNT, account)
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.ACCOUNT)
     }
+  },
+
+  // 获取保存的账号
+  getSavedAccount() {
+    return localStorage.getItem(STORAGE_KEYS.ACCOUNT)
   },
 
   // 获取记住的手机号
