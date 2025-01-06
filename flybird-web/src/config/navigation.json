@@ -1,0 +1,41 @@
+{
+  "main": [
+    {
+      "name": "简历模板",
+      "href": "/templates"
+    },
+    {
+      "name": "飞鸟社区",
+      "href": "/community"
+    },
+    {
+      "name": "作品集",
+      "href": "/portfolio"
+    }
+  ],
+  "userMenu": [
+    {
+      "name": "个人档案",
+      "key": "profile",
+      "icon": "user",
+      "count": "60%"
+    },
+    {
+      "name": "我的简历",
+      "key": "resumes",
+      "icon": "document",
+      "count": 2
+    },
+    {
+      "name": "作品集",
+      "key": "portfolio",
+      "icon": "collection",
+      "count": 3
+    },
+    {
+      "name": "账户设置",
+      "key": "account",
+      "icon": "cog"
+    }
+  ]
+}
