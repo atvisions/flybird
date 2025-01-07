@@ -166,7 +166,7 @@ const mobileActions = [
     key: 'profile',
     label: '我的',
     icon: UserCircleIcon,
-    handler: () => router.push('/user?tab=profile')
+    handler: () => router.push('/user?tab=home')
   }
 ]
 
@@ -252,66 +252,7 @@ const portfolioMenuGroups = [
   }
 ]
 
-const profileMenuGroups = [
-  {
-    title: '我的',
-    items: [
-      {
-        name: '我的档案',
-        path: '/user?tab=profile',
-        icon: UserCircleIcon
-      },
-      {
-        name: '我的简历',
-        path: '/user?tab=resumes',
-        icon: DocumentIcon
-      },
-      {
-        name: '我的创作',
-        path: '/user?tab=creations',
-        icon: DocumentTextIcon
-      },
-      {
-        name: '我的作品集',
-        path: '/user?tab=portfolio',
-        icon: PhotoIcon
-      },
-      {
-        name: '我的消息',
-        path: '/user?tab=messages',
-        icon: EnvelopeIcon
-      },
-      {
-        name: '我的收藏',
-        path: '/user?tab=favorites',
-        icon: StarIcon
-      },
-      {
-        name: '我的主页',
-        path: '/user?tab=homepage',
-        icon: GlobeAltIcon
-      }
-    ]
-  }
-]
 
-const settingsMenuGroups = [
-  {
-    title: '设置',
-    items: [
-      {
-        name: '账号设置',
-        path: '/user?tab=account',
-        icon: Cog6ToothIcon
-      },
-      {
-        name: '隐私设置',
-        path: '/user?tab=privacy',
-        icon: ShieldCheckIcon
-      }
-    ]
-  }
-]
 
 // 修改模版菜单组
 const templateMenuGroups = [
@@ -319,24 +260,14 @@ const templateMenuGroups = [
     title: '简历模板',
     items: [
       { 
-        name: '全部模板', 
-        path: '/templates', 
+        name: '简历', 
+        path: '/templates/resume', 
         icon: DocumentIcon 
       },
       { 
-        name: '校园简历', 
-        path: '/templates/campus', 
+        name: '求职信', 
+        path: '/templates/cover-letter', 
         icon: AcademicCapIcon 
-      },
-      { 
-        name: '社会简历', 
-        path: '/templates/professional', 
-        icon: BriefcaseIcon 
-      },
-      { 
-        name: '英文简历', 
-        path: '/templates/english', 
-        icon: LanguageIcon 
       }
     ]
   }

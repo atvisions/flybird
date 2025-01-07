@@ -1,28 +1,29 @@
 <template>
-  <!-- 主导航区域 -->
   <div class="mt-6 bg-white rounded-xl border border-gray-100 p-4 hidden md:block mb-6">
     <div class="flex flex-col gap-4">
       <!-- 左侧主导航和右侧按钮 -->
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <!-- 左侧主导航 -->
-        <div class="flex items-center -mx-1 overflow-x-auto no-scrollbar">
+        <div class="flex items-center -mx-1">
           <router-link
             v-for="nav in mainNavs"
             :key="nav.path"
             :to="nav.path"
-            class="px-4 sm:px-8 py-3 mx-1 text-sm font-medium transition-colors relative group whitespace-nowrap"
+            class="px-4 sm:px-6 py-3 mx-1 text-sm font-medium transition-colors group whitespace-nowrap flex items-center"
             :class="[
               $route.path === nav.path
                 ? 'text-gray-900'
                 : 'text-gray-500 hover:text-gray-700'
             ]"
           >
-            {{ nav.name }}
-            <!-- 活跃状态指示器 -->
-            <div 
-              class="absolute left-1/2 -translate-x-1/2 bottom-4.5 w-1.5 h-1.5 rounded-full transition-colors"
-              :class="$route.path === nav.path ? 'bg-gray-900' : 'bg-transparent group-hover:bg-gray-200'"
-            ></div>
+            <component :is="nav.icon" class="w-4 h-4 mr-2 flex-shrink-0" />
+            <span class="relative">
+              {{ nav.name }}
+              <span 
+                class="absolute left-1/2 -translate-x-1/2 -bottom-3 w-1.5 h-1.5 rounded-full transition-colors"
+                :class="$route.path === nav.path ? 'bg-gray-900' : 'bg-transparent group-hover:bg-gray-200'"
+              ></span>
+            </span>
           </router-link>
         </div>
 
@@ -52,34 +53,35 @@
       <!-- 分隔线 -->
       <div class="h-px bg-gray-200"></div>
       
-      <!-- 二级分类标签和排序 -->
-      <div class="flex items-center h-10" :class="{ 'justify-between': !isHomePage }">
+      <!-- 分类标签 -->
+      <div class="flex items-center h-10 justify-between">
         <!-- 左侧分类标签 -->
-        <div class="flex items-center -mx-1 overflow-x-auto no-scrollbar" :class="{ 'flex-1': isHomePage }">
+        <div class="flex items-center -mx-1 overflow-x-auto no-scrollbar">
           <button
-            v-for="category in currentCategories"
+            v-for="category in categories"
             :key="category.id"
             @click="handleCategoryChange(category.id)"
-            class="h-10 px-4 mx-1 rounded-full text-sm font-medium transition-colors whitespace-nowrap flex items-center"
+            class="h-10 px-4 mx-1 rounded-full text-sm font-medium transition-colors whitespace-nowrap inline-flex items-center"
             :class="[
               currentCategory === category.id
                 ? 'bg-gray-900 text-white'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             ]"
           >
+            <component :is="category.icon" class="w-4 h-4 mr-2 flex-shrink-0" />
             {{ category.name }}
           </button>
         </div>
 
-        <!-- 右侧排序按钮 - 不在首页显示 -->
-        <div v-if="!isHomePage" class="relative flex-shrink-0 ml-4">
+        <!-- 右侧排序按钮 -->
+        <div class="relative flex-shrink-0 ml-4">
           <button 
             @click="showSortMenu = !showSortMenu"
-            class="h-10 flex items-center px-4 bg-white border border-gray-200 rounded-lg text-sm font-medium hover:border-gray-300"
+            class="h-10 inline-flex items-center px-4 bg-white border border-gray-200 rounded-lg text-sm font-medium hover:border-gray-300"
           >
-            <ArrowsUpDownIcon class="w-4 h-4 mr-2 text-gray-500" />
-            {{ sortOptions[props.currentSort]?.label || '排序' }}
-            <ChevronDownIcon class="w-4 h-4 ml-2 text-gray-500" />
+            <ArrowsUpDownIcon class="w-4 h-4 mr-2 text-gray-500 flex-shrink-0" />
+            {{ sortOptions[currentSort]?.label || '排序' }}
+            <ChevronDownIcon class="w-4 h-4 ml-2 text-gray-500 flex-shrink-0" />
           </button>
           
           <div v-if="showSortMenu"
@@ -89,13 +91,13 @@
               v-for="(option, key) in sortOptions"
               :key="key"
               @click="handleSort(key)"
-              class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center"
-              :class="{ 'text-gray-900 font-medium': props.currentSort === key, 'text-gray-600': props.currentSort !== key }"
+              class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 inline-flex items-center"
+              :class="{ 'text-gray-900 font-medium': currentSort === key, 'text-gray-600': currentSort !== key }"
             >
               <component 
                 :is="option.icon" 
-                class="w-4 h-4 mr-2"
-                :class="props.currentSort === key ? 'text-gray-900' : 'text-gray-400'"
+                class="w-4 h-4 mr-2 flex-shrink-0"
+                :class="currentSort === key ? 'text-gray-900' : 'text-gray-400'"
               />
               {{ option.label }}
             </button>
@@ -103,6 +105,11 @@
         </div>
       </div>
     </div>
+    <!-- 添加一个遮罩层来处理排序菜单的点击外部关闭 -->
+    <div v-if="showSortMenu" 
+      class="fixed inset-0 z-10" 
+      @click="showSortMenu = false"
+    ></div>
   </div>
 </template>
 
@@ -110,7 +117,35 @@
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useStore } from 'vuex'
-import { PlusIcon, UserIcon, ArrowsUpDownIcon, ChevronDownIcon, FireIcon, ClockIcon, HandThumbUpIcon, ChatBubbleLeftIcon } from '@heroicons/vue/24/outline'
+import { 
+  PlusIcon, 
+  UserIcon, 
+  ArrowsUpDownIcon, 
+  ChevronDownIcon, 
+  FireIcon, 
+  ClockIcon, 
+  HandThumbUpIcon, 
+  EyeIcon,
+  HomeIcon,
+  NewspaperIcon,
+  QuestionMarkCircleIcon,
+  HashtagIcon,
+  DeviceMobileIcon,
+  SparklesIcon,
+  CogIcon,
+  ServerIcon,
+  CubeTransparentIcon,
+  CheckCircleIcon,
+  StarIcon,
+  GiftIcon,
+  BoltIcon,
+  BriefcaseIcon,
+  WrenchIcon,
+  UserGroupIcon,
+  CodeBracketIcon,
+  DevicePhoneMobileIcon,
+  WrenchScrewdriverIcon
+} from '@heroicons/vue/24/outline'
 
 const props = defineProps({
   currentCategory: {
@@ -132,71 +167,51 @@ const store = useStore()
 // 使用 Vuex store 的 isAuthenticated 状态
 const isAuthenticated = computed(() => store.state.isAuthenticated)
 
-// 判断是否在首页
-const isHomePage = computed(() => {
-  return route.path === '/community'
-})
-
 // 主导航数据
 const mainNavs = [
-  { name: '首页', path: '/community' },
-  { name: '文章', path: '/community/articles' },
-  { name: '问答', path: '/community/questions' },
-  { name: '话题', path: '/community/topics' }
+  { name: '首页', path: '/community', icon: HomeIcon },
+  { name: '文章', path: '/community/articles', icon: NewspaperIcon },
+  { name: '问答', path: '/community/questions', icon: QuestionMarkCircleIcon },
+  { name: '话题', path: '/community/topics', icon: HashtagIcon }
 ]
 
 // 根据当前路由显示不同的分类选项
-const currentCategories = computed(() => {
+const categories = computed(() => {
   const path = route.path
   if (path.includes('articles')) {
-    return articleCategories
+    return [
+      { id: 'all', name: '全部', icon: HomeIcon },
+      { id: 'frontend', name: '前端开发', icon: CodeBracketIcon },
+      { id: 'backend', name: '后端开发', icon: ServerIcon },
+      { id: 'mobile', name: '移动开发', icon: DevicePhoneMobileIcon },
+      { id: 'ai', name: '人工智能', icon: SparklesIcon },
+      { id: 'devops', name: 'DevOps', icon: CogIcon }
+    ]
   } else if (path.includes('questions')) {
-    return questionCategories
+    return [
+      { id: 'all', name: '全部', icon: HomeIcon },
+      { id: 'unsolved', name: '待解决', icon: QuestionMarkCircleIcon },
+      { id: 'solved', name: '已解决', icon: CheckCircleIcon },
+      { id: 'featured', name: '精选问答', icon: StarIcon },
+      { id: 'reward', name: '悬赏问答', icon: GiftIcon }
+    ]
   } else if (path.includes('topics')) {
-    return topicCategories
+    return [
+      { id: 'all', name: '全部', icon: HomeIcon },
+      { id: 'hot', name: '热门话题', icon: FireIcon },
+      { id: 'tech', name: '技术之争', icon: BoltIcon },
+      { id: 'career', name: '职业发展', icon: BriefcaseIcon },
+      { id: 'tools', name: '工具推荐', icon: WrenchScrewdriverIcon }
+    ]
   }
-  return allCategories
+  // 首页分类
+  return [
+    { id: 'all', name: '全部', icon: HomeIcon },
+    { id: 'recommend', name: '推荐', icon: SparklesIcon },
+    { id: 'following', name: '关注', icon: UserGroupIcon },
+    { id: 'latest', name: '最新', icon: ClockIcon }
+  ]
 })
-
-// 处理分类变更
-const handleCategoryChange = (categoryId) => {
-  emit('update:currentCategory', categoryId)
-}
-
-// 分类数据
-const allCategories = [
-  { id: 'all', name: '全部' },
-  { id: 'recommend', name: '推荐' },
-  { id: 'following', name: '关注' },
-  { id: 'latest', name: '最新' }
-]
-
-const articleCategories = [
-  { id: 'all', name: '全部' },
-  { id: 'frontend', name: '前端开发' },
-  { id: 'backend', name: '后端开发' },
-  { id: 'mobile', name: '移动开发' },
-  { id: 'ai', name: '人工智能' },
-  { id: 'devops', name: 'DevOps' },
-  { id: 'database', name: '数据库' },
-  { id: 'architecture', name: '架构设计' }
-]
-
-const questionCategories = [
-  { id: 'all', name: '全部' },
-  { id: 'unsolved', name: '待解决' },
-  { id: 'solved', name: '已解决' },
-  { id: 'featured', name: '精选问答' },
-  { id: 'reward', name: '悬赏问答' }
-]
-
-const topicCategories = [
-  { id: 'all', name: '全部' },
-  { id: 'hot', name: '热门话题' },
-  { id: 'tech', name: '技术之争' },
-  { id: 'career', name: '职业发展' },
-  { id: 'tools', name: '工具推荐' }
-]
 
 // 排序菜单状态
 const showSortMenu = ref(false)
@@ -205,7 +220,7 @@ const showSortMenu = ref(false)
 const sortOptions = {
   popular: { label: '最受欢迎', icon: FireIcon },
   newest: { label: '最新发布', icon: ClockIcon },
-  comments: { label: '最多评论', icon: ChatBubbleLeftIcon },
+  views: { label: '最多浏览', icon: EyeIcon },
   likes: { label: '最多点赞', icon: HandThumbUpIcon }
 }
 
@@ -213,5 +228,10 @@ const sortOptions = {
 const handleSort = (value) => {
   emit('update:currentSort', value)
   showSortMenu.value = false
+}
+
+// 处理分类变更
+const handleCategoryChange = (categoryId) => {
+  emit('update:currentCategory', categoryId)
 }
 </script> 

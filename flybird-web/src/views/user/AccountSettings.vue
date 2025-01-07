@@ -1,45 +1,6 @@
 <template>
   <div class="max-w-4xl mx-auto">
     <div class="space-y-6">
-      <!-- 账户信息 -->
-      <section class="bg-white rounded-lg shadow overflow-hidden">
-        <div class="px-6 py-4 bg-gray-100 border-b border-gray-200">
-          <h2 class="text-lg font-medium text-gray-900">账户信息</h2>
-        </div>
-        
-        <div class="p-6 space-y-6">
-          <!-- UID -->
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-              <span class="text-sm font-medium text-gray-500">UID</span>
-              <span class="text-sm text-gray-900">{{ uid }}</span>
-            </div>
-            <div class="text-xs text-gray-500">用户唯一标识</div>
-          </div>
-
-          <!-- 昵称 -->
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-              <span class="text-sm font-medium text-gray-500">昵称</span>
-              <span class="text-sm text-gray-900">{{ username }}</span>
-              <span class="text-xs text-gray-400" v-if="!username">
-                (默认为 Flybird + 手机号后4位)
-              </span>
-            </div>
-            <button 
-              @click="openNicknameModal"
-              class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-indigo-600 border border-indigo-600 
-              hover:bg-indigo-50 transition-colors rounded-md">
-              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-              </svg>
-              设置
-            </button>
-          </div>
-        </div>
-      </section>
-
       <!-- 账户安全 -->
       <section class="bg-white rounded-lg shadow overflow-hidden">
         <div class="px-6 py-4 bg-gray-100 border-b border-gray-200">
@@ -140,56 +101,6 @@
 
       <!-- Teleport 部分重写所有弹窗 -->
       <Teleport to="body">
-        <!-- 昵称设置弹窗 -->
-        <div v-if="showNicknameModal" class="modal-overlay">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h3>修改昵称</h3>
-              <button class="close-btn" @click="closeNicknameModal">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div class="modal-body">
-              <div class="form-group">
-                <input 
-                  type="text"
-                  v-model="nickname.state.value"
-                  placeholder="请输入新昵称"
-                  :disabled="nickname.state.loading"
-                  @input="validateNickname"
-                  :class="{ 'error': nickname.state.error }"
-                />
-                <!-- 错误提示 -->
-                <div v-if="nickname.state.error" class="text-red-500 text-sm mt-1">
-                  {{ nickname.state.error }}
-                </div>
-                <!-- 简单的提示文字 -->
-                <div class="text-gray-400 text-xs mt-1">
-                  昵称长度4-8个字符，可使用中文、英文字母、数字
-                </div>
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button 
-                class="btn btn-default" 
-                @click="closeNicknameModal"
-                :disabled="nickname.state.loading"
-              >
-                取消
-              </button>
-              <button 
-                class="btn btn-primary" 
-                @click="handleNicknameUpdate"
-                :disabled="nickname.state.loading"
-              >
-                {{ nickname.state.loading ? '更新中...' : '确认' }}
-              </button>
-            </div>
-          </div>
-        </div>
-
         <!-- 手机号修改弹窗 -->
         <div v-if="showPhoneModal" class="modal-overlay">
           <div class="modal-content">
@@ -518,17 +429,11 @@ const maskPhone = (phone) => {
 }
 
 // 弹窗状态
-const showNicknameModal = ref(false)
 const showPhoneModal = ref(false)
 const showPasswordModal = ref(false)
 const showDeleteConfirm = ref(false)
 
 // 打开弹窗的方法
-const openNicknameModal = () => {
-  nickname.value = store.state.userInfo?.username || ''
-  showNicknameModal.value = true
-}
-
 const openPhoneModal = () => {
   phoneManager.state.value = ''
   phoneManager.state.code = ''
@@ -544,11 +449,6 @@ const openDeleteConfirm = async () => {
 }
 
 // 关闭弹窗的方法
-const closeNicknameModal = () => {
-  showNicknameModal.value = false
-  nickname.value = ''
-}
-
 const closePhoneModal = () => {
   showPhoneModal.value = false
   phoneManager.state.value = ''
@@ -570,13 +470,6 @@ const handlePasswordSuccess = () => {
   showToast('密码修改成功', 'success')
 }
 
-// 处理昵称更新
-const handleNicknameUpdate = async () => {
-  const success = await nickname.handleUpdate()
-  if (success) {
-    closeNicknameModal()
-  }
-}
 
 // 添加密码验证相关的状态和方法
 const confirmPasswordError = ref('')
@@ -624,11 +517,6 @@ const handlePhoneUpdate = async () => {
   if (success) {
     closePhoneModal()
   }
-}
-
-// 实时验证昵称
-const validateNickname = () => {
-  nickname.state.error = nickname.validateNickname(nickname.state.value)
 }
 
 // 邮箱相关

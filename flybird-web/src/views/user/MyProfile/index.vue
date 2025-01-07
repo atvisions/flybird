@@ -2,6 +2,32 @@
 <template>
   <div class="container mx-auto pb-6">
     <div class="max-w-4xl mx-auto space-y-4">
+      <!-- 顶部提示横幅 -->
+      <div v-if="!hideWelcomeBanner" class="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg shadow-lg overflow-hidden relative">
+        <div class="px-4 py-5 sm:p-6">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <DocumentTextIcon class="h-6 w-6 text-white" />
+            </div>
+            <div class="ml-4">
+              <h3 class="text-lg font-medium text-white">欢迎来到简历档案</h3>
+              <div class="mt-1">
+                <p class="text-sm text-blue-100">
+                  这里是您的专业简历信息管理中心，完善的档案信息将帮助您生成更出色的简历。请注意，这里的信息与您在社区中展示的个人主页是分开的，专注于求职场景使用。
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 关闭按钮 -->
+        <button 
+          @click="closeWelcomeBanner"
+          class="absolute top-2 right-2 p-1 text-white/80 hover:text-white transition-colors"
+        >
+          <XMarkIcon class="w-5 h-5" />
+        </button>
+      </div>
+
       <!-- 基本信息 -->
       <BasicInfo
         :resumeData="profileData?.basic_info"
@@ -287,7 +313,9 @@ import {
 } from '@headlessui/vue'
 import {
   PlusIcon,
-  ExclamationTriangleIcon
+  ExclamationTriangleIcon,
+  DocumentTextIcon,
+  XMarkIcon
 } from '@heroicons/vue/24/outline'
 import { ALL_MODULES } from '@/constants'
 
@@ -976,5 +1004,14 @@ const handleModuleEdit = async (type, data) => {
     console.error('保存失败:', error)
     showToast(error.message || '保存失败', 'error')
   }
+}
+
+// 欢迎横幅状态
+const hideWelcomeBanner = ref(localStorage.getItem('hideWelcomeBanner') === 'true')
+
+// 关闭欢迎横幅
+const closeWelcomeBanner = () => {
+  hideWelcomeBanner.value = true
+  localStorage.setItem('hideWelcomeBanner', 'true')
 }
 </script>

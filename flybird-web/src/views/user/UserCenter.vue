@@ -1,56 +1,56 @@
 <template>
-    <div class="user-center">
+    <div class="min-h-screen">
       <HeadView />
-      <div class="min-h-screen bg-gray-50 pt-16 sm:pt-20 lg:pb-0 mt-4">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-4 lg:mt-0">
+      <div class="py-4 lg:py-6 mt-[60px] md:mt-[72px] md:overflow-visible overflow-x-hidden">
+        <div class="mx-auto max-w-7xl px-2 sm:px-4 lg:px-8 mt-4 lg:mt-0 relative">
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
             <!-- 左侧导航 - 仅桌面端显示 -->
             <div class="hidden lg:block lg:col-span-3">
-              <div class="bg-white rounded-lg shadow overflow-hidden sticky top-20">
+              <div class="bg-white rounded-lg shadow overflow-hidden sticky top-24">
                 <nav class="space-y-1">
-                    <button
-                        v-for="tab in tabs"
-                        :key="tab.key"
-                        @click="handleTabChange(tab.key)" 
-                        class="w-full flex items-center px-4 py-3 text-sm font-medium group"
-                        :class="[
-                        currentTab === tab.key
-                            ? 'bg-gray-100 text-indigo-600'
-                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                        ]"
-                    >
-                    <div class="flex items-center flex-1 min-w-0">
-                      <component
-                        :is="tab.icon"
-                        :class="[
-                          currentTab === tab.key ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-500',
-                          'h-5 w-5 flex-shrink-0'
-                        ]"
-                      />
-                      <span class="ml-2 truncate">{{ tab.name }}</span>
-                    </div>
-                    <span 
-                      v-if="getTabMetric(tab.key)"
+                  <button
+                      v-for="tab in tabs"
+                      :key="tab.key"
+                      @click="handleTabChange(tab.key)" 
+                      class="w-full flex items-center px-4 py-3 text-sm font-medium group"
                       :class="[
-                        currentTab === tab.key ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-900',
-                        'ml-3 inline-block py-0.5 px-2 text-xs rounded-full'
+                      currentTab === tab.key
+                          ? 'bg-gray-100 text-[#1A56DB]'
+                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                       ]"
-                    >
-                      {{ getTabMetric(tab.key) }}
-                    </span>
-                  </button>
-                </nav>
+                  >
+                  <div class="flex items-center flex-1 min-w-0">
+                    <component
+                      :is="getTabIcon(tab)"
+                      :class="[
+                        currentTab === tab.key ? 'text-[#1A56DB]' : 'text-gray-400 group-hover:text-gray-500',
+                        'h-5 w-5 flex-shrink-0'
+                      ]"
+                    />
+                    <span class="ml-2 truncate">{{ tab.name }}</span>
+                  </div>
+                  <span 
+                    v-if="getTabMetric(tab.key)"
+                    :class="[
+                      currentTab === tab.key ? 'bg-blue-100 text-[#1A56DB]' : 'bg-gray-100 text-gray-900',
+                      'ml-3 inline-block py-0.5 px-2 text-xs rounded-full'
+                    ]"
+                  >
+                    {{ getTabMetric(tab.key) }}
+                  </span>
+                </button>
+              </nav>
               </div>
             </div>
   
             <!-- 中间内容区 -->
-            <div class="lg:col-span-6">
+            <div class="lg:col-span-6 pb-20 lg:pb-0 w-full space-y-4">
               <component :is="currentComponent" />
             </div>
   
             <!-- 右侧广告位 - 仅桌面端显示 -->
             <div class="hidden lg:block lg:col-span-3">
-              <div class="bg-white rounded-lg shadow p-4 sticky top-20">
+              <div class="bg-white rounded-lg shadow p-4 sticky top-24">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">推荐职位</h3>
                 <div class="space-y-4">
                   <div v-for="job in recommendedJobs" :key="job.id" class="flex space-x-3">
@@ -68,12 +68,40 @@
           </div>
         </div>
   
-        <MobileTabBar 
-          :menu-groups="menuGroups"
-          :unread-messages="unreadMessagesCount"
-        />
+        <!-- 移动端底部导航 -->
+        <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 md:hidden z-50">
+          <div class="flex justify-around">
+            <button
+              v-for="action in mobileActions"
+              :key="action.key"
+              @click="action.handler"
+              class="flex flex-col items-center py-2 px-4 relative"
+            >
+              <component
+                :is="action.icon"
+                :class="[
+                  currentTab === action.key ? 'text-[#1A56DB]' : 'text-gray-400',
+                  'w-6 h-6'
+                ]"
+              />
+              <span 
+                class="text-xs mt-1"
+                :class="currentTab === action.key ? 'text-[#1A56DB]' : 'text-gray-500'"
+              >
+                {{ action.label }}
+              </span>
+              <span
+                v-if="action.badge"
+                class="absolute -top-1 right-2 min-w-[16px] h-4 bg-red-500 rounded-full text-[10px] font-medium text-white flex items-center justify-center px-1"
+              >
+                {{ action.badge }}
+              </span>
+            </button>
+          </div>
+          <div class="safe-area-pb"></div>
+        </div>
       </div>
-      <FootView />
+      <FootView class="hidden md:block" />
     </div>
   </template>
 <script setup>
@@ -84,20 +112,19 @@ import HeadView from '../../components/HeadView.vue'
 import FootView from '../../components/FootView.vue'
 import {
   UserIcon,
-  DocumentTextIcon,
-  PhotoIcon,
   DocumentIcon,
-  StarIcon,
-  EnvelopeIcon,
-  GlobeAltIcon,
   Cog6ToothIcon,
-  PlusCircleIcon,
+  Squares2X2Icon,
+  BellIcon,
   Bars3Icon,
-  XMarkIcon,
-  BookmarkIcon,
-  HomeIcon,
-  CogIcon
 } from '@heroicons/vue/24/outline'
+import {
+  UserIcon as UserIconSolid,
+  DocumentIcon as DocumentIconSolid,
+  Cog6ToothIcon as Cog6ToothIconSolid,
+  Squares2X2Icon as Squares2X2IconSolid,
+  BellIcon as BellIconSolid,
+} from '@heroicons/vue/24/solid'
 import MobileTabBar from '@/components/MobileTabBar.vue'
 
 // 创建加载组件
@@ -133,11 +160,6 @@ const MyResumes = defineAsyncComponent({
   timeout: 10000
 })
 
-const MyPortfolio = defineAsyncComponent({
-  loader: () => import('@/views/user/MyProfile/components/MyPortfolio.vue'),
-  loadingComponent: LoadingComponent,
-  timeout: 10000
-})
 
 const AccountSettings = defineAsyncComponent({
   loader: () => import('@/views/user/AccountSettings.vue'),
@@ -145,26 +167,15 @@ const AccountSettings = defineAsyncComponent({
   timeout: 10000
 })
 
-const MyCreations = defineAsyncComponent({
-  loader: () => import('@/views/user/MyProfile/components/MyCreations.vue'),
-  loadingComponent: LoadingComponent,
-  timeout: 10000
-})
 
-const MyFavorites = defineAsyncComponent({
-  loader: () => import('@/views/user/MyProfile/components/MyFavorites.vue'),
+const UserHome = defineAsyncComponent({
+  loader: () => import('@/views/user/MyProfile/components/UserHome.vue'),
   loadingComponent: LoadingComponent,
   timeout: 10000
 })
 
 const MyMessages = defineAsyncComponent({
   loader: () => import('@/views/user/MyProfile/components/MyMessages.vue'),
-  loadingComponent: LoadingComponent,
-  timeout: 10000
-})
-
-const MyHomepage = defineAsyncComponent({
-  loader: () => import('@/views/user/MyProfile/components/MyHomepage.vue'),
   loadingComponent: LoadingComponent,
   timeout: 10000
 })
@@ -203,6 +214,11 @@ const handleTabChange = (key) => {
 // 将原有的tabs拆分为主要和次要标签
 const tabs = [
   { 
+    key: 'home', 
+    name: '用户中心',
+    icon: Squares2X2Icon
+  },
+  { 
     key: 'profile', 
     name: '个人档案',
     icon: UserIcon
@@ -213,29 +229,9 @@ const tabs = [
     icon: DocumentIcon
   },
   { 
-    key: 'creations', 
-    name: '我的创作',
-    icon: DocumentTextIcon
-  },
-  { 
-    key: 'portfolio', 
-    name: '作品集',
-    icon: PhotoIcon
-  },
-  { 
-    key: 'favorites', 
-    name: '我的收藏',
-    icon: StarIcon
-  },
-  { 
     key: 'messages', 
-    name: '我的消息',
-    icon: EnvelopeIcon
-  },
-  { 
-    key: 'homepage', 
-    name: '我的主页',
-    icon: GlobeAltIcon
+    name: '系统消息',
+    icon: BellIcon
   },
   { 
     key: 'account', 
@@ -255,12 +251,10 @@ const messageBadge = computed(() => unreadMessagesCount.value)
 // 移动端底部导航按钮
 const mobileActions = [
   {
-    key: 'more',
-    label: '更多',
-    icon: Bars3Icon,
-    handler: () => { 
-      isMobileMenuOpen.value = true 
-    }
+    key: 'home',
+    label: '用户中心',
+    icon: Squares2X2Icon,
+    handler: () => handleTabChange('home')
   },
   {
     key: 'profile',
@@ -277,9 +271,9 @@ const mobileActions = [
   {
     key: 'messages',
     label: '消息',
-    icon: EnvelopeIcon,
+    icon: BellIcon,
     handler: () => handleTabChange('messages'),
-    badge: messageBadge
+    badge: unreadMessagesCount
   },
   {
     key: 'account',
@@ -301,24 +295,18 @@ const handleMobileTabChange = (key) => {
 // 动态组件
 const currentComponent = computed(() => {
   switch (currentTab.value) {
+    case 'home':
+      return UserHome
     case 'profile':
       return MyProfile
-    case 'homepage':
-      return MyHomepage
     case 'resumes':
       return MyResumes
-    case 'creations':
-      return MyCreations
-    case 'portfolio':
-      return MyPortfolio
-    case 'favorites':
-      return MyFavorites
     case 'messages':
       return MyMessages
     case 'account':
       return AccountSettings
     default:
-      return MyProfile
+      return UserHome
   }
 })
 
@@ -354,7 +342,7 @@ const getTabMetric = (key) => {
     case 'favorites':
       return favoritesCount.value
     case 'messages':
-      return unreadMessagesCount.value
+      return unreadMessagesCount.value || 0
     default:
       return ''
   }
@@ -401,34 +389,88 @@ const isActiveTab = (key) => {
   }
   return currentTab.value === key
 }
- </script>
+
+// 定义菜单组
+const menuGroups = ref([
+  {
+    title: '内容管理',
+    items: [
+      {
+        label: '作品集',
+        icon: 'portfolio',
+        route: '/user/center?tab=portfolio'
+      },
+      {
+        label: '文章',
+        icon: 'article',
+        route: '/user/center?tab=articles'
+      },
+      {
+        label: '话题',
+        icon: 'topic',
+        route: '/user/center?tab=topics'
+      },
+      {
+        label: '问答',
+        icon: 'qa',
+        route: '/user/center?tab=qa'
+      }
+    ]
+  },
+  {
+    title: '互动管理',
+    items: [
+      {
+        label: '评论',
+        icon: 'comment',
+        route: '/user/center?tab=comments'
+      },
+      {
+        label: '收藏',
+        icon: 'favorite',
+        route: '/user/center?tab=favorites'
+      },
+      {
+        label: '关注',
+        icon: 'follow',
+        route: '/user/center?tab=following'
+      }
+    ]
+  }
+])
+
+// 获取当前标签对应的图标
+const getTabIcon = (tab) => {
+  if (currentTab.value === tab.key) {
+    // 选中状态使用实心图标
+    switch (tab.key) {
+      case 'home':
+        return Squares2X2IconSolid
+      case 'profile':
+        return UserIconSolid
+      case 'resumes':
+        return DocumentIconSolid
+      case 'messages':
+        return BellIconSolid
+      case 'account':
+        return Cog6ToothIconSolid
+      default:
+        return tab.icon
+    }
+  }
+  // 未选中状态使用描边图标
+  return tab.icon
+}
+</script>
  
  <style scoped>
- .user-center {
-   min-height: 100vh;
-   display: flex;
-   flex-direction: column;
+ .safe-area-inset-bottom {
+   padding-bottom: env(safe-area-inset-bottom);
  }
-
- /* 确保移动端底部导航不会遮挡内容 */
- @media (max-width: 1024px) {
-   .user-center {
-     padding-bottom: calc(env(safe-area-inset-bottom) + 56px); /* 56px 是底部导航栏的高度 */
-   }
-   
-   .safe-area-inset-bottom {
-     padding-bottom: env(safe-area-inset-bottom);
-   }
-
-   /* 防止水平滚动 */
-   .overflow-x-auto {
-     -webkit-overflow-scrolling: touch;
-     scrollbar-width: none; /* Firefox */
-     -ms-overflow-style: none; /* IE and Edge */
-   }
-   
-   .overflow-x-auto::-webkit-scrollbar {
-     display: none; /* Chrome, Safari and Opera */
+ 
+ @supports (padding-bottom: env(safe-area-inset-bottom)) {
+   .pb-16 {
+     padding-bottom: calc(4rem + env(safe-area-inset-bottom));
    }
  }
  </style>

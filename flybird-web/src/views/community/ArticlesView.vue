@@ -1,25 +1,148 @@
 <template>
-  <div class="py-4 lg:py-6 mt-[72px]">
+  <div class="py-4 pb-24 lg:py-6 mt-[28px] md:mt-[72px]">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <!-- 顶部横幅 -->
       <PageBanner theme="violet">
         <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">技术文章</h1>
         <p class="text-gray-600 text-lg max-w-2xl">分享技术经验，共同成长</p>
       </PageBanner>
-      <!-- 使用导航组件 -->
-      <CommunityNavigation v-model:currentCategory="currentCategory" />
-        <!-- 文章列表和右侧内容 -->
-        <div class="flex flex-col lg:flex-row gap-4 lg:gap-6 mt-4 lg:mt-6">
-          <!-- 左侧文章列表 -->
-          <div class="lg:flex-1 lg:max-w-[calc(100%-320px-24px)]">
-     
-            <!-- 文章列表 -->
-            <div class="bg-white rounded-lg lg:rounded-xl border border-gray-100 p-4 lg:p-6">
+
+      <!-- 移动端当前分类显示 -->
+      <div class="flex items-center justify-between py-3 sm:hidden">
+        <div class="flex items-center space-x-2">
+          <span class="text-sm text-gray-500">当前：</span>
+          <span class="text-sm font-medium text-gray-900">
+            {{ currentCategoryName }}
+          </span>
+        </div>
+        <button 
+          class="text-sm text-gray-500 hover:text-gray-900 flex items-center"
+          @click="showCategoryMenu = true"
+        >
+          切换分类
+          <ChevronRightIcon class="w-4 h-4 ml-1" />
+        </button>
+      </div>
+
+      <!-- PC端导航 -->
+      <div class="mt-6 bg-white rounded-xl border border-gray-100 p-4 hidden md:block mb-6">
+        <div class="flex flex-col gap-4">
+          <!-- 左侧主导航和右侧按钮 -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <!-- 左侧主导航 -->
+            <div class="flex items-center -mx-1">
+              <router-link
+                v-for="nav in mainCategories"
+                :key="nav.path"
+                :to="nav.path"
+                class="px-4 sm:px-6 py-3 mx-1 text-sm font-medium transition-colors group whitespace-nowrap flex items-center"
+                :class="[
+                  $route.path === nav.path
+                    ? 'text-gray-900'
+                    : 'text-gray-500 hover:text-gray-700'
+                ]"
+              >
+                <component :is="nav.icon" class="w-4 h-4 mr-2 flex-shrink-0" />
+                <span class="relative">
+                  {{ nav.name }}
+                  <span 
+                    class="absolute left-1/2 -translate-x-1/2 -bottom-3 w-1.5 h-1.5 rounded-full transition-colors"
+                    :class="$route.path === nav.path ? 'bg-gray-900' : 'bg-transparent group-hover:bg-gray-200'"
+                  ></span>
+                </span>
+              </router-link>
+            </div>
+
+            <!-- 右侧操作按钮 -->
+            <div class="flex items-center gap-2 sm:gap-3">
+              <template v-if="isAuthenticated">
+                <!-- 发布按钮 -->
+                <button class="h-9 px-4 sm:px-5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-full hover:shadow-lg hover:shadow-violet-500/20 transition-all duration-300 text-sm font-medium flex items-center group">
+                  <PlusIcon class="w-4 h-4 mr-1.5 sm:mr-2 group-hover:scale-110 transition-transform" />
+                  <span class="hidden sm:inline">发布内容</span>
+                  <span class="sm:hidden">发布</span>
+                </button>
+              </template>
+              <template v-else>
+                <!-- 登录按钮 -->
+                <router-link 
+                  :to="`/login?redirect=${encodeURIComponent($route.fullPath)}`"
+                  class="h-9 px-4 sm:px-5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-full hover:shadow-lg hover:shadow-violet-500/20 transition-all duration-300 text-sm font-medium flex items-center group"
+                >
+                  <UserIcon class="w-4 h-4 mr-1.5 sm:mr-2 group-hover:scale-110 transition-transform" />
+                  <span>登录</span>
+                </router-link>
+              </template>
+            </div>
+          </div>
+
+          <!-- 分隔线 -->
+          <div class="h-px bg-gray-200"></div>
+
+          <!-- 分类标签 -->
+          <div class="flex items-center h-10 justify-between">
+            <!-- 左侧分类标签 -->
+            <div class="flex items-center -mx-1 overflow-x-auto no-scrollbar">
+              <button
+                v-for="category in categories"
+                :key="category.id"
+                @click="handleCategoryChange(category.id)"
+                class="h-10 px-4 mx-1 rounded-full text-sm font-medium transition-colors whitespace-nowrap inline-flex items-center"
+                :class="[
+                  currentMainCategory === category.id
+                    ? 'bg-gray-900 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ]"
+              >
+                <component :is="category.icon" class="w-4 h-4 mr-2 flex-shrink-0" />
+                {{ category.name }}
+              </button>
+            </div>
+
+            <!-- 右侧排序按钮 -->
+            <div class="relative flex-shrink-0 ml-4">
+              <button 
+                @click="showSortMenu = !showSortMenu"
+                class="h-10 inline-flex items-center px-4 bg-white border border-gray-200 rounded-lg text-sm font-medium hover:border-gray-300"
+              >
+                <ArrowsUpDownIcon class="w-4 h-4 mr-2 text-gray-500 flex-shrink-0" />
+                {{ sortOptions[currentSort]?.label || '排序' }}
+                <ChevronDownIcon class="w-4 h-4 ml-2 text-gray-500 flex-shrink-0" />
+              </button>
+              
+              <div v-if="showSortMenu"
+                class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-20"
+              >
+                <button
+                  v-for="(option, key) in sortOptions"
+                  :key="key"
+                  @click="handleSort(key)"
+                  class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 inline-flex items-center"
+                  :class="{ 'text-gray-900 font-medium': currentSort === key, 'text-gray-600': currentSort !== key }"
+                >
+                  <component 
+                    :is="option.icon" 
+                    class="w-4 h-4 mr-2 flex-shrink-0"
+                    :class="currentSort === key ? 'text-gray-900' : 'text-gray-400'"
+                  />
+                  {{ option.label }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 文章列表和右侧内容 -->
+      <div class="flex flex-col lg:flex-row gap-4 lg:gap-6 mt-4 lg:mt-6">
+        <!-- 左侧文章列表 -->
+        <div class="lg:flex-1 lg:max-w-[calc(100%-320px-24px)]">
+          <!-- 文章列表 -->
+          <div class="bg-white rounded-lg lg:rounded-xl border border-gray-100 p-4 lg:p-6">
             <div class="flex items-center justify-between mb-3 lg:mb-6">
               <h2 class="text-lg font-bold text-gray-900">全部文章</h2>
               
               共 {{ filteredArticles.length }} 篇文章
-               
             </div>
             <div class="space-y-3 lg:space-y-5">
               <div v-for="(article, index) in articles" :key="article.id"
@@ -73,112 +196,111 @@
             </div>
           </div>
 
-            <!-- 分页导航 -->
-            <div class="mt-8 flex justify-center">
-              <nav class="flex items-center gap-2">
-                <button 
-                  class="w-10 h-10 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:border-gray-300 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  :disabled="currentPage === 1"
-                  @click="currentPage--"
+          <!-- 分页导航 -->
+          <div class="mt-8 flex justify-center">
+            <nav class="flex items-center gap-2">
+              <button 
+                class="w-10 h-10 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:border-gray-300 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                :disabled="currentPage === 1"
+                @click="currentPage--"
+              >
+                <ChevronLeftIcon class="w-5 h-5" />
+              </button>
+              
+              <div class="flex items-center gap-1">
+                <button
+                  v-for="page in totalPages"
+                  :key="page"
+                  @click="currentPage = page"
+                  class="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-medium transition-colors"
+                  :class="[
+                    currentPage === page
+                      ? 'bg-gray-900 text-white'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  ]"
                 >
-                  <ChevronLeftIcon class="w-5 h-5" />
+                  {{ page }}
                 </button>
-                
-                <div class="flex items-center gap-1">
-                  <button
-                    v-for="page in totalPages"
-                    :key="page"
-                    @click="currentPage = page"
-                    class="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-medium transition-colors"
-                    :class="[
-                      currentPage === page
-                        ? 'bg-gray-900 text-white'
-                        : 'text-gray-600 hover:bg-gray-100'
-                    ]"
-                  >
-                    {{ page }}
-                  </button>
-                </div>
-                
-                <button 
-                  class="w-10 h-10 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:border-gray-300 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  :disabled="currentPage === totalPages"
-                  @click="currentPage++"
-                >
-                  <ChevronRightIcon class="w-5 h-5" />
-                </button>
-              </nav>
-            </div>
+              </div>
+              
+              <button 
+                class="w-10 h-10 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:border-gray-300 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                :disabled="currentPage === totalPages"
+                @click="currentPage++"
+              >
+                <ChevronRightIcon class="w-5 h-5" />
+              </button>
+            </nav>
           </div>
+        </div>
 
-          <!-- 右侧内容 -->
-          <div class="lg:w-[320px] space-y-6">
-            <!-- 推荐文章 -->
-            <div class="bg-white rounded-lg lg:rounded-xl border border-gray-100 p-4 lg:p-6">
-              <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center justify-between">
-                <span>推荐文章</span>
-                <a href="#" class="text-sm font-medium text-gray-500 hover:text-gray-900">更多</a>
-              </h2>
-              <div class="space-y-4">
-                <!-- 推荐文章列表 -->
-                <div v-for="article in recommendedArticles" :key="article.id"
-                  class="group cursor-pointer rounded-lg lg:rounded-xl hover:bg-gray-50 transition-colors"
-                >
-                  <div class="flex p-4 items-center space-x-4">
-                    <div class="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
-                      <img :src="article.cover" class="w-full h-full object-cover" alt="">
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      <h3 class="text-sm font-medium text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors">
-                        {{ article.title }}
-                      </h3>
-                      <div class="mt-2 flex items-center text-xs text-gray-500">
-                        <span class="flex items-center">
-                          <EyeIcon class="w-3 h-3 mr-1" />{{ article.views }}
-                        </span>
-                        <span class="mx-2">·</span>
-                        <span>{{ article.createTime }}</span>
-                      </div>
+        <!-- 右侧内容 -->
+        <div class="lg:w-[320px] space-y-6">
+          <!-- 推荐文章 -->
+          <div class="bg-white rounded-lg lg:rounded-xl border border-gray-100 p-4 lg:p-6">
+            <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center justify-between">
+              <span>推荐文章</span>
+              <a href="#" class="text-sm font-medium text-gray-500 hover:text-gray-900">更多</a>
+            </h2>
+            <div class="space-y-4">
+              <!-- 推荐文章列表 -->
+              <div v-for="article in recommendedArticles" :key="article.id"
+                class="group cursor-pointer rounded-lg lg:rounded-xl hover:bg-gray-50 transition-colors"
+              >
+                <div class="flex p-4 items-center space-x-4">
+                  <div class="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+                    <img :src="article.cover" class="w-full h-full object-cover" alt="">
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <h3 class="text-sm font-medium text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                      {{ article.title }}
+                    </h3>
+                    <div class="mt-2 flex items-center text-xs text-gray-500">
+                      <span class="flex items-center">
+                        <EyeIcon class="w-3 h-3 mr-1" />{{ article.views }}
+                      </span>
+                      <span class="mx-2">·</span>
+                      <span>{{ article.createTime }}</span>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
+          </div>
 
-            <!-- 文章排行 -->
-            <div class="bg-white rounded-lg lg:rounded-xl border border-gray-100 p-4 lg:p-6">
-              <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center justify-between">
-                <span>文章排行</span>
-                <a href="#" class="text-sm font-medium text-gray-500 hover:text-gray-900">更多</a>
-              </h2>
-              <div class="space-y-4">
-                <div v-for="(article, index) in topArticles" :key="article.id"
-                  class="group cursor-pointer rounded-lg lg:rounded-xl hover:bg-gray-50 transition-colors"
-                >
-                  <div class="flex items-start space-x-4 p-4">
-                    <div class="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center"
-                      :class="{
-                        'bg-orange-100 text-orange-600': index === 0,
-                        'bg-blue-100 text-blue-600': index === 1,
-                        'bg-purple-100 text-purple-600': index === 2,
-                        'bg-gray-100 text-gray-600': index > 2
-                      }"
-                    >
-                      <span class="text-sm font-medium">{{ index + 1 }}</span>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      <h3 class="text-sm font-medium text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors">
-                        {{ article.title }}
-                      </h3>
-                      <div class="mt-2 flex items-center text-xs text-gray-500">
-                        <span class="flex items-center">
-                          <EyeIcon class="w-3 h-3 mr-1" />{{ article.views }}
-                        </span>
-                        <span class="mx-2">·</span>
-                        <span class="flex items-center">
-                          <ChatBubbleLeftIcon class="w-3 h-3 mr-1" />{{ article.comments }}
-                        </span>
-                      </div>
+          <!-- 文章排行 -->
+          <div class="bg-white rounded-lg lg:rounded-xl border border-gray-100 p-4 lg:p-6">
+            <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center justify-between">
+              <span>文章排行</span>
+              <a href="#" class="text-sm font-medium text-gray-500 hover:text-gray-900">更多</a>
+            </h2>
+            <div class="space-y-4">
+              <div v-for="(article, index) in topArticles" :key="article.id"
+                class="group cursor-pointer rounded-lg lg:rounded-xl hover:bg-gray-50 transition-colors"
+              >
+                <div class="flex items-start space-x-4 p-4">
+                  <div class="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center"
+                    :class="{
+                      'bg-orange-100 text-orange-600': index === 0,
+                      'bg-blue-100 text-blue-600': index === 1,
+                      'bg-purple-100 text-purple-600': index === 2,
+                      'bg-gray-100 text-gray-600': index > 2
+                    }"
+                  >
+                    <span class="text-sm font-medium">{{ index + 1 }}</span>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <h3 class="text-sm font-medium text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                      {{ article.title }}
+                    </h3>
+                    <div class="mt-2 flex items-center text-xs text-gray-500">
+                      <span class="flex items-center">
+                        <EyeIcon class="w-3 h-3 mr-1" />{{ article.views }}
+                      </span>
+                      <span class="mx-2">·</span>
+                      <span class="flex items-center">
+                        <ChatBubbleLeftIcon class="w-3 h-3 mr-1" />{{ article.comments }}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -188,6 +310,20 @@
         </div>
       </div>
     </div>
+
+    <!-- 分类切换菜单 -->
+    <CategoryMenu v-if="showCategoryMenu" 
+      v-model:show="showCategoryMenu"
+      v-model:currentLevel="currentLevel"
+      v-model:currentMainCategory="currentMainCategory"
+      v-model:currentSubCategory="currentSubCategory"
+      v-model:currentThirdCategory="currentThirdCategory"
+      :categories="categories"
+      @category-change="handleCategoryChange"
+    />
+      <!-- 使用移动端底部导航栏 -->
+  <MobileTabBar :menu-groups="menuGroups" />
+  </div>
 </template>
 
 <script setup>
@@ -203,12 +339,20 @@ import {
   PlusIcon,
   UserIcon,
   ChevronRightIcon,
-  ChevronLeftIcon
+  ChevronLeftIcon,
+  HomeIcon,
+  CodeBracketIcon,
+  ServerIcon,
+  DevicePhoneMobileIcon,
+  SparklesIcon,
+  CogIcon
 } from '@heroicons/vue/24/outline'
 import { useRouter, useRoute } from 'vue-router'
 import { useStore } from 'vuex'
 import PageBanner from '@/components/common/PageBanner.vue'
-import CommunityNavigation from '@/components/community/CommunityNavigation.vue'
+import CategoryMenu from '@/components/CategoryMenu.vue'
+import MobileTabBar from '@/components/MobileTabBar.vue'
+import { mainCategories, communityCategories } from '@/config/communityCategories'
 
 const router = useRouter()
 const route = useRoute()
@@ -425,16 +569,6 @@ const topArticles = computed(() =>
     .slice(0, 5)
 )
 
-// 修改分类切换处理
-const handleCategoryChange = (categoryId) => {
-  const category = categories.find(c => c.id === categoryId)
-  if (category && category.path) {
-    router.push(category.path)
-  } else {
-    currentCategory.value = categoryId
-  }
-}
-
 // 使用 Vuex store 的 isAuthenticated 状态
 const isAuthenticated = computed(() => store.state.isAuthenticated)
 
@@ -453,4 +587,32 @@ const paginatedArticles = computed(() => {
 const totalPages = computed(() => {
   return Math.ceil(filteredArticles.value.length / pageSize)
 })
+
+// 分类相关状态
+const showCategoryMenu = ref(false)
+const currentLevel = ref('main')
+const currentMainCategory = ref('all')
+const currentSubCategory = ref('')
+const currentThirdCategory = ref('')
+
+// 使用 communityCategories 配置
+const categoryConfig = communityCategories.articles
+const categories = computed(() => categoryConfig.categories)
+
+// 获取当前分类名称
+const currentCategoryName = computed(() => {
+  if (currentMainCategory.value === 'all') return '全部'
+  const category = categories.value.find(c => c.id === currentMainCategory.value)
+  return category?.name || ''
+})
+
+// 处理分类切换
+const handleCategoryChange = (categoryId, level = 'main') => {
+  if (level === 'main') {
+    currentMainCategory.value = categoryId
+    currentSubCategory.value = ''
+    currentThirdCategory.value = ''
+    showCategoryMenu.value = false
+  }
+}
 </script> 

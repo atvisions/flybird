@@ -1,5 +1,5 @@
 <template>
-  <div class="py-4 lg:py-6 mt-[72px]">
+  <div class="py-4 pb-24 lg:py-6 mt-[72px]">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <!-- 顶部横幅 -->
       <PageBanner theme="violet">
@@ -7,8 +7,114 @@
         <p class="text-gray-600 text-lg max-w-2xl">解答技术难题，分享解决方案</p>
       </PageBanner>
 
-      <!-- 使用导航组件 -->
-      <CommunityNavigation v-model:currentCategory="currentCategory" />
+      <!-- PC端导航 -->
+      <div class="mt-6 bg-white rounded-xl border border-gray-100 p-4 hidden md:block mb-6">
+        <div class="flex flex-col gap-4">
+          <!-- 左侧主导航和右侧按钮 -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <!-- 左侧主导航 -->
+            <div class="flex items-center -mx-1">
+              <router-link
+                v-for="nav in mainCategories"
+                :key="nav.path"
+                :to="nav.path"
+                class="px-4 sm:px-6 py-3 mx-1 text-sm font-medium transition-colors group whitespace-nowrap flex items-center"
+                :class="[
+                  $route.path === nav.path
+                    ? 'text-gray-900'
+                    : 'text-gray-500 hover:text-gray-700'
+                ]"
+              >
+                <component :is="nav.icon" class="w-4 h-4 mr-2 flex-shrink-0" />
+                <span class="relative">
+                  {{ nav.name }}
+                  <span 
+                    class="absolute left-1/2 -translate-x-1/2 -bottom-3 w-1.5 h-1.5 rounded-full transition-colors"
+                    :class="$route.path === nav.path ? 'bg-gray-900' : 'bg-transparent group-hover:bg-gray-200'"
+                  ></span>
+                </span>
+              </router-link>
+            </div>
+
+            <!-- 右侧操作按钮 -->
+            <div class="flex items-center gap-2 sm:gap-3">
+              <template v-if="isAuthenticated">
+                <!-- 发布按钮 -->
+                <button class="h-9 px-4 sm:px-5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-full hover:shadow-lg hover:shadow-violet-500/20 transition-all duration-300 text-sm font-medium flex items-center group">
+                  <PlusIcon class="w-4 h-4 mr-1.5 sm:mr-2 group-hover:scale-110 transition-transform" />
+                  <span class="hidden sm:inline">发布问题</span>
+                  <span class="sm:hidden">发布</span>
+                </button>
+              </template>
+              <template v-else>
+                <!-- 登录按钮 -->
+                <router-link 
+                  :to="`/login?redirect=${encodeURIComponent($route.fullPath)}`"
+                  class="h-9 px-4 sm:px-5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-full hover:shadow-lg hover:shadow-violet-500/20 transition-all duration-300 text-sm font-medium flex items-center group"
+                >
+                  <UserIcon class="w-4 h-4 mr-1.5 sm:mr-2 group-hover:scale-110 transition-transform" />
+                  <span>登录</span>
+                </router-link>
+              </template>
+            </div>
+          </div>
+
+          <!-- 分隔线 -->
+          <div class="h-px bg-gray-200"></div>
+
+          <!-- 分类标签 -->
+          <div class="flex items-center h-10 justify-between">
+            <!-- 左侧分类标签 -->
+            <div class="flex items-center -mx-1 overflow-x-auto no-scrollbar">
+              <button
+                v-for="category in categories"
+                :key="category.id"
+                @click="handleCategoryChange(category.id)"
+                class="h-10 px-4 mx-1 rounded-full text-sm font-medium transition-colors whitespace-nowrap inline-flex items-center"
+                :class="[
+                  currentMainCategory === category.id
+                    ? 'bg-gray-900 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ]"
+              >
+                <component :is="category.icon" class="w-4 h-4 mr-2 flex-shrink-0" />
+                {{ category.name }}
+              </button>
+            </div>
+
+            <!-- 右侧排序按钮 -->
+            <div class="relative flex-shrink-0 ml-4">
+              <button 
+                @click="showSortMenu = !showSortMenu"
+                class="h-10 inline-flex items-center px-4 bg-white border border-gray-200 rounded-lg text-sm font-medium hover:border-gray-300"
+              >
+                <ArrowsUpDownIcon class="w-4 h-4 mr-2 text-gray-500 flex-shrink-0" />
+                {{ sortOptions[currentSort]?.label || '排序' }}
+                <ChevronDownIcon class="w-4 h-4 ml-2 text-gray-500 flex-shrink-0" />
+              </button>
+              
+              <div v-if="showSortMenu"
+                class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-20"
+              >
+                <button
+                  v-for="(option, key) in sortOptions"
+                  :key="key"
+                  @click="handleSort(key)"
+                  class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 inline-flex items-center"
+                  :class="{ 'text-gray-900 font-medium': currentSort === key, 'text-gray-600': currentSort !== key }"
+                >
+                  <component 
+                    :is="option.icon" 
+                    class="w-4 h-4 mr-2 flex-shrink-0"
+                    :class="currentSort === key ? 'text-gray-900' : 'text-gray-400'"
+                  />
+                  {{ option.label }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- 问答列表和右侧内容 -->
       <div class="flex flex-col lg:flex-row gap-4 lg:gap-6 mt-4 lg:mt-6">
@@ -125,6 +231,19 @@
         </div>
       </div>
     </div>
+
+    <!-- 分类切换菜单 -->
+    <CategoryMenu v-if="showCategoryMenu" 
+      v-model:show="showCategoryMenu"
+      v-model:currentLevel="currentLevel"
+      v-model:currentMainCategory="currentMainCategory"
+      v-model:currentSubCategory="currentSubCategory"
+      v-model:currentThirdCategory="currentThirdCategory"
+      :categories="categories"
+      @category-change="handleCategoryChange"
+    />
+    <!-- 使用移动端底部导航栏 -->
+    <MobileTabBar :menu-groups="menuGroups" />
   </div>
 </template>
 
@@ -146,7 +265,9 @@ import {
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import PageBanner from '@/components/common/PageBanner.vue'
-import CommunityNavigation from '@/components/community/CommunityNavigation.vue'
+import CategoryMenu from '@/components/CategoryMenu.vue'
+import MobileTabBar from '@/components/MobileTabBar.vue'
+import { mainCategories, communityCategories } from '@/config/communityCategories'
 
 const router = useRouter()
 const store = useStore()
@@ -410,4 +531,8 @@ const getStatusText = (status) => {
   }
   return statusMap[status] || status
 }
+
+// 使用问答页面的配置
+const categoryConfig = communityCategories.questions
+const categories = computed(() => categoryConfig.categories)
 </script> 

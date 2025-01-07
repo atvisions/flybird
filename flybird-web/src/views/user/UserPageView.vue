@@ -1,16 +1,16 @@
 <template>
   <div class="user-page">
     <HeadView />
-    <div class="py-8 mt-16 px-4 sm:px-6 lg:px-8">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <div class="pt-4 pb-20 sm:py-8 mt-[60px] md:mt-[72px]">
+      <div class="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8">
         <!-- 左侧个人信息栏 -->
         <div class="lg:col-span-3">
           <!-- 左侧固定区域 -->
-          <div class="space-y-6 sticky top-24">
+          <div class="mb-4 lg:mb-0 lg:sticky lg:top-24">
             <!-- 个人信息卡片 -->
             <div class="bg-white rounded-xl shadow-lg overflow-hidden">
               <!-- 背景封面 -->
-              <div class="h-32 w-full">
+              <div class="h-24 sm:h-32 w-full">
                 <img 
                   :src="userInfo.background || 'https://picsum.photos/1920/1080?random=1'" 
                   class="w-full h-full object-cover"
@@ -19,26 +19,26 @@
               </div>
               
               <!-- 个人信息卡片 -->
-              <div class="p-6 -mt-12">
+              <div class="p-4 sm:p-6 -mt-12">
                 <!-- 头像 -->
                 <div class="flex justify-center">
                   <img 
                     :src="userInfo.avatar" 
-                    class="w-24 h-24 rounded-full border-4 border-white shadow-lg"
+                    class="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-4 border-white shadow-lg"
                     alt="头像"
                   >
                 </div>
                 
                 <!-- 基本信息 -->
                 <div class="text-center mt-4">
-                  <h1 class="text-xl font-bold text-gray-900">{{ userInfo.name }}</h1>
+                  <h1 class="text-lg sm:text-xl font-bold text-gray-900">{{ userInfo.name }}</h1>
                   <p class="text-sm text-gray-500 mt-1">UID: {{ userInfo.uid }}</p>
                   <p class="text-sm text-gray-500 mt-1">{{ userInfo.location }} · {{ userInfo.age }}岁</p>
                   <p class="text-sm text-gray-500 mt-2">{{ userInfo.bio }}</p>
                 </div>
                 
                 <!-- 操作按钮 -->
-                <div class="flex gap-2 mt-4">
+                <div class="flex gap-2 mt-4 px-2 sm:px-0">
                   <button 
                     @click="handleFollow"
                     class="flex-1 py-2 bg-blue-600 text-white rounded-full text-sm font-medium hover:bg-blue-700"
@@ -54,7 +54,7 @@
                 </div>
                 
                 <!-- 社交统计 -->
-                <div class="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-100">
+                <div class="grid grid-cols-3 gap-2 sm:gap-4 mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-100">
                   <button 
                     @click="() => { 
                       showUserList = true; 
@@ -95,17 +95,27 @@
         </div>
 
         <!-- 中间内容区 -->
-        <div class="lg:col-span-6 space-y-6">
+        <div class="lg:col-span-6 space-y-3 sm:space-y-6 lg:pb-8">
+          <!-- 作品集展示 -->
+          <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h2 class="text-lg font-medium text-gray-900">作品集</h2>
+            </div>
+            <div class="p-4 sm:p-6">
+              <PortfolioList :user-id="userInfo.uid" />
+            </div>
+          </div>
+
           <!-- 内容标签页 -->
           <div v-if="!showUserList" class="bg-white rounded-xl shadow">
             <!-- 标签页导航 -->
-            <div class="border-b border-gray-200">
-              <nav class="flex space-x-8 px-6" aria-label="Tabs">
+            <div class="border-b border-gray-200 overflow-x-auto">
+              <nav class="flex whitespace-nowrap" aria-label="Tabs">
                 <button
                   v-for="tab in tabs"
                   :key="tab.key"
                   @click="currentTab = tab.key"
-                  class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap"
+                  class="flex-1 py-3 sm:py-4 px-4 border-b-2 font-medium text-sm text-center"
                   :class="[
                     currentTab === tab.key
                       ? 'border-blue-500 text-blue-600'
@@ -118,7 +128,7 @@
             </div>
 
             <!-- 标签页内容 -->
-            <div class="p-6">
+            <div class="p-4 sm:p-6">
               <!-- 文章列表 -->
               <div v-if="currentTab === 'articles'" class="space-y-6">
                 <article v-for="article in articles" :key="article.id" class="group">
@@ -283,9 +293,9 @@
         </div>
 
         <!-- 右侧广告区 -->
-        <div class="lg:col-span-3 space-y-6">
+        <div class="lg:col-span-3">
           <!-- 分享版块 -->
-          <div class="bg-white rounded-xl shadow-lg p-6">
+          <div class="hidden lg:block bg-white rounded-xl shadow-lg p-6">
             <h3 class="text-sm font-medium text-gray-900 mb-4 flex items-center">
               <ShareIcon class="w-4 h-4 mr-2 text-gray-500" />
               分享主页
@@ -331,7 +341,7 @@
           </div>
 
           <!-- 广告区 -->
-          <div class="bg-white rounded-xl shadow-lg p-6 sticky top-24">
+          <div class="bg-white rounded-xl shadow-lg p-6 sticky top-24 md:mt-4">
             <h3 class="text-lg font-medium text-gray-900 mb-4">推荐职位</h3>
             <div class="space-y-4">
               <div v-for="job in recommendedJobs" :key="job.id" class="group">
@@ -352,7 +362,7 @@
         </div>
       </div>
     </div>
-    <FootView />
+    <FootView class="hidden md:block" />
 
     <!-- 移动端导航抽屉遮罩 -->
     <div 
@@ -429,29 +439,80 @@
     </div>
 
     <!-- 移动端底部工具栏 -->
-    <div 
-      class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 lg:hidden safe-area-inset-bottom z-50"
-    >
-      <div class="flex items-center justify-between px-4 py-2">
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 lg:hidden safe-area-inset-bottom z-50">
+      <div class="grid grid-cols-3 gap-8 px-6 py-3">
         <button 
-          @click="isMobileMenuOpen = true"
-          class="flex items-center text-gray-500 hover:text-gray-700"
+          @click="handleMessage"
+          class="flex flex-col items-center justify-center text-gray-600 active:text-blue-600"
         >
-          <Bars3Icon class="w-6 h-6" />
-          <span class="ml-2 text-sm">导航</span>
+          <EnvelopeIcon class="w-6 h-6" />
+          <span class="text-xs mt-1">私信</span>
         </button>
-        <div class="flex space-x-4">
-          <button 
-            @click="handleMessage"
-            class="text-gray-500 hover:text-gray-700"
-          >
-            <EnvelopeIcon class="w-6 h-6" />
+        <button 
+          @click="handleFollow"
+          class="flex flex-col items-center justify-center text-gray-600 active:text-blue-600"
+        >
+          <UserPlusIcon class="w-6 h-6" />
+          <span class="text-xs mt-1">{{ isFollowing ? '已关注' : '关注' }}</span>
+        </button>
+        <button 
+          @click="showShareMenu = true"
+          class="flex flex-col items-center justify-center text-gray-600 active:text-blue-600"
+        >
+          <ShareIcon class="w-6 h-6" />
+          <span class="text-xs mt-1">分享</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 移动端分享菜单 -->
+    <div 
+      v-if="showShareMenu"
+      class="fixed inset-0 bg-black bg-opacity-50 z-[70] flex items-end lg:hidden"
+      @click.self="showShareMenu = false"
+    >
+      <div class="bg-white w-full rounded-t-xl p-4 space-y-4 animate-slide-up">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-lg font-medium">分享主页</h3>
+          <button @click="showShareMenu = false">
+            <XMarkIcon class="w-6 h-6 text-gray-500" />
           </button>
+        </div>
+        
+        <!-- 链接复制区域 -->
+        <div class="flex items-center gap-2">
+          <div class="flex-1 bg-gray-50 px-3 py-2 rounded-lg text-sm text-gray-600 truncate">
+            {{ pageUrl }}
+          </div>
           <button 
-            @click="handleFollow"
-            class="text-gray-500 hover:text-gray-700"
+            @click="copyLink"
+            class="shrink-0 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium"
           >
-            <UserPlusIcon class="w-6 h-6" />
+            复制
+          </button>
+        </div>
+        
+        <!-- 社交分享按钮 -->
+        <div class="grid grid-cols-4 gap-4 py-2">
+          <button 
+            v-for="platform in sharePlatforms" 
+            :key="platform.name"
+            @click="shareToPlateform(platform.name)"
+            class="flex flex-col items-center gap-2"
+          >
+            <div 
+              class="w-12 h-12 rounded-full flex items-center justify-center"
+              :class="platform.bgClass"
+            >
+              <component 
+                :is="platform.icon" 
+                class="w-6 h-6"
+                :class="platform.iconClass"
+              />
+            </div>
+            <span class="text-xs text-gray-500">
+              {{ platform.label }}
+            </span>
           </button>
         </div>
       </div>
@@ -464,6 +525,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import HeadView from '@/components/HeadView.vue'
 import FootView from '@/components/FootView.vue'
+import PortfolioList from '@/components/portfolio/PortfolioList.vue'
 import {
   CalendarIcon,
   EyeIcon,
@@ -521,8 +583,7 @@ const stats = ref({
 const tabs = [
   { key: 'articles', label: '文章' },
   { key: 'questions', label: '问答' },
-  { key: 'topics', label: '话题' },
-  { key: 'portfolio', label: '创作集' }
+  { key: 'topics', label: '话题' }
 ]
 
 const currentTab = ref('articles')
@@ -839,7 +900,7 @@ onMounted(() => {
 /* 确保移动端底部导航不会遮挡内容 */
 @media (max-width: 1024px) {
   .user-page {
-    padding-bottom: calc(env(safe-area-inset-bottom) + 56px);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 64px);
   }
   
   .safe-area-inset-bottom {
@@ -847,7 +908,30 @@ onMounted(() => {
   }
 }
 
+/* 处理标签页滚动条 */
+.overflow-x-auto {
+  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;  /* IE and Edge */
+}
+
+.overflow-x-auto::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
 .user-page > div:nth-child(2) {
   flex: 1;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
 }
 </style> 

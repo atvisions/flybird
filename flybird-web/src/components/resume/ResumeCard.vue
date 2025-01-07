@@ -59,7 +59,20 @@
           v-if="template.isPro"
           class="flex items-center"
         >
-          <span class="text-xs font-medium text-amber-600">会员免费</span>
+          <svg 
+            class="w-4 h-4 text-gray-400 mr-1.5" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor"
+          >
+            <path 
+              stroke-linecap="round" 
+              stroke-linejoin="round" 
+              stroke-width="2" 
+              d="M12 4l3 6 5-4-2 7h-12l-2-7 5 4 3-6z"
+            />
+          </svg>
+          <span class="text-sm text-gray-600">普通会员</span>
         </div>
       </div>
     </div>
@@ -68,14 +81,13 @@
 
 <script setup>
 import { DocumentDuplicateIcon, EyeIcon, HeartIcon } from '@heroicons/vue/24/outline'
-import { CrownIcon } from '@heroicons/vue/24/solid'
+import { TrophyIcon } from '@heroicons/vue/24/solid'
 
 const props = defineProps({
   template: {
     type: Object,
     required: true,
     validator: (obj) => {
-      console.log('Template props:', obj)
       return obj.title && 
              typeof obj.isPro === 'boolean' && 
              typeof obj.useCount === 'number' &&

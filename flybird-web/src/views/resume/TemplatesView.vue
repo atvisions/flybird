@@ -1,178 +1,156 @@
 <template>
-  <div class="py-4 lg:py-6 mt-[72px]">
+  <div class="py-4 pb-24 lg:py-6 mt-[72px]">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- 顶部横幅 -->
       <PageBanner theme="rose">
-        <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">{{ getCurrentNavName }}</h1>
-        <p class="text-gray-600 text-lg max-w-2xl">{{ getBannerDescription }}</p>
+        <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">精选简历模板</h1>
+        <p class="text-gray-600 text-lg max-w-2xl">精选优质简历模板，助你打造完美简历</p>
       </PageBanner>
 
-      <TemplateNavigation v-model:currentCategory="currentCategory" />
+      <!-- PC端导航 -->
+      <ResumeNavigation 
+        v-model:currentCategory="currentMainCategory"
+        v-model:currentSort="currentSort"
+        class="hidden md:block"
+      />
 
       <!-- 模板列表 -->
-      <div class="mt-3 md:mt-6">
-          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-            <ResumeCard
-              v-for="template in filteredTemplates"
-              :key="template.id"
-              :template="{
-                ...template,
-                useCount: template.uses,
-                viewCount: template.views,
-                isPro: template.isPro
-              }"
-              @like="handleLike(template)"
-            />
-          </div>
+      <div class="max-w-7xl mx-auto mt-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+          <ResumeCard
+            v-for="template in filteredTemplates"
+            :key="template.id"
+            :template="{
+              ...template,
+              category: getTemplateCategoryName(template.category),
+              useCount: template.downloads || 0,
+              viewCount: template.views || 0,
+              isLiked: false,
+              isPro: template.isPro || false
+            }"
+            @like="handleLike(template)"
+          />
         </div>
+      </div>
     </div>
+
+    <!-- 分类切换菜单 -->
+    <CategoryMenu v-if="showCategoryMenu" 
+      v-model:show="showCategoryMenu"
+      v-model:currentLevel="currentLevel"
+      v-model:currentMainCategory="currentMainCategory"
+      v-model:currentSubCategory="currentSubCategory"
+      v-model:currentThirdCategory="currentThirdCategory"
+      :categories="categories"
+      @category-change="handleCategoryChange"
+    />
+
+    <!-- 使用移动端底部导航栏 -->
+    <MobileTabBar :menu-groups="menuGroups" />
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import ResumeCard from '@/components/resume/ResumeCard.vue'
+import MobileTabBar from '@/components/MobileTabBar.vue'
 import PageBanner from '@/components/common/PageBanner.vue'
-import TemplateNavigation from '@/components/resume/TemplateNavigation.vue'
+import CategoryMenu from '@/components/CategoryMenu.vue'
+import ResumeNavigation from '@/components/resume/ResumeNavigation.vue'
+import ResumeCard from '@/components/resume/ResumeCard.vue'
+import { useResumeData } from '@/composables/useResumeData'
+import {
+  ChevronRightIcon,
+  EyeIcon,
+  HeartIcon,
+  HomeIcon,
+  AcademicCapIcon,
+  BriefcaseIcon,
+  UserGroupIcon,
+  SparklesIcon,
+  LanguageIcon
+} from '@heroicons/vue/24/outline'
 
 const route = useRoute()
 
-// 当前选中的分类
-const currentCategory = ref('all')
-// 模板数据
-const templates = ref([
-  {
-    id: 1,
-    title: '简约风格简历模板',
-    description: '清新简约的设计风格，适合应届生和初级求职者使用...',
-    cover: 'https://picsum.photos/600/800?random=1',
-    category: '应届生',
-    views: 1234,
-    likes: 89,
-    uses: 234,
-    isPro: false,
-    isLiked: false
-  },
-  {
-    id: 2,
-    title: '专业商务简历模板',
-    description: '正式的商务风格设计，突出专业能力和工作经验...',
-    cover: 'https://picsum.photos/600/800?random=2',
-    category: '经验者',
-    views: 856,
-    likes: 67,
-    uses: 156,
-    isPro: true,
-    isLiked: true
-  },
-  {
-    id: 3,
-    title: '创意设计师简历',
-    description: '独特创意的设计风格，适合设计类岗位应聘...',
-    cover: 'https://picsum.photos/600/800?random=3',
-    category: '设计类',
-    views: 2156,
-    likes: 245,
-    uses: 378,
-    isPro: true,
-    isLiked: false
-  },
-  {
-    id: 4,
-    title: '校园应届生简历',
-    description: '突出学历和实习经验，适合应届生求职...',
-    cover: 'https://picsum.photos/600/800?random=4',
-    category: '应届生',
-    views: 1567,
-    likes: 123,
-    uses: 289,
-    isPro: false,
-    isLiked: false
-  },
-  {
-    id: 5,
-    title: '高级工程师简历',
-    description: '突出专业技能和项目经验，适合技术岗位...',
-    cover: 'https://picsum.photos/600/800?random=5',
-    category: '技术类',
-    views: 3245,
-    likes: 434,
-    uses: 567,
-    isPro: true,
-    isLiked: false
-  },
-  {
-    id: 6,
-    title: '产品经理简历',
-    description: '突出产品思维和项目管理能力...',
-    cover: 'https://picsum.photos/600/800?random=6',
-    category: '产品类',
-    views: 2789,
-    likes: 345,
-    uses: 423,
-    isPro: false,
-    isLiked: false
-  },
-  {
-    id: 7,
-    title: '市场营销简历',
-    description: '突出营销能力和业绩数据展示...',
-    cover: 'https://picsum.photos/600/800?random=7',
-    category: '市场类',
-    views: 1890,
-    likes: 234,
-    uses: 345,
-    isPro: true,
-    isLiked: false
-  },
-  {
-    id: 8,
-    title: '实习生简历模板',
-    description: '简洁大方，突出教育背景和实习意向...',
-    cover: 'https://picsum.photos/600/800?random=8',
-    category: '实习生',
-    views: 2345,
-    likes: 178,
-    uses: 456,
-    isPro: false,
-    isLiked: false
-  }
+// 分类相关状态
+const currentMainCategory = ref('all')
+const currentSubCategory = ref('')
+const currentThirdCategory = ref('')
+const currentLevel = ref('main')
+const showCategoryMenu = ref(false)
+
+// 排序相关状态
+const currentSort = ref('popular')
+
+// 分类数据
+const categories = computed(() => [
+  { id: 'all', name: '全部', icon: HomeIcon },
+  { id: 'fresh', name: '应届生', icon: AcademicCapIcon },
+  { id: 'experienced', name: '经验型', icon: BriefcaseIcon },
+  { id: 'manager', name: '管理层', icon: UserGroupIcon },
+  { id: 'creative', name: '创意型', icon: SparklesIcon },
+  { id: 'international', name: '国际化', icon: LanguageIcon }
 ])
 
+// 获取模板数据
+const { templates } = useResumeData()
 
-// 筛选逻辑
+// 过滤模板列表
 const filteredTemplates = computed(() => {
-  if (currentCategory.value === 'all') {
-    return templates.value
+  let result = [...templates.value]
+  
+  // 应用分类过滤
+  if (currentMainCategory.value !== 'all') {
+    result = result.filter(template => template.category === currentMainCategory.value)
   }
-  return templates.value.filter(template => template.category === currentCategory.value)
+  
+  // 应用排序
+  switch (currentSort.value) {
+    case 'popular':
+      result.sort((a, b) => (b.views + b.likes) - (a.views + a.likes))
+      break
+    case 'newest':
+      result.sort((a, b) => new Date(b.date) - new Date(a.date))
+      break
+    case 'downloads':
+      result.sort((a, b) => b.downloads - a.downloads)
+      break
+    case 'likes':
+      result.sort((a, b) => b.likes - a.likes)
+      break
+  }
+  
+  return result
 })
 
-// 获取当前导航名称
-const getCurrentNavName = computed(() => {
-  const navMap = {
-    '/templates': '全部模板',
-    '/templates/resume': '简历模板',
-    '/templates/cover-letter': '求职信',
-    '/templates/bio': '个人简介'
-  }
-  return navMap[route.path] || '全部模板'
-})
+// 获取模板分类名称
+const getTemplateCategoryName = (categoryId) => {
+  const category = categories.value.find(c => c.id === categoryId)
+  return category?.name || categoryId
+}
 
-// 获取横幅描述
-const getBannerDescription = computed(() => {
-  const descriptions = {
-    '/templates': '精选优质简历模板，助你打造完美简历',
-    '/templates/resume': '为在校生和应届生量身定制的简历模板',
-    '/templates/cover-letter': '专业的求职信模板，助力职业发展',
-    '/templates/bio': '专业的个人简介模板，展现个人魅力'
+// 处理分类切换
+const handleCategoryChange = (categoryId, level = 'main') => {
+  if (level === 'main') {
+    currentMainCategory.value = categoryId
+    currentSubCategory.value = ''
+    currentThirdCategory.value = ''
+    if (categoryId !== 'all') {
+      currentLevel.value = 'sub'
+    } else {
+      showCategoryMenu.value = false
+    }
+  } else if (level === 'sub') {
+    currentSubCategory.value = categoryId
+    currentThirdCategory.value = ''
+    showCategoryMenu.value = false
   }
-  return descriptions[route.path] || ''
-})
+}
 
-// 添加处理收藏的函数
+// 处理模板点赞
 const handleLike = (template) => {
-  template.isLiked = !template.isLiked
-  // 这里可以添加收藏相关的API调用
+  // TODO: 实现点赞逻辑
+  console.log('Like template:', template.id)
 }
 </script> 

@@ -1,5 +1,5 @@
 <template>
-  <div class="py-4 lg:py-6 mt-[72px] ">
+  <div class="py-4 pb-24 lg:py-6 mt-[72px] ">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <!-- 顶部横幅 -->
       <PageBanner theme="violet">
@@ -7,10 +7,115 @@
         <p class="text-gray-600 text-lg max-w-2xl">参与技术讨论，表达你的观点</p>
       </PageBanner>
 
-      <!-- 使用导航组件 -->
-      <CommunityNavigation v-model:currentCategory="currentCategory" />
 
+      <!-- PC端导航 -->
+      <div class="mt-6 bg-white rounded-xl border border-gray-100 p-4 hidden md:block mb-6">
+        <div class="flex flex-col gap-4">
+          <!-- 左侧主导航和右侧按钮 -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <!-- 左侧主导航 -->
+            <div class="flex items-center -mx-1">
+              <router-link
+                v-for="nav in mainCategories"
+                :key="nav.path"
+                :to="nav.path"
+                class="px-4 sm:px-6 py-3 mx-1 text-sm font-medium transition-colors group whitespace-nowrap flex items-center"
+                :class="[
+                  $route.path === nav.path
+                    ? 'text-gray-900'
+                    : 'text-gray-500 hover:text-gray-700'
+                ]"
+              >
+                <component :is="nav.icon" class="w-4 h-4 mr-2 flex-shrink-0" />
+                <span class="relative">
+                  {{ nav.name }}
+                  <span 
+                    class="absolute left-1/2 -translate-x-1/2 -bottom-3 w-1.5 h-1.5 rounded-full transition-colors"
+                    :class="$route.path === nav.path ? 'bg-gray-900' : 'bg-transparent group-hover:bg-gray-200'"
+                  ></span>
+                </span>
+              </router-link>
+            </div>
 
+            <!-- 右侧操作按钮 -->
+            <div class="flex items-center gap-2 sm:gap-3">
+              <template v-if="isAuthenticated">
+                <!-- 发布按钮 -->
+                <button class="h-9 px-4 sm:px-5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-full hover:shadow-lg hover:shadow-violet-500/20 transition-all duration-300 text-sm font-medium flex items-center group">
+                  <PlusIcon class="w-4 h-4 mr-1.5 sm:mr-2 group-hover:scale-110 transition-transform" />
+                  <span class="hidden sm:inline">发起话题</span>
+                  <span class="sm:hidden">发布</span>
+                </button>
+              </template>
+              <template v-else>
+                <!-- 登录按钮 -->
+                <router-link 
+                  :to="`/login?redirect=${encodeURIComponent($route.fullPath)}`"
+                  class="h-9 px-4 sm:px-5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-full hover:shadow-lg hover:shadow-violet-500/20 transition-all duration-300 text-sm font-medium flex items-center group"
+                >
+                  <UserIcon class="w-4 h-4 mr-1.5 sm:mr-2 group-hover:scale-110 transition-transform" />
+                  <span>登录</span>
+                </router-link>
+              </template>
+            </div>
+          </div>
+
+          <!-- 分隔线 -->
+          <div class="h-px bg-gray-200"></div>
+
+          <!-- 分类标签 -->
+          <div class="flex items-center h-10 justify-between">
+            <!-- 左侧分类标签 -->
+            <div class="flex items-center -mx-1 overflow-x-auto no-scrollbar">
+              <button
+                v-for="category in categories"
+                :key="category.id"
+                @click="handleCategoryChange(category.id)"
+                class="h-10 px-4 mx-1 rounded-full text-sm font-medium transition-colors whitespace-nowrap inline-flex items-center"
+                :class="[
+                  currentMainCategory === category.id
+                    ? 'bg-gray-900 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ]"
+              >
+                <component :is="category.icon" class="w-4 h-4 mr-2 flex-shrink-0" />
+                {{ category.name }}
+              </button>
+            </div>
+
+            <!-- 右侧排序按钮 -->
+            <div class="relative flex-shrink-0 ml-4">
+              <button 
+                @click="showSortMenu = !showSortMenu"
+                class="h-10 inline-flex items-center px-4 bg-white border border-gray-200 rounded-lg text-sm font-medium hover:border-gray-300"
+              >
+                <ArrowsUpDownIcon class="w-4 h-4 mr-2 text-gray-500 flex-shrink-0" />
+                {{ sortOptions[currentSort]?.label || '排序' }}
+                <ChevronDownIcon class="w-4 h-4 ml-2 text-gray-500 flex-shrink-0" />
+              </button>
+              
+              <div v-if="showSortMenu"
+                class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-20"
+              >
+                <button
+                  v-for="(option, key) in sortOptions"
+                  :key="key"
+                  @click="handleSort(key)"
+                  class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 inline-flex items-center"
+                  :class="{ 'text-gray-900 font-medium': currentSort === key, 'text-gray-600': currentSort !== key }"
+                >
+                  <component 
+                    :is="option.icon" 
+                    class="w-4 h-4 mr-2 flex-shrink-0"
+                    :class="currentSort === key ? 'text-gray-900' : 'text-gray-400'"
+                  />
+                  {{ option.label }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- 话题列表和右侧内容 -->
       <div class="flex flex-col lg:flex-row gap-4 lg:gap-6 mt-4 lg:mt-6">
@@ -25,77 +130,75 @@
             </div>
             <div class="space-y-3 lg:space-y-5">
               <div v-for="topic in paginatedTopics" :key="topic.id"
-                class="group cursor-pointer bg-white rounded-lg lg:rounded-xl border border-gray-100 p-6"
+                class="group cursor-pointer"
               >
-                <!-- 标题和作者信息 -->
-                <div class="flex items-center justify-between mb-6">
-                  <h3 class="text-lg font-bold text-gray-900">{{ topic.title }}</h3>
+                <!-- 话题标题 -->
+                <h3 class="text-xl font-bold text-gray-900 mb-6">{{ topic.title }}</h3>
+                
+                <!-- 作者信息 -->
+                <div class="flex items-center space-x-3 mb-6">
+                  <img :src="topic.author.avatar" class="w-8 h-8 rounded-full">
                   <div class="flex items-center gap-3">
-                    <div class="text-right">
-                      <div class="text-sm font-medium text-gray-900">{{ topic.author.name }}</div>
-                      <div class="text-xs text-gray-500">{{ topic.createTime }}</div>
-                    </div>
-                    <img :src="topic.author.avatar" class="w-10 h-10 rounded-full ring-2 ring-gray-50">
+                    <span class="text-sm font-medium text-gray-900">{{ topic.author.name }}</span>
+                    <span class="text-xs text-gray-500">{{ topic.createTime }}</span>
                   </div>
                 </div>
 
                 <!-- VS选项对比区域 -->
-                <div class="relative mb-6">
+                <div class="relative mb-8">
                   <!-- 进度条背景 -->
-                  <div class="absolute inset-0 flex">
+                  <div class="absolute inset-0 flex rounded-xl overflow-hidden">
                     <!-- 左侧进度 -->
                     <div 
-                      class="h-full bg-gradient-to-r from-blue-50 to-blue-100 rounded-l-lg"
+                      class="h-full bg-gradient-to-r from-blue-50 to-blue-100"
                       :style="{ width: `${(topic.votesA / (topic.votesA + topic.votesB)) * 100}%` }"
                     ></div>
                     <!-- 右侧进度 -->
                     <div 
-                      class="h-full bg-gradient-to-l from-purple-50 to-purple-100 rounded-r-lg"
+                      class="h-full bg-gradient-to-l from-purple-50 to-purple-100"
                       :style="{ width: `${(topic.votesB / (topic.votesA + topic.votesB)) * 100}%` }"
                     ></div>
                   </div>
 
                   <!-- 选项内容 -->
-                  <div class="relative flex items-center min-h-[80px]">
+                  <div class="relative flex items-center min-h-[100px]">
                     <!-- 选项A -->
-                    <div class="flex-1 p-4">
+                    <div class="flex-1 p-6">
                       <div class="text-center">
                         <!-- 百分比指示器 -->
                         <div class="absolute -top-3 left-[25%] -translate-x-1/2 px-3 py-1 bg-blue-600 rounded-full text-white text-xs font-medium">
                           {{ Math.round((topic.votesA / (topic.votesA + topic.votesB)) * 100) }}%
                         </div>
-                        <div class="font-medium text-blue-600 mb-1">{{ topic.optionA }}</div>
+                        <div class="text-lg font-medium text-blue-600 mb-2">{{ topic.optionA }}</div>
                         <div class="text-sm text-gray-500 mb-4">{{ topic.votesA }} 票</div>
                         <!-- 投票按钮 -->
                         <button 
-                          class="w-20 h-10 rounded-full border-2 border-blue-200 bg-white hover:bg-blue-50 transition-colors mx-auto flex items-center justify-center cursor-pointer"
+                          class="px-6 h-10 rounded-full bg-blue-50 hover:bg-blue-100 transition-colors mx-auto flex items-center justify-center cursor-pointer"
                         >
-                          <HandThumbUpIcon class="w-4 h-4 text-blue-600" />
-                          <span class="ml-2 text-sm font-medium text-blue-600">投票</span>
+                          <span class="text-sm font-medium text-blue-600">投票</span>
                         </button>
                       </div>
                     </div>
 
                     <!-- VS标志 -->
-                    <div class="w-12 h-12 rounded-full bg-white shadow-md border border-gray-100 flex items-center justify-center z-10">
-                      <span class="text-sm font-bold bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">VS</span>
+                    <div class="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center z-10">
+                      <span class="text-xs font-bold text-gray-400">VS</span>
                     </div>
 
                     <!-- 选项B -->
-                    <div class="flex-1 p-4">
+                    <div class="flex-1 p-6">
                       <div class="text-center">
                         <!-- 百分比指示器 -->
                         <div class="absolute -top-3 right-[25%] translate-x-1/2 px-3 py-1 bg-purple-600 rounded-full text-white text-xs font-medium">
                           {{ Math.round((topic.votesB / (topic.votesA + topic.votesB)) * 100) }}%
                         </div>
-                        <div class="font-medium text-purple-600 mb-1">{{ topic.optionB }}</div>
+                        <div class="text-lg font-medium text-purple-600 mb-2">{{ topic.optionB }}</div>
                         <div class="text-sm text-gray-500 mb-4">{{ topic.votesB }} 票</div>
                         <!-- 投票按钮 -->
                         <button 
-                          class="cursor-pointer w-20 h-10 rounded-full border-2 border-purple-200 bg-white hover:bg-purple-50 transition-colors mx-auto flex items-center justify-center"
+                          class="px-6 h-10 rounded-full bg-purple-50 hover:bg-purple-100 transition-colors mx-auto flex items-center justify-center cursor-pointer"
                         >
-                          <HandThumbUpIcon class="w-4 h-4 text-purple-600" />
-                          <span class="ml-2 text-sm font-medium text-purple-600">投票</span>
+                          <span class="text-sm font-medium text-purple-600">投票</span>
                         </button>
                       </div>
                     </div>
@@ -103,43 +206,20 @@
                 </div>
 
                 <!-- 底部信息 -->
-                <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                <div class="flex items-center justify-between">
                   <!-- 参与者头像组 -->
-                  <div class="flex items-center">
-                    <!-- 当没有人参与时 -->
-                    <div v-if="topic.votesA + topic.votesB === 0" 
-                      class="text-sm text-gray-400"
-                    >
-                      暂无人参与
-                    </div>
-                    <!-- 当只有1人参与时 -->
-                    <div v-else-if="topic.votesA + topic.votesB === 1" 
-                      class="flex items-center gap-2"
-                    >
-                      <img :src="`https://picsum.photos/32/32?random=${topic.id}`"
-                        class="w-8 h-8 rounded-full border-2 border-white"
+                  <div class="flex items-center gap-2">
+                    <div class="flex -space-x-2">
+                      <img v-for="i in Math.min(3, Math.floor((topic.votesA + topic.votesB) / 10))" :key="i"
+                        :src="`https://picsum.photos/32/32?random=${topic.id * 10 + i}`"
+                        class="w-6 h-6 rounded-full ring-2 ring-white"
                       >
-                      <span class="text-sm text-gray-500">第一个参与者</span>
                     </div>
-                    <!-- 当有多人参与时 -->
-                    <div v-else class="flex items-center gap-2">
-                      <div class="flex -space-x-2">
-                        <img v-for="i in Math.min(5, Math.floor((topic.votesA + topic.votesB) / 10))" :key="i"
-                          :src="`https://picsum.photos/32/32?random=${topic.id * 10 + i}`"
-                          class="w-8 h-8 rounded-full border-2 border-white hover:scale-110 transition-transform duration-300"
-                        >
-                        <div v-if="topic.votesA + topic.votesB > 50" 
-                          class="w-8 h-8 rounded-full border-2 border-white bg-gray-50 flex items-center justify-center hover:bg-gray-100 transition-colors"
-                        >
-                          <span class="text-xs text-gray-500">+{{ topic.votesA + topic.votesB - 50 }}</span>
-                        </div>
-                      </div>
-                      <span class="text-sm text-gray-500">{{ topic.votesA + topic.votesB }} 人参与</span>
-                    </div>
+                    <span class="text-xs text-gray-500">{{ topic.votesA + topic.votesB }} 人参与</span>
                   </div>
-                  <div class="flex items-center space-x-3 text-sm text-gray-500">
-                    <span class="flex items-center">
-                      <ChatBubbleLeftIcon class="w-4 h-4 mr-1" />{{ topic.comments }}
+                  <div class="flex items-center space-x-3">
+                    <span class="flex items-center text-xs text-gray-500">
+                      <ChatBubbleLeftIcon class="w-3 h-3 mr-1" />{{ topic.comments }}
                     </span>
                   </div>
                 </div>
@@ -205,6 +285,20 @@
         </div>
       </div>
     </div>
+
+    <!-- 分类切换菜单 -->
+    <CategoryMenu v-if="showCategoryMenu" 
+      v-model:show="showCategoryMenu"
+      v-model:currentLevel="currentLevel"
+      v-model:currentMainCategory="currentMainCategory"
+      v-model:currentSubCategory="currentSubCategory"
+      v-model:currentThirdCategory="currentThirdCategory"
+      :categories="categories"
+      @category-change="handleCategoryChange"
+    />
+
+    <!-- 使用移动端底部导航栏 -->
+    <MobileTabBar :menu-groups="menuGroups" />
   </div>
 </template>
 
@@ -220,12 +314,18 @@ import {
   HandThumbUpIcon,
   PlusIcon,
   UserIcon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  HomeIcon,
+  BoltIcon,
+  BriefcaseIcon,
+  WrenchScrewdriverIcon
 } from '@heroicons/vue/24/outline'
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import PageBanner from '@/components/common/PageBanner.vue'
-import CommunityNavigation from '@/components/community/CommunityNavigation.vue'
+import CategoryMenu from '@/components/CategoryMenu.vue'
+import MobileTabBar from '@/components/MobileTabBar.vue'
+import { mainCategories, communityCategories } from '@/config/communityCategories'
 
 const router = useRouter()
 const store = useStore()
@@ -259,7 +359,7 @@ const topics = ref([
   {
     id: 1,
     title: '开发移动应用选择哪个方案？',
-    category: 'framework',
+    category: 'tech',
     optionA: 'Flutter',
     optionB: 'React Native',
     votesA: 234,
@@ -275,7 +375,7 @@ const topics = ref([
   {
     id: 2,
     title: '前端状态管理选型？',
-    category: 'framework',
+    category: 'tech',
     optionA: 'Pinia',
     optionB: 'Redux',
     votesA: 1,
@@ -307,7 +407,7 @@ const topics = ref([
   {
     id: 4,
     title: '后端开发语言之争',
-    category: 'language',
+    category: 'tech',
     optionA: 'Java',
     optionB: 'Go',
     votesA: 789,
@@ -323,7 +423,7 @@ const topics = ref([
   {
     id: 5,
     title: '数据库选型：MySQL vs PostgreSQL',
-    category: 'database',
+    category: 'tech',
     optionA: 'MySQL',
     optionB: 'PostgreSQL',
     votesA: 678,
@@ -355,7 +455,7 @@ const topics = ref([
   {
     id: 7,
     title: '容器编排平台选择',
-    category: 'devops',
+    category: 'tech',
     optionA: 'Kubernetes',
     optionB: 'Docker Swarm',
     votesA: 567,
@@ -371,7 +471,7 @@ const topics = ref([
   {
     id: 8,
     title: 'CSS 预处理器选择',
-    category: 'frontend',
+    category: 'tech',
     optionA: 'Sass',
     optionB: 'Less',
     votesA: 456,
@@ -387,7 +487,7 @@ const topics = ref([
   {
     id: 9,
     title: 'Node.js Web 框架之争',
-    category: 'backend',
+    category: 'tech',
     optionA: 'Express',
     optionB: 'Nest.js',
     votesA: 789,
@@ -403,7 +503,7 @@ const topics = ref([
   {
     id: 10,
     title: '前端测试框架选择',
-    category: 'testing',
+    category: 'tech',
     optionA: 'Jest',
     optionB: 'Vitest',
     votesA: 345,
@@ -418,13 +518,41 @@ const topics = ref([
   }
 ])
 
+// 分类相关状态
+const showCategoryMenu = ref(false)
+const currentLevel = ref('main')
+const currentMainCategory = ref('all')
+const currentSubCategory = ref('')
+const currentThirdCategory = ref('')
+
+// 使用话题页面的配置
+const categoryConfig = communityCategories.topics
+const categories = computed(() => categoryConfig.categories)
+
+// 获取当前分类名称
+const currentCategoryName = computed(() => {
+  if (currentMainCategory.value === 'all') return '全部'
+  const category = categories.value.find(c => c.id === currentMainCategory.value)
+  return category?.name || ''
+})
+
+// 处理分类切换
+const handleCategoryChange = (categoryId, level = 'main') => {
+  if (level === 'main') {
+    currentMainCategory.value = categoryId
+    currentSubCategory.value = ''
+    currentThirdCategory.value = ''
+    showCategoryMenu.value = false
+  }
+}
+
 // 筛选话题
 const filteredTopics = computed(() => {
   let result = [...topics.value]
   
   // 应用分类筛选
-  if (currentCategory.value !== 'all') {
-    result = result.filter(topic => topic.category === currentCategory.value)
+  if (currentMainCategory.value !== 'all') {
+    result = result.filter(topic => topic.category === currentMainCategory.value)
   }
   
   // 应用排序

@@ -190,7 +190,7 @@
                           ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
                           : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                       ]"
-                      placeholder="请输入个人简介（100-300字）"
+                      placeholder="请输入个人简介（20-100字）"
                     ></textarea>
                     <p v-if="formErrors.personal_summary" class="mt-1 text-sm text-red-500">
                       {{ formErrors.personal_summary }}
@@ -285,8 +285,8 @@ const rules = {
       validator: (value) => {
         if (!value) return true // 选填
         const length = value.trim().length
-        if (length < 100 || length > 300) {
-          return '个人简介需要在100-300个字符之间'
+        if (length < 20 || length > 100) {
+          return '个人简介需要在20-100个字符之间'
         }
         return true
       }

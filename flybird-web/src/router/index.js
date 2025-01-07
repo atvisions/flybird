@@ -17,6 +17,8 @@ import CommunityHomeView from '@/views/community/HomeView.vue'
 import UserPageView from '../views/user/UserPageView.vue'
 import SearchView from '@/views/search/SearchView.vue'
 import PortfolioHomeView from '@/views/portfolio/HomeView.vue'
+import PortfolioView from '@/views/portfolio/PortfolioView.vue'
+import DesignView from '@/views/portfolio/DesignView.vue'
 
 const routes = [
   {
@@ -65,28 +67,22 @@ const routes = [
   },
   {
     path: '/templates',
-    name: 'templates',
     component: () => import('@/views/resume/ResumeView.vue'),
     children: [
       {
         path: '',
-        name: 'templates-home',
-        component: () => import('@/views/resume/TemplatesView.vue')
+        name: 'resume-home',
+        redirect: '/templates/resume'
       },
       {
         path: 'resume',
         name: 'templates-resume',
-        component: () => import('@/views/resume/ResumeTemplatesView.vue')
+        component: () => import('@/views/resume/TemplatesView.vue')
       },
       {
         path: 'cover-letter',
         name: 'templates-cover-letter',
         component: () => import('@/views/resume/CoverLetterView.vue')
-      },
-      {
-        path: 'bio',
-        name: 'templates-bio',
-        component: () => import('@/views/resume/BioView.vue')
       }
     ]
   },
@@ -175,8 +171,7 @@ const routes = [
   },
   {
     path: '/portfolio',
-    name: 'portfolio',
-    component: () => import('@/views/portfolio/PortfolioView.vue'),
+    component: PortfolioView,
     children: [
       {
         path: '',
@@ -186,7 +181,7 @@ const routes = [
       {
         path: 'design',
         name: 'portfolio-design',
-        component: () => import('@/views/portfolio/DesignView.vue')
+        component: DesignView
       },
       {
         path: 'video',

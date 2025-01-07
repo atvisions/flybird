@@ -1,23 +1,30 @@
 <template>
-  <div class="py-4 lg:py-6 mt-[72px]">
+  <div class="min-h-screen py-4 pb-24 lg:py-6 mt-[72px]">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <!-- 顶部横幅 -->
       <PageBanner theme="blue">
-        <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">设计作品集</h1>
-        <p class="text-gray-600 text-lg max-w-2xl">发现优秀设计灵感，分享你的创意作品</p>
+        <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">{{ categoryConfig.title }}</h1>
+        <p class="text-gray-600 text-lg max-w-2xl">{{ categoryConfig.description }}</p>
       </PageBanner>
 
-      <!-- 使用导航组件 -->
-      <PortfolioNavigation v-model:currentCategory="currentCategory" />
+
+      <!-- PC端导航 -->
+      <PortfolioNavigation 
+        v-model:currentCategory="currentMainCategory"
+        v-model:currentSort="currentSort"
+        :type="type"
+        :categories="currentTypeCategories"
+        class="hidden md:block"
+      />
 
       <!-- 作品列表 -->
       <div class="max-w-7xl mx-auto mt-6">
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-          <div v-for="work in filteredWorks" :key="work.id"
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+          <div v-for="work in works" :key="work.id"
             class="bg-white rounded-lg lg:rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300"
           >
             <!-- 作品封面 -->
-            <div class="aspect-w-1 aspect-h-1 bg-gray-100 relative group overflow-hidden">
+            <div class="aspect-w-16 aspect-h-9 sm:aspect-w-1 sm:aspect-h-1 bg-gray-100 relative group overflow-hidden">
               <img 
                 :src="work.cover" 
                 class="w-full h-full object-cover transform group-hover:scale-110 transition-all duration-500"
@@ -32,7 +39,7 @@
               </div>
               <!-- 悬浮遮罩 -->
               <div class="absolute inset-0 bg-black/60 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center transform group-hover:scale-110">
-                <span class="text-white font-medium mb-2">{{ portfolioCategories.find(c => c.id === work.type)?.name }}</span>
+                <span class="text-white font-medium mb-2">{{ getWorkTypeName(work.type) }}</span>
                 <div class="flex items-center gap-3">
                   <span class="flex items-center text-gray-300 text-sm">
                     <EyeIcon class="w-4 h-4 mr-1" />{{ work.views }}
@@ -45,7 +52,7 @@
             </div>
 
             <!-- 作品信息 -->
-            <div class="p-3 lg:p-4">
+            <div class="p-4 lg:p-4">
               <h3 class="text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors line-clamp-1 mb-2">
                 {{ work.title }}
               </h3>
@@ -60,204 +67,84 @@
         </div>
       </div>
     </div>
+
+    <!-- 分类切换菜单 -->
+    <CategoryMenu v-if="showCategoryMenu" 
+      v-model:show="showCategoryMenu"
+      v-model:currentLevel="currentLevel"
+      v-model:currentMainCategory="currentMainCategory"
+      v-model:currentSubCategory="currentSubCategory"
+      v-model:currentThirdCategory="currentThirdCategory"
+      :type="type"
+      :categories="currentTypeCategories"
+      @category-change="handleCategoryChange"
+    />
+
+    <!-- 使用移动端底部导航栏 -->
+    <MobileTabBar :menu-groups="menuGroups" />
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useStore } from 'vuex'
 import { useRoute } from 'vue-router'
-import {
-  RectangleStackIcon,
-  UserGroupIcon,
-  SparklesIcon,
-  ShareIcon,
-  HeartIcon,
-  ArrowsUpDownIcon,
-  ChevronDownIcon,
-  FireIcon,
-  ClockIcon,
-  CalendarIcon,
-  PlusIcon,
-  UserIcon,
-  ChevronRightIcon,
-  PlayIcon
-} from '@heroicons/vue/24/outline'
+import MobileTabBar from '@/components/MobileTabBar.vue'
 import PageBanner from '@/components/common/PageBanner.vue'
+import CategoryMenu from '@/components/portfolio/CategoryMenu.vue'
 import PortfolioNavigation from '@/components/portfolio/PortfolioNavigation.vue'
+import { portfolioCategories, generateMenuGroups } from '@/config/portfolioCategories'
+import { usePortfolioData } from '@/composables/usePortfolioData'
+import {
+  PlayIcon,
+  EyeIcon,
+  HeartIcon,
+  ChevronRightIcon
+} from '@heroicons/vue/24/outline'
 
-const store = useStore()
 const route = useRoute()
+const type = 'discover'
 
-// 使用 Vuex store 的 isAuthenticated 状态
-const isAuthenticated = computed(() => store.state.isAuthenticated)
+// 使用统一的分类配置
+const categoryConfig = portfolioCategories[type]
+const menuGroups = generateMenuGroups(type)
+const { works } = usePortfolioData(type)
 
-// 当前选中的分类
-const currentCategory = ref('all')
+// 分类相关状态
+const currentMainCategory = ref('all')
+const currentSubCategory = ref('')
+const currentThirdCategory = ref('')
+const currentLevel = ref('main')
+const showCategoryMenu = ref(false)
 
-// 作品分类数据
-const portfolioCategories = [
-  { id: 'all', name: '全部' },
-  { id: 'ui', name: 'UI设计' },
-  { id: 'graphic', name: '平面设计' },
-  { id: 'web', name: 'Web设计' },
-  { id: 'video', name: '视频制作' },
-  { id: 'animation', name: '动画' },
-  { id: 'illustration', name: '插画' }
-]
-
-const showSortMenu = ref(false)
+// 排序相关状态
 const currentSort = ref('popular')
 
-// 排序选项
-const sortOptions = {
-  popular: { label: '最受欢迎', icon: FireIcon },
-  newest: { label: '最新发布', icon: CalendarIcon },
-  views: { label: '最多浏览', icon: ShareIcon },
-  likes: { label: '最多点赞', icon: HeartIcon }
-}
-
-// 模拟作品数据
-const works = ref([
-  {
-    id: 1,
-    title: '智能家居App UI设计',
-    type: 'ui',
-    cover: 'https://picsum.photos/600/400?random=1',
-    author: {
-      name: '张小明',
-      avatar: 'https://picsum.photos/32/32?random=1'
-    },
-    views: 1234,
-    likes: 89,
-    isVideo: false
-  },
-  {
-    id: 2,
-    title: '2024科技峰会品牌设计',
-    type: 'graphic',
-    cover: 'https://picsum.photos/600/400?random=2',
-    author: {
-      name: '李晓华',
-      avatar: 'https://picsum.photos/32/32?random=2'
-    },
-    views: 856,
-    likes: 67,
-    isVideo: false
-  },
-  {
-    id: 3,
-    title: '产品宣传创意视频',
-    type: 'video',
-    cover: 'https://picsum.photos/600/400?random=3',
-    author: {
-      name: '王大力',
-      avatar: 'https://picsum.photos/32/32?random=3'
-    },
-    views: 2341,
-    likes: 178,
-    isVideo: true,
-    duration: '2:35'
-  },
-  {
-    id: 4,
-    title: '企业品牌动画',
-    type: 'animation',
-    cover: 'https://picsum.photos/600/400?random=4',
-    author: {
-      name: '赵明',
-      avatar: 'https://picsum.photos/32/32?random=4'
-    },
-    views: 1567,
-    likes: 92,
-    isVideo: true,
-    duration: '1:45'
-  },
-  {
-    id: 5,
-    title: '电商网站设计',
-    type: 'web',
-    cover: 'https://picsum.photos/600/400?random=5',
-    author: {
-      name: '陈小红',
-      avatar: 'https://picsum.photos/32/32?random=5'
-    },
-    views: 987,
-    likes: 45,
-    isVideo: false
-  },
-  {
-    id: 6,
-    title: '旅行类App界面设计',
-    type: 'ui',
-    cover: 'https://picsum.photos/600/400?random=6',
-    author: {
-      name: '刘艺',
-      avatar: 'https://picsum.photos/32/32?random=6'
-    },
-    views: 765,
-    likes: 34,
-    isVideo: false
-  },
-  {
-    id: 7,
-    title: '音乐节创意海报',
-    type: 'graphic',
-    cover: 'https://picsum.photos/600/400?random=7',
-    author: {
-      name: '周设计',
-      avatar: 'https://picsum.photos/32/32?random=7'
-    },
-    views: 543,
-    likes: 28,
-    isVideo: false
-  },
-  {
-    id: 8,
-    title: '游戏角色原画设计',
-    type: 'illustration',
-    cover: 'https://picsum.photos/600/400?random=8',
-    author: {
-      name: '林画师',
-      avatar: 'https://picsum.photos/32/32?random=8'
-    },
-    views: 876,
-    likes: 56,
-    isVideo: false
-  }
-])
-
-// 根据分类和排序过滤作品
-const filteredWorks = computed(() => {
-  let result = [...works.value]
-  
-  // 应用分类过滤
-  if (currentCategory.value !== 'all') {
-    result = result.filter(work => work.type === currentCategory.value)
-  }
-  
-  // 应用排序
-  switch (currentSort.value) {
-    case 'popular':
-      result.sort((a, b) => (b.views + b.likes) - (a.views + a.likes))
-      break
-    case 'newest':
-      result.sort((a, b) => new Date(b.date) - new Date(a.date))
-      break
-    case 'views':
-      result.sort((a, b) => b.views - a.views)
-      break
-    case 'likes':
-      result.sort((a, b) => b.likes - a.likes)
-      break
-  }
-  
-  return result
+// 获取当前类型的分类数据
+const currentTypeCategories = computed(() => {
+  return categoryConfig.categories || []
 })
 
-// 处理排序
-const handleSort = (value) => {
-  currentSort.value = value
-  showSortMenu.value = false
+// 获取作品类型名称
+const getWorkTypeName = (type) => {
+  const category = currentTypeCategories.value.find(c => c.id === type)
+  return category?.name || type
+}
+
+// 处理分类切换
+const handleCategoryChange = (categoryId, level = 'main') => {
+  if (level === 'main') {
+    currentMainCategory.value = categoryId
+    currentSubCategory.value = ''
+    currentThirdCategory.value = ''
+    if (categoryId !== 'all') {
+      currentLevel.value = 'sub'
+    } else {
+      showCategoryMenu.value = false
+    }
+  } else if (level === 'sub') {
+    currentSubCategory.value = categoryId
+    currentThirdCategory.value = ''
+    showCategoryMenu.value = false
+  }
 }
 </script> 

@@ -8,6 +8,7 @@ import router from '../router'
 import { storage } from '@/utils/storage'
 import { getExpirationInfo } from '@/utils/auth'
 import defaultAvatar from '@/assets/images/default-avatar.png'
+import user from '@/api/user'
 
 export default createStore({
   state: {
@@ -362,6 +363,19 @@ export default createStore({
           commit('SET_USER_INFO', response)
           return response.data
         }
+      } catch (error) {
+        console.error('获取用户信息失败:', error)
+        throw error
+      }
+    },
+
+    async getUserInfo({ commit }) {
+      try {
+        const response = await user.getUserInfo()
+        if (response.data?.code === 200) {
+          commit('SET_USER_INFO', response.data)
+        }
+        return response
       } catch (error) {
         console.error('获取用户信息失败:', error)
         throw error

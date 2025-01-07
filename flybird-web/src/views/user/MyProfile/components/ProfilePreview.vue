@@ -46,7 +46,7 @@ import {
   EnvelopeIcon, 
   MapPinIcon 
 } from '@heroicons/vue/24/outline'
-import { profile } from '@/api/profile'
+import profile from '@/api/profile'
 import defaultAvatarImage from '@/assets/images/default-avatar.png'
 import { useStore } from 'vuex'
 

@@ -3,6 +3,15 @@ const path = require('path')
 
 module.exports = defineConfig({
   transpileDependencies: true,
+  runtimeCompiler: true,
+  configureWebpack: {
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, 'src'),
+        'vue$': 'vue/dist/vue.esm-bundler.js'
+      }
+    }
+  },
   // 使用 defineProperty 而不是 define
   chainWebpack: config => {
     config.plugin('define').tap(args => {
@@ -17,13 +26,6 @@ module.exports = defineConfig({
       args[0].title = 'popo.work'
       return args
     })
-  },
-  configureWebpack: {
-    resolve: {
-      alias: {
-        '@': path.resolve(__dirname, 'src')
-      }
-    }
   },
   devServer: {
     proxy: {

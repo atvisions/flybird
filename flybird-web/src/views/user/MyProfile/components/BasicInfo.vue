@@ -1,51 +1,21 @@
 <!-- src/views/user/MyProfile/components/BasicInfo.vue -->
 <template>
   <div class="bg-white rounded-lg shadow">
-    <!-- 背景图部分 -->
-    <div class="relative h-48 overflow-hidden rounded-t-lg">
-      <img 
-        :src="backgroundUrl" 
-        class="w-full h-full object-cover"
-        @error="handleBackgroundError"
-      >
-      <div class="absolute top-4 right-4">
-        <button
-          @click="triggerBackgroundUpload"
-          class="flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white bg-opacity-90 rounded-lg hover:bg-opacity-100 transition-all shadow-sm"
-        >
-          <svg 
-            class="w-4 h-4 mr-1.5 text-gray-600" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-          >
-            <path 
-              stroke-linecap="round" 
-              stroke-linejoin="round" 
-              stroke-width="2" 
-              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-            />
-          </svg>
-          更换背景
-        </button>
-      </div>
-      <input
-        ref="backgroundInput"
-        type="file"
-        accept="image/*"
-        class="hidden"
-        @change="handleBackgroundChange"
-      >
-    </div>
-
     <!-- 个人信息卡片 -->
-    <div class="relative px-6 pb-6">
-      <!-- 头像部分 - 上移到背景图上 -->
-      <div class="absolute -top-16 left-6">
+    <div class="px-6 py-6">
+      <!-- 标题 -->
+      <div class="flex items-center mb-6">
+        <UserIcon class="w-5 h-5 text-gray-900 mr-2" />
+        <h2 class="text-base font-medium text-gray-900">基本信息</h2>
+      </div>
+
+      <!-- 头像和基本信息 -->
+      <div class="flex items-start space-x-6 mb-8">
+        <!-- 头像部分 -->
         <div class="relative group">
           <img 
             :src="userAvatar" 
-            class="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
+            class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
             alt="用户头像"
             @error="handleImageError"
           />
@@ -56,11 +26,11 @@
             <CameraIcon class="w-8 h-8 text-white" />
           </div>
           <!-- 性别标识 -->
-          <div class="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow">
+          <div class="absolute bottom-0 right-0 bg-white rounded-full p-1.5 shadow">
             <!-- 男性图标 -->
             <svg 
               v-if="currentGender === 'male'" 
-              class="w-6 h-6 text-blue-500" 
+              class="w-5 h-5 text-blue-500" 
               viewBox="0 0 24 24" 
               fill="none" 
               stroke="currentColor"
@@ -72,7 +42,7 @@
             <!-- 女性图标 -->
             <svg 
               v-else-if="currentGender === 'female'" 
-              class="w-6 h-6 text-pink-500" 
+              class="w-5 h-5 text-pink-500" 
               viewBox="0 0 24 24" 
               fill="none" 
               stroke="currentColor"
@@ -83,53 +53,52 @@
             </svg>
           </div>
         </div>
+
+        <!-- 名字和简介 -->
+        <div class="flex-1">
+          <div class="flex items-center justify-between">
+            <h1 class="text-xl font-bold text-gray-900">{{ formatBasicInfo.name }}</h1>
+            <button
+              @click="handleEdit"
+              class="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+            >
+              <PencilSquareIcon class="w-4 h-4 text-gray-500" />
+            </button>
+          </div>
+          <p class="mt-2 text-sm text-gray-600">{{ formatBasicInfo.personal_summary || '这个人很懒，还没有填写个人简介' }}</p>
+        </div>
       </div>
 
       <!-- 基本信息部分 -->
-      <div class="pt-20">
-        <!-- 名字和编辑按钮 -->
-        <div class="flex items-center justify-between mb-4">
-          <h1 class="text-2xl font-bold text-gray-900">{{ formatBasicInfo.name }}</h1>
-          <button
-            @click="handleEdit"
-            class="p-2 rounded-full hover:bg-gray-100 transition-colors"
-          >
-            <PencilSquareIcon class="w-5 h-5 text-gray-500" />
-          </button>
-        </div>
-
-        <!-- 个人简介 -->
-        <p class="text-gray-600 mb-6">{{ formatBasicInfo.personal_summary || '这个人很懒，还没有填写个人简介' }}</p>
-
+      <div>
         <!-- 信息网格 -->
-        <div class="grid grid-cols-2 gap-6 mb-6">
+        <div class="grid grid-cols-2 gap-x-12 gap-y-4 border-t border-gray-100 pt-6">
           <!-- 联系方式 -->
-          <div class="space-y-3">
-            <h2 class="text-sm font-semibold text-gray-900 mb-2">联系方式</h2>
+          <div>
+            <h2 class="text-xs font-medium text-gray-500 mb-3">联系方式</h2>
             <div class="flex items-center space-x-2">
-              <PhoneIcon class="w-5 h-5 text-gray-400" />
-              <span class="text-gray-600">{{ formatBasicInfo.phone }}</span>
+              <PhoneIcon class="w-4 h-4 text-gray-400" />
+              <span class="text-sm text-gray-900">{{ formatBasicInfo.phone }}</span>
             </div>
-            <div class="flex items-center space-x-2">
-              <EnvelopeIcon class="w-5 h-5 text-gray-400" />
-              <span class="text-gray-600">{{ formatBasicInfo.email }}</span>
+            <div class="flex items-center space-x-2 mt-2">
+              <EnvelopeIcon class="w-4 h-4 text-gray-400" />
+              <span class="text-sm text-gray-900">{{ formatBasicInfo.email }}</span>
             </div>
           </div>
 
           <!-- 基本资料 -->
-          <div class="space-y-3">
-            <h2 class="text-sm font-semibold text-gray-900 mb-2">基本资料</h2>
+          <div>
+            <h2 class="text-xs font-medium text-gray-500 mb-3">基本资料</h2>
             <div class="flex items-center space-x-2">
-              <MapPinIcon class="w-5 h-5 text-gray-400" />
-              <span class="text-gray-600">{{ formatBasicInfo.location }}</span>
+              <MapPinIcon class="w-4 h-4 text-gray-400" />
+              <span class="text-sm text-gray-900">{{ formatBasicInfo.location }}</span>
             </div>
-            <div class="flex items-center space-x-2">
-              <CakeIcon class="w-5 h-5 text-gray-400" />
-              <span class="text-gray-600">{{ formatBasicInfo.age }}</span>
+            <div class="flex items-center space-x-2 mt-2">
+              <CakeIcon class="w-4 h-4 text-gray-400" />
+              <span class="text-sm text-gray-900">{{ formatBasicInfo.age }}</span>
             </div>
           </div>
         </div>
-
       </div>
     </div>
   </div>
@@ -146,7 +115,6 @@
 import { ref, computed, nextTick, watch, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import defaultAvatarImage from '@/assets/images/default-avatar.png'
-import defaultBackground from '@/assets/images/default-background.jpg'
 import { useStore } from 'vuex'
 import { MEDIA_URL } from '@/config'
 import { showToast } from '@/components/ToastMessage'
@@ -404,56 +372,6 @@ const validateFile = (file) => {
   }
 
   return true
-}
-
-// 背景图相关
-const backgroundInput = ref(null)
-const backgroundUrl = computed(() => {
-  const background = store.state.userInfo?.data?.basic_info?.background
-  if (!background) return defaultBackground
-  return background.startsWith('http') ? background : `${MEDIA_URL}${background}`
-})
-
-const triggerBackgroundUpload = () => {
-  backgroundInput.value.click()
-}
-
-const handleBackgroundChange = async (event) => {
-  const file = event.target.files[0]
-  if (!file) return
-  
-  if (!validateFile(file)) {
-    return
-  }
-  
-  const formData = new FormData()
-  formData.append('background', file)
-  
-  try {
-    loading.value = true
-    const response = await profile.uploadBackground(formData)
-    if (response.data?.code === 200) {
-      showToast('背景图更新成功', 'success')
-      emit('update')  // 通知父组件更新
-      const backgroundUrl = response.data.data.background
-      // 更新本地数据
-      if (props.resumeData && props.resumeData.basic_info) {
-        props.resumeData.basic_info.background = backgroundUrl
-      }
-      // 更新 store
-      store.commit('UPDATE_BACKGROUND', backgroundUrl)
-    }
-  } catch (error) {
-    console.error('Failed to update background:', error)
-    showToast('背景图更新失败', 'error')
-  } finally {
-    loading.value = false
-    event.target.value = ''
-  }
-}
-
-const handleBackgroundError = (e) => {
-  e.target.src = defaultBackground
 }
 
 // 添加状态

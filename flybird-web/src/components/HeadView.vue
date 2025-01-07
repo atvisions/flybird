@@ -73,23 +73,85 @@
         <!-- 已登录状态 -->
         <template v-else>
           <!-- 消息图标 -->
-          <router-link 
-            to="/user?tab=messages"
-            class="mr-4 p-1.5 text-gray-500 hover:text-indigo-600 relative inline-flex items-center justify-center"
+          <button 
+            @click.stop="toggleMessageMenu"
+            class="hidden md:block p-2 mr-2 text-gray-500 hover:text-indigo-600 relative"
             :class="{ 'text-indigo-600': isMessageRoute }"
           >
             <BellIcon 
-              class="w-6 h-6" 
+              class="w-5 h-5" 
               :class="{ 'text-indigo-600': isMessageRoute }"
             />
             <!-- 未读消息数量 -->
             <span 
               v-if="unreadMessagesCount > 0"
-              class="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] bg-red-500 rounded-full text-[10px] font-medium text-white flex items-center justify-center px-1"
+              class="absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 rounded-full text-[10px] font-medium text-white flex items-center justify-center px-1"
             >
               {{ unreadMessagesCount > 99 ? '99+' : unreadMessagesCount }}
             </span>
-          </router-link>
+          </button>
+
+          <!-- 消息下拉菜单 -->
+          <div v-if="showMessageMenu" 
+            class="fixed lg:absolute top-[72px] bg-white shadow-lg z-[100] w-80 rounded-lg"
+            :style="{
+              [isMobile ? '' : 'right']: isMobile ? '' : 'calc((100vw - 1280px) / 2 + 120px)',
+            }"
+          >
+            <!-- 消息菜单头部 -->
+            <div class="px-4 py-3 border-b border-gray-100">
+              <div class="flex items-center justify-between">
+                <h3 class="text-base font-medium text-gray-900">消息通知</h3>
+                <button class="text-sm text-gray-500 hover:text-gray-700">全部标记已读</button>
+              </div>
+            </div>
+            
+            <!-- 消息列表 -->
+            <div class="max-h-[400px] overflow-y-auto">
+              <div v-if="messages.length === 0" class="py-8 text-center text-gray-500">
+                暂无消息
+              </div>
+              <div v-else class="divide-y divide-gray-100 py-1">
+                <div v-for="message in messages" :key="message.id" 
+                  class="px-4 py-3 hover:bg-gray-50 cursor-pointer"
+                >
+                  <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0">
+                      <div class="w-2 h-2 mt-2 rounded-full" 
+                        :class="message.isRead ? 'bg-gray-300' : 'bg-blue-500'"
+                      ></div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center justify-between mb-1">
+                        <span 
+                          class="text-xs px-1.5 py-0.5 rounded"
+                          :class="{
+                            'bg-blue-100 text-blue-700': message.type === 'system',
+                            'bg-green-100 text-green-700': message.type === 'private'
+                          }"
+                        >
+                          {{ message.type === 'system' ? '系统通知' : '私信' }}
+                        </span>
+                        <span class="text-xs text-gray-500">{{ message.time }}</span>
+                      </div>
+                      <p class="text-sm text-gray-900">{{ message.content }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 消息菜单底部 -->
+            <div class="px-4 py-3 border-t border-gray-100 text-center">
+              <button 
+                class="text-sm text-indigo-600 hover:text-indigo-700"
+                @click="viewAllMessages"
+              >
+                查看全部消息
+              </button>
+            </div>
+          </div>
+
           <div class="relative">
             <button @click.stop="userMenuOpen = !userMenuOpen"
               class="flex items-center space-x-1 text-sm font-semibold text-gray-900 hover:text-indigo-600">
@@ -130,7 +192,7 @@
       'inset-x-0 lg:inset-x-auto',
       'lg:w-64 lg:rounded-lg'
     ]" :style="{
-      [isMobile ? '' : 'right']: isMobile ? '' : 'calc((100vw - 1280px) / 2 + 26px)',
+      [isMobile ? '' : 'right']: isMobile ? '' : 'calc((100vw - 1280px) / 2 + 24px)',
     }">
       <!-- 用户信息头部 -->
       <div class="px-5 py-4 border-b border-gray-100">
@@ -142,9 +204,20 @@
             alt="用户头像" 
             @error="handleImageError" 
           />
-          <div>
-            <div class="text-base font-medium text-gray-900">{{ username }}</div>
-            <div class="text-sm text-gray-500">{{ userType }}</div>
+          <div class="flex-1">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-base font-medium text-gray-900">{{ username }}</div>
+                <div class="text-sm text-gray-500">{{ userType }}</div>
+              </div>
+              <button
+                @click="router.push('/pro')"
+                class="px-2.5 py-1 text-xs bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-full hover:opacity-90 transition-opacity flex items-center"
+              >
+                <SparklesIcon class="w-3.5 h-3.5 mr-1" />
+                升级会员
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -328,6 +401,7 @@ import { showToast } from '@/components/ToastMessage'
 // 导入所需的图标
 import {
   DocumentTextIcon,
+  DocumentIcon,
   UserIcon,
   Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
@@ -339,15 +413,25 @@ import {
   MagnifyingGlassIcon,
   PhotoIcon,
   UserGroupIcon,
-  XMarkIcon
+  XMarkIcon,
+  Squares2X2Icon,
+  SparklesIcon
 } from '@heroicons/vue/24/outline'
+
+import {
+  UserIcon as UserIconSolid,
+  DocumentIcon as DocumentIconSolid,
+  Cog6ToothIcon as Cog6ToothIconSolid,
+  Squares2X2Icon as Squares2X2IconSolid,
+  ArrowRightOnRectangleIcon as ArrowRightOnRectangleIconSolid,
+} from '@heroicons/vue/24/solid'
 
 // 添加图标映射函数
 const getIcon = (menuKey) => {
   const iconMap = {  
-    // 用户菜单图标
-    'profile': UserCircleIcon,
-    'resumes': DocumentTextIcon,
+    'home': Squares2X2Icon,
+    'profile': UserIcon,
+    'resumes': DocumentIcon,
     'favorites': HeartIcon,
     'notifications': BellIcon,
     'settings': Cog6ToothIcon,
@@ -364,9 +448,49 @@ const route = useRoute()
 const store = useStore()
 const mobileMenuOpen = ref(false)
 const userMenuOpen = ref(false)
+const showMessageMenu = ref(false)
 const resourceMenuOpen = ref(false)
 const mobileSubmenuOpen = ref({})
 const userBasicInfo = ref(null)
+
+// 模拟消息数据
+const messages = ref([
+  {
+    id: 1,
+    content: '您的简历被查看了',
+    time: '10分钟前',
+    isRead: false,
+    type: 'system'
+  },
+  {
+    id: 2,
+    content: '有新的职位推荐',
+    time: '1小时前',
+    isRead: true,
+    type: 'system'
+  },
+  {
+    id: 3,
+    content: '张三给你发送了一条私信',
+    time: '2小时前',
+    isRead: false,
+    type: 'private'
+  }
+])
+
+// 切换消息菜单
+const toggleMessageMenu = () => {
+  showMessageMenu.value = !showMessageMenu.value
+  if (showMessageMenu.value) {
+    userMenuOpen.value = false
+  }
+}
+
+// 查看全部消息
+const viewAllMessages = () => {
+  showMessageMenu.value = false  // 关闭消息菜单
+  router.push('/user?tab=messages')
+}
 
 // 监听 store 中的用户信息变化，更新用户基本信息
 watch(
@@ -387,9 +511,6 @@ const isMobile = computed(() => {
   return window.innerWidth < 1024
 })
 
-
-
-
 // 统一的菜单关闭处理
 const closeMenus = (e) => {
   if (!e.target.closest('.resource-menu')) {
@@ -397,6 +518,9 @@ const closeMenus = (e) => {
   }
   if (!e.target.closest('.user-menu')) {
     userMenuOpen.value = false
+  }
+  if (!e.target.closest('.message-menu') && !e.target.closest('.message-button')) {
+    showMessageMenu.value = false
   }
 }
 
@@ -409,9 +533,6 @@ const toggleMenu = () => {
     mobileSubmenuOpen.value = {}
   }
 }
-
-
-
 
 // 判断当前路由是否匹配
 const isCurrentRoute = (href) => {
@@ -430,8 +551,6 @@ const isCurrentRoute = (href) => {
   // 其他路由保持完全匹配
   return route.path === href
 }
-
-
 
 // 用户昵称计算属性
 const username = computed(() => {
@@ -565,6 +684,12 @@ const userType = computed(() => '普通用户')
 const userMenuItems = computed(() => {
   return [
     {
+      key: 'home',
+      label: '用户中心',
+      icon: 'home',
+      action: () => router.push('/user?tab=home')
+    },
+    {
       key: 'profile',
       label: '我的档案',
       icon: 'profile',
@@ -575,36 +700,6 @@ const userMenuItems = computed(() => {
       label: '我的简历',
       icon: 'resumes',
       action: () => router.push('/user?tab=resumes')
-    },
-    {
-      key:'creations',
-      label:'我的创作',
-      icon:'creations',
-      action: () => router.push('/user?tab=creations')
-    },
-    {
-      key: 'portfolio',
-      label: '我的作品集',
-      icon: 'portfolio',
-      action: () => router.push('/user?tab=portfolio')
-    },
-    {
-      key: 'favorites',
-      label: '我的收藏',
-      icon: 'favorites',
-      action: () => router.push('/user?tab=favorites')
-    },
-    {
-      key: 'notifications',
-      label: '消息通知',
-      icon: 'notifications',
-      action: () => router.push('/user?tab=messages')
-    },
-    {
-      key: 'homepage',
-      label: '我的主页',
-      icon: 'homepage',
-      action: () => router.push('/u/10001')
     },
     {
       key: 'settings',
