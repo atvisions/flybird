@@ -40,11 +40,14 @@
             <div class="flex items-center gap-2 sm:gap-3">
               <template v-if="isAuthenticated">
                 <!-- 发布按钮 -->
-                <button class="h-9 px-4 sm:px-5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-full hover:shadow-lg hover:shadow-violet-500/20 transition-all duration-300 text-sm font-medium flex items-center group">
+                <router-link 
+                  to="/community/create?type=question"
+                  class="h-9 px-4 sm:px-5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-full hover:shadow-lg hover:shadow-violet-500/20 transition-all duration-300 text-sm font-medium flex items-center group"
+                >
                   <PlusIcon class="w-4 h-4 mr-1.5 sm:mr-2 group-hover:scale-110 transition-transform" />
                   <span class="hidden sm:inline">发布问题</span>
                   <span class="sm:hidden">发布</span>
-                </button>
+                </router-link>
               </template>
               <template v-else>
                 <!-- 登录按钮 -->
@@ -128,27 +131,36 @@
             </div>
             <div class="space-y-3 lg:space-y-5">
               <div v-for="question in paginatedQuestions" :key="question.id"
-                class="group cursor-pointer rounded-lg lg:rounded-xl hover:bg-gray-50 transition-colors"
+                class="group"
               >
                 <div class="p-4">
                   <!-- 问题标题和标签 -->
                   <div class="flex items-start gap-4">
                     <div class="flex-1 min-w-0">
                       <div class="flex items-center gap-2 mb-2">
+                        <!-- 悬赏标签 -->
+                        <span v-if="question.reward" 
+                          class="flex items-center px-2.5 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full text-xs font-medium shadow-sm"
+                        >
+                          <CurrencyYenIcon class="w-3.5 h-3.5 mr-0.5" />
+                          {{ question.reward }} 悬赏
+                        </span>
                         <span 
                           class="px-2 py-1 text-xs font-medium rounded-full"
                           :class="{
-                            'bg-orange-100 text-orange-600': question.status === 'unsolved',
+                            'bg-gray-100 text-gray-600': question.status === 'unsolved',
                             'bg-green-100 text-green-600': question.status === 'solved',
                             'bg-purple-100 text-purple-600': question.status === 'featured',
-                            'bg-blue-100 text-blue-600': question.status === 'reward'
                           }"
                         >
                           {{ getStatusText(question.status) }}
                         </span>
                         <span class="text-xs text-gray-500">{{ question.createTime }}</span>
                       </div>
-                      <h3 class="text-base font-medium text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-1 mb-2">
+                      <h3 
+                        class="text-xl font-bold text-gray-900 mb-3 cursor-pointer"
+                        @click="$router.push(`/community/question/${question.id}`)"
+                      >
                         {{ question.title }}
                       </h3>
                       <p class="text-sm text-gray-500 line-clamp-2 mb-4">{{ question.description }}</p>
@@ -260,7 +272,10 @@ import {
   PlusIcon,
   UserIcon,
   ChevronRightIcon,
-  ChevronLeftIcon
+  ChevronLeftIcon,
+  CurrencyYenIcon,
+  CheckCircleIcon,
+  HeartIcon
 } from '@heroicons/vue/24/outline'
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
@@ -319,6 +334,7 @@ const questions = ref([
       avatar: 'https://picsum.photos/32/32?random=1'
     },
     status: 'unsolved',
+    reward: 50,
     answers: 12,
     views: 1234,
     createTime: '2小时前'
@@ -357,7 +373,8 @@ const questions = ref([
       name: '赵明',
       avatar: 'https://picsum.photos/32/32?random=4'
     },
-    status: 'reward',
+    status: 'unsolved',
+    reward: 100,
     answers: 20,
     views: 2023,
     createTime: '8小时前'
@@ -527,7 +544,6 @@ const getStatusText = (status) => {
     unsolved: '待解决',
     solved: '已解决',
     featured: '精选',
-    reward: '悬赏'
   }
   return statusMap[status] || status
 }
@@ -535,4 +551,23 @@ const getStatusText = (status) => {
 // 使用问答页面的配置
 const categoryConfig = communityCategories.questions
 const categories = computed(() => categoryConfig.categories)
+
+// 判断是否是问题作者
+const isAuthor = computed(() => {
+  return store.state.user?.id === question.value.author.id
+})
+
+// 采纳回答
+const acceptAnswer = (answer) => {
+  if (question.value.solved) {
+    showToast('该问题已有最佳答案', 'warning')
+    return
+  }
+  
+  // TODO: 调用接口采纳回答
+  answer.isAccepted = true
+  question.value.solved = true
+  question.value.status = 'solved'
+  showToast('已采纳为最佳答案', 'success')
+}
 </script> 

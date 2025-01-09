@@ -142,6 +142,11 @@ const routes = [
         component: () => import('@/views/community/ArticlesView.vue')
       },
       {
+        path: 'article/:id',
+        name: 'ArticleDetail',
+        component: () => import('@/views/community/ArticleDetail.vue')
+      },
+      {
         path: 'questions',
         name: 'Questions',
         component: () => import('@/views/community/QuestionsView.vue')
@@ -150,6 +155,11 @@ const routes = [
         path: 'topics',
         name: 'Topics',
         component: () => import('@/views/community/TopicsView.vue')
+      },
+      {
+        path: 'topic/:id',
+        name: 'TopicDetail',
+        component: () => import('@/views/community/TopicDetail.vue')
       },
       {
         path: 'profile',
@@ -166,6 +176,21 @@ const routes = [
       {
         path: 'settings',
         component: () => import('@/views/user/AccountSettings.vue')
+      },
+      {
+        path: 'question/:id',
+        name: 'QuestionDetail',
+        component: () => import('@/views/community/QuestionDetail.vue'),
+        meta: { title: '问答详情' }
+      },
+      {
+        path: 'create',
+        name: 'CreateContent',
+        component: () => import('@/views/community/CreateContent.vue'),
+        meta: { 
+          title: '发布内容',
+          requiresAuth: true
+        }
       }
     ]
   },

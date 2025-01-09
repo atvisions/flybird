@@ -154,8 +154,7 @@ import HeadView from '@/components/HeadView.vue'
 import { showToast } from '@/components/ToastMessage'
 import { auth } from '@/api/auth'
 import { STORAGE_KEYS } from '@/utils/storage'
-import { ElMessage } from 'element-plus'
-import { authService } from '@/services/authService'
+
 import { useLogin } from '@/composables/useLogin'
 
 const router = useRouter()

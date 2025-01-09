@@ -225,7 +225,10 @@
       </div>
 
       <!-- 创作内容模块 -->
-      <div class="bg-white rounded-lg border border-gray-100 p-6 transition-shadow hover:shadow-lg">
+      <div 
+        ref="creationSection"
+        class="bg-white rounded-lg border border-gray-100 p-6 transition-shadow hover:shadow-lg"
+      >
         <div class="flex items-center justify-between mb-6">
           <h3 class="text-base font-medium text-gray-900 flex items-center">
             <PencilSquareIcon class="w-5 h-5 mr-2 text-gray-900" />
@@ -452,8 +455,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, computed, watch, nextTick } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useStore } from 'vuex'
 import { useNickname } from '@/composables/useNickname'
@@ -485,9 +488,11 @@ import { eventBus } from '@/utils/eventBus'
 import AvatarUploadDialog from '../dialogs/AvatarUploadDialog.vue'
 
 const router = useRouter()
+const route = useRoute()
 const store = useStore()
 const nickname = useNickname()
 const showNicknameModal = ref(false)
+const creationSection = ref(null)
 
 // 用户信息的计算属性
 const userInfo = computed(() => {
@@ -534,9 +539,41 @@ const fetchUserInfo = async () => {
   }
 }
 
+// 滚动到创作区域
+const scrollToCreation = () => {
+  if (creationSection.value) {
+    const offset = 100 // 可以根据需要调整这个值
+    const elementPosition = creationSection.value.getBoundingClientRect().top
+    const offsetPosition = elementPosition + window.pageYOffset - offset
+    
+    window.scrollTo({
+      top: offsetPosition,
+      behavior: 'smooth'
+    })
+  }
+}
+
+// 监听路由参数变化
+watch(
+  () => route.query.currentTab,
+  (newTab) => {
+    if (newTab === 'articles' || newTab === 'drafts') {
+      // 等待 DOM 更新后滚动
+      nextTick(() => {
+        scrollToCreation()
+      })
+    }
+  },
+  { immediate: true }
+)
+
 // 组件挂载时获取数据
 onMounted(async () => {
   await fetchUserInfo()
+  // 如果当前是文章或草稿标签，滚动到创作区域
+  if (route.query.currentTab === 'articles' || route.query.currentTab === 'drafts') {
+    scrollToCreation()
+  }
 })
 
 // 头像上传相关
@@ -639,7 +676,7 @@ const statistics = ref([
 ])
 
 // 内容相关数据
-const currentTab = ref('articles')
+const currentTab = ref(route.query.currentTab || 'articles')
 const articles = ref([])
 const portfolios = ref([])
 
@@ -747,6 +784,16 @@ const handleBackgroundUpload = async () => {
 const userProfileUrl = computed(() => {
   return `/u/${userInfo.value.uid}`
 })
+
+// 监听路由参数变化，更新当前标签页
+watch(
+  () => route.query.currentTab,
+  (newTab) => {
+    if (newTab) {
+      currentTab.value = newTab
+    }
+  }
+)
 </script>
 
 <style scoped>

@@ -46,7 +46,6 @@ THIRD_PARTY_APPS = [
     'corsheaders',
     'django_filters',
     'django_ckeditor_5',
-    'simpleui',
 ]
 
 LOCAL_APPS = [
@@ -379,83 +378,6 @@ CKEDITOR_5_CONFIGS = {
 
 CKEDITOR_5_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
 CKEDITOR_5_UPLOAD_PATH = "uploads/"
-
-# ----------- 19. SimpleUI配置 -----------
-SIMPLEUI_CONFIG = {
-    'system_keep': False,
-    'menu_display': ['认证和授权', '用户管理', '文章管理', '问答管理'],
-    'dynamic': True,
-    'menus': [
-        {
-            'name': '用户管理',
-            'icon': 'fas fa-user-circle',
-            'models': [
-                {
-                    'name': '用户列表',
-                    'icon': 'fas fa-user',
-                    'url': 'users/user/'
-                }
-            ]
-        },
-        {
-            'name': '文章管理',
-            'icon': 'fas fa-book',
-            'models': [
-                {
-                    'name': '文章分类',
-                    'icon': 'fas fa-tags',
-                    'url': 'articles/category/'
-                },
-                {
-                    'name': '文章列表',
-                    'icon': 'fas fa-file-alt',
-                    'url': 'articles/article/'
-                },
-                {
-                    'name': '评论管理',
-                    'icon': 'fas fa-comments',
-                    'url': 'articles/comment/'
-                }
-            ]
-        },
-        {
-            'name': '问答管理',
-            'icon': 'fas fa-question-circle',
-            'models': [
-                {
-                    'name': '问题列表',
-                    'icon': 'fas fa-question',
-                    'url': 'qa/question/'
-                },
-                {
-                    'name': '回答列表',
-                    'icon': 'fas fa-reply',
-                    'url': 'qa/answer/'
-                },
-                {
-                    'name': '评论管理',
-                    'icon': 'fas fa-comments',
-                    'url': 'qa/comment/'
-                }
-            ]
-        }
-    ]
-}
-
-SIMPLEUI_HOME_INFO = False
-SIMPLEUI_ANALYSIS = False
-SIMPLEUI_HOME_QUICK = True
-SIMPLEUI_HOME_ACTION = True
-SIMPLEUI_DEFAULT_THEME = 'admin.lte.css'
-SIMPLEUI_LOGO = '/static/admin/img/logo.png'
-
-SIMPLEUI_DEFAULT_ICON = False
-SIMPLEUI_ICON = {
-    '认证和授权': 'fas fa-shield-alt',
-    '用户管理': 'fas fa-users-cog',
-    '文章管理': 'fas fa-newspaper',
-    '问答管理': 'fas fa-comments',
-}
 
 # ----------- 20. 日志配置 -----------
 LOGGING = {

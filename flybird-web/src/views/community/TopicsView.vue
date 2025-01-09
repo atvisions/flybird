@@ -41,11 +41,14 @@
             <div class="flex items-center gap-2 sm:gap-3">
               <template v-if="isAuthenticated">
                 <!-- 发布按钮 -->
-                <button class="h-9 px-4 sm:px-5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-full hover:shadow-lg hover:shadow-violet-500/20 transition-all duration-300 text-sm font-medium flex items-center group">
+                <router-link 
+                  to="/community/create?type=topic"
+                  class="h-9 px-4 sm:px-5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-full hover:shadow-lg hover:shadow-violet-500/20 transition-all duration-300 text-sm font-medium flex items-center group"
+                >
                   <PlusIcon class="w-4 h-4 mr-1.5 sm:mr-2 group-hover:scale-110 transition-transform" />
                   <span class="hidden sm:inline">发起话题</span>
                   <span class="sm:hidden">发布</span>
-                </button>
+                </router-link>
               </template>
               <template v-else>
                 <!-- 登录按钮 -->
@@ -130,10 +133,15 @@
             </div>
             <div class="space-y-3 lg:space-y-5">
               <div v-for="topic in paginatedTopics" :key="topic.id"
-                class="group cursor-pointer"
+                class="group bg-white rounded-xl border border-gray-100 p-4 lg:p-6 hover:border-violet-200 transition-colors"
               >
                 <!-- 话题标题 -->
-                <h3 class="text-xl font-bold text-gray-900 mb-6">{{ topic.title }}</h3>
+                <h3 
+                  class="text-xl font-bold text-gray-900 mb-6 hover:text-violet-600 transition-colors cursor-pointer"
+                  @click="$router.push(`/community/topic/${topic.id}`)"
+                >
+                  {{ topic.title }}
+                </h3>
                 
                 <!-- 作者信息 -->
                 <div class="flex items-center space-x-3 mb-6">
@@ -145,7 +153,10 @@
                 </div>
 
                 <!-- VS选项对比区域 -->
-                <div class="relative mb-8">
+                <div 
+                  class="relative mb-8 bg-gray-50 rounded-xl p-4 cursor-pointer"
+                  @click="$router.push(`/community/topic/${topic.id}`)"
+                >
                   <!-- 进度条背景 -->
                   <div class="absolute inset-0 flex rounded-xl overflow-hidden">
                     <!-- 左侧进度 -->
@@ -166,7 +177,7 @@
                     <div class="flex-1 p-6">
                       <div class="text-center">
                         <!-- 百分比指示器 -->
-                        <div class="absolute -top-3 left-[25%] -translate-x-1/2 px-3 py-1 bg-blue-600 rounded-full text-white text-xs font-medium">
+                        <div class="absolute -top-7 left-[25%] -translate-x-1/2 px-3 py-1 bg-blue-600 rounded-full text-white text-xs font-medium">
                           {{ Math.round((topic.votesA / (topic.votesA + topic.votesB)) * 100) }}%
                         </div>
                         <div class="text-lg font-medium text-blue-600 mb-2">{{ topic.optionA }}</div>
@@ -174,6 +185,7 @@
                         <!-- 投票按钮 -->
                         <button 
                           class="px-6 h-10 rounded-full bg-blue-50 hover:bg-blue-100 transition-colors mx-auto flex items-center justify-center cursor-pointer"
+                          @click.stop
                         >
                           <span class="text-sm font-medium text-blue-600">投票</span>
                         </button>
@@ -189,7 +201,7 @@
                     <div class="flex-1 p-6">
                       <div class="text-center">
                         <!-- 百分比指示器 -->
-                        <div class="absolute -top-3 right-[25%] translate-x-1/2 px-3 py-1 bg-purple-600 rounded-full text-white text-xs font-medium">
+                        <div class="absolute -top-7 right-[25%] translate-x-1/2 px-3 py-1 bg-purple-600 rounded-full text-white text-xs font-medium">
                           {{ Math.round((topic.votesB / (topic.votesA + topic.votesB)) * 100) }}%
                         </div>
                         <div class="text-lg font-medium text-purple-600 mb-2">{{ topic.optionB }}</div>
@@ -197,6 +209,7 @@
                         <!-- 投票按钮 -->
                         <button 
                           class="px-6 h-10 rounded-full bg-purple-50 hover:bg-purple-100 transition-colors mx-auto flex items-center justify-center cursor-pointer"
+                          @click.stop
                         >
                           <span class="text-sm font-medium text-purple-600">投票</span>
                         </button>
@@ -240,7 +253,8 @@
             <h2 class="text-lg font-bold text-gray-900 mb-4">热门话题</h2>
             <div class="space-y-4">
               <div v-for="(topic, index) in hotTopics" :key="topic.id"
-                class="group cursor-pointer "
+                class="group cursor-pointer"
+                @click="$router.push(`/community/topic/${topic.id}`)"
               >
                 <div class="flex items-start space-x-3">
                   <div class="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center"
@@ -254,13 +268,13 @@
                     <span class="text-sm font-medium">{{ index + 1 }}</span>
                   </div>
                   <div class="flex-1">
-                    <h3 class="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 mb-2">
+                    <h3 class="text-sm font-medium text-gray-900 group-hover:text-violet-600 transition-colors line-clamp-2 mb-2">
                       {{ topic.title }}
                     </h3>
                     <div class="flex items-center text-xs text-gray-500">
                       <span class="flex items-center">
                         <ChatBubbleLeftIcon class="w-3 h-3 mr-1" />
-                        <span class="text-blue-600 font-medium">{{ topic.comments }}</span>
+                        <span class="text-violet-600 font-medium">{{ topic.comments }}</span>
                         <span class="ml-1">评论</span>
                       </span>
                     </div>

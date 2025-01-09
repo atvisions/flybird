@@ -145,53 +145,58 @@
               共 {{ filteredArticles.length }} 篇文章
             </div>
             <div class="space-y-3 lg:space-y-5">
-              <div v-for="(article, index) in articles" :key="article.id"
-                class="group cursor-pointer rounded-lg lg:rounded-xl hover:bg-gray-50 transition-colors"
+              <div v-for="(article, index) in paginatedArticles" :key="article.id"
+                class="group rounded-lg lg:rounded-xl hover:bg-gray-50 transition-colors"
               >
-                <!-- 使用flex-col在移动端垂直布局，lg:flex-row在大屏幕水平布局 -->
-                <div class="flex flex-col lg:flex-row gap-3 lg:gap-4 p-3 lg:p-4">
-                  <!-- 序号和内容容器 -->
-                  <div class="flex flex-1 gap-4">
-                    <!-- 文章信息 -->
-                    <div class="flex-1 min-w-0">
-                      <div class="flex items-center space-x-2 mb-3">
-                        <span class="px-3 py-1 bg-blue-500/90 rounded-full text-xs font-medium text-white">
-                          {{ article.category }}
-                        </span>
-                        <span class="text-xs text-gray-500">{{ article.createTime }}</span>
-                      </div>
-                      <h3 class="text-base font-medium text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-1 mb-2">
-                        {{ article.title }}
-                      </h3>
-                      <!-- 在移动端隐藏描述 -->
-                      <p class="text-sm text-gray-500 line-clamp-1 mb-3 hidden lg:block">{{ article.description }}</p>
-                      <div class="flex flex-wrap items-center gap-4">
-                        <div class="flex items-center space-x-2">
-                          <img :src="article.author.avatar" class="w-5 h-5 rounded-full">
-                          <span class="text-sm text-gray-600">{{ article.author.name }}</span>
+                <router-link 
+                  :to="{ name: 'ArticleDetail', params: { id: article.id }}"
+                  class="block"
+                >
+                  <!-- 使用flex-col在移动端垂直布局，lg:flex-row在大屏幕水平布局 -->
+                  <div class="flex flex-col lg:flex-row gap-3 lg:gap-4 p-3 lg:p-4">
+                    <!-- 序号和内容容器 -->
+                    <div class="flex flex-1 gap-4">
+                      <!-- 文章信息 -->
+                      <div class="flex-1 min-w-0">
+                        <div class="flex items-center space-x-2 mb-3">
+                          <span class="px-3 py-1 bg-blue-500/90 rounded-full text-xs font-medium text-white">
+                            {{ article.category }}
+                          </span>
+                          <span class="text-xs text-gray-500">{{ article.createTime }}</span>
                         </div>
-                        <div class="flex items-center text-xs text-gray-500 space-x-3">
-                          <span class="flex items-center">
-                            <EyeIcon class="w-3 h-3 mr-1" />{{ article.views }}
-                          </span>
-                          <span class="flex items-center">
-                            <ChatBubbleLeftIcon class="w-3 h-3 mr-1" />{{ article.comments }}
-                          </span>
-                          <span class="hidden sm:inline">{{ article.createTime }}</span>
+                        <h3 class="text-base font-medium text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-1 mb-2">
+                          {{ article.title }}
+                        </h3>
+                        <!-- 在移动端隐藏描述 -->
+                        <p class="text-sm text-gray-500 line-clamp-1 mb-3 hidden lg:block">{{ article.description }}</p>
+                        <div class="flex flex-wrap items-center gap-4">
+                          <div class="flex items-center space-x-2">
+                            <img :src="article.author.avatar" class="w-5 h-5 rounded-full">
+                            <span class="text-sm text-gray-600">{{ article.author.name }}</span>
+                          </div>
+                          <div class="flex items-center text-xs text-gray-500 space-x-3">
+                            <span class="flex items-center">
+                              <EyeIcon class="w-3 h-3 mr-1" />{{ article.views }}
+                            </span>
+                            <span class="flex items-center">
+                              <ChatBubbleLeftIcon class="w-3 h-3 mr-1" />{{ article.comments }}
+                            </span>
+                            <span class="hidden sm:inline">{{ article.createTime }}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  <!-- 文章封面图 -->
-                  <div class="flex-shrink-0 w-full lg:w-24 h-32 lg:h-24 rounded-lg overflow-hidden order-first lg:order-last">
-                    <img 
-                      :src="article.cover" 
-                      class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
-                      alt=""
-                    >
+                    <!-- 文章封面图 -->
+                    <div class="flex-shrink-0 w-full lg:w-24 h-32 lg:h-24 rounded-lg overflow-hidden order-first lg:order-last">
+                      <img 
+                        :src="article.cover" 
+                        class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+                        alt=""
+                      >
+                    </div>
                   </div>
-                </div>
+                </router-link>
               </div>
             </div>
           </div>

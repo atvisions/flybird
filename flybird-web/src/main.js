@@ -22,6 +22,7 @@ app.use(ElementPlus)
 
 // 添加全局 Toast 方法
 app.config.globalProperties.$toast = showToast
+window.$toast = showToast  // 添加到 window 对象，供内联事件使用
 
 // 如果需要全局使用
 app.config.globalProperties.eventBus = eventBus

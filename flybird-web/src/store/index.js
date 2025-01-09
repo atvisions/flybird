@@ -1,5 +1,4 @@
 import { createStore } from 'vuex'
-import { authService } from '@/services/authService'
 import { STORAGE_KEYS } from '@/utils/storage'
 import profile from '@/api/profile'
 import { auth } from '@/api/auth'
@@ -17,7 +16,9 @@ export default createStore({
     basicInfo: null,
     completeness: null,
     token: null,
-    refreshToken: null
+    refreshToken: null,
+    isLoadingUserInfo: false,
+    lastUserInfoFetch: null
   },
 
   mutations: {
@@ -109,6 +110,14 @@ export default createStore({
       if (state.userInfo?.data?.basic_info) {
         state.userInfo.data.basic_info.background = backgroundUrl
       }
+    },
+
+    SET_LOADING_USER_INFO(state, isLoading) {
+      state.isLoadingUserInfo = isLoading
+    },
+
+    SET_LAST_USER_INFO_FETCH(state, timestamp) {
+      state.lastUserInfoFetch = timestamp
     }
   },
 
@@ -169,16 +178,32 @@ export default createStore({
     },
 
     async fetchUserInfo({ commit, state }) {
+      // 如果正在加载，返回
+      if (state.isLoadingUserInfo) {
+        return
+      }
+      
+      // 如果数据已经存在且在5分钟内获取过，直接返回
+      const now = Date.now()
+      if (state.userInfo && state.lastUserInfoFetch && 
+          (now - state.lastUserInfoFetch) < 5 * 60 * 1000) {
+        return state.userInfo
+      }
+
       try {
+        commit('SET_LOADING_USER_INFO', true)
         const response = await auth.getUserInfo()
         
         if (response.code === 200) {
           commit('SET_USER_INFO', response)
+          commit('SET_LAST_USER_INFO_FETCH', now)
           return response.data
         }
       } catch (error) {
         console.error('获取用户信息失败:', error)
         throw error
+      } finally {
+        commit('SET_LOADING_USER_INFO', false)
       }
     },
 
@@ -351,20 +376,6 @@ export default createStore({
         throw new Error(response.data?.message || '更新背景图失败')
       } catch (error) {
         console.error('Failed to update background:', error)
-        throw error
-      }
-    },
-
-    async fetchUserInfo({ commit }) {
-      try {
-        const response = await auth.getUserInfo()
-        
-        if (response.code === 200) {
-          commit('SET_USER_INFO', response)
-          return response.data
-        }
-      } catch (error) {
-        console.error('获取用户信息失败:', error)
         throw error
       }
     },
