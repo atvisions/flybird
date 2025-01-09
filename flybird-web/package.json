@@ -24,6 +24,7 @@
     "pinia-plugin-persist": "^1.0.0",
     "qrcode": "^1.5.4",
     "qrcode.vue": "^3.6.0",
+    "swiper": "^11.2.0",
     "vue": "^3.2.13",
     "vue-cropper": "^1.0.3",
     "vue-router": "^4.0.3",

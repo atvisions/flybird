@@ -57,11 +57,14 @@
             <div class="flex items-center gap-2 sm:gap-3">
               <template v-if="isAuthenticated">
                 <!-- 发布按钮 -->
-                <button class="h-9 px-4 sm:px-5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-full hover:shadow-lg hover:shadow-violet-500/20 transition-all duration-300 text-sm font-medium flex items-center group">
+                <router-link 
+                  to="/community/create?type=article"
+                  class="h-9 px-4 sm:px-5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-full hover:shadow-lg hover:shadow-violet-500/20 transition-all duration-300 text-sm font-medium flex items-center group"
+                >
                   <PlusIcon class="w-4 h-4 mr-1.5 sm:mr-2 group-hover:scale-110 transition-transform" />
-                  <span class="hidden sm:inline">发布内容</span>
+                  <span class="hidden sm:inline">发布问题</span>
                   <span class="sm:hidden">发布</span>
-                </button>
+                </router-link>
               </template>
               <template v-else>
                 <!-- 登录按钮 -->

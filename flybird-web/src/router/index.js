@@ -19,6 +19,7 @@ import SearchView from '@/views/search/SearchView.vue'
 import PortfolioHomeView from '@/views/portfolio/HomeView.vue'
 import PortfolioView from '@/views/portfolio/PortfolioView.vue'
 import DesignView from '@/views/portfolio/DesignView.vue'
+import PortfolioDetailView from '@/views/portfolio/PortfolioDetailView.vue'
 
 const routes = [
   {
@@ -224,6 +225,16 @@ const routes = [
         component: () => import('@/views/portfolio/PhotoView.vue')
       }
     ]
+  },
+  {
+    path: '/portfolio/:id',
+    name: 'PortfolioDetail',
+    component: PortfolioDetailView,
+    props: true,
+    meta: {
+      requiresAuth: false,
+      title: '作品详情'
+    }
   },
   {
     path: '/search',

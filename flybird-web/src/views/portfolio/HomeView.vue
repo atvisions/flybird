@@ -20,7 +20,10 @@
       <!-- 作品列表 -->
       <div class="max-w-7xl mx-auto mt-6">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-          <div v-for="work in works" :key="work.id"
+          <router-link 
+            v-for="work in works" 
+            :key="work.id"
+            :to="`/portfolio/${work.id}`"
             class="bg-white rounded-lg lg:rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300"
           >
             <!-- 作品封面 -->
@@ -63,7 +66,7 @@
                 </div>
               </div>
             </div>
-          </div>
+          </router-link>
         </div>
       </div>
     </div>
@@ -94,6 +97,7 @@ import CategoryMenu from '@/components/portfolio/CategoryMenu.vue'
 import PortfolioNavigation from '@/components/portfolio/PortfolioNavigation.vue'
 import { portfolioCategories, generateMenuGroups } from '@/config/portfolioCategories'
 import { usePortfolioData } from '@/composables/usePortfolioData'
+
 import {
   PlayIcon,
   EyeIcon,
@@ -128,6 +132,9 @@ const currentTypeCategories = computed(() => {
 const getWorkTypeName = (type) => {
   const category = currentTypeCategories.value.find(c => c.id === type)
   return category?.name || type
+}
+const handleWorkClick = (workId) => {
+  router.push(`/portfolio/${workId}`)
 }
 
 // 处理分类切换
