@@ -4,6 +4,8 @@ from django.contrib.auth import get_user_model, authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.cache import cache
 import logging
+from django_redis import get_redis_connection
+from redis.exceptions import RedisError
 
 logger = logging.getLogger('users')
 
@@ -23,57 +25,80 @@ class PasswordLoginSerializer(serializers.Serializer):
         }
     )
 
-    def validate_account(self, value):
-        # 验证账号格式
-        # 手机号格式: 1开头的11位数字
-        # 邮箱格式: 包含@的字符串
-        # UID格式: 纯数字
-        if not (
-            re.match(r'^1[3-9]\d{9}$', value) or  # 手机号
-            re.match(r'^[^\s@]+@[^\s@]+\.[^\s@]+$', value) or  # 邮箱
-            re.match(r'^\d+$', value)  # UID
-        ):
-            raise serializers.ValidationError('请输入正确的手机号/邮箱/UID')
-        return value
-
     def validate(self, attrs):
         account = attrs.get('account')
         password = attrs.get('password')
+        logger.info(f"开始验证登录 - Account: {account}")
 
         try:
-            # 根据不同格式查找用户
+            # 先尝试使用手机号查找
             if re.match(r'^1[3-9]\d{9}$', account):
-                user = User.objects.get(phone=account)
+                logger.info(f"使用手机号格式验证: {account}")
+                try:
+                    # 打印所有用户的手机号，用于调试
+                    all_phones = list(User.objects.values_list('phone', flat=True))
+                    logger.info(f"数据库中的所有手机号: {all_phones}")
+                    
+                    # 使用 filter().first() 代替 get()，并打印 SQL 查询
+                    user = User.objects.filter(phone=account).first()
+                    if not user:
+                        logger.warning(f"手机号未注册: {account}")
+                        raise User.DoesNotExist()
+                    
+                    logger.info(f"找到用户 - Phone: {account}, UID: {user.uid}")
+                except User.DoesNotExist:
+                    logger.warning(f"手机号未注册: {account}")
+                    raise serializers.ValidationError({
+                        'account': ['该手机号未注册']
+                    })
+            # 再尝试使用邮箱查找
             elif re.match(r'^[^\s@]+@[^\s@]+\.[^\s@]+$', account):
-                # 确保邮箱不为空且已验证
-                user = User.objects.get(email=account, email__isnull=False)
-            elif re.match(r'^\d+$', account):
-                # 移除前导零，因为 uid 格式是 1000000 + pk
+                logger.info(f"使用邮箱格式验证: {account}")
+                try:
+                    user = User.objects.get(email=account, email__isnull=False)
+                    logger.info(f"找到用户 - Email: {account}, UID: {user.uid}")
+                except User.DoesNotExist:
+                    logger.warning(f"邮箱未注册: {account}")
+                    raise serializers.ValidationError({
+                        'account': ['该邮箱未注册']
+                    })
+            # 最后尝试使用 UID 查找（且不是手机号格式）
+            elif re.match(r'^\d+$', account) and not re.match(r'^1[3-9]\d{9}$', account):
+                logger.info(f"使用UID格式验证: {account}")
                 cleaned_uid = str(int(account))
-                user = User.objects.get(uid=cleaned_uid)
+                try:
+                    user = User.objects.get(uid=cleaned_uid)
+                    logger.info(f"找到用户 - UID: {cleaned_uid}")
+                except User.DoesNotExist:
+                    logger.warning(f"UID未注册: {cleaned_uid}")
+                    raise serializers.ValidationError({
+                        'account': ['该UID未注册']
+                    })
             else:
+                logger.warning(f"无效的账号格式: {account}")
                 raise User.DoesNotExist
             
             if not user.check_password(password):
+                logger.warning(f"密码错误 - Account: {account}")
                 raise serializers.ValidationError({
                     'password': ['密码错误，请重新输入']
                 })
             
             if not user.is_active:
+                logger.warning(f"账号已禁用 - Account: {account}")
                 raise serializers.ValidationError({
                     'account': ['该账号已被禁用，请联系客服']
                 })
             
+            logger.info(f"登录验证成功 - Account: {account}, UID: {user.uid}")
+            attrs['user'] = user
+            return attrs
+            
         except User.DoesNotExist:
+            logger.warning(f"账号格式无效: {account}")
             raise serializers.ValidationError({
-                'account': ['账号未注册，请先注册']
+                'account': ['请输入正确的手机号/邮箱/UID']
             })
-
-        # 打印调试信息
-        logger.info(f"Login attempt - Account: {account}, User found: {user.uid}")
-        
-        attrs['user'] = user
-        return attrs
 
 class RegisterSerializer(serializers.ModelSerializer):
     phone = serializers.CharField(required=True)
@@ -100,19 +125,26 @@ class RegisterSerializer(serializers.ModelSerializer):
             if User.objects.filter(phone=phone).exists():
                 raise serializers.ValidationError({'phone': '该手机号已注册'})
                 
-            # 验证验证码 - 使用与发送验证码时相同的缓存key格式
+            # 验证验证码
             code = attrs.get('code')
-            cache_key = f'sms_code_register_{phone}'  # 保持与发送时的格式一致
-            cached_code = cache.get(cache_key)
-            
-            logger.info(f"注册验证 - 手机号: {phone}")
-            logger.info(f"验证码比对 - 缓存key: {cache_key}, 输入: {code}, 缓存: {cached_code}")
-            
-            if not cached_code:
-                raise serializers.ValidationError({'code': '验证码已过期'})
-            if code != cached_code:
-                raise serializers.ValidationError({'code': '验证码错误'})
+            try:
+                redis_client = get_redis_connection('default')
+                cache_key = f'sms_code_register_{phone}'
+                stored_code = redis_client.get(cache_key)
                 
+                if not stored_code:
+                    raise serializers.ValidationError({'code': '验证码已过期'})
+                
+                if code != stored_code.decode():  # Redis 存储的是 bytes，需要解码
+                    raise serializers.ValidationError({'code': '验证码错误'})
+                
+                # 验证成功后删除验证码
+                redis_client.delete(cache_key)
+                
+            except RedisError as e:
+                logger.error(f"Redis操作失败: {str(e)}", exc_info=True)
+                raise serializers.ValidationError({'code': '验证码验证失败，请重试'})
+            
             return attrs
             
         except Exception as e:

@@ -46,12 +46,6 @@ class ProfileDataView(APIView):
                 
                 # 序列化数据
                 data = {
-                    'user': {
-                        'uid': user.uid,
-                        'username': user.username,
-                        'phone': user.phone,
-                        'email': user.email
-                    },
                     'basic_info': BasicInfoSerializer(user.basic_info).data if hasattr(user, 'basic_info') else None,
                     'job_intention': JobIntentionSerializer(user.job_intention).data if hasattr(user, 'job_intention') else None,
                     'work_experience': WorkExperienceSerializer(user.work_experiences.all(), many=True).data,

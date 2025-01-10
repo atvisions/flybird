@@ -76,8 +76,10 @@
 </template>
 
 <script>
-import HeadView from '@/components/HeadView.vue'
+import { defineAsyncComponent } from 'vue'
 import FootView from '@/components/FootView.vue'
+
+const HeadView = defineAsyncComponent(() => import('@/components/HeadView.vue'))
 
 export default {
   components: {

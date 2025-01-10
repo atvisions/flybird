@@ -157,7 +157,10 @@
               class="flex items-center space-x-1 text-sm font-semibold text-gray-900 hover:text-indigo-600">
               <img 
                 :src="avatarUrl"
-                @error="handleImageError"
+                @error="(e) => {
+                  console.error('Avatar load failed:', e)
+                  e.target.src = defaultAvatar
+                }"
                 class="h-8 w-8 rounded-full"
                 alt="用户头像"
               />
@@ -390,13 +393,14 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useStore } from 'vuex'
-import defaultAvatarImage from '@/assets/images/default-avatar.png'
+import { useAuthStore } from '@/stores/auth'
+import { useAccountStore } from '@/stores/account'
+import defaultAvatar from '@/assets/images/default-avatar.png'
 import navigation from '@/config/navigation.json'
 import { eventBus } from '@/utils/eventBus'
-import { useLogout } from '@/composables/useLogout'
-import { API_URL } from '@/config'
 import { showToast } from '@/components/ToastMessage'
+import { user } from '@/api/user'
+import request from '@/utils/request'
 
 // 导入所需的图标
 import {
@@ -445,7 +449,8 @@ const getIcon = (menuKey) => {
 // 状态管理
 const router = useRouter()
 const route = useRoute()
-const store = useStore()
+const authStore = useAuthStore()
+const accountStore = useAccountStore()
 const mobileMenuOpen = ref(false)
 const userMenuOpen = ref(false)
 const showMessageMenu = ref(false)
@@ -492,15 +497,16 @@ const viewAllMessages = () => {
   router.push('/user?tab=messages')
 }
 
-// 监听 store 中的用户信息变化，更新用户基本信息
+// 监听 accountStore 中的用户信息变化
 watch(
-  () => store.state.userInfo,
+  [() => accountStore.userInfo, () => authStore.isLoggedIn],
   (newUserInfo) => {
-    if (newUserInfo?.data?.basic_info) {
+    if (newUserInfo && authStore.isLoggedIn) {
       userBasicInfo.value = {
-        ...newUserInfo.data.basic_info,
-        ...newUserInfo.data.user
+        ...newUserInfo
       }
+    } else {
+      userBasicInfo.value = null
     }
   },
   { immediate: true, deep: true }
@@ -552,37 +558,32 @@ const isCurrentRoute = (href) => {
   return route.path === href
 }
 
-// 用户昵称计算属性
-const username = computed(() => {
-  const username = store.state.userInfo?.data?.user?.username
-  return username || '未设置昵称'
+// 直接从 store 获取状态
+const isAuthenticated = computed(() => {
+  // 同时检查登录状态和用户信息
+  return authStore.isLoggedIn && accountStore.userInfo !== null
 })
 
-// 头像 URL 计算属性
+const username = computed(() => {
+  if (!isAuthenticated.value) return ''
+  return accountStore.username
+})
+
 const avatarUrl = computed(() => {
-  const avatar = store.state.userInfo?.data?.basic_info?.avatar
-  if (!avatar) return defaultAvatarImage
-  
-  if (avatar.startsWith('http') || avatar.startsWith('data:')) {
+  if (!isAuthenticated.value) return defaultAvatar
+  const avatar = accountStore.avatar
+  if (!avatar || avatar === 'null' || avatar === 'undefined') {
+    return defaultAvatar
+  }
+  // 检查 avatar 是否是完整的 URL 或 base64 数据
+  if (avatar.startsWith('http') || avatar.startsWith('data:image')) {
     return avatar
   }
-  return `${API_URL}${avatar}`
+  // 如果是相对路径，则拼接基础 URL
+  return avatar.startsWith('/') 
+    ? `${process.env.VUE_APP_API_BASE_URL}${avatar}`
+    : `${process.env.VUE_APP_API_BASE_URL}/${avatar}`
 })
-
-// 获取用户信息的函数
-const fetchUserInfo = async () => {
-  if (store.state.isAuthenticated) {
-    try {
-      await store.dispatch('fetchUserInfo')
-      userBasicInfo.value = {
-        ...store.state.userInfo?.data?.basic_info,
-        ...store.state.userInfo?.data?.user
-      }
-    } catch (error) {
-      console.error('Failed to fetch user info:', error)
-    }
-  }
-}
 
 // 判断是否在消息页面
 const isMessageRoute = computed(() => {
@@ -605,7 +606,7 @@ const fetchUnreadMessagesCount = async () => {
 }
 
 // 在用户登录状态变化时获取未读消息数量
-watch(() => store.state.isAuthenticated, (newValue) => {
+watch(() => authStore.isLoggedIn, (newValue) => {
   if (newValue) {
     fetchUnreadMessagesCount()
   } else {
@@ -613,7 +614,7 @@ watch(() => store.state.isAuthenticated, (newValue) => {
   }
 }, { immediate: true })
 
-// 生命周期钩子，监听事件，监听登录状态
+// 生命周期钩子
 onMounted(async () => {
   document.addEventListener('click', closeMenus)
   window.addEventListener('resize', () => {
@@ -622,13 +623,23 @@ onMounted(async () => {
     }
   })
   
-  if (store.state.isAuthenticated) {
+  // 检查登录状态
+  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true'
+  const token = localStorage.getItem('token')
+  
+  if (isLoggedIn && token) {
+    authStore.isLoggedIn = true
+    request.defaults.headers.common['Authorization'] = `Bearer ${token}`
+  }
+  
+  if (authStore.isLoggedIn && !accountStore.userInfo) {
     try {
-      await fetchUserInfo()
+      await accountStore.fetchUserInfo()
     } catch (error) {
       console.error('Failed to fetch user info:', error)
       if (error.response?.status === 401) {
-        store.commit('SET_LOGGED_IN', false)
+        authStore.isLoggedIn = false
+        localStorage.removeItem('isLoggedIn')
       }
     }
   }
@@ -643,38 +654,12 @@ onUnmounted(() => {
 
 // 简化头像更新处理方法
 const handleAvatarUpdate = (newAvatar) => {
-  store.commit('SET_USER_INFO', {
-    ...store.state.userInfo,
-    data: {
-      ...store.state.userInfo?.data,
-      basic_info: {
-        ...store.state.userInfo?.data?.basic_info,
-        avatar: newAvatar
-      }
+  if (accountStore.userInfo) {
+    accountStore.userInfo = {
+      ...accountStore.userInfo,
+      avatar: newAvatar
     }
-  })
-}
-// 从 store 获取用户信息和认证状态，并计算是否已登录
-const isAuthenticated = computed(() => store.state.isAuthenticated)
-// 监听登录状态变化
-watch(() => store.state.isAuthenticated, (newValue) => {
-  if (newValue) {
-    fetchUserInfo()
-  } else {
-    userBasicInfo.value = null
   }
-}, { immediate: true })
-
-// 监听头像更新
-watch(() => store.state.avatarUpdateTime, () => {
-  if (store.state.isAuthenticated) {
-    fetchUserInfo()
-  }
-})
-
-// 处理图片加载错误
-const handleImageError = (e) => {
-  e.target.src = defaultAvatarImage
 }
 
 // 用户类型
@@ -719,17 +704,21 @@ const userMenuItems = computed(() => {
 // 处理退出登录
 const handleLogout = async () => {
   try {
-    // 关闭用户菜单
     userMenuOpen.value = false
+    await authStore.logout()
+    // 清除其他状态
+    userBasicInfo.value = null
+    unreadMessagesCount.value = 0
+    messages.value = []
+    mobileMenuOpen.value = false
+    showMessageMenu.value = false
+    resourceMenuOpen.value = false
+    mobileSubmenuOpen.value = {}
     
-    await store.dispatch('logout')
     showToast('退出成功', 'success')
     
-    // 获取当前路径作为重定向地址
     const currentPath = router.currentRoute.value.fullPath
-    // 跳转到登录页面，并带上当前路径作为 redirect 参数
     router.push(`/login?redirect=${encodeURIComponent(currentPath)}`)
-    
   } catch (error) {
     console.error('退出失败:', error)
     showToast('退出失败，请重试', 'error')

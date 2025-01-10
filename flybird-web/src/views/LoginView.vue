@@ -17,14 +17,14 @@
                 <input 
                   type="text" 
                   id="account" 
-                  v-model="loginManager.form.value.account"
+                  v-model="form.account"
                   @input="handleAccountInput"
                   required
                   class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 px-3"
-                  :class="{'ring-red-300': loginManager.state.accountError}"
+                  :class="{'ring-red-300': state.accountError}"
                   placeholder="请输入手机号/邮箱/UID"
                 >
-                <div v-if="loginManager.state.accountError" class="mt-1 text-sm text-red-600">{{ loginManager.state.accountError }}</div>
+                <div v-if="state.accountError" class="mt-1 text-sm text-red-600">{{ state.accountError }}</div>
               </div>
             </div>
 
@@ -33,13 +33,13 @@
               <label for="password" class="block text-sm font-medium text-gray-700">密码</label>
               <div class="mt-2 relative">
                 <input 
-                  :type="loginManager.state.showPassword ? 'text' : 'password'"
+                  :type="showPassword ? 'text' : 'password'"
                   id="password"
-                  v-model="loginManager.form.value.password"
+                  v-model="form.password"
                   @input="handlePasswordInput"
                   required
                   class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 px-3 pr-10"
-                  :class="{'ring-red-300': loginManager.state.passwordError}"
+                  :class="{'ring-red-300': state.passwordError}"
                 >
                 <button 
                   type="button"
@@ -47,7 +47,7 @@
                   class="absolute inset-y-0 right-0 flex items-center pr-3"
                 >
                   <!-- 密码显示/隐藏图标 -->
-                  <svg v-if="loginManager.state.showPassword" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg v-if="showPassword" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                   </svg>
@@ -56,7 +56,7 @@
                   </svg>
                 </button>
               </div>
-              <div v-if="loginManager.state.passwordError" class="mt-1 text-sm text-red-600">{{ loginManager.state.passwordError }}</div>
+              <div v-if="state.passwordError" class="mt-1 text-sm text-red-600">{{ state.passwordError }}</div>
             </div>
 
             <!-- 记住我和忘记密码 -->
@@ -64,7 +64,7 @@
               <div class="flex items-center">
                 <input
                   id="remember-me"
-                  v-model="loginManager.form.value.rememberMe"
+                  v-model="form.rememberMe"
                   type="checkbox"
                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                 />
@@ -84,14 +84,14 @@
             <div>
               <button 
                 type="submit"
-                :disabled="!isFormValid"
-                class="flex w-full justify-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                :disabled="loading"
+                class="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50"
               >
-                <svg v-if="loginManager.state.loading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                <svg v-if="loading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                {{ loginManager.state.loading ? '登录中...' : '登录' }}
+                {{ loading ? '登录中...' : '登录' }}
               </button>
             </div>
           </form>
@@ -147,176 +147,165 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { useStore } from 'vuex'
-import HeadView from '@/components/HeadView.vue'
+import { useAuthStore } from '@/stores/auth'
+import { useAccountStore } from '@/stores/account'
 import { showToast } from '@/components/ToastMessage'
-import { auth } from '@/api/auth'
-import { STORAGE_KEYS } from '@/utils/storage'
-
-import { useLogin } from '@/composables/useLogin'
+import { STORAGE_KEYS } from '@/constants'
+import HeadView from '@/components/HeadView.vue'
 
 const router = useRouter()
-const store = useStore()
+const authStore = useAuthStore()
+const accountStore = useAccountStore()
 
-// 使用 useLogin composable
-const loginManager = useLogin()  // 创建一个实例
+// 添加 loading ref
+const loading = ref(false)
+const showPassword = ref(false)
 
-// 修改表单验证状态
-const isFormValid = computed(() => {
-  return loginManager.form.value.account && 
-         loginManager.form.value.password && 
-         !loginManager.state.loading && 
-         !loginManager.state.accountError && 
-         !loginManager.state.passwordError
+// 表单状态
+const form = ref({
+  account: '',
+  password: '',
+  rememberMe: false
 })
 
-// 修改手机号验证
+// 表单验证状态
+const state = ref({
+  accountError: '',
+  passwordError: ''
+})
+
+// 表单验证
 const validateAccount = () => {
-  loginManager.state.accountError = ''
-  if (!loginManager.form.value.account) {
-    loginManager.state.accountError = '请输入账号'
+  state.value.accountError = ''
+  if (!form.value.account) {
+    state.value.accountError = '请输入账号'
     return false
   }
+  
+  const account = form.value.account.trim()
   // 验证账号格式：手机号/邮箱/UID
   const phoneRegex = /^1[3-9]\d{9}$/
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   const uidRegex = /^\d+$/
   
-  if (!phoneRegex.test(loginManager.form.value.account) && 
-      !emailRegex.test(loginManager.form.value.account) && 
-      !uidRegex.test(loginManager.form.value.account)) {
-    loginManager.state.accountError = '请输入正确的手机号/邮箱/UID'
-    return false
+  console.log('Validating account:', {
+    account,
+    isPhone: phoneRegex.test(account),
+    isEmail: emailRegex.test(account),
+    isUID: uidRegex.test(account)
+  })
+  
+  // 优先判断是否为手机号
+  if (phoneRegex.test(account)) {
+    return true
   }
-  return true
+  
+  // 其次判断是否为邮箱
+  if (emailRegex.test(account)) {
+    return true
+  }
+  
+  // 最后判断是否为 UID（且不是手机号格式）
+  if (uidRegex.test(account) && !phoneRegex.test(account)) {
+    return true
+  }
+  
+  // 如果都不符合，显示错误信息
+  state.value.accountError = '请输入正确的手机号/邮箱/UID'
+  return false
 }
 
-// 修改密码验证
 const validatePassword = () => {
-  loginManager.state.passwordError = ''
-  if (!loginManager.form.value.password) {
-    loginManager.state.passwordError = '请输入密码'
+  state.value.passwordError = ''
+  if (!form.value.password) {
+    state.value.passwordError = '请输入密码'
     return false
   }
-  if (loginManager.form.value.password.length < 6) {
-    loginManager.state.passwordError = '密码长度不能少于6位'
+  if (form.value.password.length < 6) {
+    state.value.passwordError = '密码长度不能少于6位'
     return false
   }
   return true
 }
 
-// 表单验证
-const validateForm = () => {
-  const isAccountValid = validateAccount()
-  const isPasswordValid = validatePassword()
-  return isAccountValid && isPasswordValid
-}
-
-// 处理登录错误
-const handleLoginError = (error) => {
-  console.error('登录失败:', error)
-  
-  // 处理特定错误
-  if (error.response?.data?.detail) {
-    if (error.response.data.detail.includes('不存在')) {
-      showToast('账号不存在，请先注册', 'warning')
-      setTimeout(() => {
-        router.push('/register')
-      }, 1500)
-      return
-    }
-    if (error.response.data.detail.includes('密码错误')) {
-      showToast('密码错误，请重试或找回密码', 'error')
-      return
-    }
+// 输入事件处理
+const handleAccountInput = () => {
+  if (state.value.accountError) {
+    validateAccount()
   }
-  
-  // 处理其他错误
-  const errorMessage = error.response?.data?.detail || 
-                      error.response?.data?.message || 
-                      error.message || 
-                      '登录失败，请重试'
-  showToast(errorMessage, 'error')
 }
 
-// 处理登录
-const handleLogin = async () => {
-  if (!validateAccount() || !validatePassword()) return
-  
-  try {
-    loginManager.state.loading = true
-    const success = await loginManager.handlePasswordLogin()
-    
-    if (success) {
-      // 等待用户信息加载完成
-      await store.dispatch('fetchUserInfo')
-      showToast('登录成功', 'success')
-      
-      // 获取 redirect 参数，如果没有则默认跳转到首页
-      const redirect = router.currentRoute.value.query.redirect || '/'
-      router.push(redirect)
-    }
-  } catch (error) {
-    console.error('登录失败:', error)
-    handleLoginError(error)
-  } finally {
-    loginManager.state.loading = false
+const handlePasswordInput = () => {
+  if (state.value.passwordError) {
+    validatePassword()
   }
 }
 
 // 切换密码显示
 const togglePassword = () => {
-  loginManager.state.showPassword = !loginManager.state.showPassword
+  showPassword.value = !showPassword.value
 }
 
-// 输入事件处理
-const handleAccountInput = () => {
-  if (loginManager.state.accountError) {
-    loginManager.validateAccount()
+// 处理登录
+const handleLogin = async () => {
+  if (!validateAccount() || !validatePassword()) {
+    return
+  }
+
+  try {
+    loading.value = true
+    await authStore.login({
+      account: form.value.account.trim(),
+      password: form.value.password
+    }, form.value.rememberMe)
+  } catch (error) {
+    // 处理未注册错误
+    if (error.message === '该手机号未注册') {
+      showToast('该手机号未注册，即将跳转到注册页面', 'info')
+      setTimeout(() => {
+        router.push({
+          path: '/register',
+          query: { phone: form.value.account }
+        })
+      }, 1500)
+    } else {
+      showToast(error.message || '登录失败，请稍后重试', 'error')
+    }
+    console.error('登录失败:', error)
+  } finally {
+    loading.value = false
   }
 }
-
-const handlePasswordInput = () => {
-  if (loginManager.state.passwordError) {
-    loginManager.validatePassword()
-  }
-}
-
-// 检查登录状态
-onMounted(async () => {
-  const isAuthenticated = await store.dispatch('checkAuth')
-  if (isAuthenticated) {
-    const redirect = router.currentRoute.value.query.redirect || '/'
-    router.push(redirect)
-  }
-})
 
 // 在组件挂载时恢复记住我状态
 onMounted(() => {
   const savedRememberMe = localStorage.getItem(STORAGE_KEYS.REMEMBER_ME)
   if (savedRememberMe !== null) {
-    loginManager.form.value.rememberMe = savedRememberMe === 'true'  // 更新 form 中的 rememberMe
+    form.value.rememberMe = savedRememberMe === 'true'
+  }
+  
+  // 如果有记住的账号，自动填充
+  const rememberedAccount = localStorage.getItem(STORAGE_KEYS.REMEMBERED_ACCOUNT)
+  if (rememberedAccount && form.value.rememberMe) {
+    form.value.account = rememberedAccount
   }
 })
 
-// 添加 watch 监听 rememberMe 的变化
-watch(() => loginManager.form.value.rememberMe, (newValue) => {  // 监听 form 中的 rememberMe
+// 监听 rememberMe 的变化
+watch(() => form.value.rememberMe, (newValue) => {
   if (!newValue) {
-    localStorage.removeItem(STORAGE_KEYS.REMEMBERED_PHONE)
+    localStorage.removeItem(STORAGE_KEYS.REMEMBERED_ACCOUNT)
     localStorage.removeItem(STORAGE_KEYS.REMEMBER_ME)
-    localStorage.removeItem(STORAGE_KEYS.TOKEN)
-    localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
-    localStorage.removeItem(STORAGE_KEYS.TOKEN_EXPIRES)
   }
   localStorage.setItem(STORAGE_KEYS.REMEMBER_ME, newValue.toString())
 })
 
 // 在组件卸载时，如果没有选择记住我，清除相关信息
 onUnmounted(() => {
-  if (!loginManager.form.value.rememberMe) {  // 使用 form 中的 rememberMe
-    localStorage.removeItem(STORAGE_KEYS.REMEMBERED_PHONE)
+  if (!form.value.rememberMe) {
+    localStorage.removeItem(STORAGE_KEYS.REMEMBERED_ACCOUNT)
     localStorage.removeItem(STORAGE_KEYS.REMEMBER_ME)
   }
 })

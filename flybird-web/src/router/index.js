@@ -7,7 +7,6 @@ import ProView from '../views/ProView.vue'
 import FAQView from '../views/FAQView.vue'
 import ResourcesView from '../views/ResourcesView.vue'
 import UserCenter from '@/views/user/UserCenter.vue'
-import store from '../store'
 import AboutView from '@/views/AboutView.vue'
 import PrivacyView from '@/views/PrivacyView.vue'
 import TermsView from '@/views/TermsView.vue'
@@ -20,6 +19,8 @@ import PortfolioHomeView from '@/views/portfolio/HomeView.vue'
 import PortfolioView from '@/views/portfolio/PortfolioView.vue'
 import DesignView from '@/views/portfolio/DesignView.vue'
 import PortfolioDetailView from '@/views/portfolio/PortfolioDetailView.vue'
+import { useAuthStore } from '@/stores/auth'
+import { useAccountStore } from '@/stores/account'
 
 const routes = [
   {
@@ -271,35 +272,51 @@ const router = createRouter({
 
 /// 路由守卫
 router.beforeEach(async (to, from, next) => {
-  // 检查是否需要认证
-  if (to.matched.some(record => record.meta.requiresAuth)) {
-    // 检查认证状态
-    const isAuthenticated = await store.dispatch('checkAuth')
-    
-    if (!isAuthenticated) {
-      // 未认证，跳转到登录页
-      next({
-        path: '/login',
-        query: { redirect: to.fullPath }
-      })
-    } else {
-      next()
+  const authStore = useAuthStore()
+  const accountStore = useAccountStore()
+
+  // 检查路由是否需要认证
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
+
+  // 如果已经登录且有 token
+  if (authStore.isLoggedIn && localStorage.getItem('token')) {
+    // 如果没有用户信息，尝试获取
+    if (!accountStore.userInfo) {
+      try {
+        await accountStore.fetchUserInfo()
+      } catch (error) {
+        console.error('Failed to fetch user info:', error)
+        if (error.response?.status === 401) {
+          // token 失效，清除登录状态
+          authStore.clearAuth()
+          next('/login')
+          return
+        }
+      }
     }
-  } 
-  // 检查是否是游客专用页面（如登录页）
-  else if (to.matched.some(record => record.meta.requiresGuest)) {
-    const isAuthenticated = store.getters.isAuthenticated
     
-    if (isAuthenticated) {
-      // 已登录用户不能访问游客页面
-      next({ path: '/' })
-    } else {
-      next()
+    // 如果要去登录页，重定向到首页
+    if (to.path === '/login') {
+      next('/user?tab=home')
+      return
     }
-  } 
-  else {
+    
     next()
+    return
   }
+
+  // 如果页面需要认证且用户未登录
+  if (requiresAuth && !authStore.isLoggedIn) {
+    // 保存目标路由，登录后跳转
+    next({
+      path: '/login',
+      query: { redirect: to.fullPath }
+    })
+    return
+  }
+
+  // 其他情况放行
+  next()
 })
 
 export default router

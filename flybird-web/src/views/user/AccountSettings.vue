@@ -130,7 +130,7 @@
                     :disabled="phoneManager.state.loading"
                   />
                   <button 
-                    @click="phoneManager.handleSendCode"
+                    @click="handlePhoneSendCode"
                     :disabled="phoneManager.state.loading || phoneManager.state.countdown > 0"
                     class="code-btn"
                   >
@@ -360,7 +360,7 @@
                     :disabled="emailManager.state.loading"
                   />
                   <button 
-                    @click="handleSendCode"
+                    @click="handleEmailSendCode"
                     :disabled="isCodeButtonDisabled"
                     class="code-btn"
                   >
@@ -396,7 +396,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { showToast } from '@/components/ToastMessage'
@@ -406,20 +406,25 @@ import { usePhone } from '@/composables/usePhone'
 import { useEmail } from '@/composables/useEmail'
 import { useChangePassword } from '@/composables/useChangePassword'
 import { ElMessageBox } from 'element-plus'
+import { account } from '@/api/account'
+import { useAuthStore } from '@/stores/auth'
+import { useUserStore } from '@/stores/user'
 
 const store = useStore()
 const router = useRouter()
+const authStore = useAuthStore()
+const userStore = useUserStore()
 // 基础信息
-const username = computed(() => store.state.userInfo?.data?.user?.username || '未设置')
-const uid = computed(() => store.state.userInfo?.data?.user?.uid || '暂无')
-const phone = computed(() => store.state.userInfo?.data?.user?.phone || '')
-const email = computed(() => store.state.userInfo?.data?.user?.email || '')
+const username = computed(() => userStore.userInfo?.username || '未设置')
+const uid = computed(() => userStore.userInfo?.uid || '暂无')
+const phone = computed(() => userStore.userInfo?.phone || '')
+const email = computed(() => userStore.userInfo?.email || '')
 
 // 使用 composables
 const nickname = useNickname()
 const phoneManager = usePhone()
 const emailManager = useEmail()
-const { loading, handleDeleteAccount } = useDeleteAccount()
+const { deleteLoading: loading, handleDeleteAccount } = useDeleteAccount()
 const password = useChangePassword()
 
 // 工具方法
@@ -493,7 +498,7 @@ const validateConfirmPassword = () => {
   }
 }
 
-// 修改密码更新方法
+// 处理密码更新
 const handlePasswordUpdate = async () => {
   // 先验证一次
   validateNewPassword()
@@ -504,18 +509,57 @@ const handlePasswordUpdate = async () => {
     return
   }
   
-  const success = await password.handleUpdate()
-  if (success) {
-    closePasswordModal()
-    showToast('密码修改成功', 'success')
+  try {
+    userInfoLoading.value = true
+    const response = await account.updatePassword({
+      old_password: password.state.oldPassword,
+      new_password: password.state.newPassword,
+      confirm_password: password.state.confirmPassword
+    })
+    
+    if (response?.data?.code === 200) {
+      closePasswordModal()
+      showToast('密码修改成功', 'success')
+      // 清空表单
+      password.state.oldPassword = ''
+      password.state.newPassword = ''
+      password.state.confirmPassword = ''
+    }
+  } catch (error) {
+    console.error('密码修改失败:', error)
+    showToast(error?.response?.data?.message || '密码修改失败', 'error')
+  } finally {
+    userInfoLoading.value = false
   }
 }
 
 // 处理手机号更新
 const handlePhoneUpdate = async () => {
-  const success = await phoneManager.handleUpdate()
-  if (success) {
-    closePhoneModal()
+  if (!phoneManager.state.value || !phoneManager.state.code) {
+    showToast('请填写完整信息', 'warning')
+    return
+  }
+
+  try {
+    const response = await account.changePhone({
+      phone: phoneManager.state.value,
+      code: phoneManager.state.code
+    })
+    
+    if (response?.data?.code === 200) {
+      closePhoneModal()
+      await userStore.getUserInfo()
+      showToast('手机号更新成功', 'success')
+    } else {
+      throw new Error(response?.data?.message || '手机号更新失败')
+    }
+  } catch (error) {
+    console.error('手机号更新失败:', error)
+    const errorMsg = error.response?.data?.message || 
+                    error.response?.data?.detail ||
+                    error.message || 
+                    '手机号更新失败'
+    showToast(errorMsg, 'error')
   }
 }
 
@@ -536,9 +580,30 @@ const closeEmailModal = () => {
 }
 
 const handleEmailUpdate = async () => {
-  const success = await emailManager.handleUpdate()
-  if (success) {
-    closeEmailModal()
+  try {
+    const data = {
+      email: emailManager.state.value,
+      code: emailManager.state.code,
+      password: emailManager.state.password
+    }
+    
+    // 根据是否已有邮箱决定是绑定还是更换
+    const response = await (email.value ? 
+      account.changeEmail(data) : 
+      account.bindEmail(data))
+
+    if (response?.data?.message) {
+      closeEmailModal()
+      await store.dispatch('getUserInfo')
+      showToast(response.data.message, 'success')
+    }
+  } catch (error) {
+    console.error('邮箱更新失败:', error)
+    const errorMsg = error.response?.data?.detail || 
+                    error.response?.data?.message || 
+                    error.message || 
+                    '邮箱操作失败'
+    showToast(errorMsg, 'error')
   }
 }
 
@@ -559,28 +624,44 @@ const isEmailFormValid = computed(() => {
 // 添加防重复点击状态
 const isRequestingCode = ref(false)
 
-// 修改发送验证码的处理方法
-const handleSendCode = async () => {
-  if (isRequestingCode.value) {
+// 处理邮箱更新的验证码发送
+const handleEmailSendCode = async () => {
+  if (!emailManager.state.value) {
+    showToast('请输入新邮箱', 'warning')
     return
   }
-
-  if (!emailManager.state.value || !emailManager.state.password) {
-    ElMessage.error('请先输入邮箱地址和登录密码')
+  
+  if (!phone.value) {
+    showToast('当前账号未绑定手机号，无法进行邮箱验证', 'warning')
     return
   }
-
+  
+  // 验证邮箱格式
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(emailManager.state.value)) {
+    showToast('请输入正确的邮箱格式', 'warning')
+    return
+  }
+  
   try {
+    emailManager.state.loading = true
     isRequestingCode.value = true
-    // 传递邮箱和密码参数
-    await emailManager.handleSendCode({
-      email: emailManager.state.value,
-      password: emailManager.state.password
+    const response = await account.sendEmailCode({
+      email: emailManager.state.value
     })
+    
+    if (response?.data?.message) {
+      showToast(response.data.message, 'success')
+      startEmailCountdown()
+    }
   } catch (error) {
     console.error('发送验证码失败:', error)
-    ElMessage.error(error.response?.data?.detail || '发送验证码失败')
+    const errorMsg = error.response?.data?.detail || 
+                    error.message || 
+                    '发送验证码失败'
+    showToast(errorMsg, 'error')
   } finally {
+    emailManager.state.loading = false
     isRequestingCode.value = false
   }
 }
@@ -637,11 +718,140 @@ const handleConfirmDelete = async () => {
   }
   
   try {
-    await handleDeleteAccount(deleteForm.value.password)
+    const response = await account.deleteAccount(deleteForm.value)
+    if (response?.data?.code === 200) {
+      showToast('账号已注销', 'success')
+      // 使用 auth store 的 logout 方法清除所有状态
+      await authStore.logout()
+      // 清除 user store 的状态
+      userStore.clearUserInfo()
+      // 清除其他可能的状态
+      localStorage.removeItem('isLoggedIn')
+      // 强制刷新页面以确保所有状态都被清除
+      window.location.href = '/login'
+    }
   } catch (error) {
     console.error('注销失败:', error)
     showToast(error?.message || '注销失败', 'error')
   }
+}
+
+// 倒计时管理
+const startPhoneCountdown = () => {
+  phoneManager.state.countdown = 60
+  const timer = setInterval(() => {
+    phoneManager.state.countdown--
+    if (phoneManager.state.countdown <= 0) {
+      clearInterval(timer)
+    }
+  }, 1000)
+}
+
+const startEmailCountdown = () => {
+  emailManager.state.countdown = 60
+  const timer = setInterval(() => {
+    emailManager.state.countdown--
+    if (emailManager.state.countdown <= 0) {
+      clearInterval(timer)
+    }
+  }, 1000)
+}
+
+// 处理手机号更新的验证码发送
+const handlePhoneSendCode = async () => {
+  if (!phoneManager.state.value) {
+    showToast('请输入新手机号', 'warning')
+    return
+  }
+  
+  // 验证手机号格式
+  const phoneRegex = /^1[3-9]\d{9}$/
+  if (!phoneRegex.test(phoneManager.state.value)) {
+    showToast('请输入正确的手机号格式', 'warning')
+    return
+  }
+  
+  try {
+    phoneManager.state.loading = true
+    const response = await account.sendVerifyCode({
+      phone: phoneManager.state.value,
+      scene: 'change_phone',
+      type: 'sms'
+    })
+
+    if (response?.data?.code === 200) {
+      startPhoneCountdown()
+      showToast('验证码已发送', 'success')
+    } else {
+      throw new Error(response?.data?.message || '发送验证码失败')
+    }
+  } catch (error) {
+    console.error('发送验证码失败:', error)
+    const errorMsg = error.response?.data?.message || 
+                    error.response?.data?.detail ||
+                    error.message || 
+                    '发送验证码失败'
+    showToast(errorMsg, 'error')
+  } finally {
+    phoneManager.state.loading = false
+  }
+}
+
+// 表单数据
+const form = ref({
+  old_password: '',
+  new_password: '',
+  confirm_password: ''
+})
+
+// 用户信息
+const userInfo = ref(null)
+
+// 用户信息加载状态
+const userInfoLoading = ref(false)
+
+// 获取用户信息
+const fetchUserInfo = async () => {
+  try {
+    userInfoLoading.value = true
+    userInfo.value = await userStore.getUserInfo()
+  } catch (error) {
+    console.error('获取用户信息失败:', error)
+    showToast('获取用户信息失败', 'error')
+  } finally {
+    userInfoLoading.value = false
+  }
+}
+
+// 在组件挂载时获取用户信息
+onMounted(() => {
+  fetchUserInfo()
+})
+
+
+// 表单验证
+const validateForm = () => {
+  if (!form.value.old_password) {
+    showToast('请输入当前密码', 'error')
+    return false
+  }
+  if (!form.value.new_password) {
+    showToast('请输入新密码', 'error')
+    return false
+  }
+  if (!form.value.confirm_password) {
+    showToast('请确认新密码', 'error')
+    return false
+  }
+  if (form.value.new_password !== form.value.confirm_password) {
+    showToast('两次输入的密码不一致', 'error')
+    return false
+  }
+  if (form.value.new_password.length < 6) {
+    showToast('密码长度不能少于6位', 'error')
+    return false
+  }
+  return true
 }
 </script>
 

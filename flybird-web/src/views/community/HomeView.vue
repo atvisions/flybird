@@ -369,14 +369,14 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, watchEffect, onMounted } from 'vue'
 import { mainCategories } from '@/config/communityCategories'
 import MobileTabBar from '@/components/MobileTabBar.vue'
 import { PlusIcon, UserIcon, ArrowsUpDownIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
-import ContentCard from '@/components/community/ContentCard.vue'
 import PageBanner from '@/components/common/PageBanner.vue'
 import CategoryMenu from '@/components/CategoryMenu.vue'
 import { useCommunityData } from '@/composables/useCommunityData'
+import { communityMenuGroups } from '@/config/navigationConfig'
 import {
   ChatBubbleLeftIcon,
   UserGroupIcon,
@@ -393,8 +393,15 @@ import {
   FireIcon
 } from '@heroicons/vue/24/outline'
 import { useRouter } from 'vue-router'
-import { useStore } from 'vuex'
-const store = useStore()
+import { useAuthStore } from '@/stores/auth'
+
+const authStore = useAuthStore()
+
+
+// 排序菜单状态
+const showSortMenu = ref(false)
+
+
 
 // 分类相关状态
 const currentMainCategory = ref('all')
@@ -405,8 +412,8 @@ const showCategoryMenu = ref(false)
 const currentLevel = ref('main')
 const currentSubCategory = ref('')
 const currentThirdCategory = ref('')
-// 使用 Vuex store 的 isAuthenticated 状态
-const isAuthenticated = computed(() => store.state.isAuthenticated)
+// 使用 Pinia store 的 isAuthenticated 状态
+const isAuthenticated = computed(() => authStore.isAuthenticated)
 // 监听父组件传递的分类变化
 const props = defineProps({
   currentCategory: {
@@ -597,29 +604,23 @@ const handleCategoryChange = (categoryId, level = 'main') => {
   }
 }
 
-// 移动端底部导航菜单
-const menuGroups = [
-  {
-    title: '社区',
-    items: [
-      { 
-        name: '文章', 
-        path: '/community/articles', 
-        icon: DocumentTextIcon 
-      },
-      { 
-        name: '问答', 
-        path: '/community/questions', 
-        icon: QuestionMarkCircleIcon 
-      },
-      { 
-        name: '话题', 
-        path: '/community/topics', 
-        icon: HashtagIcon 
-      }
-    ]
-  }
-]
+const menuGroups = communityMenuGroups
 
 const router = useRouter()
+
+watchEffect(() => {
+  // 如果用户已登录且 token 需要刷新
+  if (isAuthenticated.value && authStore.needsTokenRefresh) {
+    authStore.refreshAuthToken().catch(error => {
+      console.error('Failed to refresh token:', error)
+      // Token 刷新失败会自动重定向到登录页
+    })
+  }
+})
+
+// 处理排序
+const handleSort = (value) => {
+  currentSort.value = value
+  showSortMenu.value = false
+}
 </script> 

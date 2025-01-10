@@ -88,8 +88,10 @@ class AvatarUploadView(APIView):
     
     def post(self, request):
         try:
+            logger.info(f"收到的文件数据: {request.FILES}")
             avatar = request.FILES.get('avatar')
             if not avatar:
+                logger.error("未找到头像文件，请求FILES内容：%s", request.FILES)
                 return Response({
                     'code': 400,
                     'message': '请选择要上传的头像'
@@ -97,6 +99,7 @@ class AvatarUploadView(APIView):
             
             # 验证文件类型
             if not avatar.content_type.startswith('image/'):
+                logger.error(f"文件类型错误: {avatar.content_type}")
                 return Response({
                     'code': 400,
                     'message': '请上传图片文件'
@@ -128,49 +131,5 @@ class AvatarUploadView(APIView):
                 'message': '上传头像失败'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-class BackgroundUploadView(APIView):
-    """背景图上传接口"""
-    permission_classes = [IsAuthenticated]
-    parser_classes = (MultiPartParser, FormParser)
-    
-    def post(self, request):
-        try:
-            background = request.FILES.get('background')
-            if not background:
-                return Response({
-                    'code': 400,
-                    'message': '请选择要上传的背景图'
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-            # 验证文件类型
-            if not background.content_type.startswith('image/'):
-                return Response({
-                    'code': 400,
-                    'message': '请上传图片文件'
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-            # 获取或创建基本信息
-            basic_info, _ = BasicInfo.objects.get_or_create(user=request.user)
-            
-            # 保存新背景图
-            basic_info.background = background
-            basic_info.save()
-            
-            # 确保返回的是字符串URL
-            background_url = basic_info.background.url if basic_info.background else None
-            logger.info(f"背景图URL: {background_url}, 类型: {type(background_url)}")
-            
-            return Response({
-                'code': 200,
-                'message': '背景图上传成功',
-                'data': {
-                    'background': background_url
-                }
-            })
-            
-        except Exception as e:
-            logger.error(f"上传背景图失败: {str(e)}", exc_info=True)
-            return Response({
-                'code': 500,
-                'message': '上传背景图失败'
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+   

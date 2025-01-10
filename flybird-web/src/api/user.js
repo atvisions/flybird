@@ -1,34 +1,51 @@
 import request from '@/utils/request'
 
 export const user = {
-  // 更新用户名
-  updateUsername: (data) => {
-    return request.post('/api/v1/users/account/username/', {
-      username: data.username
+  // 获取用户信息
+  getUserInfo: () => {
+    return request.get('/api/v1/users/userInfo/')
+  },
+
+  // 更新用户头像
+  updateAvatar: (data) => {
+    const formData = new FormData()
+    formData.append('avatar', data)
+    return request.post('/api/v1/users/userInfo/avatar/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
     })
   },
 
-  // 更换手机号
-  changePhone: (data) => {
-    return request.post('/api/v1/users/account/phone/', {
-      phone: data.phone,
-      code: data.code
+  // 更新用户背景图
+  updateBackground: (data) => {
+    const formData = new FormData()
+    formData.append('background', data)
+    return request.post('/api/v1/users/userInfo/background/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
     })
   },
 
-  // 修改密码
-  updatePassword: (data) => {
-    return request.post('/api/v1/users/account/password/', {
-      old_password: data.old_password,
-      new_password: data.new_password,
-      confirm_password: data.confirm_password
+  // 更新用户基本信息
+  updateUserInfo: (data) => {
+    const formData = new FormData()
+    Object.keys(data).forEach(key => {
+      if (data[key] !== null && data[key] !== undefined) {
+        formData.append(key, data[key])
+      }
     })
-  },
-
-}
-
-export const updateNickname = (nickname) => {
-  return user.updateUsername({ username: nickname })
+    
+    return request({
+      url: '/api/v1/users/userInfo/',
+      method: 'put',
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+  }
 }
 
 export default user

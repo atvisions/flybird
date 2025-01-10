@@ -1,35 +1,53 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import request from '@/utils/request'
+import { showToast } from '@/components/ToastMessage'
 
-export const useUserStore = defineStore('user', () => {
-  // 从 localStorage 获取初始登录状态
-  const isLoggedIn = ref(localStorage.getItem('isLoggedIn') === 'true')
-  const userInfo = ref(JSON.parse(localStorage.getItem('userInfo')) || null)
+export const useUserStore = defineStore('user', {
+  state: () => ({
+    userInfo: null,
+    loading: false,
+    error: null
+  }),
 
-  // 登录
-  const login = (user) => {
-    isLoggedIn.value = true
-    userInfo.value = user
-    // 保存到 localStorage
-    localStorage.setItem('isLoggedIn', 'true')
-    localStorage.setItem('userInfo', JSON.stringify(user))
+  getters: {
+    userBasicInfo: (state) => state.userInfo,
+    username: (state) => state.userInfo?.username,
+    avatar: (state) => state.userInfo?.avatar,
+    isLoading: (state) => state.loading,
+    hasError: (state) => state.error !== null
+  },
+
+  actions: {
+    async getUserInfo() {
+      try {
+        this.loading = true
+        this.error = null
+        
+        const response = await request.get('/api/v1/users/userInfo/')
+        
+        if (response?.data?.code === 200) {
+          this.userInfo = response.data.data
+          return this.userInfo
+        }
+        
+        throw new Error(response?.data?.message || '获取用户信息失败')
+      } catch (error) {
+        console.error('获取用户信息失败:', error)
+        this.error = error.message
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+
+    clearUserInfo() {
+      this.userInfo = null
+      this.loading = false
+      this.error = null
+    },
+
+    setUserInfo(info) {
+      this.userInfo = info
+    }
   }
-
-  // 登出
-  const logout = () => {
-    isLoggedIn.value = false
-    userInfo.value = null
-    // 清除 localStorage
-    localStorage.removeItem('isLoggedIn')
-    localStorage.removeItem('userInfo')
-  }
-
-  return {
-    isLoggedIn,
-    userInfo,
-    login,
-    logout
-  }
-}, {
-  persist: true // 启用状态持久化
 }) 

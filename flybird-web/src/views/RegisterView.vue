@@ -40,16 +40,16 @@
               <button 
                 type="button"
                 @click="handleSendCode"
-                :disabled="form.countdown > 0 || sendingCode"
+                :disabled="sendingCode || countdown > 0"
                 class="relative -ml-px whitespace-nowrap inline-flex items-center rounded-r-md px-6 py-2 text-sm font-semibold ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-10 w-[140px]"
-                :class="form.countdown > 0 || sendingCode ? 'text-gray-400 bg-gray-50' : 'text-indigo-600'"
+                :class="sendingCode ? 'text-gray-400 bg-gray-50' : 'text-indigo-600'"
               >
                 <svg v-if="sendingCode" class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
                 <span class="w-full text-center">
-                  {{ sendingCode ? '发送中...' : form.countdown > 0 ? `${form.countdown}s` : '获取验证码' }}
+                  {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
                 </span>
               </button>
             </div>
@@ -115,7 +115,7 @@
           <div class="flex items-center">
             <input 
               id="agree-terms" 
-              v-model="agreed" 
+              v-model="form.agreement" 
               type="checkbox" 
               required
               class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600" 
@@ -172,19 +172,38 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import { showToast } from '@/components/ToastMessage'
 import HeadView from '@/components/HeadView.vue'
-import { useRegister } from '@/composables/useRegister'
+import { auth } from '@/api/auth'
 
-const {
-  form,
-  loading,
-  sendingCode,
-  agreed,
-  showPassword,
-  handleSendCode,
-  handleRegister
-} = useRegister()
+const router = useRouter()
+const authStore = useAuthStore()
+
+// 表单数据
+const form = ref({
+  phone: '',
+  code: '',
+  password: '',
+  confirmPassword: '',
+  agreement: false
+})
+
+// 添加倒计时状态
+const countdown = ref(0)
+
+// 倒计时管理
+const startCountdown = () => {
+  countdown.value = 60
+  const timer = setInterval(() => {
+    countdown.value--
+    if (countdown.value <= 0) {
+      clearInterval(timer)
+    }
+  }, 1000)
+}
 
 // 表单是否有效
 const isFormValid = computed(() => {
@@ -192,11 +211,89 @@ const isFormValid = computed(() => {
          form.value.code && 
          form.value.password && 
          form.value.confirmPassword && 
-         agreed.value
+         form.value.agreement
 })
 
 // 切换密码显示状态
 const togglePassword = () => {
-  showPassword.value = !showPassword.value
+  form.value.showPassword = !form.value.showPassword
+}
+
+// 添加手机号验证
+const validatePhone = () => {
+  if (!form.value.phone) {
+    showToast('请输入手机号', 'warning')
+    return false
+  }
+  const phoneRegex = /^1[3-9]\d{9}$/
+  if (!phoneRegex.test(form.value.phone)) {
+    showToast('请输入正确的手机号格式', 'warning')
+    return false
+  }
+  return true
+}
+
+// 发送验证码
+const handleSendCode = async () => {
+  if (!validatePhone()) {
+    return
+  }
+
+  try {
+    authStore.sendingCode = true
+    const response = await auth.sendVerifyCode({
+      phone: form.value.phone,
+      scene: 'register'
+    })
+    
+    if (response?.data?.code === 200) {
+      startCountdown()
+      showToast(response.data.message, 'success')
+    } else {
+      throw new Error(response.data.message || '发送验证码失败')
+    }
+  } catch (error) {
+    console.error('发送验证码失败:', error)
+    if (error.response) {
+      console.error('完整错误响应:', {
+        status: error.response.status,
+        statusText: error.response.statusText,
+        data: error.response.data,
+        headers: error.response.headers,
+        config: {
+          url: error.response.config.url,
+          method: error.response.config.method,
+          data: error.response.config.data
+        }
+      })
+    }
+    const errorMsg = error.response?.data?.message || 
+                    error.response?.data?.detail ||
+                    error.message || 
+                    '发送验证码失败'
+    showToast(errorMsg, 'error')
+  } finally {
+    authStore.sendingCode = false
+  }
+}
+
+// 处理注册
+const handleRegister = async () => {
+  if (!isFormValid.value) return
+  
+  try {
+    authStore.loading = true
+    await authStore.register({
+      phone: form.value.phone,
+      code: form.value.code,
+      password: form.value.password,
+      confirmPassword: form.value.confirmPassword
+    })
+  } catch (error) {
+    console.error('注册失败:', error)
+    showToast(error.message || '注册失败，请稍后重试', 'error')
+  } finally {
+    authStore.loading = false
+  }
 }
 </script>

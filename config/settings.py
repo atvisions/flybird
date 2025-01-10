@@ -114,12 +114,19 @@ REDIS_PASSWORD = os.getenv('REDIS_PASSWORD', '')
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/1",  # Redis 服务器地址
+        "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            "PASSWORD": "",  # 如果有密码，在这里设置
-            "SOCKET_CONNECT_TIMEOUT": 5,  # 连接超时时间
-            "SOCKET_TIMEOUT": 5,  # 读写超时时间
+            "PASSWORD": REDIS_PASSWORD if REDIS_PASSWORD else None,
+            "SOCKET_CONNECT_TIMEOUT": 5,
+            "SOCKET_TIMEOUT": 5,
+            "RETRY_ON_TIMEOUT": True,
+            "CONNECTION_POOL_KWARGS": {
+                "max_connections": 100,
+                "retry_on_timeout": True
+            },
+            "COMPRESSOR": "django_redis.compressors.zlib.ZlibCompressor",
+            "IGNORE_EXCEPTIONS": True,
         }
     }
 }
@@ -348,8 +355,6 @@ CELERY_BEAT_SCHEDULE = {
 # 短信服务配置
 SMS_CONFIG = {
     'PROVIDER': os.getenv('SMS_PROVIDER', 'aliyun'),
-    'VIRTUAL_SMS': str(os.getenv('VIRTUAL_SMS')).lower() in ['true', '1', 'yes', 'on'],
-    'SHOW_SMS_IN_DEBUG': str(os.getenv('SHOW_SMS_CODE', 'False')).lower() in ['true', '1', 'yes', 'on'],
     'TEMPLATES': ALIYUN['SMS_TEMPLATES']
 }
 
@@ -466,3 +471,7 @@ LOGGING = {
 
 # 允许上传的文件类型
 ALLOWED_UPLOAD_IMAGES = ['image/jpeg', 'image/png', 'image/gif']
+
+# 设置缓存异常处理
+DJANGO_REDIS_IGNORE_EXCEPTIONS = True
+DJANGO_REDIS_LOG_IGNORED_EXCEPTIONS = True

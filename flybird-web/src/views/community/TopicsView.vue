@@ -313,6 +313,7 @@
 
     <!-- 使用移动端底部导航栏 -->
     <MobileTabBar :menu-groups="menuGroups" />
+
   </div>
 </template>
 
@@ -335,17 +336,18 @@ import {
   WrenchScrewdriverIcon
 } from '@heroicons/vue/24/outline'
 import { useRouter } from 'vue-router'
-import { useStore } from 'vuex'
+import { useAuthStore } from '@/stores/auth'
 import PageBanner from '@/components/common/PageBanner.vue'
 import CategoryMenu from '@/components/CategoryMenu.vue'
 import MobileTabBar from '@/components/MobileTabBar.vue'
 import { mainCategories, communityCategories } from '@/config/communityCategories'
+import { communityMenuGroups } from '@/config/navigationConfig'
 
 const router = useRouter()
-const store = useStore()
+const authStore = useAuthStore()
 
 // 使用 Vuex store 的 isAuthenticated 状态
-const isAuthenticated = computed(() => store.state.isAuthenticated)
+const isAuthenticated = computed(() => authStore.isAuthenticated)
 
 // 状态管理
 const currentCategory = ref('all')
@@ -650,4 +652,7 @@ const activeUsers = ref([
     avatar: 'https://picsum.photos/32/32?random=8'
   }
 ])
+
+const menuGroups = communityMenuGroups
+
 </script> 

@@ -116,7 +116,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useStore } from 'vuex'
+import { useAuthStore } from '@/stores/auth'
 import { 
   PlusIcon, 
   UserIcon, 
@@ -152,10 +152,10 @@ const emit = defineEmits(['update:currentCategory', 'update:currentSort'])
 
 const router = useRouter()
 const route = useRoute()
-const store = useStore()
+const authStore = useAuthStore()
 
 // 使用 Vuex store 的 isAuthenticated 状态
-const isAuthenticated = computed(() => store.state.isAuthenticated)
+const isAuthenticated = computed(() => authStore.isAuthenticated)
 
 // 主导航数据
 const mainNavs = [

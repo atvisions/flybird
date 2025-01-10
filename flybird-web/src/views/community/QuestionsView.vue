@@ -278,20 +278,27 @@ import {
   HeartIcon
 } from '@heroicons/vue/24/outline'
 import { useRouter } from 'vue-router'
-import { useStore } from 'vuex'
+import { useAuthStore } from '@/stores/auth'
 import PageBanner from '@/components/common/PageBanner.vue'
 import CategoryMenu from '@/components/CategoryMenu.vue'
 import MobileTabBar from '@/components/MobileTabBar.vue'
 import { mainCategories, communityCategories } from '@/config/communityCategories'
+import { communityMenuGroups } from '@/config/navigationConfig'
 
 const router = useRouter()
-const store = useStore()
+const authStore = useAuthStore()
 
-// 使用 Vuex store 的 isAuthenticated 状态
-const isAuthenticated = computed(() => store.state.isAuthenticated)
+// 分类相关状态
+const currentMainCategory = ref('all')
+const currentSubCategory = ref('')
+const currentThirdCategory = ref('')
+const showCategoryMenu = ref(false)
+const currentLevel = ref('main')
+
+// 使用 Pinia store 的 isAuthenticated 状态
+const isAuthenticated = computed(() => authStore.isAuthenticated)
 
 // 状态管理
-const currentCategory = ref('all')
 const showSortMenu = ref(false)
 const currentSort = ref('popular')
 const currentPage = ref(1)
@@ -303,6 +310,16 @@ const sortOptions = {
   newest: { label: '最新发布', icon: ClockIcon },
   answers: { label: '最多回答', icon: ChatBubbleLeftIcon },
   views: { label: '最多浏览', icon: EyeIcon }
+}
+
+// 处理分类切换
+const handleCategoryChange = (categoryId, level = 'main') => {
+  if (level === 'main') {
+    currentMainCategory.value = categoryId
+    currentSubCategory.value = ''
+    currentThirdCategory.value = ''
+    showCategoryMenu.value = false
+  }
 }
 
 // 分页后的问题列表
@@ -464,8 +481,8 @@ const filteredQuestions = computed(() => {
   let result = [...questions.value]
   
   // 应用分类筛选
-  if (currentCategory.value !== 'all') {
-    result = result.filter(question => question.category === currentCategory.value)
+  if (currentMainCategory.value !== 'all') {
+    result = result.filter(question => question.category === currentMainCategory.value)
   }
   
   // 应用排序
@@ -554,7 +571,7 @@ const categories = computed(() => categoryConfig.categories)
 
 // 判断是否是问题作者
 const isAuthor = computed(() => {
-  return store.state.user?.id === question.value.author.id
+  return authStore.user?.id === question.value.author.id
 })
 
 // 采纳回答
@@ -570,4 +587,7 @@ const acceptAnswer = (answer) => {
   question.value.status = 'solved'
   showToast('已采纳为最佳答案', 'success')
 }
+
+const menuGroups = communityMenuGroups
+
 </script> 

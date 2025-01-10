@@ -15,12 +15,12 @@
         <div class="relative group">
           <img 
             :src="userAvatar" 
-            class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+            class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg user-avatar"
             alt="用户头像"
             @error="handleImageError"
           />
           <div 
-            @click="triggerUpload"
+            @click="showAvatarCropper = true"
             class="absolute inset-0 flex items-center justify-center rounded-full bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity duration-200"
           >
             <CameraIcon class="w-8 h-8 text-white" />
@@ -103,12 +103,16 @@
     </div>
   </div>
 
-  <!-- 添加头像上传弹窗 -->
-  <AvatarUploadDialog
-    v-model="showAvatarUpload"
-    :loading="loading"
+  <!-- 新的头像裁剪组件 -->
+  <ProfileAvatarUpload
+    ref="avatarUploadRef"
+    v-model="showAvatarCropper"
     @upload="handleAvatarUpload"
   />
+
+  <div v-if="pageLoading" class="loading-state">
+    <!-- loading 内容 -->
+  </div>
 </template>
 
 <script setup>
@@ -144,7 +148,8 @@ import {
   TransitionChild,
   TransitionRoot
 } from '@headlessui/vue'
-import AvatarUploadDialog from '../dialogs/AvatarUploadDialog.vue'
+import ProfileAvatarUpload from '@/components/ProfileAvatarUpload.vue'
+import { useAccountStore } from '@/stores/account'
 
 // 1. 首先声明 props
 const props = defineProps({
@@ -171,7 +176,7 @@ const emit = defineEmits(['update', 'edit', 'toggleBioExpand'])
 
 // 3. 导入和初始化其他变量
 const store = useStore()
-const loading = ref(true)
+const pageLoading = ref(true)
 const basicInfo = ref({})
 
 // 4. 计算属性
@@ -205,7 +210,7 @@ watch(
   () => props.resumeData,
   (newVal) => {
     if (newVal && Object.keys(newVal).length > 0) {
-      loading.value = false
+      pageLoading.value = false
     }
   },
   { immediate: true }
@@ -214,12 +219,12 @@ watch(
 // 6. 生命周期钩子
 onMounted(async () => {
   try {
-    loading.value = true
+    pageLoading.value = true
     // 不需要在这里获取数据，因为父组件会处理
   } catch (error) {
     console.error('初始化失败:', error)
   } finally {
-    loading.value = false
+    pageLoading.value = false
   }
 })
 
@@ -322,33 +327,38 @@ const logResumeData = () => {
 const handleAvatarUpload = async (file) => {
   try {
     loading.value = true
-    const formData = new FormData()
-    formData.append('avatar', file)
-    
-    const response = await profile.uploadAvatar(formData)
-    if (response.data?.code === 200) {
-      showToast('头像上传成功', 'success')
-      emit('update')
-      const avatarUrl = response.data.data.avatar
-      eventBus.emit('avatar-updated', avatarUrl)
+    console.log('开始上传职业头像:', {
+      file,
+      size: file.size,
+      type: file.type
+    })
+
+    const response = await profile.uploadAvatar(file)
+    console.log('职业头像上传响应:', response)
+
+    if (response?.data?.code === 200) {
+      showToast('职业头像上传成功', 'success')
+      
+      // 更新本地数据
       if (props.resumeData) {
-        props.resumeData.avatar = avatarUrl
+        props.resumeData.avatar = response.data.data.avatar
+        
+        // 触发父组件更新
+        emit('update', {
+          type: 'avatar',
+          value: response.data.data.avatar
+        })
       }
-      showAvatarUpload.value = false // 关闭弹窗
     } else {
       throw new Error(response.data?.message || '上传失败')
     }
   } catch (error) {
-    console.error('头像上传失败:', error)
-    showToast(error.message || '头像上传失败，请稍后重试', 'error')
+    console.error('职业头像上传失败:', error)
+    showToast(error.message || '职业头像上传失败，请稍后重试', 'error')
   } finally {
     loading.value = false
+    showAvatarCropper.value = false
   }
-}
-
-// 添加触发文件选择的方法
-const triggerUpload = () => {
-  showAvatarUpload.value = true
 }
 
 // 添加图片加载错误处理
@@ -375,5 +385,24 @@ const validateFile = (file) => {
 }
 
 // 添加状态
-const showAvatarUpload = ref(false)
+const showAvatarCropper = ref(false)
+const avatarUploadRef = ref(null)
+const loading = ref(false)
+
+// 监听 resumeData 变化
+watch(
+  () => props.resumeData,
+  (newVal) => {
+    if (newVal) {
+      // 强制更新组件
+      nextTick(() => {
+        if (props.resumeData?.avatar) {
+          const img = new Image()
+          img.src = userAvatar.value
+        }
+      })
+    }
+  },
+  { deep: true }
+)
 </script>

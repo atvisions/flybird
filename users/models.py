@@ -74,6 +74,13 @@ class User(AbstractUser):
         blank=True
     )
     
+    # 添加新的字段
+    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True, verbose_name='用户头像')
+    background_image = models.ImageField(upload_to='backgrounds/', null=True, blank=True, verbose_name='背景图')
+    position = models.CharField(max_length=100, null=True, blank=True, verbose_name='职位')
+    bio = models.TextField(null=True, blank=True, verbose_name='个人简介')
+    is_vip = models.BooleanField(default=False, verbose_name='是否是VIP用户')
+
     USERNAME_FIELD = 'phone'
     REQUIRED_FIELDS = []
     
@@ -106,8 +113,8 @@ class User(AbstractUser):
         return super().save(*args, **kwargs)
 
     class Meta:
-        verbose_name = _('user')
-        verbose_name_plural = _('users')
+        verbose_name = '用户'
+        verbose_name_plural = verbose_name
         db_table = 'users_user'  # 使用默认的表名
         ordering = ['-date_joined']  # 按注册时间倒序排序
 
@@ -127,5 +134,6 @@ class ProfileScore(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.total_score}分"
+
 
 # ... 继续添加其他模型 ... 

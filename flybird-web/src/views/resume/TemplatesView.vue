@@ -44,16 +44,12 @@
       :categories="categories"
       @category-change="handleCategoryChange"
     />
-
-    <!-- 使用移动端底部导航栏 -->
-    <MobileTabBar :menu-groups="menuGroups" />
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import MobileTabBar from '@/components/MobileTabBar.vue'
 import PageBanner from '@/components/common/PageBanner.vue'
 import CategoryMenu from '@/components/CategoryMenu.vue'
 import ResumeNavigation from '@/components/resume/ResumeNavigation.vue'
@@ -153,4 +149,25 @@ const handleLike = (template) => {
   // TODO: 实现点赞逻辑
   console.log('Like template:', template.id)
 }
+
+// 定义菜单组
+const menuGroups = ref([
+  {
+    title: '简历模板',
+    items: [
+      {
+        name: '全部模板',
+        path: '/resume/templates/all'
+      },
+      {
+        name: '推荐模板',
+        path: '/resume/templates/recommended'
+      },
+      {
+        name: '最新模板',
+        path: '/resume/templates/latest'
+      }
+    ]
+  }
+])
 </script> 

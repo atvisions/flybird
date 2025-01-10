@@ -15,6 +15,8 @@ from users.utils.sms import send_sms
 import random
 import logging
 
+from django_redis import get_redis_connection
+from redis.exceptions import RedisError
 logger = logging.getLogger('users')
 
 User = get_user_model()
@@ -162,7 +164,6 @@ class LogoutView(APIView):
             return Response(status=status.HTTP_205_RESET_CONTENT)
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-
 class SendSmsCodeView(APIView):
     permission_classes = [AllowAny]
     
@@ -175,12 +176,10 @@ class SendSmsCodeView(APIView):
     
     def post(self, request):
         try:
-            # 获取参数
             phone = request.data.get('phone')
             scene = request.data.get('scene')
             
-            # 记录请求信息
-            logger.info(f"发送验证码请求 - 手机号: {phone}, 场景: {scene}")
+            logger.info(f"开始处理验证码请求 - 手机号: {phone}, 场景: {scene}")
             
             # 验证参数
             if not phone:
@@ -188,20 +187,14 @@ class SendSmsCodeView(APIView):
                     'code': 400,
                     'message': '手机号不能为空'
                 }, status=status.HTTP_400_BAD_REQUEST)
-                
-            if not scene:
-                return Response({
-                    'code': 400,
-                    'message': '场景不能为空'
-                }, status=status.HTTP_400_BAD_REQUEST)
-                
-            if scene not in self.VALID_SCENES:
+            
+            if not scene or scene not in self.VALID_SCENES:
                 return Response({
                     'code': 400,
                     'message': '无效的场景类型'
                 }, status=status.HTTP_400_BAD_REQUEST)
             
-            # 根据场景验证
+            # 场景验证
             if scene == 'register':
                 if User.objects.filter(phone=phone).exists():
                     return Response({
@@ -221,42 +214,49 @@ class SendSmsCodeView(APIView):
                         'message': '该手机号未注册'
                     }, status=status.HTTP_400_BAD_REQUEST)
             
-            # 生成验证码
-            code = ''.join(random.choices('0123456789', k=6))
-            
-            # 保存验证码到缓存
-            cache_key = f'sms_code_{scene}_{phone}'
-            cache.set(cache_key, code, timeout=300)  # 5分钟有效期
-            
-            # 验证是否存储成功
-            stored_code = cache.get(cache_key)
-            logger.info(f"验证码存储确认 - Key: {cache_key}, Code: {code}, Stored: {stored_code}")
-            
-            # 发送短信
             try:
-                send_sms(phone, code, scene)
-                logger.info(f"验证码发送成功 - 手机号: {phone}, 验证码: {code}")
+                redis_client = get_redis_connection('default')
+                cache_key = f'sms_code_{scene}_{phone}'
                 
-                return Response({
-                    'code': 200,
-                    'message': f'{self.VALID_SCENES[scene]}验证码已发送',
-                    'data': {
-                        'code': code if settings.DEBUG else None
-                    }
-                })
+                # 检查发送频率
+                if redis_client.exists(cache_key):
+                    ttl = redis_client.ttl(cache_key)
+                    if ttl > 240:  # 如果距离上次发送不足1分钟
+                        return Response({
+                            'code': 400,
+                            'message': '发送太频繁，请稍后再试'
+                        }, status=status.HTTP_400_BAD_REQUEST)
                 
-            except Exception as e:
-                logger.error(f"发送短信失败: {str(e)}", exc_info=True)
+                # 生成验证码
+                code = ''.join(random.choices('0123456789', k=6))
+                
+                # 先尝试发送短信
+                try:
+                    send_sms(phone, code, scene)
+                    
+                    # 短信发送成功后，再保存验证码
+                    redis_client.setex(cache_key, 300, code)  # 5分钟有效期
+                    
+                    return Response({
+                        'code': 200,
+                        'message': f'{self.VALID_SCENES[scene]}验证码已发送'
+                    })
+                except Exception as sms_error:
+                    logger.error(f"短信发送失败: {str(sms_error)}", exc_info=True)
+                    raise
+                
+            except RedisError as redis_error:
+                logger.error(f"Redis操作失败: {str(redis_error)}", exc_info=True)
                 return Response({
                     'code': 500,
-                    'message': '发送验证码失败，请稍后重试'
+                    'message': '系统繁忙，请稍后重试'
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
                 
         except Exception as e:
-            logger.error(f"发送验证码异常: {str(e)}", exc_info=True)
+            logger.error(f"验证码处理异常: {str(e)}", exc_info=True)
             return Response({
                 'code': 500,
-                'message': str(e)
+                'message': '发送验证码失败，请稍后重试'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class ResetPasswordView(APIView):

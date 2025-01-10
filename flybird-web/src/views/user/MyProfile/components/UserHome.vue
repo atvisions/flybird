@@ -6,7 +6,7 @@
       <div class="h-48 bg-gradient-to-r from-gray-900 to-gray-800 relative group rounded-t-lg overflow-hidden">
         <div class="absolute inset-0 rounded-t-lg overflow-hidden">
           <img
-            :src="userInfo.coverImage ? formatImageUrl(userInfo.coverImage) : defaultBackground"
+            :src="backgroundUrl"
             class="w-full h-full object-cover opacity-70"
             alt="背景图"
             @error="handleBackgroundError"
@@ -23,26 +23,21 @@
       
       <!-- 用户信息卡片 -->
       <div class="-mt-10 relative z-10">
-        <!-- 头像上传区域 -->
-        <div class="relative group w-20 h-20 mx-auto -mb-10 z-20">
+        <!-- 头像和基本身份信息区块 -->
+        <div 
+          class="relative group w-20 h-20 mx-auto -mb-10 z-20 cursor-pointer"
+          @click="openEditModal"
+        >
           <img
             :src="userAvatar"
-            class="w-20 h-20 rounded-full border-4 border-white object-cover"
+            class="w-20 h-20 rounded-full border-4 border-white object-cover shadow-lg"
             alt="头像"
             @error="handleImageError"
           />
-          <div 
-            @click="showAvatarUpload = true"
-            class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-          >
-            <CameraIcon class="w-6 h-6 text-white" />
+          <!-- 添加悬停效果 -->
+          <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+            <PencilIcon class="w-6 h-6 text-white" />
           </div>
-          <span 
-            v-if="userInfo.gender" 
-            class="absolute bottom-0 right-0 w-6 h-6 bg-white rounded-full flex items-center justify-center"
-          >
-            <!-- 性别图标 -->
-          </span>
         </div>
 
         <div class="bg-white rounded-b-lg border border-gray-100 p-4 pb-6 transition-shadow hover:shadow-lg relative">
@@ -50,7 +45,7 @@
           <div class="flex flex-col items-center relative z-10">
             <!-- 编辑资料按钮 -->
             <button 
-              @click="openNicknameModal"
+              @click="openEditModal"
               class="absolute right-[-10px] top-[-30px] px-3 py-1 text-xs text-gray-500 hover:text-gray-900 border border-gray-200 rounded-full hover:bg-gray-50 transition-all flex items-center bg-white"
             >
               <PencilIcon class="w-3.5 h-3.5 mr-1" />
@@ -60,15 +55,15 @@
             <!-- 用户基本信息 -->
             <div class="flex flex-col items-center min-h-[5rem] pt-8">
               <div class="flex flex-col items-center space-y-3">
-                <!-- 昵称 -->
+                <!-- 用户名 -->
                 <div class="text-center">
                   <div class="inline-flex items-center group relative">
-                    <h2 class="text-xl font-bold text-gray-900">{{ userInfo.nickname }}</h2>
+                    <h2 class="text-xl font-bold text-gray-900">{{ userInfo.username }}</h2>
                   </div>
                 </div>
                 <!-- 当前岗位 -->
                 <div class="mt-1 flex items-center justify-center group">
-                  <span v-if="userInfo.jobTitle" class="text-sm text-gray-600">{{ userInfo.jobTitle }}</span>
+                  <span v-if="userInfo.position" class="text-sm text-gray-600">{{ userInfo.position }}</span>
                   <span v-else class="text-sm text-gray-400">未设置职位</span>
                 </div>
                 <!-- 个人简介 -->
@@ -89,37 +84,33 @@
                     <!-- 右引号装饰 -->
                     <span class="absolute -right-4 -bottom-2 text-gray-300 text-xl font-serif">"</span>
                   </div>
-                  <button 
-                    @click="router.push('/user?tab=profile')"
-                    class="absolute -right-10 top-1/2 -translate-y-1/2 p-1 opacity-0 group-hover:opacity-50 transition-opacity rounded-full text-gray-400 hover:text-gray-900 hover:bg-gray-100"
-                  >
-                    <PencilIcon class="w-3.5 h-3.5" />
-                  </button>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- 统计数据 -->
-          <div class="grid grid-cols-4 gap-4 mt-6 pt-6 border-t border-gray-100 relative z-10">
-            <div 
-              v-for="stat in statistics" 
-              :key="stat.label"
-              class="text-center"
-            >
-              <div class="text-base font-semibold text-gray-900">{{ stat.value }}</div>
-              <div class="text-xs text-gray-500">{{ stat.label }}</div>
-            </div>
-            <!-- 个人主页链接 -->
-            <div class="col-span-4 flex justify-center mt-4 relative z-10">
-              <a
-                :href="userProfileUrl"
-                target="_blank"
-                class="inline-flex items-center text-xs text-gray-500 hover:text-gray-900 transition-colors group"
+          <div class="bg-white rounded-b-lg border border-gray-100 p-4 pb-6 transition-shadow hover:shadow-lg relative">
+            <!-- 统计数据 -->
+            <div class="grid grid-cols-4 gap-4 mt-6 pt-6 border-t border-gray-100 relative z-10">
+              <div 
+                v-for="stat in statistics" 
+                :key="stat.label"
+                class="text-center"
               >
-                <GlobeAltIcon class="w-4 h-4 mr-1.5 text-gray-400 group-hover:text-gray-900" />
-                查看个人主页
-              </a>
+                <div class="text-base font-semibold text-gray-900">{{ stat.value }}</div>
+                <div class="text-xs text-gray-500">{{ stat.label }}</div>
+              </div>
+              <!-- 个人主页链接 -->
+              <div class="col-span-4 flex justify-center mt-4 relative z-10">
+                <a
+                  :href="userProfileUrl"
+                  target="_blank"
+                  class="inline-flex items-center text-xs text-gray-500 hover:text-gray-900 transition-colors group"
+                >
+                  <GlobeAltIcon class="w-4 h-4 mr-1.5 text-gray-400 group-hover:text-gray-900" />
+                  查看个人主页
+                </a>
+              </div>
             </div>
           </div>
         </div>
@@ -397,60 +388,118 @@
       </div>
     </div>
 
-    <!-- 昵称设置弹窗 -->
-    <div v-if="showNicknameModal" class="modal-overlay">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>修改昵称</h3>
-          <button class="close-btn" @click="closeNicknameModal">
-            <XMarkIcon class="w-5 h-5" />
-          </button>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <input 
-              type="text"
-              v-model="nickname.state.value"
-              placeholder="请输入新昵称"
-              :disabled="nickname.state.loading"
-              @input="validateNickname"
-              :class="{ 'error': nickname.state.error }"
-            />
-            <!-- 错误提示 -->
-            <div v-if="nickname.state.error" class="text-red-500 text-sm mt-1">
-              {{ nickname.state.error }}
+    <!-- 编辑资料弹窗 -->
+    <Transition
+      enter-active-class="transition duration-200 ease-out"
+      enter-from-class="opacity-0 scale-95"
+      enter-to-class="opacity-100 scale-100"
+      leave-active-class="transition duration-150 ease-in"
+      leave-from-class="opacity-100 scale-100"
+      leave-to-class="opacity-0 scale-95"
+    >
+      <div v-if="showEditModal" class="modal-overlay">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>编辑个人资料</h3>
+            <button class="close-btn" @click="closeEditModal">
+              <XMarkIcon class="w-5 h-5" />
+            </button>
+          </div>
+          <div class="modal-body">
+            <!-- 头像上传 -->
+            <div class="form-group">
+              <label class="form-label">头像</label>
+              <div class="flex items-center space-x-4">
+                <div class="relative group">
+                  <img
+                    :src="editAvatarUrl"
+                    class="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+                    alt="头像"
+                    @error="handleImageError"
+                  />
+                  <div 
+                    @click="handleAvatarSelect"
+                    class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  >
+                    <CameraIcon class="w-6 h-6 text-white" />
+                  </div>
+                </div>
+                <input
+                  ref="avatarInput"
+                  type="file"
+                  accept="image/*"
+                  class="hidden"
+                  @change="handleAvatarChange"
+                />
+                <div class="text-sm text-gray-500">
+                  <p>点击头像更换</p>
+                  <p class="text-xs mt-1">建议使用正面免冠证件照</p>
+                </div>
+              </div>
             </div>
-            <!-- 简单的提示文字 -->
-            <div class="text-gray-400 text-xs mt-1">
-              昵称长度4-8个字符，可使用中文、英文字母、数字
+            
+            <!-- 用户名 -->
+            <div class="form-group">
+              <label class="form-label">用户名</label>
+              <input 
+                type="text"
+                v-model="editForm.username"
+                placeholder="请输入用户名"
+                :class="{ 'error': usernameError }"
+                :disabled="loading"
+                @input="validateUsername"
+              />
+              <div v-if="usernameError" class="text-xs text-red-500 mt-1">
+                {{ usernameError }}
+              </div>
+              <!-- 提示文字 -->
+              <div class="text-gray-400 text-xs mt-1">
+                用户名长度4-11个字符，可使用中文、英文字母、数字
+              </div>
+            </div>
+            
+            <!-- 职位 -->
+            <div class="form-group">
+              <label class="form-label">当前职位</label>
+              <input 
+                type="text"
+                v-model="editForm.position"
+                placeholder="请输入您的职位"
+                :disabled="loading"
+              />
+            </div>
+            
+            <!-- 个人简介 -->
+            <div class="form-group">
+              <label class="form-label">个人简介</label>
+              <textarea
+                v-model="editForm.bio"
+                placeholder="请输入个人简介"
+                :disabled="loading"
+                rows="4"
+                class="form-textarea"
+              ></textarea>
             </div>
           </div>
-        </div>
-        <div class="modal-footer">
-          <button 
-            class="btn btn-default" 
-            @click="closeNicknameModal"
-            :disabled="nickname.state.loading"
-          >
-            取消
-          </button>
-          <button 
-            class="btn btn-primary" 
-            @click="handleNicknameUpdate"
-            :disabled="nickname.state.loading"
-          >
-            {{ nickname.state.loading ? '更新中...' : '确认' }}
-          </button>
+          <div class="modal-footer">
+            <button 
+              class="btn btn-default" 
+              @click="closeEditModal"
+              :disabled="loading"
+            >
+              取消
+            </button>
+            <button 
+              class="btn btn-primary" 
+              @click="handleProfileUpdate"
+              :disabled="loading"
+            >
+              {{ loading ? '更新中...' : '确认' }}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-
-    <!-- 添加头像上传弹窗 -->
-    <AvatarUploadDialog
-      v-model="showAvatarUpload"
-      :loading="loading"
-      @upload="handleAvatarUpload"
-    />
+    </Transition>
   </div>
 </template>
 
@@ -458,9 +507,8 @@
 import { ref, onMounted, computed, watch, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { useStore } from 'vuex'
-import { useNickname } from '@/composables/useNickname'
-import { MEDIA_URL } from '@/config'
+import { useAccountStore } from '@/stores/account'
+import config from '@/config'
 import defaultAvatarImage from '@/assets/images/default-avatar.png'
 import defaultBackground from '@/assets/images/default-background.jpg'
 import { showToast } from '@/components/ToastMessage'
@@ -483,34 +531,43 @@ import {
   GlobeAltIcon,            // 个人主页图标
   XMarkIcon               // 关闭图标
 } from '@heroicons/vue/24/outline'
-import profile from '@/api/profile'
+import { user } from '@/api/user'
 import { eventBus } from '@/utils/eventBus'
-import AvatarUploadDialog from '../dialogs/AvatarUploadDialog.vue'
 
 const router = useRouter()
 const route = useRoute()
-const store = useStore()
-const nickname = useNickname()
-const showNicknameModal = ref(false)
+const accountStore = useAccountStore()
+const showEditModal = ref(false)
+const editForm = ref({
+  username: '',
+  position: '',
+  bio: '',
+  avatar: null
+})
+const avatarInput = ref(null)
+const usernameError = ref('')
 const creationSection = ref(null)
 
-// 用户信息的计算属性
-const userInfo = computed(() => {
-  return {
-    uid: store.state.userInfo?.data?.user?.uid,
-    nickname: store.state.userInfo?.data?.user?.username,
-    avatar: store.state.userInfo?.data?.basic_info?.avatar,
-    isVip: store.state.userInfo?.data?.user?.is_vip,
-    coverImage: store.state.userInfo?.data?.basic_info?.background,
-    bio: store.state.userInfo?.data?.basic_info?.personal_summary,
-    jobTitle: store.state.userInfo?.data?.job_intention?.job_title || null,
-  }
+// 使用 getters 获取用户信息
+const userInfo = computed(() => ({
+  uid: accountStore.uid,
+  username: accountStore.username,
+  avatar: accountStore.avatar,
+  background: accountStore.background,
+  bio: accountStore.bio || null,
+  position: accountStore.position || null
+}))
+
+// 添加背景图 URL 的计算属性
+const backgroundUrl = computed(() => {
+  const bgImage = userInfo.value?.background
+  return bgImage ? formatImageUrl(bgImage) : defaultBackground
 })
 
-// 格式化头像 URL
+// 格式化图片 URL
 const formatImageUrl = (url) => {
-  if (!url) return defaultAvatarImage
-  return url.startsWith('http') ? url : `${MEDIA_URL}${url}`
+  if (!url || url === 'null') return defaultAvatarImage
+  return url.startsWith('http') ? url : `${process.env.VUE_APP_API_BASE_URL}${url}`
 }
 
 // 计算头像 URL
@@ -518,22 +575,18 @@ const userAvatar = computed(() => {
   return formatImageUrl(userInfo.value?.avatar)
 })
 
+// 在编辑弹窗中显示头像
+const editAvatarUrl = computed(() => {
+  return formatImageUrl(editForm.value.avatar || userInfo.value?.avatar)
+})
+
 // 获取用户信息
 const fetchUserInfo = async () => {
   try {
-    // 从 store 中获取用户信息
-    const userInfo = store.state.userInfo
-    if (!userInfo) {
-      await store.dispatch('getProfile')
+    // 只在 store 中没有数据时获取
+    if (!accountStore.userInfo) {
+      await accountStore.fetchUserInfo()
     }
-    // 从 store 中获取统计数据
-    const stats = store.state.userInfo?.data?.stats || {}
-    statistics.value = [
-      { label: '关注', value: stats.following_count || '0' },
-      { label: '粉丝', value: stats.followers_count || '0' },
-      { label: '点赞', value: stats.likes_count || '0' },
-      { label: '访问', value: stats.views_count || '0' }
-    ]
   } catch (error) {
     console.error('获取用户信息失败:', error)
   }
@@ -569,7 +622,11 @@ watch(
 
 // 组件挂载时获取数据
 onMounted(async () => {
-  await fetchUserInfo()
+  // 只在 store 中没有数据时获取
+  if (!accountStore.userInfo) {
+    await fetchUserInfo()
+  }
+  
   // 如果当前是文章或草稿标签，滚动到创作区域
   if (route.query.currentTab === 'articles' || route.query.currentTab === 'drafts') {
     scrollToCreation()
@@ -590,64 +647,116 @@ const handleBackgroundError = (e) => {
   e.target.src = defaultBackground
 }
 
-const handleNicknameUpdate = async () => {
-  const success = await nickname.handleUpdate()
-  if (success) {
-    closeNicknameModal()
-    // 重新获取用户信息
-    await store.dispatch('getProfile')
-    eventBus.emit('user-info-updated')
+// 处理个人资料更新
+const handleProfileUpdate = async () => {
+  if (!validateUsername()) return
+  
+  try {
+    loading.value = true
+    // 准备更新数据
+    const updateData = {
+      username: editForm.value.username.trim(),
+      position: editForm.value.position?.trim() || '',
+      bio: editForm.value.bio?.trim() || '',
+      phone: accountStore.phone,
+      email: accountStore.email
+    }
+    
+    console.log('Submitting update:', updateData)
+      
+    const response = await accountStore.updateUserInfo(updateData)
+      
+    // 使用后端返回的数据更新表单
+    if (response?.data?.code === 200) {
+      const userData = response.data.data
+      editForm.value = {
+        username: userData.username,
+        position: userData.position || '',
+        bio: userData.bio || '',
+        avatar: userData.avatar
+      }
+    }
+      
+    showToast('更新成功', 'success')
+    closeEditModal()
+  } catch (error) {
+    console.error('更新失败:', error)
+    showToast(error.message || '更新失败，请稍后重试', 'error')
+  } finally {
+    loading.value = false
   }
 }
 
-// 昵称修改相关方法
-const openNicknameModal = () => {
-  nickname.state.value = store.state.userInfo?.data?.user?.username || ''
-  showNicknameModal.value = true
+// 实时验证用户名
+const validateUsername = () => {
+  const value = editForm.value.username
+  if (!value) {
+    usernameError.value = '用户名不能为空'
+  } else if (value.length < 4 || value.length > 11) {
+    usernameError.value = '用户名长度必须在4-11个字符之间'
+  } else if (!/^[\u4e00-\u9fa5a-zA-Z0-9]+$/.test(value)) {
+    usernameError.value = '用户名只能包含中文、英文字母和数字'
+  } else {
+    usernameError.value = ''
+  }
+  return !usernameError.value
 }
 
-const closeNicknameModal = () => {
-  showNicknameModal.value = false
-  nickname.state.value = ''
+// 打开编辑弹窗时初始化表单数据
+const openEditModal = () => {
+  editForm.value = {
+    username: userInfo.value.username || '',
+    position: userInfo.value.position || '',
+    bio: userInfo.value.bio || '',
+    avatar: userInfo.value.avatar || null
+  }
+  showEditModal.value = true
 }
 
-// 实时验证昵称
-const validateNickname = () => {
-  nickname.state.error = nickname.validateNickname(nickname.state.value)
+// 关闭编辑弹窗
+const closeEditModal = () => {
+  showEditModal.value = false
+  editForm.value = {
+    username: '',
+    position: '',
+    bio: '',
+    avatar: null
+  }
+  usernameError.value = ''
 }
 
-const handleAvatarUpload = async (file) => {
+const handleAvatarChange = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+  
+  // 验证文件
+  if (!file.type.startsWith('image/')) {
+    showToast('请选择图片文件', 'error')
+    return
+  }
+  
+  const maxSize = 2 * 1024 * 1024 // 2MB
+  if (file.size > maxSize) {
+    showToast('图片大小不能超过2MB', 'error')
+    return
+  }
+  
   try {
     loading.value = true
     const formData = new FormData()
     formData.append('avatar', file)
     
-    const response = await profile.uploadAvatar(formData)
-    if (response.data?.code === 200) {
-      showToast('头像上传成功', 'success')
-      const avatarUrl = response.data.data.avatar
-      // 更新 store 中的用户信息
-      store.commit('SET_USER_INFO', {
-        ...store.state.userInfo,
-        data: {
-          ...store.state.userInfo.data,
-          basic_info: {
-            ...store.state.userInfo.data.basic_info,
-            avatar: avatarUrl
-          }
-        }
-      })
-      // 触发全局事件
-      eventBus.emit('avatar-updated', avatarUrl)
-      showAvatarUpload.value = false
-    } else {
-      throw new Error(response.data?.message || '上传失败')
-    }
+    // 使用 accountStore 更新头像
+    await accountStore.updateAvatar(formData)
+    editForm.value.avatar = accountStore.avatar
+    showToast('头像上传成功', 'success')
   } catch (error) {
     console.error('头像上传失败:', error)
     showToast(error.message || '头像上传失败，请稍后重试', 'error')
   } finally {
     loading.value = false
+    // 清空文件选择器
+    event.target.value = ''
   }
 }
 
@@ -733,12 +842,10 @@ const formatDate = (date) => {
 
 // 处理背景图上传
 const handleBackgroundUpload = async () => {
-  // 创建文件输入框
   const input = document.createElement('input')
   input.type = 'file'
   input.accept = 'image/*'
   
-  // 监听文件选择
   input.onchange = async (e) => {
     const file = e.target.files[0]
     if (!file) return
@@ -748,35 +855,17 @@ const handleBackgroundUpload = async () => {
       const formData = new FormData()
       formData.append('background', file)
       
-      const response = await profile.uploadBackground(formData)
-      if (response.data?.code === 200) {
-        showToast('背景图上传成功', 'success')
-        const backgroundUrl = response.data.data.background
-        // 更新 store 中的用户信息
-        store.commit('SET_USER_INFO', {
-          ...store.state.userInfo,
-          data: {
-            ...store.state.userInfo.data,
-            basic_info: {
-              ...store.state.userInfo.data.basic_info,
-              background: backgroundUrl
-            }
-          }
-        })
-        // 触发全局事件
-        eventBus.emit('background-updated', backgroundUrl)
-      } else {
-        throw new Error(response.data?.message || '上传失败')
-      }
+      await accountStore.updateBackground(formData)
+      showToast('背景图上传成功', 'success')
     } catch (error) {
       console.error('背景图上传失败:', error)
       showToast(error.message || '背景图上传失败，请稍后重试', 'error')
     } finally {
       loading.value = false
+      input.value = ''
     }
   }
   
-  // 触发文件选择
   input.click()
 }
 
@@ -794,6 +883,11 @@ watch(
     }
   }
 )
+
+// 处理头像选择
+const handleAvatarSelect = () => {
+  avatarInput.value?.click()
+}
 </script>
 
 <style scoped>
@@ -931,6 +1025,40 @@ watch(
 .form-group input.error:focus {
   border-color: #ef4444;
   box-shadow: 0 0 0 1px #ef4444;
+}
+
+/* 添加新的样式 */
+.form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.form-textarea {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: #111827;
+  background-color: white;
+  transition: border-color 0.15s ease-in-out;
+  resize: vertical;
+  min-height: 5rem;
+}
+
+.form-textarea:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 1px #6366f1;
+}
+
+.form-textarea:disabled {
+  background-color: #f3f4f6;
+  cursor: not-allowed;
 }
 
 /* 其他已有的样式保持不变 */

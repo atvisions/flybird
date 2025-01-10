@@ -471,8 +471,22 @@ const initData = async () => {
 }
 
 // 更新数据
-const handleUpdate = async () => {
-  await initData()
+const handleUpdate = async (updateInfo) => {
+  try {
+    if (updateInfo?.type === 'avatar') {
+      // 直接更新头像
+      if (profileData.value) {
+        profileData.value.avatar = updateInfo.value
+        // 使用已定义的 initData 函数替代
+        await initData()
+      }
+      return
+    }
+    // 重新获取档案数据
+    await initData()
+  } catch (error) {
+    console.error('更新失败:', error)
+  }
 }
 
 // 处理编辑

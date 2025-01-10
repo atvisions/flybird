@@ -122,7 +122,8 @@ import {
 const props = defineProps({
   menuGroups: {
     type: Array,
-    required: true
+    required: true,
+    default: () => []
   },
   unreadMessages: {
     type: Number,

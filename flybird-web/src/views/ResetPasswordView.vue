@@ -155,6 +155,7 @@
 <script setup>
 import HeadView from '@/components/HeadView.vue'
 import { useResetPassword } from '@/composables/useResetPassword'
+import { auth } from '@/api/auth'
 
 const {
   form,
@@ -162,8 +163,24 @@ const {
   countdown,
   showPassword,
   isFormValid,
-  handleSendCode,
+  startCountdown,
   handleResetPassword,
   togglePassword
 } = useResetPassword()
+
+// 发送验证码
+const handleSendCode = async () => {
+  try {
+    loading.value = true
+    await auth.sendVerifyCode({
+      phone: form.value.phone,
+      scene: 'reset_password'
+    })
+    startCountdown()
+  } catch (error) {
+    console.error('发送验证码失败:', error)
+  } finally {
+    loading.value = false
+  }
+}
 </script>

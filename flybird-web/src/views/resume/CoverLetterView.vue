@@ -44,9 +44,6 @@
       :categories="categories"
       @category-change="handleCategoryChange"
     />
-
-    <!-- 使用移动端底部导航栏 -->
-    <MobileTabBar :menu-groups="menuGroups" />
   </div>
 </template>
 
@@ -158,4 +155,25 @@ const handleLike = (template) => {
   // TODO: 实现点赞逻辑
   console.log('Like template:', template.id)
 }
+
+// 如果你确实需要 MobileTabBar，添加以下代码：
+const menuGroups = ref([
+  {
+    title: '求职信',
+    items: [
+      {
+        name: '全部模板',
+        path: '/resume/cover-letter/all'
+      },
+      {
+        name: '推荐模板',
+        path: '/resume/cover-letter/recommended'
+      },
+      {
+        name: '最新模板',
+        path: '/resume/cover-letter/latest'
+      }
+    ]
+  }
+])
 </script> 

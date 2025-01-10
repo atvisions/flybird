@@ -1,13 +1,18 @@
+//这里是
 import request from '@/utils/request'
 
 // 档案数据管理
 const profile = {
   // 获取完整档案数据
   getData() {
-    return request.get('/api/v1/users/profile/data/')
+    console.log('Calling getData...')
+    return request.get('/api/v1/users/profile/data/').then(response => {
+      console.log('getData raw response:', response)
+      return response
+    })
   },
 
-  // 获取简历完整度
+  // 获取档案完整度（仅在档案页面使用）
   getCompleteness() {
     return request.get('/api/v1/users/profile/completeness/')
   },
@@ -59,21 +64,14 @@ const profile = {
     })
   },
 
-  // 特殊接口保持不变
-  uploadAvatar(formData) {
-    return request({
-      url: '/api/v1/users/profile/avatar/upload/',
-      method: 'post',
-      headers: { 'Content-Type': 'multipart/form-data' },
-      data: formData
-    })
-  },
-
   uploadBackground(formData) {
     return request({
       url: '/api/v1/users/profile/background/upload/',
       method: 'post',
-      headers: { 'Content-Type': 'multipart/form-data' },
+      headers: {
+        // 让 axios 自动设置 Content-Type 和 boundary
+        'Content-Type': undefined
+      },
       data: formData
     })
   },
@@ -90,6 +88,48 @@ const profile = {
       method: 'put',
       data
     })
+  },
+
+  // 上传头像
+  uploadAvatar: async (file) => {
+    console.log('Profile API - 开始上传职业头像:', {
+      fileName: file.name,
+      size: file.size,
+      type: file.type
+    })
+    
+    // 验证文件类型
+    if (!file.type.startsWith('image/')) {
+      throw new Error('请上传图片文件')
+    }
+    
+    const formData = new FormData()
+    // 添加前缀以区分职业头像
+    const fileName = `profile_${file.name}`
+    formData.append('avatar', file, fileName)
+    
+    try {
+      const response = await request({
+        url: '/api/v1/users/profile/avatar/upload/',
+        method: 'post',
+        data: formData,
+        headers: {
+          'Content-Type': undefined
+        }
+      })
+      
+      console.log('Profile API - 职业头像上传响应:', response)
+      
+      return response
+    } catch (error) {
+      console.error('职业头像上传失败:', error)
+      const errorMessage = error.response?.data?.message || error.message
+      console.error('错误详情:', {
+        message: errorMessage,
+        data: error.response?.data
+      })
+      throw error
+    }
   },
 
 }

@@ -117,7 +117,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useStore } from 'vuex'
+import { useAuthStore } from '@/stores/auth'
 import { PlusIcon, UserIcon, ArrowsUpDownIcon, ChevronDownIcon, FireIcon, ClockIcon, HandThumbUpIcon, EyeIcon } from '@heroicons/vue/24/outline'
 import { portfolioCategories, mainCategories } from '@/config/portfolioCategories'
 
@@ -140,10 +140,10 @@ const emit = defineEmits(['update:currentCategory', 'update:currentSort'])
 
 const router = useRouter()
 const route = useRoute()
-const store = useStore()
+const authStore = useAuthStore()
 
 // 使用 Vuex store 的 isAuthenticated 状态
-const isAuthenticated = computed(() => store.state.isAuthenticated)
+const isAuthenticated = computed(() => authStore.isAuthenticated)
 
 // 判断是否在首页
 const isHomePage = computed(() => {

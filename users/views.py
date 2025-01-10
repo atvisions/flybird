@@ -1,7 +1,136 @@
 from django.urls import get_resolver
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework import status
+from .serializers import UserSerializer
+from .models import User
+from rest_framework.parsers import MultiPartParser, FormParser
+import logging
+
+logger = logging.getLogger(__name__)
+
+class UserInfoView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = (MultiPartParser, FormParser)
+
+    def get(self, request):
+        """获取用户信息"""
+        user = request.user
+        serializer = UserSerializer(user)
+        return Response({
+            'code': 200,
+            'message': '获取成功',
+            'data': serializer.data
+        })
+
+    def put(self, request):
+        """更新用户信息"""
+        user = request.user
+        serializer = UserSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                'code': 200,
+                'message': '更新成功',
+                'data': serializer.data
+            })
+        return Response({
+            'code': 400,
+            'message': '更新失败',
+            'errors': serializer.errors
+        })
+
+class AvatarUploadView(APIView):
+    """头像上传接口"""
+    permission_classes = [IsAuthenticated]
+    parser_classes = (MultiPartParser, FormParser)
+    
+    def post(self, request):
+        try:
+            avatar = request.FILES.get('avatar')
+            if not avatar:
+                return Response({
+                    'code': 400,
+                    'message': '请选择要上传的头像'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # 验证文件类型
+            if not avatar.content_type.startswith('image/'):
+                return Response({
+                    'code': 400,
+                    'message': '请上传图片文件'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # 直接更新用户的头像
+            user = request.user
+            user.avatar = avatar
+            user.save()
+            
+            # 确保返回的是字符串URL
+            avatar_url = user.avatar.url if user.avatar else None
+            logger.info(f"头像URL: {avatar_url}, 类型: {type(avatar_url)}")
+            
+            return Response({
+                'code': 200,
+                'message': '头像上传成功',
+                'data': {
+                    'avatar': avatar_url
+                }
+            })
+            
+        except Exception as e:
+            logger.error(f"上传头像失败: {str(e)}", exc_info=True)
+            return Response({
+                'code': 500,
+                'message': '上传头像失败'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class BackgroundUploadView(APIView):
+    """背景图上传接口"""
+    permission_classes = [IsAuthenticated]
+    parser_classes = (MultiPartParser, FormParser)
+    
+    def post(self, request):
+        try:
+            background = request.FILES.get('background')
+            if not background:
+                return Response({
+                    'code': 400,
+                    'message': '请选择要上传的背景图'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # 验证文件类型
+            if not background.content_type.startswith('image/'):
+                return Response({
+                    'code': 400,
+                    'message': '请上传图片文件'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # 直接更新用户的背景图
+            user = request.user
+            user.background_image = background
+            user.save()
+            
+            # 确保返回的是字符串URL
+            background_url = user.background_image.url if user.background_image else None
+            logger.info(f"背景图URL: {background_url}, 类型: {type(background_url)}")
+            
+            return Response({
+                'code': 200,
+                'message': '背景图上传成功',
+                'data': {
+                    'background': background_url
+                }
+            })
+            
+        except Exception as e:
+            logger.error(f"上传背景图失败: {str(e)}", exc_info=True)
+            return Response({
+                'code': 500,
+                'message': '上传背景图失败'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
 @permission_classes([AllowAny])

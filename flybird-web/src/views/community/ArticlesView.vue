@@ -353,18 +353,22 @@ import {
   ServerIcon,
   DevicePhoneMobileIcon,
   SparklesIcon,
-  CogIcon
+  CogIcon,
+  DocumentTextIcon,
+  QuestionMarkCircleIcon,
+  HashtagIcon
 } from '@heroicons/vue/24/outline'
 import { useRouter, useRoute } from 'vue-router'
-import { useStore } from 'vuex'
+import { useAuthStore } from '@/stores/auth'
 import PageBanner from '@/components/common/PageBanner.vue'
 import CategoryMenu from '@/components/CategoryMenu.vue'
 import MobileTabBar from '@/components/MobileTabBar.vue'
 import { mainCategories, communityCategories } from '@/config/communityCategories'
+import { communityMenuGroups } from '@/config/navigationConfig'
 
 const router = useRouter()
 const route = useRoute()
-const store = useStore()
+const authStore = useAuthStore()
 
 const currentCategory = ref('all')
 const showSortMenu = ref(false)
@@ -578,7 +582,7 @@ const topArticles = computed(() =>
 )
 
 // 使用 Vuex store 的 isAuthenticated 状态
-const isAuthenticated = computed(() => store.state.isAuthenticated)
+const isAuthenticated = computed(() => authStore.isAuthenticated)
 
 // 分页相关
 const currentPage = ref(1)
@@ -623,4 +627,7 @@ const handleCategoryChange = (categoryId, level = 'main') => {
     showCategoryMenu.value = false
   }
 }
+
+// 移动端底部导航菜单
+const menuGroups = communityMenuGroups
 </script> 
