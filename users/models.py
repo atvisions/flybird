@@ -49,14 +49,14 @@ class User(AbstractUser):
     uid = models.CharField('用户ID', max_length=32, unique=True, null=True, blank=True)
     phone = models.CharField('手机号', max_length=11, unique=True)
     email = models.EmailField('邮箱', null=True, blank=True)
-    avatar = models.URLField('头像', max_length=255, null=True, blank=True)
-    background_image = models.URLField('背景图', max_length=255, null=True, blank=True)
+    avatar = models.ImageField('头像', upload_to='avatars/', null=True, blank=True)
+    background_image = models.ImageField('背景图', upload_to='backgrounds/', null=True, blank=True)
     position = models.CharField('职位', max_length=50, null=True, blank=True)
     bio = models.TextField('简介', max_length=500, null=True, blank=True)
     
     # 会员相关字段
-    is_vip = models.BooleanField('是否是会员', default=False, db_index=True)
-    vip_type = models.CharField('会员类型', max_length=50, default='none', db_index=True)
+    is_vip = models.BooleanField('是否会员', default=False)
+    vip_type = models.CharField('会员类型', max_length=50, default='none')
     vip_expire_time = models.DateTimeField('会员过期时间', null=True, blank=True)
     vip_status = models.CharField('会员状态', max_length=50, default='普通用户')
 

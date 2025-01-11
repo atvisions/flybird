@@ -105,10 +105,7 @@
         </div>
       </main>
 
-      <!-- 简化底部显示逻辑 -->
-      <div v-if="!isMobileView" class="footer-container">
-        1111
-      </div>
+      <FootView />
     </div>
   </template>
 <script setup>
@@ -116,6 +113,7 @@ import { ref, computed, watch, onMounted, onUnmounted, defineAsyncComponent } fr
 import { useRoute, useRouter } from 'vue-router'
 import profile from '@/api/profile'
 import HeadView from '../../components/HeadView.vue'
+import FootView from '../../components/FootView.vue'
 import {
   UserIcon,
   DocumentIcon,

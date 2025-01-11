@@ -4,7 +4,6 @@ export const showToast = (message, type = 'info') => {
   ElMessage({
     message,
     type,
-    duration: 3000,
-    showClose: true
+    duration: 3000
   })
 } 

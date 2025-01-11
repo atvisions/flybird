@@ -195,7 +195,7 @@ import {
   ServerIcon,
   DevicePhoneMobileIcon,
   ChartBarIcon,
-  DatabaseIcon,
+  ServerStackIcon,
   CpuChipIcon,
   BeakerIcon,
   PhotoIcon,
@@ -284,7 +284,7 @@ const categories = [
   { id: 'backend', name: '后端开发', icon: ServerIcon },
   { id: 'mobile', name: '移动开发', icon: DevicePhoneMobileIcon },
   { id: 'algorithm', name: '算法', icon: ChartBarIcon },
-  { id: 'database', name: '数据库', icon: DatabaseIcon },
+  { id: 'database', name: '数据库', icon: ServerStackIcon },
   { id: 'devops', name: '运维', icon: CpuChipIcon },
   { id: 'ai', name: '人工智能', icon: BeakerIcon }
 ]

@@ -55,14 +55,21 @@ class PointRuleSerializer(serializers.ModelSerializer):
 class UserPointSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserPoint
-        fields = ['balance', 'total_earned', 'point_level']
+        fields = [
+            'balance',
+            'total_earned',
+            'point_level',
+            'sign_in_days'
+        ]
 
 class PointRecordSerializer(serializers.ModelSerializer):
-    rule = PointRuleSerializer()
-    
     class Meta:
         model = PointRecord
         fields = [
-            'points', 'balance', 'event_type',
-            'description', 'created_at'
+            'id',
+            'points',
+            'event_type',
+            'description',
+            'balance',
+            'created_at'
         ] 

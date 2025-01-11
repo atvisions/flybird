@@ -29,13 +29,21 @@ export const membership = {
   },
 
   // 获取积分信息
-  getPoints: () => {
-    return request.get('/api/v1/membership/points/')
+  getPointsInfo: () => {
+    return request.get('/api/v1/membership/points/balance/')
   },
 
   // 获取积分记录
-  getPointRecords: () => {
-    return request.get('/api/v1/membership/points/records/')
+  getPointsRecords: (params) => {
+    return request.get('/api/v1/membership/points/records/', { params })
+  },
+
+  signIn: () => {
+    return request.post('/api/v1/membership/points/check-in/')
+  },
+
+  getSignInStatus: () => {
+    return request.get('/api/v1/membership/points/check-in/status/')
   },
 
   // 验证支付状态
@@ -43,5 +51,10 @@ export const membership = {
     return request.post('/api/v1/membership/payment/verify/', {
       order_no: orderNo
     })
+  },
+
+  // 获取订单记录
+  getOrders: () => {
+    return request.get('/api/v1/membership/orders/')
   }
 } 

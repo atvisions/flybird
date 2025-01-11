@@ -11,7 +11,7 @@ from .serializers import (
     MembershipOrderSerializer, UserPointSerializer,
     PointRecordSerializer
 )
-from .services import PaymentService, MembershipCacheService
+from .services import PaymentService, MembershipCacheService, PointService
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 from rest_framework.decorators import api_view, permission_classes
@@ -293,30 +293,59 @@ def wechat_notify(request):
 @permission_classes([IsAuthenticated])
 def check_in(request):
     """每日签到"""
-    # 检查今日是否已签到
-    today = timezone.now().date()
-    checked = PointRecord.objects.filter(
-        user=request.user,
-        event_type='daily_check_in',
-        created_at__date=today
-    ).exists()
-    
-    if checked:
-        return Response({'detail': '今日已签到'}, status=status.HTTP_400_BAD_REQUEST)
-    
     try:
+        # 检查今日是否已签到
+        if PointService.check_daily_sign_in(request.user):
+            return Response({
+                'code': 400,
+                'message': '今日已签到',
+                'data': None
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # 获取连续签到天数
+        sign_in_days = PointService.get_sign_in_days(request.user)
+        
+        # 计算签到奖励积分
+        points = 3  # 基础积分
+        
+        # 连续签到额外奖励
+        if sign_in_days % 7 == 6:  # 连续签到7天
+            points += 10
+        if sign_in_days % 30 == 29:  # 连续签到30天
+            points += 50
+            
+        # 添加积分
         record = PointService.add_points(
             user=request.user,
+            points=points,
             event_type='daily_check_in',
-            description='每日签到奖励'
+            description=f'第{sign_in_days + 1}天签到奖励'
         )
+        
         return Response({
-            'points': record.points,
-            'balance': record.balance,
-            'message': '签到成功'
+            'code': 200,
+            'message': '签到成功',
+            'data': {
+                'points': points,
+                'balance': record.balance,
+                'sign_in_days': sign_in_days + 1,
+                'next_reward': {
+                    'days': 7 - ((sign_in_days + 1) % 7),
+                    'points': 10
+                } if (sign_in_days + 1) % 7 != 0 else {
+                    'days': 30 - ((sign_in_days + 1) % 30),
+                    'points': 50
+                }
+            }
         })
+        
     except Exception as e:
-        return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST) 
+        logger.error(f"签到失败: {str(e)}")
+        return Response({
+            'code': 500,
+            'message': '签到失败，请稍后重试',
+            'data': None
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @method_decorator(csrf_exempt, name='dispatch')
 class MembershipPurchaseView(APIView):
@@ -776,26 +805,77 @@ class UserPointViewSet(viewsets.GenericViewSet):
     @action(detail=False, methods=['get'])
     def balance(self, request):
         """获取积分余额"""
-        point, _ = UserPoint.objects.get_or_create(user=request.user)
-        serializer = self.get_serializer(point)
-        return Response({
-            'code': 200,
-            'message': '获取成功',
-            'data': serializer.data
-        })
+        try:
+            point, _ = UserPoint.objects.get_or_create(
+                user=request.user,
+                defaults={
+                    'balance': 0,
+                    'total_earned': 0,
+                    'point_level': 1,
+                    'sign_in_days': 0
+                }
+            )
+            
+            return Response({
+                'code': 200,
+                'message': '获取成功',
+                'data': {
+                    'balance': point.balance,
+                    'total_earned': point.total_earned,
+                    'level': point.point_level,
+                    'sign_in_days': point.sign_in_days
+                }
+            })
+            
+        except Exception as e:
+            logger.error(f"获取积分信息失败: {str(e)}")
+            logger.error(traceback.format_exc())
+            return Response({
+                'code': 500,
+                'message': '获取积分信息失败',
+                'data': None
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class PointRecordListView(APIView):
     """积分记录列表"""
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        records = PointRecord.objects.filter(user=request.user)
-        serializer = PointRecordSerializer(records, many=True)
-        return Response({
-            'code': 200,
-            'message': '获取成功',
-            'data': serializer.data
-        }) 
+        try:
+            page = int(request.GET.get('page', 1))
+            page_size = int(request.GET.get('page_size', 10))
+            
+            # 获取用户的积分记录
+            records = PointRecord.objects.filter(user=request.user).order_by('-created_at')
+            
+            # 分页
+            start = (page - 1) * page_size
+            end = start + page_size
+            
+            # 获取当前页的记录
+            current_records = records[start:end]
+            
+            # 序列化数据
+            serializer = PointRecordSerializer(current_records, many=True)
+            
+            return Response({
+                'code': 200,
+                'message': '获取成功',
+                'data': {
+                    'records': serializer.data,
+                    'has_more': records.count() > end,
+                    'total': records.count()
+                }
+            })
+            
+        except Exception as e:
+            logger.error(f"获取积分记录失败: {str(e)}")
+            logger.error(traceback.format_exc())
+            return Response({
+                'code': 500,
+                'message': '获取积分记录失败',
+                'data': None
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class PaymentVerifyView(APIView):
     """支付验证"""
@@ -905,3 +985,58 @@ class PaymentVerifyView(APIView):
                 'code': 500,
                 'message': '系统错误'
             }, status=500) 
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def check_in_status(request):
+    """获取签到状态"""
+    try:
+        # 获取用户积分账户
+        user_point, _ = UserPoint.objects.get_or_create(user=request.user)
+        
+        # 检查今日是否已签到
+        can_sign_in = not PointService.check_daily_sign_in(request.user)
+        
+        # 获取连续签到天数
+        sign_in_days = PointService.get_sign_in_days(request.user)
+        
+        # 计算下次奖励
+        next_reward = None
+        if can_sign_in:
+            if (sign_in_days + 1) % 7 == 0:  # 即将获得7天奖励
+                next_reward = {
+                    'days': 1,
+                    'points': 10
+                }
+            elif (sign_in_days + 1) % 30 == 0:  # 即将获得30天奖励
+                next_reward = {
+                    'days': 1,
+                    'points': 50
+                }
+            else:
+                days_to_weekly = 7 - ((sign_in_days + 1) % 7)
+                next_reward = {
+                    'days': days_to_weekly,
+                    'points': 10
+                }
+        
+        return Response({
+            'code': 200,
+            'message': '获取成功',
+            'data': {
+                'can_sign_in': can_sign_in,
+                'sign_in_days': sign_in_days,
+                'next_reward': next_reward,
+                'balance': user_point.balance,
+                'total_earned': user_point.total_earned
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"获取签到状态失败: {str(e)}")
+        logger.error(traceback.format_exc())
+        return Response({
+            'code': 500,
+            'message': '获取签到状态失败',
+            'data': None
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR) 

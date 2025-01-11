@@ -12,6 +12,7 @@ import VueCropper from 'vue-cropper'
 import 'vue-cropper/dist/index.css'
 import { useAuthStore } from '@/stores/auth'
 import store from './store'
+import config from './config'
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -37,5 +38,7 @@ window.$toast = showToast  // 添加到 window 对象，供内联事件使用
 
 // 如果需要全局使用
 app.config.globalProperties.eventBus = eventBus
+
+app.config.globalProperties.$config = config
 
 app.mount('#app')

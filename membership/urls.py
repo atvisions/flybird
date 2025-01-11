@@ -6,7 +6,7 @@ from .views import (
     PaymentNotifyView, PaymentReturnView,
     AlipayNotifyView, AlipayReturnView,
     UserPointViewSet, PointRecordListView,
-    PaymentVerifyView
+    PaymentVerifyView, check_in, check_in_status
 )
 
 router = DefaultRouter()
@@ -24,5 +24,7 @@ urlpatterns = [
     path('notify/alipay/', AlipayNotifyView.as_view(), name='alipay_notify'),
     path('return/alipay/', AlipayReturnView.as_view(), name='alipay_return'),
     path('points/records/', PointRecordListView.as_view(), name='point_records'),
+    path('points/check-in/', check_in, name='check-in'),
+    path('points/check-in/status/', check_in_status, name='check-in-status'),
 ]
 

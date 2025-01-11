@@ -75,7 +75,7 @@
           <!-- 消息图标 -->
           <button 
             @click.stop="toggleMessageMenu"
-            class="hidden md:block p-2 mr-2 text-gray-500 hover:text-indigo-600 relative"
+            class="hidden md:block p-2 mr-2 text-gray-500 hover:text-indigo-600 relative message-menu"
             :class="{ 'text-indigo-600': isMessageRoute }"
           >
             <BellIcon 
@@ -93,7 +93,7 @@
 
           <!-- 消息下拉菜单 -->
           <div v-if="showMessageMenu" 
-            class="fixed lg:absolute top-[72px] bg-white shadow-lg z-[100] w-80 rounded-lg"
+            class="fixed lg:absolute top-[72px] bg-white shadow-lg z-[100] w-80 rounded-lg message-menu"
             :style="{
               [isMobile ? '' : 'right']: isMobile ? '' : 'calc((100vw - 1280px) / 2 + 120px)',
             }"
@@ -113,6 +113,7 @@
               </div>
               <div v-else class="divide-y divide-gray-100 py-1">
                 <div v-for="message in messages" :key="message.id" 
+                  @click.stop="viewMessageDetail(message)"
                   class="px-4 py-3 hover:bg-gray-50 cursor-pointer"
                 >
                   <div class="flex items-start space-x-3">
@@ -153,39 +154,27 @@
           </div>
 
           <div class="relative" ref="dropdownRef">
-            <div 
-              class="flex items-center cursor-pointer" 
-              @click="toggleDropdown"
+            <button 
+              @click.stop="toggleDropdown"
+              class="flex items-center cursor-pointer"
             >
               <img 
                 :src="avatarUrl"
-                @error="(e) => {
-                  console.error('Avatar load failed:', e)
-                  e.target.src = defaultAvatar
-                }"
                 class="h-8 w-8 rounded-full"
                 alt="用户头像"
               />
-              <span class="hidden lg:inline">
-                {{ username }}
-              </span>
-              <svg class="h-5 w-5" :class="{ 'rotate-180': showDropdown }" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd"
-                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                  clip-rule="evenodd" />
-              </svg>
-            </div>
+              <span class="hidden lg:inline ml-2">{{ username }}</span>
+              <ChevronDownIcon 
+                class="h-5 w-5 ml-1"
+                :class="{ 'rotate-180': showDropdown }"
+              />
+            </button>
 
-            <!-- 下拉菜单 -->
-            <div v-if="showDropdown" 
+            <!-- 下拉菜单内容 -->
+            <div 
+              v-if="showDropdown"
+              class="fixed lg:absolute right-0 top-[60px] w-full lg:w-80 bg-white shadow-lg py-1 border-t lg:border lg:border-gray-100 z-50"
               :class="[
-                'fixed lg:absolute',
-                'right-0 top-[60px]',
-                'w-full lg:w-80',
-                'bg-white shadow-lg',
-                'py-1',
-                'border-t lg:border lg:border-gray-100',
-                'z-50',
                 isMobile ? 'inset-x-0' : '',
                 isMobile ? 'h-[calc(100vh-60px)]' : '',
                 isMobile ? 'overflow-y-auto' : ''
@@ -232,11 +221,7 @@
                   <div class="flex items-center space-x-3">
                     <span class="text-lg font-medium text-[#1A56DB]">{{ pointsInfo.balance || 0 }}</span>
                     <button 
-                      @click="() => {
-                        router.push('/user?tab=membership')
-                        showDropdown.value = false
-                        userMenuOpen.value = false
-                      }"
+                      @click="handlePointsDetail"
                       class="text-xs text-gray-500 hover:text-gray-700 flex items-center"
                     >
                       <span>查看详情</span>
@@ -326,11 +311,7 @@
           <div class="flex items-center space-x-3">
             <span class="text-lg font-medium text-[#1A56DB]">{{ pointsInfo.balance || 0 }}</span>
             <button 
-              @click="() => {
-                router.push('/user?tab=membership')
-                showDropdown.value = false
-                userMenuOpen.value = false
-              }"
+              @click="handlePointsDetail"
               class="text-xs text-gray-500 hover:text-gray-700 flex items-center"
             >
               <span>查看详情</span>
@@ -515,6 +496,7 @@ import navigation from '@/config/navigation.json'
 import { eventBus } from '@/utils/eventBus'
 import { showToast } from '@/components/ToastMessage'
 import request from '@/utils/request'
+import { membership } from '@/api/membership'
 
 // 导入所需的图标
 import {
@@ -535,7 +517,8 @@ import {
   Squares2X2Icon,
   SparklesIcon,
   StarIcon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  ChevronDownIcon
 } from '@heroicons/vue/24/outline'
 
 
@@ -556,17 +539,43 @@ const getIcon = (menuKey) => {
   return iconMap[menuKey] || UserIcon // 默认返回 UserIcon
 }
 
-// 状态管理
+// 状态管理 - 将所有状态管理放在一起
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const accountStore = useAccountStore()
 const mobileMenuOpen = ref(false)
-const userMenuOpen = ref(false)
+const showDropdown = ref(false)
 const showMessageMenu = ref(false)
 const resourceMenuOpen = ref(false)
-const mobileSubmenuOpen = ref({})
+const dropdownRef = ref(null)
 const userBasicInfo = ref(null)
+
+// 切换下拉菜单
+const toggleDropdown = (e) => {
+  e.stopPropagation()
+  showDropdown.value = !showDropdown.value
+  // 关闭其他菜单
+  showMessageMenu.value = false
+  resourceMenuOpen.value = false
+}
+
+// 处理点击事件
+const handleClickOutside = (event) => {
+  const target = event.target
+  // 如果点击的不是下拉菜单区域，关闭下拉菜单
+  if (dropdownRef.value && !dropdownRef.value.contains(target)) {
+    showDropdown.value = false
+  }
+  // 如果点击的不是消息菜单区域，关闭消息菜单
+  if (!target.closest('.message-menu')) {
+    showMessageMenu.value = false
+  }
+  // 如果点击的不是资源菜单区域，关闭资源菜单
+  if (!target.closest('.resource-menu')) {
+    resourceMenuOpen.value = false
+  }
+}
 
 // 模拟消息数据
 const messages = ref([
@@ -594,24 +603,25 @@ const messages = ref([
 ])
 
 // 切换消息菜单
-const toggleMessageMenu = () => {
+const toggleMessageMenu = (e) => {
+  e.stopPropagation() // 阻止事件冒泡
   showMessageMenu.value = !showMessageMenu.value
-  if (showMessageMenu.value) {
-    userMenuOpen.value = false
+  if (showDropdown.value) {
+    showDropdown.value = false
   }
 }
 
 // 查看全部消息
 const viewAllMessages = () => {
-  showMessageMenu.value = false  // 关闭消息菜单
-  router.push('/user?tab=messages')
+  router.push('/messages')
+  showMessageMenu.value = false // 关闭消息菜单
 }
 
 // 监听 accountStore 中的用户信息变化
 watch(
   [() => accountStore.userInfo, () => authStore.isLoggedIn],
-  (newUserInfo) => {
-    if (newUserInfo && authStore.isLoggedIn) {
+  ([newUserInfo, isLoggedIn]) => {
+    if (newUserInfo && isLoggedIn) {
       userBasicInfo.value = {
         ...newUserInfo
       }
@@ -622,9 +632,17 @@ watch(
   { immediate: true, deep: true }
 )
 
+// 响应式状态
+const windowWidth = ref(window?.innerWidth || 1024)
+
+// 处理窗口大小变化
+const handleResize = () => {
+  windowWidth.value = window.innerWidth
+}
+
 // 响应式计算
 const isMobile = computed(() => {
-  return window.innerWidth < 1024
+  return windowWidth.value < 1024
 })
 
 // 统一的菜单关闭处理
@@ -632,11 +650,11 @@ const closeMenus = (e) => {
   if (!e.target.closest('.resource-menu')) {
     resourceMenuOpen.value = false
   }
-  if (!e.target.closest('.user-menu')) {
-    userMenuOpen.value = false
-  }
   if (!e.target.closest('.message-menu') && !e.target.closest('.message-button')) {
     showMessageMenu.value = false
+  }
+  if (!e.target.closest('.user-dropdown') && !e.target.closest('.user-button')) {
+    showDropdown.value = false
   }
 }
 
@@ -727,11 +745,7 @@ watch(() => authStore.isLoggedIn, (newValue) => {
 // 生命周期钩子
 onMounted(async () => {
   document.addEventListener('click', closeMenus)
-  window.addEventListener('resize', () => {
-    if (!isMobile.value) {
-      mobileMenuOpen.value = false
-    }
-  })
+  window.addEventListener('resize', handleResize)
   
   // 检查登录状态
   const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true'
@@ -847,7 +861,6 @@ const handleVipButton = () => {
     router.push('/user?tab=membership')
   }
   showDropdown.value = false
-  userMenuOpen.value = false
 }
 
 // 用户菜单选项
@@ -860,7 +873,6 @@ const userMenuItems = computed(() => {
       action: () => {
         router.push('/user?tab=home')
         showDropdown.value = false
-        userMenuOpen.value = false
       }
     },
     {
@@ -870,7 +882,6 @@ const userMenuItems = computed(() => {
       action: () => {
         router.push('/user?tab=profile')
         showDropdown.value = false
-        userMenuOpen.value = false
       }
     },
     {
@@ -880,7 +891,6 @@ const userMenuItems = computed(() => {
       action: () => {
         router.push('/user?tab=resumes')
         showDropdown.value = false
-        userMenuOpen.value = false
       }
     },
     {
@@ -890,7 +900,6 @@ const userMenuItems = computed(() => {
       action: () => {
         router.push('/user?tab=settings')
         showDropdown.value = false
-        userMenuOpen.value = false
       }
     },
     {
@@ -900,7 +909,6 @@ const userMenuItems = computed(() => {
       action: () => {
         router.push('/user?tab=membership')
         showDropdown.value = false
-        userMenuOpen.value = false
       }
     },
     {
@@ -915,7 +923,7 @@ const userMenuItems = computed(() => {
 // 处理退出登录
 const handleLogout = async () => {
   try {
-    userMenuOpen.value = false
+    showDropdown.value = false
     await authStore.logout()
     // 清除其他状态
     userBasicInfo.value = null
@@ -924,7 +932,6 @@ const handleLogout = async () => {
     mobileMenuOpen.value = false
     showMessageMenu.value = false
     resourceMenuOpen.value = false
-    mobileSubmenuOpen.value = {}
     
     showToast('退出成功', 'success')
     
@@ -1012,9 +1019,9 @@ const refreshUserInfo = async () => {
 // 积分信息
 const pointsInfo = ref({
   balance: 0,
-  total_earned: 0,
-  total_spent: 0,
-  level: 1
+  level: 1,
+  sign_in_days: 0,
+  total_earned: 0
 })
 
 // 获取积分信息
@@ -1029,30 +1036,46 @@ const fetchPointsInfo = async () => {
   }
 }
 
-const showDropdown = ref(false)
-const dropdownRef = ref(null)
-
-// 切换下拉菜单
-const toggleDropdown = () => {
-  showDropdown.value = !showDropdown.value
-}
-
-// 处理点击事件
-const handleClickOutside = (event) => {
-  if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
-    showDropdown.value = false
-  }
-}
-
-onMounted(() => {
-  // 添加全局点击事件监听
+// 合并重复的 onMounted
+onMounted(async () => {
+  // 添加事件监听
   document.addEventListener('click', handleClickOutside)
+  window.addEventListener('resize', handleResize)
+  
+  try {
+    await Promise.all([
+      fetchPointsInfo(),
+      accountStore.fetchUserInfo()
+    ])
+  } catch (error) {
+    console.error('初始化数据失败:', error)
+  }
 })
 
 onUnmounted(() => {
   // 移除全局点击事件监听
   document.removeEventListener('click', handleClickOutside)
+  window.removeEventListener('resize', handleResize)
+  eventBus.off('avatar-updated', handleAvatarUpdate)
+  window.removeEventListener('payment-success', refreshUserInfo)
 })
+
+// 处理菜单关闭
+const closeDropdown = () => {
+  showDropdown.value = false
+}
+
+// 处理点击详情按钮
+const handleViewDetails = () => {
+  router.push('/user?tab=membership')
+  showDropdown.value = false
+}
+
+// 修改积分详情按钮的点击处理
+const handlePointsDetail = () => {
+  router.push('/user?tab=membership')
+  showDropdown.value = false
+}
 
 </script>
 <style scoped>

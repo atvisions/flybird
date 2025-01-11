@@ -250,19 +250,26 @@ class PointRule(models.Model):
 
 class UserPoint(models.Model):
     """用户积分"""
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='points')
-    balance = models.IntegerField('积分余额', default=0)
-    total_earned = models.IntegerField('累计获得', default=0)
-    point_level = models.IntegerField('积分等级', default=1)
-    created_at = models.DateTimeField('创建时间', auto_now_add=True)
-    updated_at = models.DateTimeField('更新时间', auto_now=True)
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='point'
+    )
+    balance = models.IntegerField(default=0)
+    total_earned = models.IntegerField(default=0)
+    point_level = models.IntegerField(default=1)
+    sign_in_days = models.IntegerField(default=0)
+    last_sign_in = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        db_table = 'user_points'
         verbose_name = '用户积分'
         verbose_name_plural = verbose_name
 
     def __str__(self):
-        return f'{self.user.username} - {self.balance}积分'
+        return f"{self.user.username} - {self.balance}积分"
 
     def update_level(self):
         """更新积分等级"""

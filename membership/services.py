@@ -384,112 +384,78 @@ class PaymentService:
 
 class PointService:
     """积分服务"""
+    
     @staticmethod
-    def add_points(user, event_type, description=None, amount=None):
+    def add_points(user, points, event_type, description=None):
         """
         添加积分
         :param user: 用户对象
-        :param event_type: 事件类型
-        :param description: 描述(可选)
-        :param amount: 指定积分数量(可选)
-        """
-        try:
-            with transaction.atomic():
-                # 获取或创建用户积分账户
-                point, _ = UserPoint.objects.get_or_create(user=user)
-                
-                # 获取积分规则
-                try:
-                    rule = PointRule.objects.get(event_type=event_type, is_active=True)
-                except PointRule.DoesNotExist:
-                    logger.warning(f"积分规则不存在: {event_type}")
-                    return None
-                
-                # 计算实际积分
-                points = amount if amount is not None else rule.points
-                
-                # 检查是否有会员加成
-                if hasattr(user, 'membership') and user.membership.is_active:
-                    membership_tier = user.membership.tier
-                    point_multiplier = membership_tier.benefits.get('point_multiplier', 1)
-                    points = int(points * point_multiplier)
-                
-                # 更新积分余额
-                point.balance += points
-                point.total_earned += points
-                
-                # 更新积分等级
-                point.update_level()
-                point.save()
-                
-                # 创建积分记录
-                record = PointRecord.objects.create(
-                    user=user,
-                    rule=rule,
-                    points=points,
-                    balance=point.balance,
-                    event_type=event_type,
-                    description=description or rule.name
-                )
-                
-                logger.info(
-                    f"积分添加成功: "
-                    f"用户={user.phone}, "
-                    f"事件={event_type}, "
-                    f"积分={points}, "
-                    f"余额={point.balance}"
-                )
-                
-                return record
-                
-        except Exception as e:
-            logger.error(f"添加积分失败: {str(e)}")
-            return None
-
-    @staticmethod
-    def deduct_points(user, points, event_type, description):
-        """
-        扣除积分
-        :param user: 用户对象
-        :param points: 扣除的积分数量
+        :param points: 积分数量
         :param event_type: 事件类型
         :param description: 描述
+        :return: PointRecord 对象
         """
-        try:
-            with transaction.atomic():
-                point = UserPoint.objects.select_for_update().get(user=user)
+        with transaction.atomic():
+            # 获取或创建用户积分账户
+            user_point, _ = UserPoint.objects.get_or_create(user=user)
+            
+            # 更新积分余额
+            user_point.balance += points
+            user_point.total_earned += points if points > 0 else 0
+            user_point.save()
+            
+            # 创建积分记录
+            record = PointRecord.objects.create(
+                user=user,
+                points=points,
+                event_type=event_type,
+                description=description,
+                balance=user_point.balance
+            )
+            
+            return record
+    
+    @staticmethod
+    def check_daily_sign_in(user):
+        """
+        检查用户今日是否已签到
+        :param user: 用户对象
+        :return: bool
+        """
+        today = timezone.now().date()
+        return PointRecord.objects.filter(
+            user=user,
+            event_type='daily_check_in',
+            created_at__date=today
+        ).exists()
+    
+    @staticmethod
+    def get_sign_in_days(user):
+        """
+        获取用户连续签到天数
+        :param user: 用户对象
+        :return: int
+        """
+        records = PointRecord.objects.filter(
+            user=user,
+            event_type='daily_check_in'
+        ).order_by('-created_at')
+        
+        if not records:
+            return 0
+            
+        days = 1
+        last_date = records[0].created_at.date()
+        
+        for record in records[1:]:
+            current_date = record.created_at.date()
+            if (last_date - current_date).days == 1:
+                days += 1
+                last_date = current_date
+            else:
+                break
                 
-                # 检查积分是否足够
-                if point.balance < points:
-                    logger.warning(f"积分不足: 用户={user.phone}, 当前={point.balance}, 需要={points}")
-                    return False
-                
-                # 扣除积分
-                point.balance -= points
-                point.save()
-                
-                # 创建积分记录
-                PointRecord.objects.create(
-                    user=user,
-                    points=-points,
-                    balance=point.balance,
-                    event_type=event_type,
-                    description=description
-                )
-                
-                logger.info(
-                    f"积分扣除成功: "
-                    f"用户={user.phone}, "
-                    f"事件={event_type}, "
-                    f"积分={points}, "
-                    f"余额={point.balance}"
-                )
-                
-                return True
-                
-        except Exception as e:
-            logger.error(f"扣除积分失败: {str(e)}")
-            return False 
+        return days
 
 class MembershipCacheService:
     """会员信息缓存服务"""

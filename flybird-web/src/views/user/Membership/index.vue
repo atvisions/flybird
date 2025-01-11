@@ -5,18 +5,18 @@
       <div class="px-6 py-8 bg-gradient-to-br from-[#1A56DB] via-blue-600 to-blue-500 relative overflow-hidden">
         <!-- 装饰背景 -->
         <div class="absolute inset-0">
-          <div class="absolute right-0 top-0 w-64 h-64 bg-white/10 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
-          <div class="absolute left-0 bottom-0 w-32 h-32 bg-white/5 rounded-full blur-2xl"></div>
+          <div class="absolute right-0 top-0 w-64 h-64 bg-white bg-opacity-10 rounded-full blur-3xl transform -translate-y-1/2 translate-x-1/2"></div>
+          <div class="absolute left-0 bottom-0 w-32 h-32 bg-white bg-opacity-5 rounded-full blur-2xl"></div>
         </div>
         <!-- 内容 -->
         <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between relative space-y-4 lg:space-y-0">
           <div class="text-white">
             <h3 class="text-2xl font-bold tracking-tight">{{ vipTypeText }}</h3>
-            <p class="mt-2 text-white/80 font-medium">{{ vipExpireText }}</p>
+            <p class="mt-2 text-white text-opacity-80 font-medium">{{ vipExpireText }}</p>
           </div>
           <button 
             @click="handleVipButton"
-            class="w-full lg:w-auto px-6 py-2.5 bg-white/10 backdrop-blur-sm text-white border border-white/20 rounded-full text-sm font-medium hover:bg-white/20 transition-all duration-300"
+            class="w-full lg:w-auto px-6 py-2.5 bg-white bg-opacity-10 backdrop-blur-sm text-white border border-white border-opacity-20 rounded-full text-sm font-medium hover:bg-opacity-20 transition-all duration-300"
           >
             {{ vipButtonText }}
           </button>
@@ -28,9 +28,9 @@
         <h4 class="text-base font-medium text-gray-900 mb-4">专属会员权益</h4>
         <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6">
           <div v-for="benefit in memberBenefits" :key="benefit.key" 
-            class="flex lg:flex-col items-center lg:text-center p-3 lg:p-0 bg-gray-50/50 lg:bg-transparent rounded-lg lg:rounded-none"
+            class="flex lg:flex-col items-center lg:text-center p-3 lg:p-0 bg-gray-50 bg-opacity-50 lg:bg-transparent rounded-lg lg:rounded-none"
           >
-            <div class="w-10 lg:w-12 h-10 lg:h-12 rounded-full bg-gradient-to-br from-blue-50 to-blue-100/50 flex items-center justify-center">
+            <div class="w-10 lg:w-12 h-10 lg:h-12 rounded-full bg-gradient-to-br from-blue-50 to-blue-100 bg-opacity-50 flex items-center justify-center">
               <component :is="benefit.icon" class="w-6 h-6 text-[#1A56DB]" />
             </div>
             <div class="ml-3 lg:ml-0 lg:mt-3">
@@ -44,18 +44,16 @@
 
     <!-- 积分信息 -->
     <div class="bg-white rounded-lg shadow overflow-hidden">
-      <!-- 积分和等级概览 -->
-      <div class="relative px-4 lg:px-8 py-6 lg:py-10 overflow-hidden bg-gradient-to-br from-gray-50 to-white border-b border-gray-100">
+      <div class="px-6 py-8 relative">
         <!-- 装饰背景 -->
         <div class="absolute inset-0 opacity-10">
-          <div class="absolute right-0 top-0 w-64 h-64 bg-gradient-to-br from-violet-100/20 to-purple-100/20 rounded-full transform translate-x-1/3 -translate-y-1/3"></div>
+          <div class="absolute right-0 top-0 w-64 h-64 bg-gradient-to-br from-violet-100 to-purple-100 bg-opacity-20 rounded-full transform -translate-y-1/3 translate-x-1/3"></div>
         </div>
         
+        <!-- 积分和等级概览 -->
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
           <div>
-            <div class="flex items-center">
-              <h3 class="text-lg lg:text-xl font-semibold text-gray-900">我的积分</h3>
-            </div>
+            <h3 class="text-lg lg:text-xl font-semibold text-gray-900">我的积分</h3>
             <div class="mt-3">
               <span class="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-[#1A56DB] to-blue-500 bg-clip-text text-transparent">{{ pointsInfo.balance || 0 }}</span>
               <span class="text-sm text-gray-600 ml-1">积分</span>
@@ -98,7 +96,7 @@
             <div>
               <div class="text-sm font-medium text-blue-900">连续签到</div>
               <div class="flex items-baseline space-x-1">
-                <span class="text-xl font-bold text-[#1A56DB]">{{ pointsInfo.sign_in_days || 0 }}</span>
+                <span class="text-xl font-bold text-[#1A56DB]">{{ signInInfo.sign_in_days || 0 }}</span>
                 <span class="text-sm text-[#1A56DB]">天</span>
               </div>
             </div>
@@ -141,7 +139,7 @@
           </div>
         </div>
         <div class="divide-y divide-gray-100 max-h-[400px] overflow-y-auto">
-          <div v-if="pointsRecords.length === 0" class="py-8 text-center text-gray-500">
+          <div v-if="!pointsRecords?.length" class="py-8 text-center text-gray-500">
             暂无积分记录
           </div>
           <div 
@@ -153,7 +151,7 @@
             <div>
               <div class="text-xs lg:text-sm font-medium text-gray-900">{{ record.description }}</div>
               <div class="text-[10px] lg:text-xs text-gray-500 mt-0.5">
-                {{ formatDate(record.created_at, window.innerWidth < 640 ? 'MM-DD HH:mm' : 'YYYY-MM-DD HH:mm') }}
+                {{ formatDate(record.created_at, dateFormat) }}
               </div>
             </div>
             <div :class="[
@@ -177,229 +175,252 @@
       </div>
     </div>
 
-    <!-- 积分和等级说明区域 -->
-    <div class="space-y-4">
-      <div class="space-y-8">
-        <!-- 积分获取规则 -->
-        <div class="bg-white rounded-lg shadow overflow-hidden">
-          <div class="px-6 py-4 bg-gray-50 border-b border-gray-100">
-            <h3 class="text-base font-medium text-gray-900">积分获取规则</h3>
-            <p class="mt-1 text-sm text-gray-500">参与社区互动，赚取积分升级</p>
-          </div>
-          <div class="p-6">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8 mt-6 lg:mt-8">
-              <!-- 内容创作 -->
-              <div class="p-4 lg:p-5 bg-gradient-to-br from-gray-50 to-white rounded-lg border border-gray-100/80 shadow-sm">
-                <div class="flex items-center space-x-3 mb-4">
-                  <div class="w-7 lg:w-8 h-7 lg:h-8 rounded-full bg-violet-100 flex items-center justify-center">
-                    <PencilSquareIcon class="w-4 h-4 text-violet-600" />
-                  </div>
-                  <span class="text-sm lg:text-base font-semibold text-gray-900">内容创作</span>
-                </div>
-                <ul class="space-y-3">
-                  <li class="flex items-center justify-between text-sm">
-                    <span class="text-gray-600">发布原创文章</span>
-                    <span class="font-medium text-violet-600 bg-violet-50 px-3 py-1 rounded-full">+30分</span>
-                  </li>
-                  <li class="flex items-center justify-between text-sm">
-                    <span class="text-gray-600">发布作品集</span>
-                    <span class="font-medium text-gray-900 bg-gray-100 px-2 py-0.5 rounded">+35分</span>
-                  </li>
-                  <li class="flex items-center justify-between text-sm">
-                    <span class="text-gray-600">发布问答</span>
-                    <span class="font-medium text-gray-900 bg-gray-100 px-2 py-0.5 rounded">+20分</span>
-                  </li>
-                  <li class="flex items-center justify-between text-sm">
-                    <span class="text-gray-600">发布话题</span>
-                    <span class="font-medium text-gray-900 bg-gray-100 px-2 py-0.5 rounded">+20分</span>
-                  </li>
-                </ul>
+    <!-- Tab 导航 -->
+    <div class="bg-white rounded-lg shadow">
+      <!-- Tab 头部 -->
+      <div class="border-b border-gray-200">
+        <nav class="-mb-px flex" aria-label="Tabs">
+          <button
+            v-for="tab in tabs"
+            :key="tab.key"
+            @click="currentTab = tab.key"
+            :class="[
+              currentTab === tab.key
+                ? 'border-primary-500 text-primary-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+              'w-1/3 py-4 px-1 text-center border-b-2 font-medium text-sm transition-colors duration-200'
+            ]"
+          >
+            {{ tab.name }}
+          </button>
+        </nav>
+      </div>
+
+      <!-- Tab 内容 -->
+      <div class="p-6">
+        <!-- 积分规则 -->
+        <div v-if="currentTab === 'points'" class="space-y-6">
+          <h3 class="text-lg font-medium text-gray-900">积分获取规则</h3>
+          <div class="space-y-3">
+            <div class="flex items-center p-4 bg-white border rounded-lg transition-all hover:shadow-sm border-blue-100">
+              <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-blue-50">
+                <CalendarDaysIcon class="w-5 h-5 text-blue-500" />
               </div>
-              
-              <!-- 社区互动 -->
-              <div class="p-4 lg:p-5 bg-gradient-to-br from-gray-50 to-white rounded-lg border border-gray-100/80 shadow-sm">
-                <div class="flex items-center space-x-3 mb-4">
-                  <div class="w-7 lg:w-8 h-7 lg:h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                    <ChatBubbleLeftRightIcon class="w-4 h-4 text-blue-600" />
-                  </div>
-                  <span class="text-sm lg:text-base font-semibold text-gray-900">社区互动</span>
+              <div class="ml-4 flex-1">
+                <div class="flex items-center justify-between">
+                  <div class="font-medium text-gray-900">每日签到</div>
+                  <button
+                    @click="handleSignIn"
+                    :disabled="!canSignIn"
+                    class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors cursor-pointer"
+                    :class="[
+                      canSignIn 
+                        ? 'bg-primary-600 text-white hover:bg-primary-700 hover:shadow-sm active:bg-primary-800' 
+                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    ]"
+                  >
+                    {{ canSignIn ? '立即签到' : '今日已签到' }}
+                  </button>
                 </div>
-                <ul class="space-y-3">
-                  <li class="flex items-center justify-between text-sm">
-                    <span class="text-gray-600">回答问题</span>
-                    <span class="font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-full">+8分</span>
-                  </li>
-                  <li class="flex items-center justify-between text-sm">
-                    <span class="text-gray-600">评论文章/作品</span>
-                    <span class="font-medium text-gray-900 bg-gray-100 px-2 py-0.5 rounded">+3分</span>
-                  </li>
-                  <li class="flex items-center justify-between text-sm">
-                    <span class="text-gray-600">回答被采纳</span>
-                    <span class="font-medium text-gray-900 bg-gray-100 px-2 py-0.5 rounded">悬赏分</span>
-                  </li>
-                </ul>
+                <div class="mt-1 text-sm text-gray-500">
+                  已连续签到 {{ signInInfo.sign_in_days || 0 }} 天
+                  <template v-if="signInInfo.nextReward">
+                    <span class="ml-2">
+                      再签到 {{ signInInfo.nextReward.days }} 天可获得 
+                      {{ signInInfo.nextReward.points }} 积分奖励
+                    </span>
+                  </template>
+                </div>
               </div>
-              
-              <!-- 每日签到 -->
-              <div class="p-4 lg:p-5 bg-gradient-to-br from-gray-50 to-white rounded-lg border border-gray-100/80 shadow-sm">
-                <div class="flex items-center space-x-3 mb-4">
-                  <div class="w-7 lg:w-8 h-7 lg:h-8 rounded-full bg-amber-100 flex items-center justify-center">
-                    <GiftIcon class="w-4 h-4 text-amber-600" />
-                  </div>
-                  <span class="text-sm lg:text-base font-semibold text-gray-900">每日签到</span>
-                </div>
-                <ul class="space-y-3">
-                  <li class="flex items-center justify-between text-sm">
-                    <span class="text-gray-600">每日签到</span>
-                    <span class="font-medium text-amber-600 bg-amber-50 px-3 py-1 rounded-full">+3分</span>
-                  </li>
-                  <li class="flex items-center justify-between text-sm">
-                    <span class="text-gray-600">连续签到7天</span>
-                    <span class="font-medium text-gray-900 bg-gray-100 px-2 py-0.5 rounded">+10分</span>
-                  </li>
-                  <li class="flex items-center justify-between text-sm">
-                    <span class="text-gray-600">连续签到30天</span>
-                    <span class="font-medium text-gray-900 bg-gray-100 px-2 py-0.5 rounded">+50分</span>
-                  </li>
-                </ul>
+            </div>
+            <div v-for="rule in pointRules.slice(1)" :key="rule.action" 
+              class="flex items-center p-4 bg-white border rounded-lg transition-all hover:shadow-sm"
+              :class="rule.borderColor"
+            >
+              <div :class="[
+                'w-10 h-10 rounded-lg flex items-center justify-center',
+                rule.bgColor
+              ]">
+                <component :is="rule.icon" class="w-5 h-5" :class="rule.iconColor" />
               </div>
-              
-              <!-- 额外奖励 -->
-              <div class="p-4 lg:p-5 bg-gradient-to-br from-gray-50 to-white rounded-lg border border-gray-100/80 shadow-sm">
-                <div class="flex items-center space-x-3 mb-4">
-                  <div class="w-7 lg:w-8 h-7 lg:h-8 rounded-full bg-emerald-100 flex items-center justify-center">
-                    <StarIcon class="w-4 h-4 text-emerald-600" />
-                  </div>
-                  <span class="text-sm lg:text-base font-semibold text-gray-900">额外奖励</span>
+              <div class="ml-4 flex-1">
+                <div class="flex items-center justify-between">
+                  <div class="font-medium text-gray-900">{{ rule.action }}</div>
+                  <div class="text-sm font-medium" :class="rule.textColor">{{ rule.points }}</div>
                 </div>
-                <ul class="space-y-3">
-                  <li class="flex items-center justify-between text-sm">
-                    <div class="flex items-center">
-                      <span class="text-gray-600">会员双倍积分</span>
-                      <span class="ml-1.5 text-xs px-1.5 py-0.5 rounded bg-amber-100 text-amber-600">VIP</span>
-                    </div>
-                    <span class="font-medium text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">×2</span>
-                  </li>
-                  <li class="flex items-center justify-between text-sm">
-                    <span class="text-gray-600">内容被收藏</span>
-                    <span class="font-medium text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">+2分/次</span>
-                  </li>
-                  <li class="flex items-center justify-between text-sm">
-                    <span class="text-gray-600">内容被推荐</span>
-                    <span class="font-medium text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">+100分</span>
-                  </li>
-                  <li class="text-xs text-gray-500 mt-2 pl-1">
-                    注：会员用户参与所有积分活动可获得双倍积分奖励
-                  </li>
-                </ul>
+                <div class="mt-1 text-sm text-gray-500">{{ rule.description }}</div>
               </div>
             </div>
           </div>
         </div>
-        
-        <!-- 等级特权说明 -->
-        <div class="bg-white rounded-lg shadow overflow-hidden">
-          <div class="px-6 py-4 bg-gray-50 border-b border-gray-100">
-            <h3 class="text-lg font-semibold text-gray-900">会员等级特权</h3>
-            <p class="mt-1 text-sm text-gray-600">解锁更多等级，享受更多尊享权益</p>
-          </div>
-          <div class="p-6">
-            <div class="space-y-4 lg:space-y-8 mt-6 lg:mt-8">
-              <div v-for="level in 5" :key="level" 
-                class="p-4 lg:p-5 bg-gradient-to-br from-gray-50 to-white rounded-lg border transition-all duration-300 hover:shadow-md"
-                :class="[
-                  level <= pointsInfo.level 
-                    ? 'border-blue-200' 
-                    : 'border-gray-100',
-                ]"
+
+        <!-- 等级权益 -->
+        <div v-if="currentTab === 'privileges'" class="space-y-6">
+          <h3 class="text-lg font-medium text-gray-900">等级特权</h3>
+          <div class="space-y-6">
+            <div v-for="level in 5" :key="level" 
+              class="bg-white border rounded-lg overflow-hidden transition-all hover:shadow-sm"
+              :class="[
+                level === pointsInfo.level ? 'border-primary-500' : 'border-gray-100',
+              ]"
+            >
+              <!-- 等级头部 -->
+              <div class="px-6 py-4 flex items-center justify-between border-b border-gray-100"
+                :class="level === pointsInfo.level ? 'bg-primary-50' : 'bg-gray-50'"
               >
-                <div class="flex flex-col lg:flex-row lg:items-center justify-between mb-4 space-y-2 lg:space-y-0">
-                  <div class="flex items-center space-x-3">
-                    <div class="relative">
-                      <div class="w-8 lg:w-10 h-8 lg:h-10 rounded-full flex items-center justify-center"
-                        :class="[
-                          level <= pointsInfo.level 
-                            ? 'bg-gradient-to-br from-[#1A56DB] to-blue-500 text-white' 
-                            : 'bg-gray-100 text-gray-400'
-                        ]"
+                <div class="flex items-center space-x-3">
+                  <div class="w-10 h-10 rounded-lg flex items-center justify-center"
+                    :class="level === pointsInfo.level ? 'bg-primary-100' : 'bg-white'"
+                  >
+                    <TrophyIcon 
+                      class="w-6 h-6"
+                      :class="level === pointsInfo.level ? 'text-primary-500' : 'text-gray-400'"
+                    />
+                  </div>
+                  <div>
+                    <div class="flex items-center">
+                      <span class="text-lg font-semibold text-gray-900">
+                        Lv.{{ level }} {{ getLevelTitle(level) }}
+                      </span>
+                      <span v-if="level === pointsInfo.level"
+                        class="ml-2 px-2 py-0.5 text-xs font-medium text-primary-600 bg-primary-100 rounded-full"
                       >
-                        <span class="text-lg font-bold">{{ level }}</span>
-                      </div>
-                      <div v-if="level <= pointsInfo.level" 
-                        class="absolute -right-1 -bottom-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white flex items-center justify-center"
-                      >
-                        <CheckIcon class="w-2.5 h-2.5 text-white" />
-                      </div>
+                        当前等级
+                      </span>
+                    </div>
+                    <div class="text-sm text-gray-500 mt-0.5">{{ getLevelRange(level) }}</div>
+                  </div>
+                </div>
+                <div class="text-sm text-gray-500">
+                  {{ level < 5 ? `距离下一级还需 ${getNextLevelPoints(level, pointsInfo.total_earned)} 积分` : '已达到最高等级' }}
+                </div>
+              </div>
+
+              <!-- 等级特权列表 -->
+              <div class="p-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div v-for="(privilege, index) in getLevelPrivileges(level)" 
+                    :key="index"
+                    class="flex items-start space-x-3 p-3 rounded-lg"
+                    :class="level === pointsInfo.level ? 'bg-primary-50' : 'bg-gray-50'"
+                  >
+                    <div class="flex-shrink-0">
+                      <CheckCircleIcon 
+                        class="w-5 h-5"
+                        :class="level === pointsInfo.level ? 'text-primary-500' : 'text-gray-400'"
+                      />
                     </div>
                     <div>
-                      <div class="text-base lg:text-lg font-semibold text-gray-900">{{ getLevelTitle(level) }}</div>
-                      <div class="text-sm text-gray-500">{{ getLevelRange(level) }}</div>
+                      <div class="text-sm font-medium text-gray-900">{{ privilege.title }}</div>
+                      <div class="text-xs text-gray-500 mt-0.5">{{ privilege.description }}</div>
                     </div>
-                  </div>
-                  <div class="flex items-center space-x-2">
-                    <div class="text-xs px-2 py-0.5 rounded-full"
-                      :class="[
-                        level <= pointsInfo.level 
-                          ? 'bg-green-100 text-green-600' 
-                          : 'bg-gray-100 text-gray-500'
-                      ]"
-                    >
-                      {{ level <= pointsInfo.level ? '已解锁' : '未解锁' }}
-                    </div>
-                  </div>
-                </div>
-                <div class="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4">
-                  <div v-for="privilege in getLevelPrivileges(level)" :key="privilege"
-                    class="flex items-start space-x-2">
-                    <CheckCircleIcon class="w-5 h-5 mt-0.5 flex-shrink-0" />
-                    <span class="text-xs lg:text-sm">{{ privilege }}</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- 订单记录 -->
-    <div class="space-y-4">
-      <h2 class="text-lg font-medium text-gray-900">订单记录</h2>
-      <div class="bg-white rounded-lg shadow overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200">
-          <div class="flex items-center justify-between">
-            <h3 class="text-base font-medium text-gray-900">会员订单</h3>
-            <button 
-              class="text-sm text-gray-500 hover:text-gray-700"
-              @click="router.push('/orders')"
-            >
-              查看全部
-            </button>
-          </div>
-        </div>
-        <div class="divide-y divide-gray-200">
-          <div v-if="orders.length === 0" class="py-8 text-center text-gray-500">
+        <!-- 订单记录 -->
+        <div v-if="currentTab === 'orders'" class="space-y-4">
+          <div v-if="orders.length === 0" class="text-center py-8 text-gray-500">
             暂无订单记录
           </div>
-          <div v-else v-for="order in orders" :key="order.order_no" class="px-6 py-4">
-            <div class="flex items-center justify-between">
-              <div>
-                <div class="text-sm text-gray-500">订单号：{{ order.order_no }}</div>
-                <div class="mt-1 text-base font-medium text-gray-900">{{ order.vip_type_display }}</div>
+          
+          <!-- 订单列表 -->
+          <div v-else class="space-y-4">
+            <div v-for="order in orders" :key="order.order_no" 
+              class="bg-white border rounded-lg overflow-hidden transition-all hover:border-gray-300"
+            >
+              <!-- 订单基本信息 -->
+              <div class="px-4 py-3 flex items-center justify-between border-b border-gray-100">
+                <div class="flex items-center space-x-4">
+                  <div class="text-sm text-gray-500">订单号：{{ order.order_no }}</div>
+                  <div :class="[
+                    'px-2 py-1 text-xs font-medium rounded-full',
+                    {
+                      'bg-yellow-100 text-yellow-800': order.status === 'pending',
+                      'bg-green-100 text-green-800': order.status === 'paid',
+                      'bg-gray-100 text-gray-800': order.status === 'cancelled',
+                      'bg-red-100 text-red-800': order.status === 'refunded'
+                    }
+                  ]">
+                    {{ formatOrderStatus(order.status) }}
+                  </div>
+                </div>
+                <button 
+                  class="text-sm text-gray-500 hover:text-gray-700"
+                  @click="toggleOrderDetail(order.order_no)"
+                >
+                  {{ expandedOrders.includes(order.order_no) ? '收起' : '展开' }}
+                  <ChevronDownIcon 
+                    class="w-4 h-4 inline-block ml-1 transition-transform"
+                    :class="{ 'rotate-180': expandedOrders.includes(order.order_no) }"
+                  />
+                </button>
               </div>
-              <div class="text-right">
-                <div class="text-lg font-medium text-gray-900">¥{{ order.amount }}</div>
-                <div class="mt-1 text-sm" :class="{
-                  'text-green-500': order.status === 'paid',
-                  'text-gray-500': order.status === 'pending',
-                  'text-red-500': ['cancelled', 'refunded'].includes(order.status)
-                }">
-                  {{ order.status_display }}
+              
+              <!-- 订单主要信息 -->
+              <div class="px-4 py-3 flex items-center justify-between bg-gray-50">
+                <div class="flex items-center space-x-3">
+                  <div class="w-10 h-10 rounded-lg bg-violet-100 flex items-center justify-center">
+                    <SparklesIcon class="w-5 h-5 text-violet-600" />
+                  </div>
+                  <div>
+                    <div class="font-medium">{{ formatMembershipType(order) }}</div>
+                    <div class="text-sm text-gray-500">{{ formatOrderDate(order.created_at) }}</div>
+                  </div>
+                </div>
+                <div class="text-lg font-medium text-gray-900">
+                  ¥{{ order.amount }}
                 </div>
               </div>
-            </div>
-            <div class="mt-2 text-sm text-gray-500">
-              {{ formatDate(order.created_at) }}
+              
+              <!-- 展开的详细信息 -->
+              <div v-show="expandedOrders.includes(order.order_no)"
+                class="px-4 py-3 space-y-3 bg-gray-50 border-t border-gray-100"
+              >
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <div class="text-gray-500">支付方式</div>
+                    <div class="mt-1">{{ formatPaymentMethod(order.payment_method) }}</div>
+                  </div>
+                  <div>
+                    <div class="text-gray-500">支付时间</div>
+                    <div class="mt-1">{{ order.paid_at ? formatDate(order.paid_at) : '-' }}</div>
+                  </div>
+                  <div>
+                    <div class="text-gray-500">订单创建时间</div>
+                    <div class="mt-1">{{ formatDate(order.created_at) }}</div>
+                  </div>
+                  <div>
+                    <div class="text-gray-500">订单更新时间</div>
+                    <div class="mt-1">{{ formatDate(order.updated_at) }}</div>
+                  </div>
+                </div>
+                
+                <!-- 如果有备注信息 -->
+                <div v-if="order.remarks" class="text-sm">
+                  <div class="text-gray-500">备注信息</div>
+                  <div class="mt-1 text-gray-700">{{ order.remarks }}</div>
+                </div>
+                
+                <!-- 订单操作按钮 -->
+                <div class="flex justify-end space-x-3 pt-2">
+                  <button v-if="order.status === 'pending'"
+                    class="px-3 py-1 text-sm text-violet-600 hover:text-violet-700 border border-violet-200 rounded-md hover:bg-violet-50"
+                    @click="handlePayment(order)"
+                  >
+                    立即支付
+                  </button>
+                  <button v-if="['pending', 'paid'].includes(order.status)"
+                    class="px-3 py-1 text-sm text-gray-600 hover:text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50"
+                    @click="showOrderDetail(order)"
+                  >
+                    查看详情
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -409,98 +430,179 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAccountStore } from '@/stores/account'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ElMessage } from 'element-plus'
 import { 
-  SparklesIcon, CloudArrowUpIcon, 
-  ChatBubbleLeftRightIcon, QuestionMarkCircleIcon, CheckCircleIcon, 
-  GiftIcon, ClipboardDocumentListIcon, StarIcon, PencilSquareIcon, 
-  CalendarDaysIcon,
-  DocumentTextIcon,
-  CloudIcon,
-  DocumentChartBarIcon,
-  UserGroupIcon,
-  CheckIcon,
-  DocumentIcon,
-  BoltIcon,
-  HeartIcon
+  CalendarDaysIcon, 
+  StarIcon,
+  TrophyIcon,
+  CheckCircleIcon,
+  ChevronDownIcon,
+  SparklesIcon
 } from '@heroicons/vue/24/outline'
-import { formatDate, formatRemainingTime } from '@/utils/date'
+import { useRouter } from 'vue-router'
+import { membership } from '@/api/membership'
+import { formatDate } from '@/utils/date'
+import { useAccountStore } from '@/stores/account'
 
 const router = useRouter()
+
 const accountStore = useAccountStore()
 
-// 会员权益
-const memberBenefits = [
-  { 
-    key: 'template', 
-    name: '会员模板', 
-    desc: '进阶模板无限用',
-    icon: DocumentIcon
-  },
-  { 
-    key: 'points', 
-    name: '双倍积分', 
-    desc: '所有活动双倍奖',
-    icon: StarIcon
-  },
-  { 
-    key: 'ai', 
-    name: 'AI助手', 
-    desc: '智能档案优化',
-    icon: BoltIcon
-  },
-  { 
-    key: 'storage', 
-    name: '超大空间', 
-    desc: '100G专属云盘',
-    icon: CloudIcon
-  },
-  {
-    key: 'support',
-    name: '专属客服',
-    desc: '7×24小时服务',
-    icon: HeartIcon
-  }
-]
-
-// 积分信息
-const pointsInfo = ref({
-  balance: 0,
-  total_earned: 0,
-  total_spent: 0,
-  level: 1
+// 会员状态数据
+const vipTypeText = computed(() => {
+  const userInfo = accountStore.userInfo
+  if (!userInfo?.is_vip) return '免费用户'
+  return userInfo.vip_status
 })
 
-// 订单记录
-const orders = ref([])
+const vipExpireText = computed(() => {
+  const userInfo = accountStore.userInfo
+  if (!userInfo?.is_vip) return '开通会员享受更多权益'
+  if (userInfo.vip_type === 'lifetime') return '终身会员'
+  if (userInfo.vip_expire_time) {
+    const expireDate = new Date(userInfo.vip_expire_time)
+    const now = new Date()
+    const diffDays = Math.floor((expireDate - now) / (1000 * 60 * 60 * 24))
+    if (diffDays > 0) {
+      return `剩余 ${diffDays} 天 (${formatDate(userInfo.vip_expire_time, 'YYYY-MM-DD')})`
+    } else {
+      return '会员已过期'
+    }
+  }
+  return '开通会员享受更多权益'
+})
 
-// 积分记录相关
-const currentFilter = ref('all')
-const pointsRecords = ref([])
-const currentPage = ref(1)
-const hasMore = ref(true)
+const vipButtonText = computed(() => {
+  const userInfo = accountStore.userInfo
+  if (!userInfo?.is_vip) return '立即开通'
+  if (userInfo.vip_type === 'lifetime') return '查看权益'
+  return '立即续费'
+})
+
+// 积分相关数据
+const pointsInfo = ref({
+  balance: 0,
+  level: 1,
+  sign_in_days: 0,
+  total_earned: 0
+})
+
+// 签到相关数据
+const signInInfo = ref({
+  can_sign_in: false,
+  sign_in_days: 0,
+  next_reward: null
+})
+
 const loading = ref(false)
+const currentFilter = ref('all')
+const currentTab = ref('points')
+const pointsRecords = ref([])
+const hasMore = ref(false)
+const page = ref(1)
+const expandedOrders = ref([])
 
+// 会员权益列表
+const memberBenefits = [
+  {
+    key: 'unlimited',
+    name: '无限使用',
+    desc: '无限制使用所有功能',
+    icon: SparklesIcon
+  },
+  // ... 其他权益配置
+]
+
+// 积分筛选选项
 const pointsFilters = [
   { label: '全部', value: 'all' },
   { label: '获得', value: 'earned' },
-  { label: '使用', value: 'spent' }
+  { label: '使用', value: 'used' }
 ]
 
-// 过滤后的记录
+// tabs配置
+const tabs = [
+  { key: 'points', name: '积分规则' },
+  { key: 'privileges', name: '等级权益' },
+  { key: 'orders', name: '订单记录' }
+]
+
+// 积分规则
+const pointRules = [
+  {
+    action: '每日签到',
+    points: '+1~10',
+    description: '连续签到可获得更多积分奖励',
+    icon: CalendarDaysIcon,
+    bgColor: 'bg-blue-50',
+    iconColor: 'text-blue-500',
+    borderColor: 'border-blue-100',
+    textColor: 'text-blue-600'
+  },
+  // ... 其他规则配置
+]
+
+// 计算属性
 const filteredRecords = computed(() => {
+  if (!pointsRecords.value) return []
   if (currentFilter.value === 'all') return pointsRecords.value
-  
   return pointsRecords.value.filter(record => 
-    currentFilter.value === 'earned' 
-      ? record.points > 0 
-      : record.points < 0
+    currentFilter.value === 'earned' ? record.points > 0 : record.points < 0
   )
 })
 
-// 获取积分信息
+// 添加会员信息的响应式数据
+const membershipInfo = ref({
+  is_active: false,
+  tier: null,
+  expire_at: null
+})
+
+// 修改 handleVipButton 方法
+const handleVipButton = () => {
+  const userInfo = accountStore.userInfo
+  if (!userInfo?.is_vip) {
+    router.push('/pro')
+  } else if (userInfo.vip_type === 'lifetime') {
+    // 显示会员权益详情
+    currentTab.value = 'privileges'
+  } else {
+    router.push('/pro')
+  }
+}
+
+// 获取签到状态
+const fetchSignInStatus = async () => {
+  try {
+    const response = await membership.getSignInStatus()
+    if (response?.data?.code === 200) {
+      signInInfo.value = response.data.data
+    }
+  } catch (error) {
+    console.error('获取签到状态失败:', error)
+  }
+}
+
+// 处理签到
+const handleSignIn = async () => {
+  if (!signInInfo.value.can_sign_in) return
+  
+  try {
+    const response = await membership.signIn()
+    if (response?.data?.code === 200) {
+      ElMessage.success('签到成功')
+      await Promise.all([
+        fetchSignInStatus(),
+        fetchPointsInfo()
+      ])
+    }
+  } catch (error) {
+    console.error('签到失败:', error)
+    ElMessage.error('签到失败，请稍后重试')
+  }
+}
+
 const fetchPointsInfo = async () => {
   try {
     const response = await membership.getPointsInfo()
@@ -512,37 +614,22 @@ const fetchPointsInfo = async () => {
   }
 }
 
-// 获取订单记录
-const fetchOrders = async () => {
-  try {
-    const response = await membership.getOrders()
-    if (response?.data?.code === 200) {
-      orders.value = response.data.data
-    }
-  } catch (error) {
-    console.error('获取订单记录失败:', error)
-  }
-}
-
-// 获取积分记录
-const fetchPointsRecords = async (page = 1) => {
+const fetchPointsRecords = async () => {
   if (loading.value) return
   
   loading.value = true
   try {
-    const response = await membership.getPointsRecords({ 
-      page,
-      page_size: 10
-    })
+    const response = await membership.getPointsRecords({ page: page.value })
     if (response?.data?.code === 200) {
-      const { records, has_more } = response.data.data
-      if (page === 1) {
+      const records = response.data.data?.records || []
+      const has_more = response.data.data?.has_more || false
+      
+      if (page.value === 1) {
         pointsRecords.value = records
       } else {
         pointsRecords.value.push(...records)
       }
       hasMore.value = has_more
-      currentPage.value = page
     }
   } catch (error) {
     console.error('获取积分记录失败:', error)
@@ -551,59 +638,11 @@ const fetchPointsRecords = async (page = 1) => {
   }
 }
 
-// 加载更多
 const loadMore = () => {
-  fetchPointsRecords(currentPage.value + 1)
+  page.value++
+  fetchPointsRecords()
 }
 
-// 监听筛选变化
-watch(currentFilter, () => {
-  // 切换筛选时重置到第一页
-  currentPage.value = 1
-  fetchPointsRecords(1)
-})
-
-// 会员类型文本
-const vipTypeText = computed(() => {
-  const userInfo = accountStore.userInfo
-  if (!userInfo?.is_vip) return '普通用户'
-  return userInfo.vip_status
-})
-
-// 会员到期文本
-const vipExpireText = computed(() => {
-  const userInfo = accountStore.userInfo
-  if (!userInfo?.is_vip) return '开通会员享专属权益'
-  if (userInfo.vip_type === 'lifetime') return '终身会员'
-  if (userInfo.vip_expire_time) {
-    const expireDate = new Date(userInfo.vip_expire_time)
-    const now = new Date()
-    const diffDays = Math.floor((expireDate - now) / (1000 * 60 * 60 * 24))
-    return diffDays > 0 ? `剩余 ${diffDays} 天` : '已过期'
-  }
-  return ''
-})
-
-// 会员按钮文本和处理
-const vipButtonText = computed(() => {
-  const userInfo = accountStore.userInfo
-  if (!userInfo?.is_vip) return '立即开通'
-  if (userInfo.vip_type === 'lifetime') return '查看权益'
-  return '立即续费'
-})
-
-const handleVipButton = () => {
-  const userInfo = accountStore.userInfo
-  if (!userInfo?.is_vip) {
-    router.push('/pro')
-  } else if (userInfo.vip_type === 'lifetime') {
-    // 显示会员权益详情
-  } else {
-    router.push('/pro')
-  }
-}
-
-// 获取等级称号
 const getLevelTitle = (level) => {
   const levelConfig = {
     1: { title: '初级会员', range: '0-1000积分' },
@@ -615,55 +654,17 @@ const getLevelTitle = (level) => {
   return levelConfig[level]?.title || '普通会员'
 }
 
-const showTooltip = ref(false)
-
-// 提示框位置
-const tooltipPosition = ref({ x: 0, y: 0 })
-
-// 计算提示框位置
-const calculateTooltipPosition = (event) => {
-  const iconRect = event.target.getBoundingClientRect()
-  const tooltipWidth = 320 // w-80 = 20rem = 320px
-  const tooltipHeight = 480 // 预估高度
-  
-  // 水平居中于图标
-  const x = iconRect.left + (iconRect.width / 2) - (tooltipWidth / 2)
-  // 位于图标上方，留出足够空间
-  const y = iconRect.top - tooltipHeight - 10
-  
-  // 确保不超出视窗边界
-  const adjustedX = Math.max(16, Math.min(x, window.innerWidth - tooltipWidth - 16))
-  const adjustedY = Math.max(16, y)
-  
-  tooltipPosition.value = {
-    x: adjustedX,
-    y: adjustedY
+const getLevelRange = (level) => {
+  const ranges = {
+    1: '0-1,000积分',
+    2: '1,001-3,000积分',
+    3: '3,001-8,000积分',
+    4: '8,001-15,000积分',
+    5: '15,000+积分'
   }
+  return ranges[level] || ''
 }
 
-// 修改鼠标进入事件处理
-const handleMouseEnter = (event) => {
-  calculateTooltipPosition(event)
-  showTooltip.value = true
-}
-
-// 获取下一等级所需积分
-const getNextLevelPoints = (currentLevel, currentPoints) => {
-  const levelThresholds = {
-    1: 1000,
-    2: 3000,
-    3: 8000,
-    4: 15000,
-    5: Infinity
-  }
-  
-  if (currentLevel >= 5) return 0
-  
-  const nextLevelThreshold = levelThresholds[currentLevel + 1]
-  return nextLevelThreshold - currentPoints
-}
-
-// 获取当前等级进度
 const getLevelProgress = (currentLevel, currentPoints) => {
   const levelRanges = {
     1: { min: 0, max: 1000 },
@@ -681,121 +682,191 @@ const getLevelProgress = (currentLevel, currentPoints) => {
   return Math.min(100, Math.max(0, (current / total) * 100))
 }
 
-// 是否可以签到
-const canSignIn = computed(() => !pointsInfo.value.signed_today)
-
-// 处理签到
-const handleSignIn = async () => {
-  if (!canSignIn.value) return
-  
-  try {
-    const response = await membership.signIn()
-    if (response?.data?.code === 200) {
-      await fetchPointsInfo() // 刷新积分信息
-      showToast('签到成功', 'success')
-    }
-  } catch (error) {
-    console.error('签到失败:', error)
-    showToast('签到失败，请重试', 'error')
-  }
-}
-
-// 获取等级阈值
-const getLevelThreshold = (level) => {
-  const thresholds = {
+const getNextLevelPoints = (currentLevel, currentPoints) => {
+  const levelThresholds = {
     1: 1000,
     2: 3000,
     3: 8000,
     4: 15000,
     5: Infinity
   }
+  
+  if (currentLevel >= 5) return 0
+  
+  const nextLevelThreshold = levelThresholds[currentLevel + 1]
+  return nextLevelThreshold - currentPoints
+}
+
+const toggleOrderDetail = (orderNo) => {
+  const index = expandedOrders.value.indexOf(orderNo)
+  if (index > -1) {
+    expandedOrders.value.splice(index, 1)
+  } else {
+    expandedOrders.value.push(orderNo)
+  }
+}
+
+const getLevelThreshold = (level) => {
+  const thresholds = {
+    1: 1000,    // 0-1000
+    2: 3000,    // 1001-3000
+    3: 8000,    // 3001-8000
+    4: 15000,   // 8001-15000
+    5: Infinity // 15000+
+  }
   return thresholds[level] || 1000
 }
 
 // 获取签到提示
 const getSignInTip = () => {
-  if (!pointsInfo.value.signed_today) {
-    return '今日签到可获得3积分'
+  const nextReward = signInInfo.value.next_reward
+  if (!nextReward) return ''
+  
+  if (nextReward.days === 1) {
+    return `明日签到可获得 ${nextReward.points} 积分奖励`
   }
-  if (pointsInfo.value.sign_in_days % 7 === 6) {
-    return '明日签到可获得额外10积分奖励'
-  }
-  if (pointsInfo.value.sign_in_days % 30 === 29) {
-    return '明日签到可获得额外50积分奖励'
-  }
-  return `已连续签到 ${pointsInfo.value.sign_in_days} 天`
+  return `再签到 ${nextReward.days} 天可获得 ${nextReward.points} 积分奖励`
 }
 
-// 获取等级范围说明
-const getLevelRange = (level) => {
-  const ranges = {
-    1: '0-1,000积分',
-    2: '1,001-3,000积分',
-    3: '3,001-8,000积分',
-    4: '8,001-15,000积分',
-    5: '15,000+积分'
-  }
-  return ranges[level] || ''
-}
-
-// 获取等级特权说明
+// 获取等级特权
 const getLevelPrivileges = (level) => {
   const privileges = {
     1: [
-      '发布简历动态',
-      '参与社区讨论',
-      '基础积分奖励',
-      '个人主页展示'
+      { title: '基础功能', description: '可使用所有基础功能' },
+      { title: '每日签到', description: '每日签到获取积分' }
     ],
     2: [
-      '简历曝光加成',
-      '简历动态置顶',
-      '积分加速成长',
-      '社区徽章展示'
+      { title: '高级功能', description: '解锁部分高级功能' },
+      { title: '积分加速', description: '签到积分1.2倍' }
     ],
     3: [
-      '专属等级标识',
-      '简历优先推荐',
-      '开通打赏功能',
-      '高级积分特权'
+      { title: '专业功能', description: '解锁全部高级功能' },
+      { title: '积分加速', description: '签到积分1.5倍' }
     ],
     4: [
-      '内容免审发布',
-      '简历优先投递',
-      '打赏特权加成',
-      '社区荣誉称号'
+      { title: '特权服务', description: '享受专属客服服务' },
+      { title: '积分加速', description: '签到积分2倍' }
     ],
     5: [
-      '资深用户认证',
-      '内容审核特权',
-      '打赏收益加成',
-      '专属成就徽章'
+      { title: 'VIP特权', description: '享受最高级别服务' },
+      { title: '积分加速', description: '签到积分3倍' }
     ]
   }
-  return privileges[level] || []
+  return privileges[level] || privileges[1]
 }
 
-onMounted(async () => {
-  await Promise.all([
-    fetchPointsInfo(),
-    fetchOrders(),
-    fetchPointsRecords()
-  ])
+// 格式化订单状态
+const formatOrderStatus = (status) => {
+  const statusMap = {
+    pending: '待支付',
+    paid: '已支付',
+    cancelled: '已取消',
+    refunded: '已退款'
+  }
+  return statusMap[status] || status
+}
+
+// 格式化支付方式
+const formatPaymentMethod = (method) => {
+  const methodMap = {
+    alipay: '支付宝',
+    wechat: '微信支付',
+    balance: '余额支付'
+  }
+  return methodMap[method] || method
+}
+
+// 格式化会员类型
+const formatMembershipType = (order) => {
+  // 打印原始数据，用于调试
+  console.log('订单数据:', order)
   
-  // 添加窗口大小变化监听
-  window.addEventListener('resize', () => {
-    if (showTooltip.value) {
-      showTooltip.value = false
+  // 优先使用 tier_name
+  const tierName = order.tier_name || order.tier?.name || '普通会员'
+  
+  // 如果是终身会员
+  if (order.type === 'lifetime' || order.duration === 'lifetime') {
+    return `${tierName} (终身)`
+  }
+  
+  // 如果有时长
+  if (order.duration) {
+    return `${tierName} (${order.duration}个月)`
+  }
+  
+  return tierName
+}
+
+// 格式化日期
+const formatOrderDate = (dateString) => {
+  if (!dateString) return '-'
+  return formatDate(dateString, 'YYYY-MM-DD')
+}
+
+// 处理支付
+const handlePayment = (order) => {
+  // 处理支付逻辑
+  console.log('处理支付:', order)
+}
+
+// 显示订单详情
+const showOrderDetail = (order) => {
+  // 显示订单详情逻辑
+  console.log('显示订单详情:', order)
+}
+
+// 添加 orders 数据
+const orders = ref([])
+
+// 添加窗口宽度的响应式引用
+const windowWidth = ref(window?.innerWidth || 1024)
+
+// 添加窗口大小变化的处理函数
+const handleResize = () => {
+  windowWidth.value = window.innerWidth
+}
+
+// 获取订单记录
+const fetchOrders = async () => {
+  try {
+    const response = await membership.getOrders()
+    console.log('订单接口返回:', response.data)
+    if (response?.data?.code === 200) {
+      orders.value = response.data.data || []
     }
-  })
+  } catch (error) {
+    console.error('获取订单记录失败:', error)
+    orders.value = []
+  }
+}
+
+// 修改组件挂载时的数据获取
+onMounted(async () => {
+  window.addEventListener('resize', handleResize)
+  try {
+    await accountStore.fetchUserInfo()
+    await Promise.all([
+      fetchPointsInfo(),
+      fetchPointsRecords(),
+      fetchSignInStatus(),
+      fetchOrders()  // 添加获取订单记录
+    ])
+  } catch (error) {
+    console.error('初始化数据失败:', error)
+    pointsRecords.value = []
+    orders.value = []
+  }
 })
 
-// 在 onUnmounted 中清理
+// 在组件卸载时移除事件监听
 onUnmounted(() => {
-  window.removeEventListener('resize', () => {
-    if (showTooltip.value) {
-      showTooltip.value = false
-    }
-  })
+  window.removeEventListener('resize', handleResize)
 })
-</script> 
+
+// 添加格式化日期的计算属性
+const dateFormat = computed(() => windowWidth.value < 640 ? 'MM-DD HH:mm' : 'YYYY-MM-DD HH:mm')
+
+// 计算属性：是否可以签到
+const canSignIn = computed(() => signInInfo.value.can_sign_in)
+</script>
+

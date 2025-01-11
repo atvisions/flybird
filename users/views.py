@@ -8,6 +8,7 @@ from .serializers import UserSerializer
 from .models import User
 from rest_framework.parsers import MultiPartParser, FormParser
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -72,11 +73,23 @@ class AvatarUploadView(APIView):
             
             # 直接更新用户的头像
             user = request.user
+            
+            # 保存前先保存旧的头像路径
+            old_avatar = user.avatar.path if user.avatar else None
+            
+            # 更新头像
             user.avatar = avatar
             user.save()
             
+            # 如果有旧头像，尝试删除
+            if old_avatar and os.path.exists(old_avatar):
+                try:
+                    os.remove(old_avatar)
+                except Exception as e:
+                    logger.warning(f"删除旧头像失败: {str(e)}")
+            
             # 确保返回的是字符串URL
-            avatar_url = user.avatar.url if user.avatar else None
+            avatar_url = request.build_absolute_uri(user.avatar.url) if user.avatar else None
             logger.info(f"头像URL: {avatar_url}, 类型: {type(avatar_url)}")
             
             return Response({

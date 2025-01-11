@@ -23,6 +23,7 @@
 import { ref, computed, onMounted, defineAsyncComponent } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { API_URL, BASE_API_URL } from '@/config'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -40,15 +41,6 @@ const handleToastDestroy = () => {
   toastMessage.value = ''
   toastType.value = 'info'
 }
-
-// 计算是否显示头部和底部
-const showHeaderAndFooter = computed(() => {
-  const path = router.currentRoute.value.path
-  return !publicRoutes.includes(path)
-})
-
-// 计算是否显示登录按钮
-const showLoginButton = computed(() => !authStore.isAuthenticated)
 
 onMounted(() => {
   // 检查认证状态
