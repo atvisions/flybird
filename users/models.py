@@ -80,6 +80,18 @@ class User(AbstractUser):
     position = models.CharField(max_length=100, null=True, blank=True, verbose_name='职位')
     bio = models.TextField(null=True, blank=True, verbose_name='个人简介')
     is_vip = models.BooleanField(default=False, verbose_name='是否是VIP用户')
+    vip_expire_time = models.DateTimeField(null=True, blank=True, verbose_name='会员到期时间')
+    vip_type = models.CharField(
+        max_length=20, 
+        choices=[
+            ('none', '普通用户'),
+            ('monthly', '月度会员'),
+            ('yearly', '年度会员'),
+            ('lifetime', '终身会员')
+        ],
+        default='none',
+        verbose_name='会员类型'
+    )
 
     USERNAME_FIELD = 'phone'
     REQUIRED_FIELDS = []
@@ -112,6 +124,28 @@ class User(AbstractUser):
             return super().save(*args, **kwargs)
         return super().save(*args, **kwargs)
 
+    @property
+    def vip_status(self):
+        """获取会员状态"""
+        if not self.is_vip:
+            return '普通用户'
+        
+        if self.vip_type == 'lifetime':
+            return '终身会员'
+            
+        if not self.vip_expire_time:
+            return '普通用户'
+            
+        now = timezone.now()
+        if now > self.vip_expire_time:
+            self.is_vip = False
+            self.vip_type = 'none'
+            self.save(update_fields=['is_vip', 'vip_type'])
+            return '普通用户'
+            
+        days_left = (self.vip_expire_time - now).days
+        return f"{self.get_vip_type_display()}（剩余{days_left}天）"
+
     class Meta:
         verbose_name = '用户'
         verbose_name_plural = verbose_name
@@ -134,6 +168,37 @@ class ProfileScore(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.total_score}分"
+
+class VipOrder(models.Model):
+    """会员订单"""
+    ORDER_STATUS = [
+        ('pending', '待支付'),
+        ('paid', '已支付'),
+        ('cancelled', '已取消'),
+        ('refunded', '已退款')
+    ]
+    
+    VIP_TYPES = [
+        ('monthly', '月度会员'),
+        ('yearly', '年度会员'),
+        ('lifetime', '终身会员')
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='vip_orders')
+    order_no = models.CharField(max_length=64, unique=True, verbose_name='订单号')
+    vip_type = models.CharField(max_length=20, choices=VIP_TYPES, verbose_name='会员类型')
+    amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='支付金额')
+    status = models.CharField(max_length=20, choices=ORDER_STATUS, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
+    paid_at = models.DateTimeField(null=True, blank=True, verbose_name='支付时间')
+    
+    class Meta:
+        verbose_name = '会员订单'
+        verbose_name_plural = verbose_name
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.get_vip_type_display()} - {self.get_status_display()}"
 
 
 # ... 继续添加其他模型 ... 

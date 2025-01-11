@@ -112,28 +112,22 @@ REDIS_DB = os.getenv('REDIS_DB', '1')
 REDIS_PASSWORD = os.getenv('REDIS_PASSWORD', '')
 
 CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            "PASSWORD": REDIS_PASSWORD if REDIS_PASSWORD else None,
-            "SOCKET_CONNECT_TIMEOUT": 5,
-            "SOCKET_TIMEOUT": 5,
-            "RETRY_ON_TIMEOUT": True,
-            "CONNECTION_POOL_KWARGS": {
-                "max_connections": 100,
-                "retry_on_timeout": True
-            },
-            "COMPRESSOR": "django_redis.compressors.zlib.ZlibCompressor",
-            "IGNORE_EXCEPTIONS": True,
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/0',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'SOCKET_CONNECT_TIMEOUT': 5,
+            'SOCKET_TIMEOUT': 5,
+            'RETRY_ON_TIMEOUT': True,
+            'CONNECTION_POOL_KWARGS': {'max_connections': 100},
         }
     }
 }
 
 # 使用 Redis 作为 session 后端
-SESSION_ENGINE = "django.contrib.sessions.backends.cache"
-SESSION_CACHE_ALIAS = "default"
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_CACHE_ALIAS = 'default'
 
 # ----------- 8. 认证配置 -----------
 AUTH_USER_MODEL = 'users.User'
@@ -355,7 +349,9 @@ CELERY_BEAT_SCHEDULE = {
 # 短信服务配置
 SMS_CONFIG = {
     'PROVIDER': os.getenv('SMS_PROVIDER', 'aliyun'),
-    'TEMPLATES': ALIYUN['SMS_TEMPLATES']
+    'TEMPLATES': ALIYUN['SMS_TEMPLATES'],
+    'USE_VIRTUAL_SMS': True,  # 是否使用虚拟短信（测试模式）
+    'VIRTUAL_SMS_CODE': '123456'  # 虚拟短信的固定验证码
 }
 
 # CSRF配置

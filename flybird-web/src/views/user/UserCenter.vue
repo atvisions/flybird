@@ -1,115 +1,121 @@
 <template>
-    <div class="min-h-screen">
+    <div class="min-h-screen flex flex-col">
       <HeadView />
-      <div class="py-4 lg:py-6 mt-[60px] md:mt-[72px] md:overflow-visible overflow-x-hidden">
-        <div class="mx-auto max-w-7xl px-2 sm:px-4 lg:px-8 mt-4 lg:mt-0 relative">
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
-            <!-- 左侧导航 - 仅桌面端显示 -->
-            <div class="hidden lg:block lg:col-span-3">
-              <div class="bg-white rounded-lg shadow overflow-hidden sticky top-24">
-                <nav class="space-y-1">
-                  <button
-                      v-for="tab in tabs"
-                      :key="tab.key"
-                      @click="handleTabChange(tab.key)" 
-                      class="w-full flex items-center px-4 py-3 text-sm font-medium group"
-                      :class="[
-                      currentTab === tab.key
-                          ? 'bg-gray-100 text-[#1A56DB]'
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                      ]"
-                  >
-                  <div class="flex items-center flex-1 min-w-0">
-                    <component
-                      :is="getTabIcon(tab)"
-                      :class="[
-                        currentTab === tab.key ? 'text-[#1A56DB]' : 'text-gray-400 group-hover:text-gray-500',
-                        'h-5 w-5 flex-shrink-0'
-                      ]"
-                    />
-                    <span class="ml-2 truncate">{{ tab.name }}</span>
-                  </div>
-                  <span 
-                    v-if="getTabMetric(tab.key)"
-                    :class="[
-                      currentTab === tab.key ? 'bg-blue-100 text-[#1A56DB]' : 'bg-gray-100 text-gray-900',
-                      'ml-3 inline-block py-0.5 px-2 text-xs rounded-full'
-                    ]"
-                  >
-                    {{ getTabMetric(tab.key) }}
-                  </span>
-                </button>
-              </nav>
-              </div>
-            </div>
-  
-            <!-- 中间内容区 -->
-            <div class="lg:col-span-6 pb-20 lg:pb-0 w-full space-y-4">
-              <component :is="currentComponent" />
-            </div>
-  
-            <!-- 右侧广告位 - 仅桌面端显示 -->
-            <div class="hidden lg:block lg:col-span-3">
-              <div class="bg-white rounded-lg shadow p-4 sticky top-24">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">推荐职位</h3>
-                <div class="space-y-4">
-                  <div v-for="job in recommendedJobs" :key="job.id" class="flex space-x-3">
-                    <div class="flex-1 min-w-0">
-                      <p class="text-sm font-medium text-gray-900 truncate">{{ job.title }}</p>
-                      <p class="text-sm text-gray-500">{{ job.company }}</p>
+      <!-- 主要内容区域 -->
+      <main class="flex-1 flex flex-col">
+        <div class="flex-1 py-4 lg:py-6 mt-[60px] md:mt-[72px] md:overflow-visible overflow-x-hidden">
+          <div class="mx-auto max-w-7xl px-2 sm:px-4 lg:px-8 mt-4 lg:mt-0 relative">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+              <!-- 左侧导航 - 仅桌面端显示 -->
+              <div class="hidden lg:block lg:col-span-3">
+                <div class="bg-white rounded-lg shadow overflow-hidden sticky top-24">
+                  <nav class="space-y-1">
+                    <button
+                        v-for="tab in tabs"
+                        :key="tab.key"
+                        @click="handleTabChange(tab.key)" 
+                        class="w-full flex items-center px-4 py-3 text-sm font-medium group"
+                        :class="[
+                        currentTab === tab.key
+                            ? 'bg-gray-100 text-[#1A56DB]'
+                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        ]"
+                    >
+                    <div class="flex items-center flex-1 min-w-0">
+                      <component
+                        :is="getTabIcon(tab)"
+                        :class="[
+                          currentTab === tab.key ? 'text-[#1A56DB]' : 'text-gray-400 group-hover:text-gray-500',
+                          'h-5 w-5 flex-shrink-0'
+                        ]"
+                      />
+                      <span class="ml-2 truncate">{{ tab.name }}</span>
                     </div>
-                    <div class="flex-shrink-0">
-                      <span class="text-sm font-medium text-indigo-600">{{ job.salary }}</span>
+                    <span 
+                      v-if="getTabMetric(tab.key)"
+                      :class="[
+                        currentTab === tab.key ? 'bg-blue-100 text-[#1A56DB]' : 'bg-gray-100 text-gray-900',
+                        'ml-3 inline-block py-0.5 px-2 text-xs rounded-full'
+                      ]"
+                    >
+                      {{ getTabMetric(tab.key) }}
+                    </span>
+                  </button>
+                </nav>
+                </div>
+              </div>
+    
+              <!-- 中间内容区 -->
+              <div class="lg:col-span-6 pb-20 lg:pb-0 w-full space-y-4">
+                <component :is="currentComponent" />
+              </div>
+    
+              <!-- 右侧广告位 - 仅桌面端显示 -->
+              <div class="hidden lg:block lg:col-span-3">
+                <div class="bg-white rounded-lg shadow p-4 sticky top-24">
+                  <h3 class="text-lg font-medium text-gray-900 mb-4">推荐职位</h3>
+                  <div class="space-y-4">
+                    <div v-for="job in recommendedJobs" :key="job.id" class="flex space-x-3">
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-900 truncate">{{ job.title }}</p>
+                        <p class="text-sm text-gray-500">{{ job.company }}</p>
+                      </div>
+                      <div class="flex-shrink-0">
+                        <span class="text-sm font-medium text-indigo-600">{{ job.salary }}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-  
-        <!-- 移动端底部导航 -->
-        <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 md:hidden z-50">
-          <div class="flex justify-around">
-            <button
-              v-for="action in mobileActions"
-              :key="action.key"
-              @click="action.handler"
-              class="flex flex-col items-center py-2 px-4 relative"
-            >
-              <component
-                :is="action.icon"
-                :class="[
-                  currentTab === action.key ? 'text-[#1A56DB]' : 'text-gray-400',
-                  'w-6 h-6'
-                ]"
-              />
-              <span 
-                class="text-xs mt-1"
-                :class="currentTab === action.key ? 'text-[#1A56DB]' : 'text-gray-500'"
+    
+          <!-- 移动端底部导航 -->
+          <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 md:hidden z-50">
+            <div class="flex justify-around">
+              <button
+                v-for="action in mobileActions"
+                :key="action.key"
+                @click="action.handler"
+                class="flex flex-col items-center py-2 px-4 relative"
               >
-                {{ action.label }}
-              </span>
-              <span
-                v-if="action.badge"
-                class="absolute -top-1 right-2 min-w-[16px] h-4 bg-red-500 rounded-full text-[10px] font-medium text-white flex items-center justify-center px-1"
-              >
-                {{ action.badge }}
-              </span>
-            </button>
+                <component
+                  :is="action.icon"
+                  :class="[
+                    currentTab === action.key ? 'text-[#1A56DB]' : 'text-gray-400',
+                    'w-6 h-6'
+                  ]"
+                />
+                <span 
+                  class="text-xs mt-1"
+                  :class="currentTab === action.key ? 'text-[#1A56DB]' : 'text-gray-500'"
+                >
+                  {{ action.label }}
+                </span>
+                <span
+                  v-if="action.badge"
+                  class="absolute -top-1 right-2 min-w-[16px] h-4 bg-red-500 rounded-full text-[10px] font-medium text-white flex items-center justify-center px-1"
+                >
+                  {{ action.badge }}
+                </span>
+              </button>
+            </div>
+            <div class="safe-area-pb"></div>
           </div>
-          <div class="safe-area-pb"></div>
         </div>
+      </main>
+
+      <!-- 简化底部显示逻辑 -->
+      <div v-if="!isMobileView" class="footer-container">
+        1111
       </div>
-      <FootView class="hidden md:block" />
     </div>
   </template>
 <script setup>
-import { ref, computed, watch, onMounted, defineAsyncComponent } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, defineAsyncComponent } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import profile from '@/api/profile'
 import HeadView from '../../components/HeadView.vue'
-import FootView from '../../components/FootView.vue'
 import {
   UserIcon,
   DocumentIcon,
@@ -117,6 +123,7 @@ import {
   Squares2X2Icon,
   BellIcon,
   Bars3Icon,
+  SparklesIcon,
 } from '@heroicons/vue/24/outline'
 import {
   UserIcon as UserIconSolid,
@@ -180,6 +187,13 @@ const MyMessages = defineAsyncComponent({
   timeout: 10000
 })
 
+// 导入会员中心组件
+const Membership = defineAsyncComponent({
+  loader: () => import('@/views/user/Membership/index.vue'),
+  loadingComponent: LoadingComponent,
+  timeout: 10000
+})
+
 const route = useRoute()
 const router = useRouter()
 
@@ -219,8 +233,13 @@ const tabs = [
     icon: Squares2X2Icon
   },
   { 
+    key: 'membership', 
+    name: '会员中心',
+    icon: SparklesIcon
+  },
+  { 
     key: 'profile', 
-    name: '个人档案',
+    name: '我的档案',
     icon: UserIcon
   },
   { 
@@ -297,6 +316,8 @@ const currentComponent = computed(() => {
   switch (currentTab.value) {
     case 'home':
       return UserHome
+    case 'membership':
+      return Membership
     case 'profile':
       return MyProfile
     case 'resumes':
@@ -461,6 +482,24 @@ const getTabIcon = (tab) => {
   // 未选中状态使用描边图标
   return tab.icon
 }
+
+// 添加移动端视图判断
+const isMobileView = computed(() => {
+  return window.innerWidth < 768
+})
+
+const handleResize = () => {
+  // 触发响应式更新
+  window.dispatchEvent(new Event('resize'))
+}
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+})
 </script>
  
  <style scoped>
@@ -472,5 +511,14 @@ const getTabIcon = (tab) => {
    .pb-16 {
      padding-bottom: calc(4rem + env(safe-area-inset-bottom));
    }
+ }
+ 
+ /* 确保内容区域占满剩余空间 */
+ main {
+   min-height: calc(100vh - 60px);
+ }
+
+ .footer-container {
+   margin-top: auto;
  }
  </style>

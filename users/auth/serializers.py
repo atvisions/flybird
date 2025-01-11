@@ -6,6 +6,7 @@ from django.core.cache import cache
 import logging
 from django_redis import get_redis_connection
 from redis.exceptions import RedisError
+from django.conf import settings
 
 logger = logging.getLogger('users')
 
@@ -100,56 +101,45 @@ class PasswordLoginSerializer(serializers.Serializer):
                 'account': ['请输入正确的手机号/邮箱/UID']
             })
 
-class RegisterSerializer(serializers.ModelSerializer):
+class RegisterSerializer(serializers.Serializer):
     phone = serializers.CharField(required=True)
-    password = serializers.CharField(write_only=True, required=True)
-    confirm_password = serializers.CharField(write_only=True, required=True)  # 新增确认密码字段
-    code = serializers.CharField(write_only=True, required=True)
-    
-    class Meta:
-        model = User
-        fields = ('phone', 'password', 'confirm_password', 'code')  # 添加confirm_password到fields
-        extra_kwargs = {
-            'password': {'write_only': True},
-            'confirm_password': {'write_only': True},  # 确保确认密码也是write_only
-        }
+    code = serializers.CharField(required=True)
+    password = serializers.CharField(required=True)
+    confirm_password = serializers.CharField(required=True)
 
     def validate(self, attrs):
-        try:
-            # 验证两次密码是否一致
-            if attrs.get('password') != attrs.get('confirm_password'):
-                raise serializers.ValidationError({'confirm_password': '两次输入的密码不一致'})
+        # 验证手机号格式
+        if not re.match(r'^1[3-9]\d{9}$', attrs['phone']):
+            raise serializers.ValidationError({'phone': '手机号格式不正确'})
 
-            # 验证手机号是否已注册
-            phone = attrs.get('phone')
-            if User.objects.filter(phone=phone).exists():
-                raise serializers.ValidationError({'phone': '该手机号已注册'})
-                
-            # 验证验证码
-            code = attrs.get('code')
-            try:
-                redis_client = get_redis_connection('default')
-                cache_key = f'sms_code_register_{phone}'
-                stored_code = redis_client.get(cache_key)
-                
-                if not stored_code:
-                    raise serializers.ValidationError({'code': '验证码已过期'})
-                
-                if code != stored_code.decode():  # Redis 存储的是 bytes，需要解码
-                    raise serializers.ValidationError({'code': '验证码错误'})
-                
-                # 验证成功后删除验证码
-                redis_client.delete(cache_key)
-                
-            except RedisError as e:
-                logger.error(f"Redis操作失败: {str(e)}", exc_info=True)
-                raise serializers.ValidationError({'code': '验证码验证失败，请重试'})
+        # 验证验证码
+        phone = attrs['phone']
+        code = attrs['code']
+        
+        # 从缓存中获取验证码
+        cache_key = f'sms_code_register_{phone}'
+        cached_code = cache.get(cache_key)
+        
+        # 在开发环境中，如果是测试模式，使用固定的验证码
+        if settings.DEBUG and settings.SMS_CONFIG.get('USE_VIRTUAL_SMS', False):
+            if code != settings.SMS_CONFIG.get('VIRTUAL_SMS_CODE', '123456'):
+                raise serializers.ValidationError({'code': '验证码错误'})
+        else:
+            if not cached_code:
+                raise serializers.ValidationError({'code': '验证码已过期'})
             
-            return attrs
-            
-        except Exception as e:
-            logger.error(f"验证异常: {str(e)}", exc_info=True)
-            raise
+            if cached_code != code:
+                raise serializers.ValidationError({'code': '验证码错误'})
+
+        # 验证密码
+        if len(attrs['password']) < 8:
+            raise serializers.ValidationError({'password': '密码长度不能小于8位'})
+
+        # 验证两次密码是否一致
+        if attrs['password'] != attrs['confirm_password']:
+            raise serializers.ValidationError({'confirm_password': '两次输入的密码不一致'})
+
+        return attrs
 
     def create(self, validated_data):
         try:
@@ -195,7 +185,7 @@ class PhoneLoginSerializer(serializers.Serializer):
 class ResetPasswordSerializer(serializers.Serializer):
     phone = serializers.CharField()
     code = serializers.CharField()
-    new_password = serializers.CharField(validators=[validate_password])
+    new_password = serializers.CharField()
     confirm_password = serializers.CharField()
 
     def validate(self, attrs):
@@ -209,43 +199,52 @@ class ResetPasswordSerializer(serializers.Serializer):
             user = User.objects.get(phone=phone)
         except User.DoesNotExist:
             raise serializers.ValidationError({
-                'phone': ['用户不存在']
+                'phone': '该手机号未注册'
+            })
+
+        # 验证验证码
+        cache_key = f'sms_code_reset_password_{phone}'
+        cached_code = cache.get(cache_key)
+        
+        # 开发环境验证码处理
+        if settings.DEBUG and settings.SMS_CONFIG.get('USE_VIRTUAL_SMS', False):
+            if code != settings.SMS_CONFIG.get('VIRTUAL_SMS_CODE', '123456'):
+                raise serializers.ValidationError({'code': '验证码错误'})
+        else:
+            if not cached_code:
+                raise serializers.ValidationError({'code': '验证码已过期'})
+                
+            if code != cached_code:
+                raise serializers.ValidationError({'code': '验证码错误'})
+
+        # 验证密码
+        if len(new_password) < 8:
+            raise serializers.ValidationError({
+                'new_password': '密码长度不能小于8位'
             })
 
         # 验证两次密码是否一致
         if new_password != confirm_password:
             raise serializers.ValidationError({
-                'confirm_password': ['两次输入的密码不一致']
+                'confirm_password': '两次输入的密码不一致'
             })
 
-        # 验证短信验证码
-        cache_key = f'sms_code_reset_password_{phone}'
-        cached_code = cache.get(cache_key)
-        
-        if not cached_code:
-            raise serializers.ValidationError({
-                'code': ['验证码已过期，请重新获取']
-            })
-            
-        if code != cached_code:
-            raise serializers.ValidationError({
-                'code': ['验证码错误']
-            })
-
-        # 验证成功后删除缓存的验证码
-        cache.delete(cache_key)
-        
         attrs['user'] = user
         return attrs
 
     def save(self):
         user = self.validated_data['user']
-        user.set_password(self.validated_data['new_password'])
+        new_password = self.validated_data['new_password']
+        
+        # 设置新密码
+        user.set_password(new_password)
         user.save()
         
-        # 记录密码重置日志
-        logger.info(f"用户 {user.phone} 重置密码成功")
+        # 删除验证码缓存
+        cache_key = f'sms_code_reset_password_{user.phone}'
+        cache.delete(cache_key)
         
+        logger.info(f"用户 {user.phone} 重置密码成功")
         return user
 
 class ChangePhoneSerializer(serializers.Serializer):

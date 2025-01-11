@@ -182,6 +182,11 @@ import { auth } from '@/api/auth'
 const router = useRouter()
 const authStore = useAuthStore()
 
+// 添加缺失的状态
+const loading = ref(false)          // 添加 loading 状态
+const sendingCode = ref(false)      // 添加发送验证码状态
+const showPassword = ref(false)     // 添加密码显示状态
+
 // 表单数据
 const form = ref({
   phone: '',
@@ -216,7 +221,7 @@ const isFormValid = computed(() => {
 
 // 切换密码显示状态
 const togglePassword = () => {
-  form.value.showPassword = !form.value.showPassword
+  showPassword.value = !showPassword.value  // 修改这里，使用 ref 变量
 }
 
 // 添加手机号验证
@@ -240,40 +245,36 @@ const handleSendCode = async () => {
   }
 
   try {
-    authStore.sendingCode = true
+    sendingCode.value = true
     const response = await auth.sendVerifyCode({
       phone: form.value.phone,
-      scene: 'register'
+      scene: 'register'  // 指定场景为注册
     })
     
     if (response?.data?.code === 200) {
       startCountdown()
-      showToast(response.data.message, 'success')
+      showToast('验证码已发送', 'success')
     } else {
-      throw new Error(response.data.message || '发送验证码失败')
+      throw new Error(response.data?.message || '发送验证码失败')
     }
   } catch (error) {
     console.error('发送验证码失败:', error)
-    if (error.response) {
-      console.error('完整错误响应:', {
-        status: error.response.status,
-        statusText: error.response.statusText,
-        data: error.response.data,
-        headers: error.response.headers,
-        config: {
-          url: error.response.config.url,
-          method: error.response.config.method,
-          data: error.response.config.data
+    let errorMsg = '发送验证码失败'
+    
+    if (error.response?.data) {
+      const errorData = error.response.data
+      if (typeof errorData === 'object') {
+        if (errorData.message) {
+          errorMsg = errorData.message
+        } else if (errorData.phone) {
+          errorMsg = Array.isArray(errorData.phone) ? errorData.phone[0] : errorData.phone
         }
-      })
+      }
     }
-    const errorMsg = error.response?.data?.message || 
-                    error.response?.data?.detail ||
-                    error.message || 
-                    '发送验证码失败'
-    showToast(errorMsg, 'error')
+    
+    showToast(String(errorMsg), 'error')
   } finally {
-    authStore.sendingCode = false
+    sendingCode.value = false
   }
 }
 
@@ -282,8 +283,8 @@ const handleRegister = async () => {
   if (!isFormValid.value) return
   
   try {
-    authStore.loading = true
-    await authStore.register({
+    loading.value = true
+    const response = await authStore.register({
       phone: form.value.phone,
       code: form.value.code,
       password: form.value.password,
@@ -291,9 +292,19 @@ const handleRegister = async () => {
     })
   } catch (error) {
     console.error('注册失败:', error)
-    showToast(error.message || '注册失败，请稍后重试', 'error')
+    let errorMsg = '注册失败，请稍后重试'
+    if (error.response?.data) {
+      if (typeof error.response.data === 'object') {
+        // 处理对象形式的错误信息
+        const firstError = Object.values(error.response.data)[0]
+        errorMsg = Array.isArray(firstError) ? firstError[0] : firstError
+      } else if (typeof error.response.data === 'string') {
+        errorMsg = error.response.data
+      }
+    }
+    showToast(errorMsg, 'error')
   } finally {
-    authStore.loading = false
+    loading.value = false
   }
 }
 </script>

@@ -5,15 +5,17 @@ from django.conf import settings
 from rest_framework import permissions, status, serializers
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from users.models import ProfileScore
 from .serializers import (
     PasswordLoginSerializer, RegisterSerializer,
     ResetPasswordSerializer, ChangePhoneSerializer
 )
 from users.utils.sms import send_sms
+from users.utils.email import verify_email_code, send_verification_email, generate_email_code
 import random
 import logging
+import re
 
 from django_redis import get_redis_connection
 from redis.exceptions import RedisError
@@ -169,91 +171,87 @@ class SendSmsCodeView(APIView):
     
     VALID_SCENES = {
         'register': '注册',
-        'login': '登录',
         'reset_password': '重置密码',
         'change_phone': '更换手机号'
     }
-    
+
     def post(self, request):
         try:
             phone = request.data.get('phone')
-            scene = request.data.get('scene')
+            scene = request.data.get('scene', 'default')
             
-            logger.info(f"开始处理验证码请求 - 手机号: {phone}, 场景: {scene}")
-            
-            # 验证参数
+            # 验证手机号
             if not phone:
                 return Response({
                     'code': 400,
                     'message': '手机号不能为空'
                 }, status=status.HTTP_400_BAD_REQUEST)
-            
-            if not scene or scene not in self.VALID_SCENES:
+                
+            if not re.match(r'^1[3-9]\d{9}$', phone):
                 return Response({
                     'code': 400,
-                    'message': '无效的场景类型'
+                    'message': '手机号格式不正确'
                 }, status=status.HTTP_400_BAD_REQUEST)
-            
-            # 场景验证
+
+            # 检查场景是否有效
+            if scene not in self.VALID_SCENES:
+                return Response({
+                    'code': 400,
+                    'message': '无效的场景'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # 根据场景验证手机号
             if scene == 'register':
                 if User.objects.filter(phone=phone).exists():
                     return Response({
                         'code': 400,
                         'message': '该手机号已注册'
                     }, status=status.HTTP_400_BAD_REQUEST)
-            elif scene == 'change_phone':
-                if User.objects.filter(phone=phone).exists():
-                    return Response({
-                        'code': 400,
-                        'message': '该手机号已被使用'
-                    }, status=status.HTTP_400_BAD_REQUEST)
-            elif scene in ['login', 'reset_password']:
+            elif scene == 'reset_password':
                 if not User.objects.filter(phone=phone).exists():
                     return Response({
                         'code': 400,
                         'message': '该手机号未注册'
                     }, status=status.HTTP_400_BAD_REQUEST)
-            
-            try:
-                redis_client = get_redis_connection('default')
-                cache_key = f'sms_code_{scene}_{phone}'
-                
-                # 检查发送频率
-                if redis_client.exists(cache_key):
-                    ttl = redis_client.ttl(cache_key)
-                    if ttl > 240:  # 如果距离上次发送不足1分钟
-                        return Response({
-                            'code': 400,
-                            'message': '发送太频繁，请稍后再试'
-                        }, status=status.HTTP_400_BAD_REQUEST)
-                
-                # 生成验证码
-                code = ''.join(random.choices('0123456789', k=6))
-                
-                # 先尝试发送短信
-                try:
-                    send_sms(phone, code, scene)
-                    
-                    # 短信发送成功后，再保存验证码
-                    redis_client.setex(cache_key, 300, code)  # 5分钟有效期
-                    
-                    return Response({
-                        'code': 200,
-                        'message': f'{self.VALID_SCENES[scene]}验证码已发送'
-                    })
-                except Exception as sms_error:
-                    logger.error(f"短信发送失败: {str(sms_error)}", exc_info=True)
-                    raise
-                
-            except RedisError as redis_error:
-                logger.error(f"Redis操作失败: {str(redis_error)}", exc_info=True)
+
+            # 使用缓存检查发送频率
+            cache_key = f'sms_cooldown_{scene}_{phone}'
+            if cache.get(cache_key):
                 return Response({
-                    'code': 500,
-                    'message': '系统繁忙，请稍后重试'
-                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-                
+                    'code': 429,
+                    'message': '发送太频繁，请稍后再试'
+                }, status=status.HTTP_429_TOO_MANY_REQUESTS)
+
+            # 根据环境选择验证码
+            use_virtual_sms = settings.DEBUG and settings.SMS_CONFIG.get('USE_VIRTUAL_SMS', False)
+            if use_virtual_sms:
+                code = settings.SMS_CONFIG.get('VIRTUAL_SMS_CODE', '123456')
+                logger.info(f"使用虚拟验证码: {code}")
+            else:
+                code = ''.join(random.choices('0123456789', k=6))
+                # TODO: 实际发送短信的代码
+                # send_sms(phone, code, scene)
+
+            # 保存验证码到缓存
+            code_key = f'sms_code_{scene}_{phone}'
+            cache.set(code_key, code, timeout=settings.SMS_CONFIG.get('SMS_EXPIRE_SECONDS', 300))
+            # 设置冷却时间
+            cache.set(cache_key, True, timeout=settings.SMS_CONFIG.get('SMS_COOLDOWN_SECONDS', 60))
+
+            # 返回响应
+            response_data = {
+                'code': 200,
+                'message': f'{self.VALID_SCENES[scene]}验证码已发送'
+            }
+            
+            # 在开发环境中返回验证码
+            if use_virtual_sms:
+                response_data['data'] = {'code': code}
+
+            return Response(response_data)
+
         except Exception as e:
-            logger.error(f"验证码处理异常: {str(e)}", exc_info=True)
+            logger.error(f"发送验证码失败: {str(e)}", exc_info=True)
             return Response({
                 'code': 500,
                 'message': '发送验证码失败，请稍后重试'
@@ -264,9 +262,28 @@ class ResetPasswordView(APIView):
     
     def post(self, request):
         serializer = ResetPasswordSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response({'detail': '密码重置成功'})
+        try:
+            if serializer.is_valid():
+                user = serializer.save()  # 调用序列化器的 save 方法重置密码
+                logger.info(f"密码重置成功 - Phone: {user.phone}")
+                return Response({
+                    'code': 200,
+                    'message': '密码重置成功'
+                })
+            else:
+                logger.warning(f"密码重置验证失败: {serializer.errors}")
+                # 获取第一个错误信息
+                first_error = next(iter(serializer.errors.values()))[0]
+                return Response({
+                    'code': 400,
+                    'message': str(first_error)
+                }, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"密码重置异常: {str(e)}", exc_info=True)
+            return Response({
+                'code': 500,
+                'message': '密码重置失败，请稍后重试'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class ChangePhoneView(APIView):
     def post(self, request):
@@ -274,3 +291,37 @@ class ChangePhoneView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response({'detail': '手机号更换成功'})
+
+class ChangeEmailView(APIView):
+    """更换邮箱"""
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        email = request.data.get('email')
+        code = request.data.get('code')
+        
+        # 验证邮箱格式
+        if not email or not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+            return Response({
+                'detail': '邮箱格式不正确'
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
+        # 验证验证码
+        if not verify_email_code(email, code):
+            return Response({
+                'detail': '验证码错误'
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
+        # 检查邮箱是否已被使用
+        if User.objects.filter(email=email).exclude(id=request.user.id).exists():
+            return Response({
+                'detail': '该邮箱已被使用'
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
+        # 更换邮箱
+        request.user.email = email
+        request.user.save(update_fields=['email'])
+        
+        return Response({
+            'message': '邮箱更换成功'
+        })

@@ -1,70 +1,68 @@
 from django.contrib import admin
-from .models import (
-    MembershipTier, UserMembership, MembershipOrder,
-    PointRule, UserPoint, PointRecord
-)
-
-@admin.register(MembershipTier)
-class MembershipTierAdmin(admin.ModelAdmin):
-    list_display = [
-        'name', 'tier_type', 'price_monthly', 'price_quarterly', 
-        'price_yearly', 'is_default', 'sort_order'
-    ]
-    list_editable = ['sort_order', 'is_default']
-    search_fields = ['name']
-    list_filter = ['tier_type', 'is_default']
-    ordering = ['sort_order']
+from .models import UserMembership
+from django.utils import timezone
+import datetime
 
 @admin.register(UserMembership)
 class UserMembershipAdmin(admin.ModelAdmin):
-    list_display = ['user', 'tier', 'expire_time', 'is_expired', 'remaining_days']
-    list_filter = ['tier', 'created_at']
-    search_fields = ['user__phone', 'user__username']
-    readonly_fields = ['created_at', 'updated_at']
+    list_display = ('user', 'membership_type', 'expire_time', 'membership_status', 'created_at')
+    list_filter = ('membership_type', 'created_at')
+    search_fields = ('user__username', 'user__phone', 'user__email')
+    raw_id_fields = ('user',)
+    date_hierarchy = 'created_at'
     
-    def is_expired(self, obj):
-        return obj.is_expired
-    is_expired.boolean = True
-    is_expired.short_description = '是否过期'
-    
-    def remaining_days(self, obj):
-        return obj.remaining_days
-    remaining_days.short_description = '剩余天数'
+    actions = ['set_monthly_membership', 'set_yearly_membership', 'set_lifetime_membership', 'remove_membership']
 
-@admin.register(MembershipOrder)
-class MembershipOrderAdmin(admin.ModelAdmin):
-    list_display = [
-        'order_no', 'user', 'tier', 'amount',
-        'payment_method', 'status', 'paid_time'
-    ]
-    list_filter = ['status', 'payment_method', 'tier']
-    search_fields = ['order_no', 'user__username']
-    raw_id_fields = ['user', 'tier']
+    def membership_status(self, obj):
+        if obj.membership_type == 'none':
+            return '普通用户'
+        if obj.membership_type == 'lifetime':
+            return '终身会员'
+        if obj.expire_time:
+            days_left = (obj.expire_time - timezone.now()).days
+            if days_left > 0:
+                return f"{obj.get_membership_type_display()}（剩余{days_left}天）"
+            return '已过期'
+        return obj.get_membership_type_display()
+    membership_status.short_description = '会员状态'
 
-@admin.register(PointRule)
-class PointRuleAdmin(admin.ModelAdmin):
-    list_display = [
-        'name', 'event_type', 'points',
-        'is_active', 'created_at'
-    ]
-    list_filter = ['is_active']
-    search_fields = ['name', 'event_type']
+    def set_monthly_membership(self, request, queryset):
+        queryset.update(
+            membership_type='monthly',
+            expire_time=timezone.now() + datetime.timedelta(days=30)
+        )
+        self.message_user(request, f'已将 {queryset.count()} 个用户设置为月度会员')
+    set_monthly_membership.short_description = '设置为月度会员'
 
-@admin.register(UserPoint)
-class UserPointAdmin(admin.ModelAdmin):
-    list_display = [
-        'user', 'balance', 'total_earned',
-        'total_spent', 'updated_at'
-    ]
-    search_fields = ['user__username']
-    raw_id_fields = ['user']
+    def set_yearly_membership(self, request, queryset):
+        queryset.update(
+            membership_type='yearly',
+            expire_time=timezone.now() + datetime.timedelta(days=365)
+        )
+        self.message_user(request, f'已将 {queryset.count()} 个用户设置为年度会员')
+    set_yearly_membership.short_description = '设置为年度会员'
 
-@admin.register(PointRecord)
-class PointRecordAdmin(admin.ModelAdmin):
-    list_display = [
-        'user', 'event_type', 'points',
-        'balance', 'created_at'
-    ]
-    list_filter = ['event_type']
-    search_fields = ['user__username', 'description']
-    raw_id_fields = ['user', 'rule'] 
+    def set_lifetime_membership(self, request, queryset):
+        queryset.update(
+            membership_type='lifetime',
+            expire_time=None
+        )
+        self.message_user(request, f'已将 {queryset.count()} 个用户设置为终身会员')
+    set_lifetime_membership.short_description = '设置为终身会员'
+
+    def remove_membership(self, request, queryset):
+        queryset.update(
+            membership_type='none',
+            expire_time=None
+        )
+        self.message_user(request, f'已移除 {queryset.count()} 个用户的会员资格')
+    remove_membership.short_description = '移除会员资格'
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        # 同步更新用户表中的会员状态
+        user = obj.user
+        user.is_vip = obj.membership_type != 'none'
+        user.vip_type = obj.membership_type
+        user.vip_expire_time = obj.expire_time
+        user.save(update_fields=['is_vip', 'vip_type', 'vip_expire_time']) 

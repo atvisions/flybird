@@ -234,14 +234,32 @@ export const useAuthStore = defineStore('auth', {
           
           return true
         }
-        return false
+        throw new Error(response?.data?.message || '注册失败')
       } catch (error) {
         console.error('Registration failed:', error)
+        let errorMsg = '注册失败，请稍后重试'
+        
+        if (error.response?.data) {
+          const errorData = error.response.data
+          if (typeof errorData === 'object') {
+            // 处理字段级别的错误
+            if (errorData.code) {
+              errorMsg = Array.isArray(errorData.code) ? errorData.code[0] : errorData.code
+            } else if (errorData.phone) {
+              errorMsg = Array.isArray(errorData.phone) ? errorData.phone[0] : errorData.phone
+            } else if (errorData.password) {
+              errorMsg = Array.isArray(errorData.password) ? errorData.password[0] : errorData.password
+            } else if (errorData.confirm_password) {
+              errorMsg = Array.isArray(errorData.confirm_password) ? errorData.confirm_password[0] : errorData.confirm_password
+            }
+          }
+        }
+        
         this.clearAuth()
         const accountStore = useAccountStore()
         accountStore.clearUserInfo()
-        showToast(error.message || '注册失败，请稍后重试', 'error')
-        throw error
+        showToast(String(errorMsg), 'error')  // 确保转换为字符串
+        throw new Error(errorMsg)
       }
     },
 

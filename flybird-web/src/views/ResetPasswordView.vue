@@ -96,7 +96,7 @@
               <div class="mt-2">
                 <input 
                   id="confirm-password" 
-                  v-model="form.confirmPassword" 
+                  v-model="form.confirm_password"
                   type="password" 
                   required
                   placeholder="请再次输入密码"
@@ -153,34 +153,116 @@
 </template>
 
 <script setup>
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import HeadView from '@/components/HeadView.vue'
-import { useResetPassword } from '@/composables/useResetPassword'
 import { auth } from '@/api/auth'
+import { showToast } from '@/components/ToastMessage'
 
-const {
-  form,
-  loading,
-  countdown,
-  showPassword,
-  isFormValid,
-  startCountdown,
-  handleResetPassword,
-  togglePassword
-} = useResetPassword()
+const router = useRouter()
+const loading = ref(false)
+const countdown = ref(0)
+const form = ref({
+  phone: '',
+  code: '',
+  password: '',
+  confirm_password: ''
+})
+
+const showPassword = ref(false)
+
+// 表单验证
+const isFormValid = computed(() => {
+  const phoneRegex = /^1[3-9]\d{9}$/
+  const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/
+  
+  return phoneRegex.test(form.value.phone) && 
+         form.value.code?.length === 6 && 
+         form.value.password &&
+         form.value.confirm_password &&
+         form.value.password === form.value.confirm_password &&
+         passwordRegex.test(form.value.password)
+})
 
 // 发送验证码
 const handleSendCode = async () => {
+  if (!form.value.phone) {
+    showToast('请输入手机号', 'error')
+    return
+  }
+  
   try {
     loading.value = true
     await auth.sendVerifyCode({
       phone: form.value.phone,
       scene: 'reset_password'
     })
-    startCountdown()
+    
+    // 开始倒计时
+    countdown.value = 60
+    const timer = setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0) {
+        clearInterval(timer)
+      }
+    }, 1000)
+    
+    showToast('验证码已发送', 'success')
   } catch (error) {
     console.error('发送验证码失败:', error)
+    showToast(error.response?.data?.message || '发送验证码失败', 'error')
   } finally {
     loading.value = false
   }
+}
+
+// 重置密码
+const handleResetPassword = async () => {
+  if (!isFormValid.value) return
+  
+  try {
+    loading.value = true
+    const response = await auth.resetPassword({
+      phone: form.value.phone,
+      code: form.value.code,
+      new_password: form.value.password,
+      confirm_password: form.value.confirm_password
+    })
+    
+    if (response?.data?.code === 200) {
+      showToast('密码重置成功', 'success')
+      // 延迟跳转，让用户看到成功提示
+      setTimeout(() => {
+        router.push('/login')
+      }, 1500)
+    } else {
+      throw new Error(response.data?.message || '重置密码失败')
+    }
+  } catch (error) {
+    console.error('重置密码失败:', error)
+    let errorMsg = '重置密码失败，请稍后重试'
+    
+    if (error.response?.data) {
+      const errorData = error.response.data
+      if (typeof errorData === 'object') {
+        if (errorData.message) {
+          errorMsg = errorData.message
+        } else {
+          // 获取第一个错误信息
+          const firstError = Object.values(errorData)[0]
+          errorMsg = Array.isArray(firstError) ? firstError[0] : firstError
+        }
+      }
+    }
+    
+    showToast(errorMsg, 'error')
+  } finally {
+    loading.value = false
+  }
+}
+
+// 切换密码显示
+const togglePassword = () => {
+  showPassword.value = !showPassword.value
 }
 </script>

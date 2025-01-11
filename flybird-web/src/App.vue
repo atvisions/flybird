@@ -1,15 +1,12 @@
 <template>
   <div class="min-h-screen bg-gray-50">
-    <!-- 头部导航 -->
-    <HeadView v-if="showHeaderAndFooter" />
+
     
     <!-- 主要内容区域 -->
     <main>
       <router-view></router-view>
     </main>
     
-    <!-- 底部 -->
-    <FootView v-if="showHeaderAndFooter" />
     
     <!-- Toast 消息组件 -->
     <ToastMessage 
@@ -30,6 +27,9 @@ import { useAuthStore } from '@/stores/auth'
 const router = useRouter()
 const authStore = useAuthStore()
 
+// 不需要登录的路由
+const publicRoutes = ['/login', '/register', '/reset-password']
+
 // Toast 相关状态
 const toastMessage = ref('')
 const toastType = ref('info')
@@ -44,7 +44,7 @@ const handleToastDestroy = () => {
 // 计算是否显示头部和底部
 const showHeaderAndFooter = computed(() => {
   const path = router.currentRoute.value.path
-  return !path.includes('/login') && !path.includes('/register')
+  return !publicRoutes.includes(path)
 })
 
 // 计算是否显示登录按钮
@@ -54,7 +54,8 @@ onMounted(() => {
   // 检查认证状态
   if (!authStore.isAuthenticated) {
     const currentPath = router.currentRoute.value.path
-    if (currentPath !== '/login' && currentPath !== '/register') {
+    // 只有非公开路由才需要重定向到登录页
+    if (!publicRoutes.includes(currentPath)) {
       // 保存当前路径用于登录后重定向
       const redirect = encodeURIComponent(currentPath)
       router.push(`/login?redirect=${redirect}`)
@@ -63,8 +64,6 @@ onMounted(() => {
 })
 
 // 异步导入组件
-const HeadView = defineAsyncComponent(() => import('@/components/HeadView.vue'))
-const FootView = defineAsyncComponent(() => import('@/components/FootView.vue'))
 const ToastMessage = defineAsyncComponent(() => import('@/components/ToastMessage.vue'))
 </script>
 

@@ -17,13 +17,20 @@ class UserInfoView(APIView):
 
     def get(self, request):
         """获取用户信息"""
-        user = request.user
-        serializer = UserSerializer(user)
-        return Response({
-            'code': 200,
-            'message': '获取成功',
-            'data': serializer.data
-        })
+        try:
+            user = request.user
+            serializer = UserSerializer(user)
+            return Response({
+                'code': 200,
+                'message': '获取成功',
+                'data': serializer.data
+            })
+        except Exception as e:
+            logger.error(f"获取用户信息失败: {str(e)}", exc_info=True)
+            return Response({
+                'code': 500,
+                'message': '获取用户信息失败'
+            }, status=500)
 
     def put(self, request):
         """更新用户信息"""

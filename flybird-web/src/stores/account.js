@@ -39,6 +39,7 @@ export const useAccountStore = defineStore('account', {
           const userData = response.data.data
           
           this.userInfo = {
+            ...userData,
             id: userData.id,
             uid: userData.uid,
             username: userData.username,
@@ -48,13 +49,14 @@ export const useAccountStore = defineStore('account', {
             position: userData.position || null,
             bio: userData.bio || null,
             is_vip: userData.is_vip || false,
+            vip_type: userData.vip_type || 'none',
+            vip_expire_time: userData.vip_expire_time || null,
+            vip_status: userData.vip_status || '普通用户',
             is_staff: userData.is_staff || false,
             background_image: userData.background_image || null
           }
           
-          
           localStorage.setItem('userInfo', JSON.stringify(this.userInfo))
-          
           return this.userInfo
         }
         return null

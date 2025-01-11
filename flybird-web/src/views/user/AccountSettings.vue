@@ -20,12 +20,21 @@
               </div>
               <p class="mt-1 text-sm text-gray-500">{{ email || '未绑定' }}</p>
             </div>
-            <button 
-              @click="openEmailModal"
-              class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-indigo-600 border border-indigo-600 
-              hover:bg-indigo-50 transition-colors rounded-md">
-              {{ email ? '更换邮箱' : '绑定邮箱' }}
-            </button>
+            <div class="flex space-x-2">
+              <button 
+                v-if="email"
+                @click="handleUnbindEmail"
+                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-600 border border-red-600 
+                hover:bg-red-50 transition-colors rounded-md">
+                取消绑定
+              </button>
+              <button 
+                @click="openEmailModal"
+                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-indigo-600 border border-indigo-600 
+                hover:bg-indigo-50 transition-colors rounded-md">
+                {{ email ? '更换邮箱' : '绑定邮箱' }}
+              </button>
+            </div>
           </div>
 
           <!-- 手机号 -->
@@ -116,7 +125,7 @@
               <div class="form-group">
                 <input 
                   type="text" 
-                  v-model="phoneManager.state.value"
+                  v-model.trim="phoneManager.state.value"
                   placeholder="请输入新手机号"
                   :disabled="phoneManager.state.loading"
                 />
@@ -125,16 +134,21 @@
                 <div class="code-input">
                   <input 
                     type="text" 
-                    v-model="phoneManager.state.code"
+                    v-model.trim="phoneManager.state.code"
+                    maxlength="6"
                     placeholder="请输入验证码"
                     :disabled="phoneManager.state.loading"
+                    @input="e => phoneManager.state.code = e.target.value.replace(/\D/g, '').slice(0, 6)"
                   />
                   <button 
                     @click="handlePhoneSendCode"
-                    :disabled="phoneManager.state.loading || phoneManager.state.countdown > 0"
+                    :disabled="isPhoneCodeButtonDisabled"
                     class="code-btn"
                   >
-                    {{ phoneManager.state.countdown > 0 ? `${phoneManager.state.countdown}s` : '获取验证码' }}
+                    {{ phoneManager.state.countdown > 0 
+                      ? `${phoneManager.state.countdown}s` 
+                      : (phoneManager.state.loading ? '发送中...' : '获取验证码') 
+                    }}
                   </button>
                 </div>
               </div>
@@ -150,7 +164,7 @@
               <button 
                 class="btn btn-primary" 
                 @click="handlePhoneUpdate"
-                :disabled="phoneManager.state.loading"
+                :disabled="!isPhoneFormValid || phoneManager.state.loading"
               >
                 {{ phoneManager.state.loading ? '更新中...' : '确认' }}
               </button>
@@ -170,68 +184,169 @@
               </button>
             </div>
             <div class="modal-body">
+              <!-- 原密码 -->
               <div class="form-group">
-                <input 
-                  type="password" 
-                  v-model="password.state.oldPassword"
-                  placeholder="请输入原密码"
-                  :disabled="password.state.loading"
-                />
-              </div>
-              <div class="form-group">
-                <input 
-                  type="password" 
-                  v-model="password.state.newPassword"
-                  placeholder="请输入新密码"
-                  :disabled="password.state.loading"
-                  @input="handlePasswordInput"
-                />
-                <div v-if="password.state.error" class="text-sm text-red-500 mt-1">
-                  {{ password.state.error }}
+                <div class="relative">
+                  <input 
+                    :type="showOldPassword ? 'text' : 'password'"
+                    v-model="passwordFormState.oldPassword"
+                    placeholder="请输入当前密码"
+                  />
+                  <button 
+                    type="button"
+                    class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    @click="showOldPassword = !showOldPassword"
+                  >
+                    <svg 
+                      class="h-5 w-5 text-gray-400" 
+                      :class="{ 'text-indigo-600': showOldPassword }"
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path 
+                        v-if="showOldPassword"
+                        stroke-linecap="round" 
+                        stroke-linejoin="round" 
+                        stroke-width="2" 
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path 
+                        v-if="showOldPassword"
+                        stroke-linecap="round" 
+                        stroke-linejoin="round" 
+                        stroke-width="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
+                      <path
+                        v-else
+                        stroke-linecap="round" 
+                        stroke-linejoin="round" 
+                        stroke-width="2"
+                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                      />
+                    </svg>
+                  </button>
                 </div>
-                
+              </div>
+              
+              <!-- 新密码 -->
+              <div class="form-group">
+                <div class="relative">
+                  <input 
+                    :type="showNewPassword ? 'text' : 'password'"
+                    v-model="passwordFormState.newPassword"
+                    @input="handlePasswordInput"
+                    placeholder="请输入新密码"
+                  />
+                  <button 
+                    type="button"
+                    class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    @click="showNewPassword = !showNewPassword"
+                  >
+                    <svg 
+                      class="h-5 w-5 text-gray-400" 
+                      :class="{ 'text-indigo-600': showNewPassword }"
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path 
+                        v-if="showNewPassword"
+                        stroke-linecap="round" 
+                        stroke-linejoin="round" 
+                        stroke-width="2" 
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path 
+                        v-if="showNewPassword"
+                        stroke-linecap="round" 
+                        stroke-linejoin="round" 
+                        stroke-width="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
+                      <path
+                        v-else
+                        stroke-linecap="round" 
+                        stroke-linejoin="round" 
+                        stroke-width="2"
+                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                      />
+                    </svg>
+                  </button>
+                </div>
                 <!-- 密码强度指示器 -->
-                <div class="mt-2">
-                  <div class="flex items-center justify-between mb-1">
-                    <span class="text-xs text-gray-500">密码强度</span>
-                    <span class="text-xs" :class="strengthTextClass">{{ strengthText }}</span>
+                <div class="password-strength">
+                  <div class="strength-text" :class="strengthTextClass">
+                    密码强度: {{ strengthText }}
                   </div>
-                  <div class="flex gap-1 h-1">
+                  <div class="strength-bar">
                     <div 
-                      v-for="n in 4" 
-                      :key="n"
-                      class="flex-1 rounded-full transition-colors duration-200"
-                      :class="[
-                        n <= password.state.strength 
-                          ? strengthColorClass 
-                          : 'bg-gray-200'
-                      ]"
+                      class="strength-progress" 
+                      :class="strengthColorClass"
+                      :style="{ width: (passwordFormState.strength * 16.67) + '%' }"
                     ></div>
                   </div>
                 </div>
-                
-                <!-- 密码规则提示 -->
-                <div class="text-xs text-gray-400 mt-2 space-y-1">
-                  <div>密码要求：</div>
-                  <div>• 长度在8-20个字符之间</div>
-                  <div>• 必须包含字母</div>
-                  <div>• 必须包含数字</div>
-                  <div>• 不能与当前密码相同</div>
-                  <div>建议包含（可选）：</div>
-                  <div>• 大小写字母</div>
-                  <div>• 特殊字符（!@#$%^&*）</div>
+                <!-- 密码格式要求提示 -->
+                <div class="password-requirements text-sm text-gray-500 mt-2">
+                  <p>密码必须满足：</p>
+                  <ul class="list-disc pl-5 space-y-1">
+                    <li>长度至少8位</li>
+                    <li>包含字母</li>
+                    <li>包含数字</li>
+                  </ul>
+                  <p class="mt-1">建议包含：</p>
+                  <ul class="list-disc pl-5 space-y-1">
+                    <li>大写字母</li>
+                    <li>特殊字符（!@#$%^&*）</li>
+                  </ul>
                 </div>
               </div>
+
+              <!-- 确认密码 -->
               <div class="form-group">
-                <input 
-                  type="password" 
-                  v-model="password.state.confirmPassword"
-                  placeholder="请确认新密码"
-                  :disabled="password.state.loading"
-                  @input="validateConfirmPassword"
-                />
-                <div v-if="confirmPasswordError" class="text-sm text-red-500 mt-1">
-                  {{ confirmPasswordError }}
+                <div class="relative">
+                  <input 
+                    :type="showConfirmPassword ? 'text' : 'password'"
+                    v-model="passwordFormState.confirmPassword"
+                    placeholder="请确认新密码"
+                  />
+                  <button 
+                    type="button"
+                    class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    @click="showConfirmPassword = !showConfirmPassword"
+                  >
+                    <svg 
+                      class="h-5 w-5 text-gray-400" 
+                      :class="{ 'text-indigo-600': showConfirmPassword }"
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path 
+                        v-if="showConfirmPassword"
+                        stroke-linecap="round" 
+                        stroke-linejoin="round" 
+                        stroke-width="2" 
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path 
+                        v-if="showConfirmPassword"
+                        stroke-linecap="round" 
+                        stroke-linejoin="round" 
+                        stroke-width="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
+                      <path
+                        v-else
+                        stroke-linecap="round" 
+                        stroke-linejoin="round" 
+                        stroke-width="2"
+                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                      />
+                    </svg>
+                  </button>
                 </div>
               </div>
             </div>
@@ -239,16 +354,16 @@
               <button 
                 class="btn btn-default" 
                 @click="closePasswordModal"
-                :disabled="password.state.loading"
+                :disabled="passwordFormState.loading"
               >
                 取消
               </button>
               <button 
                 class="btn btn-primary" 
                 @click="handlePasswordUpdate"
-                :disabled="password.state.loading"
+                :disabled="!isPasswordFormValid"
               >
-                {{ password.state.loading ? '更新中...' : '确认' }}
+                {{ passwordFormState.loading ? '修改中...' : '确认' }}
               </button>
             </div>
           </div>
@@ -295,30 +410,67 @@
                 </div>
               </div>
               <div class="form-group">
-                <input 
-                  type="password" 
-                  v-model="deleteForm.password"
-                  placeholder="请输入登录密码确认"
-                  :disabled="loading"
-                  class="border-red-300 focus:border-red-500 focus:ring-red-500"
-                />
+                <div class="relative">
+                  <input 
+                    :type="showPassword ? 'text' : 'password'"
+                    v-model="deleteFormState.password"
+                    placeholder="请输入登录密码确认"
+                    :disabled="deleteFormState.loading"
+                    class="border-red-300 focus:border-red-500 focus:ring-red-500"
+                  />
+                  <button 
+                    type="button"
+                    class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    @click="showPassword = !showPassword"
+                  >
+                    <svg 
+                      class="h-5 w-5 text-gray-400" 
+                      :class="{ 'text-red-600': showPassword }"
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path 
+                        v-if="showPassword"
+                        stroke-linecap="round" 
+                        stroke-linejoin="round" 
+                        stroke-width="2" 
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path 
+                        v-if="showPassword"
+                        stroke-linecap="round" 
+                        stroke-linejoin="round" 
+                        stroke-width="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
+                      <path
+                        v-else
+                        stroke-linecap="round" 
+                        stroke-linejoin="round" 
+                        stroke-width="2"
+                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                      />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
             <div class="modal-footer">
               <button 
                 class="btn btn-default" 
                 @click="closeDeleteConfirm"
-                :disabled="loading"
+                :disabled="deleteFormState.loading"
               >
                 取消
               </button>
               <button 
-                class="btn btn-danger" 
-                @click="handleConfirmDelete"
-                :disabled="loading || !deleteForm.password"
-              >
-                {{ loading ? '注销中...' : '确认注销' }}
-              </button>
+              class="btn btn-danger" 
+              @click="handleConfirmDelete"
+              :disabled="deleteFormState.loading || !deleteFormState.password"
+            >
+              {{ deleteFormState.loading ? '注销中...' : '确认注销' }}
+            </button>
             </div>
           </div>
         </div>
@@ -344,12 +496,49 @@
                 />
               </div>
               <div class="form-group">
-                <input 
-                  type="password" 
-                  v-model="emailManager.state.password"
-                  placeholder="请输入登录密码"
-                  :disabled="emailManager.state.loading"
-                />
+                <div class="relative">
+                  <input 
+                    :type="showPassword ? 'text' : 'password'"
+                    v-model="emailManager.state.password"
+                    placeholder="请输入登录密码"
+                    :disabled="emailManager.state.loading"
+                  />
+                  <button 
+                    type="button"
+                    class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    @click="showPassword = !showPassword"
+                  >
+                    <svg 
+                      class="h-5 w-5 text-gray-400" 
+                      :class="{ 'text-indigo-600': showPassword }"
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path 
+                        v-if="showPassword"
+                        stroke-linecap="round" 
+                        stroke-linejoin="round" 
+                        stroke-width="2" 
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path 
+                        v-if="showPassword"
+                        stroke-linecap="round" 
+                        stroke-linejoin="round" 
+                        stroke-width="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
+                      <path
+                        v-else
+                        stroke-linecap="round" 
+                        stroke-linejoin="round" 
+                        stroke-width="2"
+                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                      />
+                    </svg>
+                  </button>
+                </div>
               </div>
               <div class="form-group">
                 <div class="code-input">
@@ -361,12 +550,12 @@
                   />
                   <button 
                     @click="handleEmailSendCode"
-                    :disabled="isCodeButtonDisabled"
+                    :disabled="isEmailCodeButtonDisabled"
                     class="code-btn"
                   >
                     {{ emailManager.state.countdown > 0 
                       ? `${emailManager.state.countdown}s` 
-                      : (isRequestingCode ? '发送中...' : '获取验证码') 
+                      : (emailManager.state.loading ? '发送中...' : '获取验证码') 
                     }}
                   </button>
                 </div>
@@ -383,9 +572,77 @@
               <button 
                 class="btn btn-primary" 
                 @click="handleEmailUpdate"
-                :disabled="!isEmailFormValid"
+                :disabled="!isEmailFormValid || emailManager.state.loading"
               >
                 {{ emailManager.state.loading ? (email ? '更换中...' : '绑定中...') : '确认' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 邮箱解绑确认弹窗 -->
+        <div v-if="showUnbindEmailModal" class="modal-overlay">
+          <div class="modal-content">
+            <div class="modal-header">
+              <div class="flex items-center space-x-2">
+                <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <h3 class="text-gray-900">取消邮箱绑定</h3>
+              </div>
+              <button class="close-btn" @click="closeUnbindEmailModal">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div class="bg-gray-50 p-4 rounded-md mb-4 border border-gray-200">
+                <div class="flex">
+                  <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div class="ml-3">
+                    <h3 class="text-sm font-medium text-gray-900">
+                      请确认以下信息
+                    </h3>
+                    <div class="mt-2 text-sm text-gray-600">
+                      <ul class="list-disc pl-5 space-y-1">
+                        <li>取消绑定后将无法接收邮件通知</li>
+                        <li>需要输入登录密码确认操作</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <input 
+                  type="password" 
+                  v-model="unbindEmailForm.password"
+                  placeholder="请输入登录密码确认"
+                  :disabled="unbindEmailLoading"
+                  class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                />
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button 
+                class="btn btn-default" 
+                @click="closeUnbindEmailModal"
+                :disabled="unbindEmailLoading"
+              >
+                取消
+              </button>
+              <button 
+                class="btn btn-primary" 
+                @click="confirmUnbindEmail"
+                :disabled="unbindEmailLoading || !unbindEmailForm.password"
+              >
+                {{ unbindEmailLoading ? '处理中...' : '确认解绑' }}
               </button>
             </div>
           </div>
@@ -396,179 +653,400 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useStore } from 'vuex'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast } from '@/components/ToastMessage'
 import { useDeleteAccount } from '@/composables/useDeleteAccount'
-import { useNickname } from '@/composables/useNickname'
 import { usePhone } from '@/composables/usePhone'
 import { useEmail } from '@/composables/useEmail'
 import { useChangePassword } from '@/composables/useChangePassword'
-import { ElMessageBox } from 'element-plus'
 import { account } from '@/api/account'
 import { useAuthStore } from '@/stores/auth'
 import { useUserStore } from '@/stores/user'
 
-const store = useStore()
 const router = useRouter()
 const authStore = useAuthStore()
 const userStore = useUserStore()
-// 基础信息
-const username = computed(() => userStore.userInfo?.username || '未设置')
-const uid = computed(() => userStore.userInfo?.uid || '暂无')
-const phone = computed(() => userStore.userInfo?.phone || '')
-const email = computed(() => userStore.userInfo?.email || '')
 
-// 使用 composables
-const nickname = useNickname()
-const phoneManager = usePhone()
-const emailManager = useEmail()
-const { deleteLoading: loading, handleDeleteAccount } = useDeleteAccount()
-const password = useChangePassword()
-
-// 工具方法
+// 手机号掩码处理函数
 const maskPhone = (phone) => {
   if (!phone) return '未绑定'
   return phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2')
 }
 
+// 从 userStore 获取用户信息
+const phone = computed(() => userStore.userInfo?.phone)
+const email = computed(() => userStore.userInfo?.email)
+
 // 弹窗状态
+const showEmailModal = ref(false)
+const showUnbindEmailModal = ref(false)
 const showPhoneModal = ref(false)
 const showPasswordModal = ref(false)
 const showDeleteConfirm = ref(false)
+const showPassword = ref(false)
 
-// 打开弹窗的方法
-const openPhoneModal = () => {
-  phoneManager.state.value = ''
-  phoneManager.state.code = ''
-  showPhoneModal.value = true
+// 密码状态
+const passwordFormState = ref({
+  oldPassword: '',
+  newPassword: '',
+  confirmPassword: '',
+  loading: false,
+  strength: 0
+})
+
+// 邮箱解绑相关状态
+const unbindEmailLoading = ref(false)
+const unbindEmailForm = ref({
+  password: ''
+})
+
+// 邮箱解绑相关方法
+const closeUnbindEmailModal = () => {
+  showUnbindEmailModal.value = false
+  unbindEmailForm.value.password = ''
 }
 
+const handleUnbindEmail = () => {
+  showUnbindEmailModal.value = true
+}
+
+const confirmUnbindEmail = async () => {
+  try {
+    unbindEmailLoading.value = true
+    const response = await account.unbindEmail({
+      password: unbindEmailForm.value.password
+    })
+    
+    if (response?.data?.message) {
+      closeUnbindEmailModal()
+      await userStore.getUserInfo()
+      showToast(response.data.message || '邮箱解绑成功', 'success')
+    }
+  } catch (error) {
+    console.error('邮箱解绑失败:', error)
+    const errorMsg = error.response?.data?.detail || 
+                    error.response?.data?.message || 
+                    error.message || 
+                    '邮箱解绑失败'
+    showToast(errorMsg, 'error')
+  } finally {
+    unbindEmailLoading.value = false
+  }
+}
+
+// 密码显示状态
+const showOldPassword = ref(false)
+const showNewPassword = ref(false)
+const showConfirmPassword = ref(false)
+
+// 打开密码修改弹窗时重置所有状态
 const openPasswordModal = () => {
+  // 重置表单状态
+  passwordFormState.value = {
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+    loading: false,
+    strength: 0
+  }
+  // 重置密码显示状态
+  showOldPassword.value = false
+  showNewPassword.value = false
+  showConfirmPassword.value = false
   showPasswordModal.value = true
+  console.log('Password modal opened:', showPasswordModal.value)
 }
 
-const openDeleteConfirm = async () => {
-  showDeleteConfirm.value = true
-}
-
-// 关闭弹窗的方法
-const closePhoneModal = () => {
-  showPhoneModal.value = false
-  phoneManager.state.value = ''
-  phoneManager.state.code = ''
-}
-
+// 关闭密码修改弹窗时重置所有状态
 const closePasswordModal = () => {
   showPasswordModal.value = false
-}
-
-const closeDeleteConfirm = () => {
-  showDeleteConfirm.value = false
-  deleteForm.value.password = ''
-}
-
-// 处理成功回调
-const handlePasswordSuccess = () => {
-  closePasswordModal()
-  showToast('密码修改成功', 'success')
-}
-
-
-// 添加密码验证相关的状态和方法
-const confirmPasswordError = ref('')
-
-const validateNewPassword = () => {
-  // 使用 composable 中的验证方法
-  password.state.error = password.validatePassword(password.state.newPassword)
-  // 如果新密码变化，也要检查确认密码
-  if (password.state.confirmPassword) {
-    validateConfirmPassword()
+  // 重置表单状态
+  passwordFormState.value = {
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+    loading: false,
+    strength: 0
   }
+  // 重置密码显示状态
+  showOldPassword.value = false
+  showNewPassword.value = false
+  showConfirmPassword.value = false
 }
 
-const validateConfirmPassword = () => {
-  if (!password.state.confirmPassword) {
-    confirmPasswordError.value = ''
-  } else if (password.state.confirmPassword !== password.state.newPassword) {
-    confirmPasswordError.value = '两次输入的密码不一致'
-  } else {
-    confirmPasswordError.value = ''
-  }
+// 邮箱管理器
+const emailManager = useEmail()
+const phoneManager = usePhone()
+const { validatePassword } = useChangePassword()
+const { loading } = useDeleteAccount()
+
+// 修改密码强度更新的处理方法
+const handlePasswordInput = () => {
+  const strength = validatePassword(passwordFormState.value.newPassword)
+  console.log('Password strength updated:', strength)
+  passwordFormState.value.strength = strength
 }
+
+// 密码表单验证
+const isPasswordFormValid = computed(() => {
+  // 添加调试日志
+  console.log('Password validation:', {
+    oldPassword: !!passwordFormState.value.oldPassword,
+    newPassword: !!passwordFormState.value.newPassword,
+    confirmPassword: !!passwordFormState.value.confirmPassword,
+    passwordsMatch: passwordFormState.value.newPassword === passwordFormState.value.confirmPassword,
+    strength: passwordFormState.value.strength,
+    loading: passwordFormState.value.loading
+  })
+
+  return passwordFormState.value.oldPassword && 
+         passwordFormState.value.newPassword && 
+         passwordFormState.value.confirmPassword && 
+         passwordFormState.value.newPassword === passwordFormState.value.confirmPassword &&
+         passwordFormState.value.strength >= 3 &&
+         !passwordFormState.value.loading
+})
 
 // 处理密码更新
 const handlePasswordUpdate = async () => {
-  // 先验证一次
-  validateNewPassword()
-  validateConfirmPassword()
-  
-  // 如果有错误就不提交
-  if (password.state.error || confirmPasswordError.value) {
-    return
-  }
-  
   try {
-    userInfoLoading.value = true
+    passwordFormState.value.loading = true
     const response = await account.updatePassword({
-      old_password: password.state.oldPassword,
-      new_password: password.state.newPassword,
-      confirm_password: password.state.confirmPassword
+      oldPassword: passwordFormState.value.oldPassword,
+      newPassword: passwordFormState.value.newPassword,
+      confirmPassword: passwordFormState.value.confirmPassword
     })
     
-    if (response?.data?.code === 200) {
+    if (response?.data?.message) {
       closePasswordModal()
-      showToast('密码修改成功', 'success')
-      // 清空表单
-      password.state.oldPassword = ''
-      password.state.newPassword = ''
-      password.state.confirmPassword = ''
+      showToast(response.data.message || '密码修改成功', 'success')
     }
   } catch (error) {
     console.error('密码修改失败:', error)
-    showToast(error?.response?.data?.message || '密码修改失败', 'error')
+    console.log('Error response:', error.response)
+    console.log('Form data:', passwordFormState.value)
+    
+    const errorMsg = error.response?.data?.detail || 
+                    error.response?.data?.message || 
+                    error.message || 
+                    '密码修改失败'
+    showToast(errorMsg, 'error')
+  } finally {
+    passwordFormState.value.loading = false
+  }
+}
+
+// 密码强度相关
+const strengthText = computed(() => {
+  const strength = passwordFormState.value.strength
+  if (strength <= 2) return '弱'
+  if (strength <= 3) return '中'
+  return '强'
+})
+
+const strengthTextClass = computed(() => {
+  const strength = passwordFormState.value.strength
+  if (strength <= 2) return 'text-red-500'
+  if (strength <= 3) return 'text-yellow-500'
+  return 'text-green-500'
+})
+
+const strengthColorClass = computed(() => {
+  const strength = passwordFormState.value.strength
+  if (strength <= 2) return 'bg-red-500'
+  if (strength <= 3) return 'bg-yellow-500'
+  return 'bg-green-500'
+})
+
+// 监听密码修改弹窗状态
+onMounted(() => {
+  watch(showPasswordModal, (newVal) => {
+    console.log('Password modal state changed:', newVal)
+  })
+})
+
+// 用户信息
+const userInfo = ref(null)
+
+// 用户信息加载状态
+const userInfoLoading = ref(false)
+
+// 获取用户信息
+const fetchUserInfo = async () => {
+  try {
+    userInfoLoading.value = true
+    await userStore.getUserInfo()
+  } catch (error) {
+    console.error('获取用户信息失败:', error)
+    showToast('获取用户信息失败', 'error')
   } finally {
     userInfoLoading.value = false
   }
 }
 
-// 处理手机号更新
+// 在组件挂载时获取用户信息
+onMounted(() => {
+  fetchUserInfo()
+  watch(showPasswordModal, (newVal) => {
+    console.log('Password modal state changed:', newVal)
+  })
+})
+
+// 手机号管理相关方法
+const openPhoneModal = () => {
+  phoneManager.state.value = ''
+  phoneManager.state.code = ''
+  phoneManager.state.loading = false
+  phoneManager.state.countdown = 0
+  showPhoneModal.value = true
+  console.log('Phone modal opened:', showPhoneModal.value) // 添加调试日志
+}
+
+const closePhoneModal = () => {
+  showPhoneModal.value = false
+  phoneManager.state.value = ''
+  phoneManager.state.code = ''
+  phoneManager.state.loading = false
+  phoneManager.state.countdown = 0
+}
+
+// 手机号验证码按钮禁用状态
+const isPhoneCodeButtonDisabled = computed(() => {
+  const phoneRegex = /^1[3-9]\d{9}$/
+  return phoneManager.state.loading || 
+         phoneManager.state.countdown > 0 || 
+         !phoneManager.state.value ||
+         !phoneRegex.test(phoneManager.state.value)
+})
+
+// 手机号表单验证
+const isPhoneFormValid = computed(() => {
+  const phoneRegex = /^1[3-9]\d{9}$/
+  const isValidPhone = phoneRegex.test(phoneManager.state.value)
+  const isValidCode = phoneManager.state.code?.length === 6
+
+  return phoneManager.state.value && 
+         phoneManager.state.code && 
+         isValidPhone && 
+         isValidCode && 
+         !phoneManager.state.loading
+})
+
+// 发送手机验证码
+const handlePhoneSendCode = async () => {
+  const phoneRegex = /^1[3-9]\d{9}$/
+  if (!phoneManager.state.value) {
+    showToast('请输入新手机号', 'warning')
+    return
+  }
+  
+  if (!phoneRegex.test(phoneManager.state.value)) {
+    showToast('请输入正确的手机号格式', 'warning')
+    return
+  }
+  
+  try {
+    phoneManager.state.loading = true
+    const response = await account.sendVerifyCode({
+      phone: phoneManager.state.value.trim(),
+      scene: 'change_phone'  // 指定场景为更换手机号
+    })
+    
+    if (response?.data?.code === 200) {
+      showToast(response.data.message || '验证码已发送', 'success')
+      phoneManager.state.countdown = 60
+      startPhoneCountdown()
+    }
+  } catch (error) {
+    const errorMsg = error.response?.data?.detail || 
+                    error.response?.data?.message || 
+                    error.message || 
+                    '发送验证码失败'
+    showToast(errorMsg, 'error')
+  } finally {
+    phoneManager.state.loading = false
+  }
+}
+
+// 更新手机号
 const handlePhoneUpdate = async () => {
-  if (!phoneManager.state.value || !phoneManager.state.code) {
-    showToast('请填写完整信息', 'warning')
+  const phoneRegex = /^1[3-9]\d{9}$/
+  if (!phoneManager.state.value || !phoneRegex.test(phoneManager.state.value)) {
+    showToast('请输入正确的手机号', 'warning')
+    return
+  }
+  
+  if (!phoneManager.state.code || phoneManager.state.code.length !== 6) {
+    showToast('请输入6位验证码', 'warning')
     return
   }
 
   try {
+    phoneManager.state.loading = true
     const response = await account.changePhone({
-      phone: phoneManager.state.value,
-      code: phoneManager.state.code
+      phone: phoneManager.state.value.trim(),
+      code: phoneManager.state.code.trim()
     })
-    
-    if (response?.data?.code === 200) {
+
+    if (response?.data?.code === 200 || response?.status === 200) {
+      showToast(response.data?.message || '手机号修改成功', 'success')
       closePhoneModal()
       await userStore.getUserInfo()
-      showToast('手机号更新成功', 'success')
-    } else {
-      throw new Error(response?.data?.message || '手机号更新失败')
     }
   } catch (error) {
     console.error('手机号更新失败:', error)
-    const errorMsg = error.response?.data?.message || 
-                    error.response?.data?.detail ||
-                    error.message || 
-                    '手机号更新失败'
+    let errorMsg = '手机号更新失败'
+    
+    if (error.response?.data) {
+      const errorData = error.response.data
+      if (typeof errorData.detail === 'object') {
+        errorMsg = Object.values(errorData.detail)[0]
+      } else if (typeof errorData.detail === 'string') {
+        errorMsg = errorData.detail
+      } else if (errorData.message) {
+        errorMsg = errorData.message
+      }
+    }
+    
     showToast(errorMsg, 'error')
+  } finally {
+    phoneManager.state.loading = false
   }
 }
 
-// 邮箱相关
-const showEmailModal = ref(false)
+// 倒计时管理
+let phoneTimer = null
 
+const startPhoneCountdown = () => {
+  if (phoneTimer) {
+    clearInterval(phoneTimer)
+  }
+  phoneManager.state.countdown = 60
+  phoneTimer = setInterval(() => {
+    if (phoneManager.state.countdown > 0) {
+      phoneManager.state.countdown--
+    } else {
+      clearInterval(phoneTimer)
+      phoneTimer = null
+    }
+  }, 1000)
+}
+
+// 在组件卸载时清理定时器
+onUnmounted(() => {
+  if (phoneTimer) {
+    clearInterval(phoneTimer)
+    phoneTimer = null
+  }
+})
+
+// 邮箱相关方法
 const openEmailModal = () => {
   emailManager.state.value = ''
   emailManager.state.code = ''
+  emailManager.state.password = ''
+  showPassword.value = false
   showEmailModal.value = true
 }
 
@@ -577,66 +1055,44 @@ const closeEmailModal = () => {
   emailManager.state.value = ''
   emailManager.state.code = ''
   emailManager.state.password = ''
+  emailManager.state.loading = false
+  showPassword.value = false
 }
 
-const handleEmailUpdate = async () => {
-  try {
-    const data = {
-      email: emailManager.state.value,
-      code: emailManager.state.code,
-      password: emailManager.state.password
-    }
-    
-    // 根据是否已有邮箱决定是绑定还是更换
-    const response = await (email.value ? 
-      account.changeEmail(data) : 
-      account.bindEmail(data))
-
-    if (response?.data?.message) {
-      closeEmailModal()
-      await store.dispatch('getUserInfo')
-      showToast(response.data.message, 'success')
-    }
-  } catch (error) {
-    console.error('邮箱更新失败:', error)
-    const errorMsg = error.response?.data?.detail || 
-                    error.response?.data?.message || 
-                    error.message || 
-                    '邮箱操作失败'
-    showToast(errorMsg, 'error')
-  }
-}
-
-// 添加计算属性控制邮箱表单按钮状态
-const isEmailFormValid = computed(() => {
-  // 检查邮箱格式
+// 邮箱验证码按钮禁用状态
+const isEmailCodeButtonDisabled = computed(() => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  const isValidEmail = emailRegex.test(emailManager.state.value)
-  
-  // 检查所有必填字段
-  return emailManager.state.value && 
-         emailManager.state.code && 
-         emailManager.state.password &&  // 密码必填
-         isValidEmail && 
-         !emailManager.state.loading
+  return emailManager.state.loading || 
+         emailManager.state.countdown > 0 || 
+         !emailManager.state.value ||
+         !emailRegex.test(emailManager.state.value) ||
+         !emailManager.state.password
 })
 
-// 添加防重复点击状态
-const isRequestingCode = ref(false)
+// 邮箱表单验证
+const isEmailFormValid = computed(() => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  const isValidEmail = emailRegex.test(emailManager.state.value)
 
-// 处理邮箱更新的验证码发送
+  return emailManager.state.value && 
+         emailManager.state.code && 
+         emailManager.state.password &&
+         isValidEmail && 
+         emailManager.state.code.length === 6
+})
+
+// 发送邮箱验证码
 const handleEmailSendCode = async () => {
   if (!emailManager.state.value) {
-    showToast('请输入新邮箱', 'warning')
+    showToast('请输入邮箱地址', 'warning')
     return
   }
   
-  if (!phone.value) {
-    showToast('当前账号未绑定手机号，无法进行邮箱验证', 'warning')
+  if (!emailManager.state.password) {
+    showToast('请输入登录密码', 'warning')
     return
   }
   
-  // 验证邮箱格式
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!emailRegex.test(emailManager.state.value)) {
     showToast('请输入正确的邮箱格式', 'warning')
@@ -645,80 +1101,115 @@ const handleEmailSendCode = async () => {
   
   try {
     emailManager.state.loading = true
-    isRequestingCode.value = true
     const response = await account.sendEmailCode({
-      email: emailManager.state.value
+      email: emailManager.state.value,
+      password: emailManager.state.password
     })
     
     if (response?.data?.message) {
       showToast(response.data.message, 'success')
+      emailManager.state.countdown = 60
       startEmailCountdown()
     }
   } catch (error) {
-    console.error('发送验证码失败:', error)
     const errorMsg = error.response?.data?.detail || 
                     error.message || 
                     '发送验证码失败'
     showToast(errorMsg, 'error')
   } finally {
     emailManager.state.loading = false
-    isRequestingCode.value = false
   }
 }
 
-// 修改按钮禁用状态
-const isCodeButtonDisabled = computed(() => {
-  return emailManager.state.loading || 
-         emailManager.state.countdown > 0 || 
-         !emailManager.state.password || 
-         !emailManager.state.value ||
-         isRequestingCode.value
-})
+// 处理邮箱更新
+const handleEmailUpdate = async () => {
+  if (!isEmailFormValid.value) {
+    showToast('请填写完整信息', 'warning')
+    return
+  }
 
-// 密码强度相关
-const strengthText = computed(() => {
-  const strength = password.state.strength
-  if (strength === 0) return '弱'
-  if (strength <= 2) return '中'
-  if (strength <= 4) return '强'
-  return '非常强'
-})
+  try {
+    emailManager.state.loading = true
+    const response = await account.bindEmail({
+      email: emailManager.state.value,
+      code: emailManager.state.code,
+      password: emailManager.state.password
+    })
 
-const strengthTextClass = computed(() => {
-  const strength = password.state.strength
-  if (strength === 0) return 'text-red-500'
-  if (strength <= 2) return 'text-yellow-500'
-  if (strength <= 4) return 'text-green-500'
-  return 'text-green-600'
-})
-
-const strengthColorClass = computed(() => {
-  const strength = password.state.strength
-  if (strength === 0) return 'bg-red-500'
-  if (strength <= 2) return 'bg-yellow-500'
-  if (strength <= 4) return 'bg-green-500'
-  return 'bg-green-600'
-})
-
-const handlePasswordInput = () => {
-  validateNewPassword()
-  password.updatePasswordStrength(password.state.newPassword)
+    if (response?.data?.message) {
+      showToast(response.data.message, 'success')
+      closeEmailModal()
+      await userStore.getUserInfo()
+    }
+  } catch (error) {
+    console.error('邮箱更新失败:', error)
+    const errorMsg = error.response?.data?.detail || 
+                    error.message || 
+                    '邮箱更新失败'
+    showToast(errorMsg, 'error')
+  } finally {
+    emailManager.state.loading = false
+  }
 }
 
-// 添加表单数据
-const deleteForm = ref({
-  password: ''
+// 邮箱倒计时管理
+let emailTimer = null
+
+const startEmailCountdown = () => {
+  if (emailTimer) {
+    clearInterval(emailTimer)
+  }
+  emailManager.state.countdown = 60
+  emailTimer = setInterval(() => {
+    if (emailManager.state.countdown > 0) {
+      emailManager.state.countdown--
+    } else {
+      clearInterval(emailTimer)
+      emailTimer = null
+    }
+  }, 1000)
+}
+
+// 在组件卸载时清理定时器
+onUnmounted(() => {
+  if (emailTimer) {
+    clearInterval(emailTimer)
+  }
+  if (phoneTimer) {
+    clearInterval(phoneTimer)
+  }
 })
+
+// 注销账号相关状态
+const deleteFormState = ref({
+  password: '',
+  loading: false
+})
+
+// 注销账号相关方法
+const openDeleteConfirm = () => {
+  deleteFormState.value.password = ''
+  showDeleteConfirm.value = true
+}
+
+const closeDeleteConfirm = () => {
+  showDeleteConfirm.value = false
+  deleteFormState.value.password = ''
+}
 
 // 处理确认注销
 const handleConfirmDelete = async () => {
-  if (!deleteForm.value.password) {
+  if (!deleteFormState.value.password) {
     showToast('请输入密码', 'warning')
     return
   }
   
   try {
-    const response = await account.deleteAccount(deleteForm.value)
+    deleteFormState.value.loading = true
+    const response = await account.deleteAccount({
+      password: deleteFormState.value.password
+    })
+    
     if (response?.data?.code === 200) {
       showToast('账号已注销', 'success')
       // 使用 auth store 的 logout 方法清除所有状态
@@ -732,127 +1223,16 @@ const handleConfirmDelete = async () => {
     }
   } catch (error) {
     console.error('注销失败:', error)
-    showToast(error?.message || '注销失败', 'error')
-  }
-}
-
-// 倒计时管理
-const startPhoneCountdown = () => {
-  phoneManager.state.countdown = 60
-  const timer = setInterval(() => {
-    phoneManager.state.countdown--
-    if (phoneManager.state.countdown <= 0) {
-      clearInterval(timer)
-    }
-  }, 1000)
-}
-
-const startEmailCountdown = () => {
-  emailManager.state.countdown = 60
-  const timer = setInterval(() => {
-    emailManager.state.countdown--
-    if (emailManager.state.countdown <= 0) {
-      clearInterval(timer)
-    }
-  }, 1000)
-}
-
-// 处理手机号更新的验证码发送
-const handlePhoneSendCode = async () => {
-  if (!phoneManager.state.value) {
-    showToast('请输入新手机号', 'warning')
-    return
-  }
-  
-  // 验证手机号格式
-  const phoneRegex = /^1[3-9]\d{9}$/
-  if (!phoneRegex.test(phoneManager.state.value)) {
-    showToast('请输入正确的手机号格式', 'warning')
-    return
-  }
-  
-  try {
-    phoneManager.state.loading = true
-    const response = await account.sendVerifyCode({
-      phone: phoneManager.state.value,
-      scene: 'change_phone',
-      type: 'sms'
-    })
-
-    if (response?.data?.code === 200) {
-      startPhoneCountdown()
-      showToast('验证码已发送', 'success')
-    } else {
-      throw new Error(response?.data?.message || '发送验证码失败')
-    }
-  } catch (error) {
-    console.error('发送验证码失败:', error)
-    const errorMsg = error.response?.data?.message || 
-                    error.response?.data?.detail ||
+    const errorMsg = error.response?.data?.detail || 
+                    error.response?.data?.message || 
                     error.message || 
-                    '发送验证码失败'
+                    '注销失败'
     showToast(errorMsg, 'error')
   } finally {
-    phoneManager.state.loading = false
+    deleteFormState.value.loading = false
   }
 }
 
-// 表单数据
-const form = ref({
-  old_password: '',
-  new_password: '',
-  confirm_password: ''
-})
-
-// 用户信息
-const userInfo = ref(null)
-
-// 用户信息加载状态
-const userInfoLoading = ref(false)
-
-// 获取用户信息
-const fetchUserInfo = async () => {
-  try {
-    userInfoLoading.value = true
-    userInfo.value = await userStore.getUserInfo()
-  } catch (error) {
-    console.error('获取用户信息失败:', error)
-    showToast('获取用户信息失败', 'error')
-  } finally {
-    userInfoLoading.value = false
-  }
-}
-
-// 在组件挂载时获取用户信息
-onMounted(() => {
-  fetchUserInfo()
-})
-
-
-// 表单验证
-const validateForm = () => {
-  if (!form.value.old_password) {
-    showToast('请输入当前密码', 'error')
-    return false
-  }
-  if (!form.value.new_password) {
-    showToast('请输入新密码', 'error')
-    return false
-  }
-  if (!form.value.confirm_password) {
-    showToast('请确认新密码', 'error')
-    return false
-  }
-  if (form.value.new_password !== form.value.confirm_password) {
-    showToast('两次输入的密码不一致', 'error')
-    return false
-  }
-  if (form.value.new_password.length < 6) {
-    showToast('密码长度不能少于6位', 'error')
-    return false
-  }
-  return true
-}
 </script>
 
 <style scoped>
@@ -1083,5 +1463,27 @@ const validateForm = () => {
 .form-group input.error:focus {
   border-color: #ef4444;
   box-shadow: 0 0 0 1px #ef4444;
+}
+
+/* 添加密码强度指示器样式 */
+.password-strength {
+  margin-top: 0.5rem;
+}
+
+.strength-text {
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+.strength-bar {
+  height: 4px;
+  background-color: #e5e7eb;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.strength-progress {
+  height: 100%;
+  transition: width 0.3s ease;
 }
 </style>

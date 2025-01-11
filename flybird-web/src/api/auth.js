@@ -60,58 +60,75 @@ export const auth = {
   
   // 发送验证码
   sendVerifyCode: (data) => {
-    // 验证必要参数
-    if (!data.phone || !data.scene) {
-      throw new Error('手机号和场景参数不能为空')
-    }
-    
-    // 验证场景是否有效
-    const validScenes = ['register', 'login', 'reset_password', 'change_phone']
-    if (!validScenes.includes(data.scene)) {
-      throw new Error('无效的场景类型')
-    }
-    
     return request({
       url: '/api/v1/users/auth/sms/send/',
       method: 'post',
       data: {
         phone: data.phone,
-        scene: data.scene
+        scene: data.scene,
+        type: 'sms'
       }
     })
   },
   
   // 重置密码
-  resetPassword: async (data) => {
-    return request.post('/api/v1/users/auth/password/reset/', {
+  resetPassword: (data) => {
+    // 打印请求数据以便调试
+    console.log('Reset password request data:', {
       phone: data.phone,
       code: data.code,
-      new_password: data.new_password,
-      confirm_password: data.confirm_password
+      new_password: '***',
+      confirm_password: '***'
+    })
+
+    return request({
+      url: '/api/v1/users/auth/password/reset/',
+      method: 'post',
+      data: {
+        phone: data.phone,
+        code: data.code,
+        new_password: data.new_password,
+        confirm_password: data.confirm_password
+      }
+    }).then(response => {
+      console.log('Reset password success response:', response.data)
+      return response
+    }).catch(error => {
+      console.log('Reset password error response:', error.response?.data)
+      // 处理错误响应
+      const errorData = error.response?.data
+      if (errorData) {
+        // 如果错误信息在 code 字段中
+        if (errorData.code && Array.isArray(errorData.code)) {
+          throw new Error(errorData.code[0])
+        }
+        // 如果错误信息在其他字段中
+        for (const key in errorData) {
+          if (Array.isArray(errorData[key])) {
+            throw new Error(errorData[key][0])
+          }
+        }
+        // 如果有直接的错误消息
+        if (errorData.message) {
+          throw new Error(errorData.message)
+        }
+      }
+      throw error
     })
   },
   
   // 注册
-  register: async (data) => {
-    try {
-      const response = await request.post('/api/v1/users/auth/register/', {
+  register: (data) => {
+    return request({
+      url: '/api/v1/users/auth/register/',
+      method: 'post',
+      data: {
         phone: data.phone,
         code: data.code,
         password: data.password,
         confirm_password: data.confirmPassword
-      })
-      
-      // 如果注册成功，直接返回登录所需的 token 信息
-      if (response?.data?.code === 200) {
-        const userData = response.data.data
-        // 直接返回响应，让 store 处理 token 和用户信息
-        return response
       }
-      throw new Error(response?.data?.message || '注册失败')
-    } catch (error) {
-      console.error('Registration failed:', error)
-      throw error
-    }
+    })
   },
   
   handleLoginResponse(response) {

@@ -72,98 +72,44 @@ class TierPrivilege(models.Model):
 
 class UserMembership(models.Model):
     """用户会员信息"""
+    MEMBERSHIP_TYPES = [
+        ('none', '普通用户'),
+        ('monthly', '月度会员'),
+        ('yearly', '年度会员'),
+        ('lifetime', '终身会员')
+    ]
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='membership'
     )
-    tier = models.ForeignKey(
-        MembershipTier,
-        on_delete=models.PROTECT,
-        verbose_name='会员等级'
+    membership_type = models.CharField(
+        max_length=20,
+        choices=MEMBERSHIP_TYPES,
+        default='none',
+        verbose_name='会员类型'
     )
-    expire_time = models.DateTimeField('到期时间', null=True)
-    created_at = models.DateTimeField('创建时间', auto_now_add=True)
-    updated_at = models.DateTimeField('更新时间', auto_now=True)
-    
+    expire_time = models.DateTimeField(
+        null=True, 
+        blank=True,
+        verbose_name='到期时间'
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='创建时间'
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name='更新时间'
+    )
+
     class Meta:
         verbose_name = '用户会员'
         verbose_name_plural = verbose_name
 
     def __str__(self):
-        return f"{self.user.phone}-{self.tier.name}"
-    
-    def save(self, *args, **kwargs):
-        # 如果没有设置等级，使用默认等级
-        if not self.tier_id:
-            default_tier = MembershipTier.objects.filter(
-                models.Q(is_default=True) | models.Q(tier_type='free')
-            ).first()
-            if default_tier:
-                self.tier = default_tier
-        super().save(*args, **kwargs)
-    
-    @property
-    def is_expired(self):
-        """是否已过期"""
-        if not self.expire_time:
-            return True
-        return self.expire_time < timezone.now()
-    
-    @property
-    def remaining_days(self):
-        """剩余天数"""
-        if not self.expire_time:
-            return 0
-        if self.is_expired:
-            return 0
-        delta = self.expire_time - timezone.now()
-        return max(0, delta.days)
-    
-    def extend_membership(self, days):
-        """延长会员时间"""
-        now = timezone.now()
-        if not self.expire_time or self.expire_time < now:
-            # 如果没有到期时间或已过期，从当前时间开始计算
-            self.expire_time = now + timezone.timedelta(days=days)
-        else:
-            # 如果未过期，在当前到期时间基础上延长
-            self.expire_time += timezone.timedelta(days=days)
-        self.save()
-        
-    def check_and_restore(self):
-        """检查并恢复会员状态"""
-        # 如果有未支付的订单，检查是否已支付
-        pending_orders = MembershipOrder.objects.filter(
-            user=self.user,
-            status='pending',
-            created_at__gte=timezone.now() - timezone.timedelta(days=7)  # 只检查7天内的订单
-        ).order_by('-created_at')
-        
-        for order in pending_orders:
-            try:
-                # 调用支付宝查询接口
-                payment_service = PaymentService()
-                trade_status = payment_service.query_order(order)
-                
-                if trade_status in ['TRADE_SUCCESS', 'TRADE_FINISHED']:
-                    # 订单已支付但状态未更新，进行恢复
-                    with transaction.atomic():
-                        order.status = 'paid'
-                        order.paid_time = timezone.now()
-                        order.save()
-                        
-                        self.tier = order.tier
-                        self.extend_membership(order.days)
-                        
-                    logger.info(f"恢复会员状态成功: 用户={self.user.phone}, 订单={order.order_no}")
-                    return True
-                    
-            except Exception as e:
-                logger.error(f"检查订单状态失败: {str(e)}")
-                continue
-                
-        return False
+        return f"{self.user.username} - {self.get_membership_type_display()}"
 
 class MembershipOrder(models.Model):
     """会员订单"""
