@@ -2,114 +2,91 @@
   <div class="user-home w-full">
     <!-- 顶部背景和用户信息 -->
     <div class="relative">
-      <!-- 背景图 -->
-      <div class="h-48 bg-gradient-to-r from-gray-900 to-gray-800 relative group rounded-t-lg overflow-hidden">
+      <!-- 背景图 - 降低高度并优化渐变 -->
+      <div class="h-40 bg-gradient-to-r from-gray-900 to-gray-800 relative group rounded-t-lg overflow-hidden">
         <div class="absolute inset-0 rounded-t-lg overflow-hidden">
           <img
             :src="backgroundUrl"
-            class="w-full h-full object-cover opacity-70"
+            class="w-full h-full object-cover opacity-60"
             alt="背景图"
             @error="handleBackgroundError"
           />
+          <!-- 添加渐变遮罩 -->
+          <div class="absolute inset-0 bg-gradient-to-b from-transparent to-black/30"></div>
         </div>
-        <!-- 背景图上传按钮 -->
+        <!-- 背景图上传按钮 - 调整位置和样式 -->
         <div 
-          class="absolute top-4 right-4 p-2 rounded-full bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+          class="absolute top-3 right-3 p-1.5 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:bg-black/50"
           @click="handleBackgroundUpload"
         >
-          <CameraIcon class="w-5 h-5 text-white" />
+          <CameraIcon class="w-4 h-4 text-white" />
         </div>
       </div>
       
-      <!-- 用户信息卡片 -->
-      <div class="-mt-10 relative z-10">
+      <!-- 用户信息卡片 - 优化布局和间距 -->
+      <div class="-mt-8 relative z-10">
         <!-- 头像和基本身份信息区块 -->
         <div 
-          class="relative group w-20 h-20 mx-auto -mb-10 z-20 cursor-pointer"
+          class="relative group w-16 h-16 mx-auto -mb-8 z-20 cursor-pointer"
           @click="openEditModal"
         >
           <img
             :src="userAvatar"
-            class="w-20 h-20 rounded-full border-4 border-white object-cover shadow-lg"
+            class="w-16 h-16 rounded-full border-4 border-white object-cover shadow-md"
             alt="头像"
             @error="handleImageError"
           />
-          <!-- 添加悬停效果 -->
-          <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-            <PencilIcon class="w-6 h-6 text-white" />
+          <!-- 优化悬停效果 -->
+          <div class="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+            <PencilIcon class="w-5 h-5 text-white" />
           </div>
         </div>
 
-        <div class="bg-white rounded-b-lg border border-gray-100 p-4 pb-6 transition-shadow hover:shadow-lg relative">
-          <!-- 头像和基本身份信息区块 -->
-          <div class="flex flex-col items-center relative z-10">
-            <!-- 编辑资料按钮 -->
-            <button 
-              @click="openEditModal"
-              class="absolute right-[-10px] top-[-30px] px-3 py-1 text-xs text-gray-500 hover:text-gray-900 border border-gray-200 rounded-full hover:bg-gray-50 transition-all flex items-center bg-white"
-            >
-              <PencilIcon class="w-3.5 h-3.5 mr-1" />
-              编辑资料
-            </button>
+        <div class="bg-white rounded-b-lg border border-gray-100 p-4 transition-shadow hover:shadow-sm">
+          <!-- 用户基本信息 - 简化布局 -->
+          <div class="flex flex-col items-center pt-6">
+            <!-- 编辑资料按钮 - 调整位置和样式 -->
+            <div class="absolute right-3 top-3 flex items-center space-x-2">
+              <!-- 个人主页链接 - 新位置 -->
+              <a
+                :href="userProfileUrl"
+                target="_blank"
+                class="px-2.5 py-1 text-xs text-gray-500 hover:text-gray-700 border border-gray-200 rounded-full hover:bg-gray-50 transition-all flex items-center bg-white/80 backdrop-blur-sm"
+              >
+                <GlobeAltIcon class="w-3 h-3 mr-1" />
+                主页
+              </a>
+              
+              <button 
+                @click="openEditModal"
+                class="px-2.5 py-1 text-xs text-gray-500 hover:text-gray-700 border border-gray-200 rounded-full hover:bg-gray-50 transition-all flex items-center bg-white/80 backdrop-blur-sm"
+              >
+                <PencilIcon class="w-3 h-3 mr-1" />
+                编辑
+              </button>
+            </div>
 
-            <!-- 用户基本信息 -->
-            <div class="flex flex-col items-center min-h-[5rem] pt-8">
-              <div class="flex flex-col items-center space-y-3">
-                <!-- 用户名 -->
-                <div class="text-center">
-                  <div class="inline-flex items-center group relative">
-                    <h2 class="text-xl font-bold text-gray-900">{{ userInfo.username }}</h2>
-                  </div>
-                </div>
-                <!-- 当前岗位 -->
-                <div class="mt-1 flex items-center justify-center group">
-                  <span v-if="userInfo.position" class="text-sm text-gray-600">{{ userInfo.position }}</span>
-                  <span v-else class="text-sm text-gray-400">未设置职位</span>
-                </div>
-                <!-- 个人简介 -->
-                <div class="mt-2 group relative">
-                  <div class="relative">
-                    <!-- 左引号装饰 -->
-                    <span class="absolute -left-4 -top-2 text-gray-300 text-xl font-serif">"</span>
-                    <p v-if="userInfo.bio" 
-                      class="text-sm text-gray-500 max-w-xl px-6 py-3 bg-gray-50/80 rounded-lg"
-                    >
-                      {{ userInfo.bio }}
-                    </p>
-                    <p v-else 
-                      class="text-sm text-gray-400 italic px-6 py-3 bg-gray-50/80 rounded-lg"
-                    >
-                      这个人还没有填写个人简介
-                    </p>
-                    <!-- 右引号装饰 -->
-                    <span class="absolute -right-4 -bottom-2 text-gray-300 text-xl font-serif">"</span>
-                  </div>
-                </div>
+            <!-- 用户基本信息 - 优化间距和排版 -->
+            <div class="flex flex-col items-center space-y-2">
+              <h2 class="text-lg font-bold text-gray-900">{{ userInfo.username }}</h2>
+              <div class="text-sm text-gray-600">{{ userInfo.position || '未设置职位' }}</div>
+              <!-- 个人简介 - 优化样式 -->
+              <div class="mt-2 max-w-lg text-center">
+                <p class="text-sm text-gray-500 leading-relaxed">
+                  {{ userInfo.bio || '这个人还没有填写个人简介' }}
+                </p>
               </div>
             </div>
-          </div>
 
-          <div class="bg-white rounded-b-lg border border-gray-100 p-4 pb-6 transition-shadow hover:shadow-lg relative">
-            <!-- 统计数据 -->
-            <div class="grid grid-cols-4 gap-4 mt-6 pt-6 border-t border-gray-100 relative z-10">
+            <!-- 统计数据 - 简化显示 -->
+            <div class="grid grid-cols-4 gap-4 mt-4 w-full max-w-xl">
               <div 
                 v-for="stat in statistics" 
                 :key="stat.label"
                 class="text-center"
               >
-                <div class="text-base font-semibold text-gray-900">{{ stat.value }}</div>
+                <div class="text-base font-medium text-gray-900">{{ stat.value }}</div>
                 <div class="text-xs text-gray-500">{{ stat.label }}</div>
-              </div>
-              <!-- 个人主页链接 -->
-              <div class="col-span-4 flex justify-center mt-4 relative z-10">
-                <a
-                  :href="userProfileUrl"
-                  target="_blank"
-                  class="inline-flex items-center text-xs text-gray-500 hover:text-gray-900 transition-colors group"
-                >
-                  <GlobeAltIcon class="w-4 h-4 mr-1.5 text-gray-400 group-hover:text-gray-900" />
-                  查看个人主页
-                </a>
               </div>
             </div>
           </div>
@@ -158,7 +135,7 @@
         </div>
 
         <!-- 作品卡片网格 -->
-        <div v-if="portfolios.length > 0" class="grid grid-cols-2 gap-6">
+        <div v-if="portfolios?.length > 0" class="grid grid-cols-2 gap-6">
           <!-- 作品卡片 -->
           <div
             v-for="portfolio in portfolios"
@@ -620,16 +597,32 @@ watch(
   { immediate: true }
 )
 
-// 组件挂载时获取数据
-onMounted(async () => {
-  // 只在 store 中没有数据时获取
-  if (!accountStore.userInfo) {
-    await fetchUserInfo()
+// 作品集数据初始化为空数组而不是 undefined
+const portfolios = ref([])
+
+// 获取作品集数据
+const fetchPortfolios = async () => {
+  try {
+    const response = await portfolio.getUserPortfolios()
+    if (response?.data?.code === 200) {
+      portfolios.value = response.data.data || []
+    }
+  } catch (error) {
+    console.error('获取作品集失败:', error)
+    portfolios.value = []
   }
-  
-  // 如果当前是文章或草稿标签，滚动到创作区域
-  if (route.query.currentTab === 'articles' || route.query.currentTab === 'drafts') {
-    scrollToCreation()
+}
+
+// 在组件挂载时获取数据
+onMounted(async () => {
+  // ... 其他代码保持不变 ...
+  try {
+    await Promise.all([
+      fetchUserInfo(),
+      fetchPortfolios()
+    ])
+  } catch (error) {
+    console.error('初始化数据失败:', error)
   }
 })
 
@@ -787,7 +780,6 @@ const statistics = ref([
 // 内容相关数据
 const currentTab = ref(route.query.currentTab || 'articles')
 const articles = ref([])
-const portfolios = ref([])
 
 // 收藏相关数据
 const currentFavTab = ref('portfolios')

@@ -102,7 +102,37 @@
               <h2 class="text-lg font-medium text-gray-900">作品集</h2>
             </div>
             <div class="p-4 sm:p-6">
-              <PortfolioList :user-id="userInfo.uid" />
+              <!-- 作品网格 -->
+              <div v-if="portfolios?.length > 0" class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                <div 
+                  v-for="portfolio in portfolios" 
+                  :key="portfolio.id"
+                  class="group relative aspect-square rounded-lg overflow-hidden cursor-pointer"
+                  @click="router.push(`/portfolio/${portfolio.id}`)"
+                >
+                  <img 
+                    :src="portfolio.cover || 'https://picsum.photos/400/400'" 
+                    class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                    :alt="portfolio.title"
+                  />
+                  <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div class="absolute bottom-0 left-0 right-0 p-3">
+                      <h3 class="text-sm font-medium text-white truncate">{{ portfolio.title }}</h3>
+                      <p class="text-xs text-white/80 mt-1">{{ portfolio.category }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 空状态 -->
+              <div v-else class="text-center py-12">
+                <div class="text-gray-400 mb-4">
+                  <svg class="w-12 h-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <p class="text-gray-500">暂无作品集展示</p>
+              </div>
             </div>
           </div>
 
@@ -760,6 +790,11 @@ const fetchUserData = async () => {
     // TODO: 调用API获取用户数据
     // const response = await api.getUserProfile(username)
     // userInfo.value = response.data
+    
+    // 获取作品集数据
+    if (userInfo.value?.uid) {
+      await fetchPortfolios(userInfo.value.uid)
+    }
   } catch (error) {
     console.error('获取用户数据失败:', error)
   }
@@ -883,6 +918,47 @@ const handleMobileUserListChange = (key) => {
   showUserList = true
   currentTab = null
   isMobileMenuOpen = false
+}
+
+// 示例作品集数据
+const portfolios = ref([
+  {
+    id: 1,
+    title: '城市风光摄影',
+    category: '摄影',
+    cover: 'https://picsum.photos/400/400?random=1'
+  },
+  {
+    id: 2,
+    title: '品牌设计作品',
+    category: '设计',
+    cover: 'https://picsum.photos/400/400?random=2'
+  },
+  {
+    id: 3,
+    title: '自然风光系列',
+    category: '摄影',
+    cover: 'https://picsum.photos/400/400?random=3'
+  },
+  {
+    id: 4,
+    title: 'UI设计案例',
+    category: '设计',
+    cover: 'https://picsum.photos/400/400?random=4'
+  }
+])
+
+// 获取作品集数据
+const fetchPortfolios = async (uid) => {
+  try {
+    const response = await portfolio.getUserPortfolios(uid)
+    if (response?.data?.code === 200) {
+      portfolios.value = response.data.data || []
+    }
+  } catch (error) {
+    console.error('获取作品集失败:', error)
+    portfolios.value = []
+  }
 }
 
 onMounted(() => {
