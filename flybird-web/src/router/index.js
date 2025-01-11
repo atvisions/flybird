@@ -262,6 +262,12 @@ const routes = [
         component: SearchView
       }
     ]
+  },
+  {
+    path: '/payment/success',
+    name: 'PaymentResult',
+    component: () => import('@/views/payment/PaymentResult.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 

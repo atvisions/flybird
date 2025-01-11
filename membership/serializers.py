@@ -1,41 +1,40 @@
 from rest_framework import serializers
 from .models import (
-    MembershipTier, Privilege, TierPrivilege, UserMembership,
-    MembershipOrder, PointRule, UserPoint, PointRecord
+    MembershipTier, UserMembership, MembershipOrder, 
+    UserPoint, PointRecord, PointRule
 )
-
-class PrivilegeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Privilege
-        fields = ['id', 'name', 'key', 'description', 'value_type']
-
-class TierPrivilegeSerializer(serializers.ModelSerializer):
-    privilege = PrivilegeSerializer()
-    
-    class Meta:
-        model = TierPrivilege
-        fields = ['privilege', 'value']
+from django.utils import timezone
 
 class MembershipTierSerializer(serializers.ModelSerializer):
-    privileges = TierPrivilegeSerializer(many=True, read_only=True)
-    
     class Meta:
         model = MembershipTier
         fields = [
-            'id', 'name', 'tier_type', 'price_monthly', 'price_quarterly',
-            'price_yearly', 'description', 'privileges'
+            'id', 'name', 'description', 'sort_order',
+            'price_monthly', 'price_quarterly', 'price_yearly',
+            'benefits'
         ]
 
 class UserMembershipSerializer(serializers.ModelSerializer):
     tier = MembershipTierSerializer()
     days_left = serializers.SerializerMethodField()
+    is_active = serializers.SerializerMethodField()
     
     class Meta:
         model = UserMembership
-        fields = ['tier', 'expire_time', 'days_left', 'created_at']
+        fields = [
+            'tier', 'expire_time', 'status', 
+            'days_left', 'is_active', 'created_at'
+        ]
         
     def get_days_left(self, obj):
-        return obj.days_left if hasattr(obj, 'days_left') else 0
+        if not obj.expire_time or not obj.status:
+            return 0
+        if obj.expire_time < timezone.now():
+            return 0
+        return (obj.expire_time - timezone.now()).days
+        
+    def get_is_active(self, obj):
+        return obj.is_active
 
 class MembershipOrderSerializer(serializers.ModelSerializer):
     tier = MembershipTierSerializer()
@@ -43,19 +42,20 @@ class MembershipOrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = MembershipOrder
         fields = [
-            'id', 'order_no', 'tier', 'amount', 'days',
-            'payment_method', 'status', 'paid_time', 'created_at'
+            'order_no', 'tier', 'amount', 'days',
+            'payment_method', 'status', 'paid_time',
+            'created_at'
         ]
 
 class PointRuleSerializer(serializers.ModelSerializer):
     class Meta:
         model = PointRule
-        fields = ['id', 'name', 'event_type', 'points', 'description']
+        fields = ['name', 'event_type', 'points', 'description']
 
 class UserPointSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserPoint
-        fields = ['balance', 'total_earned', 'total_spent', 'updated_at']
+        fields = ['balance', 'total_earned', 'point_level']
 
 class PointRecordSerializer(serializers.ModelSerializer):
     rule = PointRuleSerializer()
@@ -63,6 +63,6 @@ class PointRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = PointRecord
         fields = [
-            'id', 'rule', 'points', 'balance', 'event_type',
+            'points', 'balance', 'event_type',
             'description', 'created_at'
         ] 

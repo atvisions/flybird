@@ -576,7 +576,10 @@ const vipExpireText = computed(() => {
   if (!userInfo?.is_vip) return '开通会员享专属权益'
   if (userInfo.vip_type === 'lifetime') return '终身会员'
   if (userInfo.vip_expire_time) {
-    return `${formatRemainingTime(userInfo.vip_expire_time)}`
+    const expireDate = new Date(userInfo.vip_expire_time)
+    const now = new Date()
+    const diffDays = Math.floor((expireDate - now) / (1000 * 60 * 60 * 24))
+    return diffDays > 0 ? `剩余 ${diffDays} 天` : '已过期'
   }
   return ''
 })
@@ -596,7 +599,7 @@ const handleVipButton = () => {
   } else if (userInfo.vip_type === 'lifetime') {
     // 显示会员权益详情
   } else {
-    router.push('/pro/renew')
+    router.push('/pro')
   }
 }
 

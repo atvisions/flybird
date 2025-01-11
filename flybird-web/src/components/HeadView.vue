@@ -755,11 +755,16 @@ onMounted(async () => {
   }
   
   eventBus.on('avatar-updated', handleAvatarUpdate)
+  
+  // 监听支付成功事件
+  window.addEventListener('payment-success', refreshUserInfo)
 })
 
 // 保持原有的事件清理
 onUnmounted(() => {
   eventBus.off('avatar-updated', handleAvatarUpdate)
+  // 移除支付成功事件监听
+  window.removeEventListener('payment-success', refreshUserInfo)
 })
 
 // 简化头像更新处理方法
@@ -772,27 +777,16 @@ const handleAvatarUpdate = (newAvatar) => {
   }
 }
 
-// 会员状态相关的计算属性
+// 修改会员状态相关的计算属性
 const isVip = computed(() => {
-  console.log('VIP Status:', accountStore.userInfo?.is_vip)
   return accountStore.userInfo?.is_vip || false
 })
 
 // 会员类型文本
 const vipTypeText = computed(() => {
   const userInfo = accountStore.userInfo
-  if (!userInfo?.is_vip) return '普通用户'
-  
-  switch (userInfo.vip_type) {
-    case 'monthly':
-      return '月度会员'
-    case 'yearly':
-      return '年度会员'
-    case 'lifetime':
-      return '终身会员'
-    default:
-      return '普通用户'
-  }
+  if (!userInfo) return '普通用户'
+  return userInfo.vip_status || '普通用户'
 })
 
 // 剩余天数文本
@@ -803,7 +797,7 @@ const remainingDays = computed(() => {
   if (userInfo.vip_expire_time) {
     const expireDate = new Date(userInfo.vip_expire_time)
     const now = new Date()
-    const diffDays = Math.ceil((expireDate - now) / (1000 * 60 * 60 * 24))
+    const diffDays = Math.floor((expireDate - now) / (1000 * 60 * 60 * 24))
     if (diffDays > 0) {
       return `剩余 ${diffDays} 天`
     }
@@ -811,25 +805,18 @@ const remainingDays = computed(() => {
   return ''
 })
 
+// 会员按钮文本
 const vipButtonText = computed(() => {
   const userInfo = accountStore.userInfo
-  if (!userInfo) return '升级会员'
+  if (!userInfo?.is_vip) return '升级会员'
   
-  if (!userInfo.is_vip) return '升级会员'
+  if (userInfo.vip_type === 'lifetime') return '会员中心'
   
-  // 如果是终身会员
-  if (userInfo.vip_type === 'lifetime') return '续费会员'
-  
-  // 如果有到期时间
   if (userInfo.vip_expire_time) {
     const expireDate = new Date(userInfo.vip_expire_time)
     const now = new Date()
     const diffDays = Math.ceil((expireDate - now) / (1000 * 60 * 60 * 24))
-    
-    // 如果会员即将到期（30天内）
-    if (diffDays <= 30) {
-      return '续费会员'
-    }
+    return diffDays <= 30 ? '续费会员' : '会员中心'
   }
   
   return '会员中心'

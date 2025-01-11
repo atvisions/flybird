@@ -1,0 +1,45 @@
+[
+    {
+        "model": "membership.membershiptier",
+        "pk": 1,
+        "fields": {
+            "name": "高级会员",
+            "description": "高级会员权益，解锁全部功能",
+            "sort_order": 1,
+            "price_monthly": 29.90,
+            "price_quarterly": 79.90,
+            "price_yearly": 299.90,
+            "status": true,
+            "is_default": true,
+            "benefits": {
+                "resume_export": {
+                    "name": "简历导出",
+                    "value": -1,
+                    "description": "无限简历导出"
+                },
+                "ai_chat": {
+                    "name": "AI助手对话",
+                    "value": -1,
+                    "description": "无限AI对话额度"
+                },
+                "job_apply": {
+                    "name": "职位申请",
+                    "value": -1,
+                    "description": "无限职位投递"
+                },
+                "resume_optimization": {
+                    "name": "简历优化建议",
+                    "value": true,
+                    "description": "AI简历优化建议"
+                },
+                "priority_support": {
+                    "name": "优先客服支持",
+                    "value": true,
+                    "description": "7*24小时优先客服支持"
+                }
+            },
+            "created_at": "2025-01-11T08:00:00.000Z",
+            "updated_at": "2025-01-11T08:00:00.000Z"
+        }
+    }
+] 

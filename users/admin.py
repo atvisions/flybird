@@ -13,14 +13,24 @@ from .profile.models import (
     BasicInfo, JobIntention, WorkExperience, Education,
     Project, Skill, Certificate, Language, Portfolio, SocialLink
 )
-from .models import User, VipOrder
+from .models import User
 
 @admin.register(User)
-class CustomUserAdmin(UserAdmin):
-    list_display = ('phone', 'username', 'vip_status_display', 'is_staff', 'is_active', 'date_joined')
-    list_filter = ('is_vip', 'vip_type', 'is_staff', 'is_active', 'date_joined')
-    search_fields = ('phone', 'username', 'uid')
-    ordering = ('-date_joined',)
+class CustomUserAdmin(admin.ModelAdmin):
+    list_display = [
+        'username', 'phone', 'email', 'is_vip', 'vip_type',
+        'vip_status', 'vip_expire_time', 'is_staff', 'date_joined'
+    ]
+    list_filter = [
+        'is_vip',
+        'vip_type',
+        'is_staff',
+        'is_active',
+        'date_joined'
+    ]
+    search_fields = ['username', 'phone', 'email']
+    ordering = ['-date_joined']
+    readonly_fields = ['uid', 'date_joined', 'last_login']
     
     fieldsets = (
         (None, {'fields': ('phone', 'username', 'password')}),
@@ -28,7 +38,7 @@ class CustomUserAdmin(UserAdmin):
             'fields': ('avatar', 'background_image', 'position', 'bio'),
         }),
         (_('会员信息'), {
-            'fields': ('is_vip', 'vip_type', 'vip_expire_time'),
+            'fields': ('is_vip', 'vip_type', 'vip_expire_time', 'vip_status'),
         }),
         (_('权限'), {
             'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
@@ -53,7 +63,8 @@ class CustomUserAdmin(UserAdmin):
         queryset.update(
             is_vip=True,
             vip_type='monthly',
-            vip_expire_time=timezone.now() + datetime.timedelta(days=30)
+            vip_expire_time=timezone.now() + datetime.timedelta(days=30),
+            vip_status='月度会员'
         )
         self.message_user(request, f'成功将 {queryset.count()} 个用户设置为月度会员')
     set_as_monthly_vip.short_description = '设置为月度会员'
@@ -65,7 +76,8 @@ class CustomUserAdmin(UserAdmin):
         queryset.update(
             is_vip=True,
             vip_type='yearly',
-            vip_expire_time=timezone.now() + datetime.timedelta(days=365)
+            vip_expire_time=timezone.now() + datetime.timedelta(days=365),
+            vip_status='年度会员'
         )
         self.message_user(request, f'成功将 {queryset.count()} 个用户设置为年度会员')
     set_as_yearly_vip.short_description = '设置为年度会员'
@@ -75,7 +87,8 @@ class CustomUserAdmin(UserAdmin):
         queryset.update(
             is_vip=True,
             vip_type='lifetime',
-            vip_expire_time=None
+            vip_expire_time=None,
+            vip_status='终身会员'
         )
         self.message_user(request, f'成功将 {queryset.count()} 个用户设置为终身会员')
     set_as_lifetime_vip.short_description = '设置为终身会员'
@@ -85,7 +98,8 @@ class CustomUserAdmin(UserAdmin):
         queryset.update(
             is_vip=False,
             vip_type='none',
-            vip_expire_time=None
+            vip_expire_time=None,
+            vip_status='普通用户'
         )
         self.message_user(request, f'成功移除 {queryset.count()} 个用户的会员资格')
     remove_vip.short_description = '移除会员资格'
@@ -102,54 +116,6 @@ class CustomUserAdmin(UserAdmin):
             return f"{obj.get_vip_type_display()}（剩余{days_left}天）"
         return obj.get_vip_type_display()
     vip_status_display.short_description = '会员状态'
-
-@admin.register(VipOrder)
-class VipOrderAdmin(admin.ModelAdmin):
-    list_display = (
-        'order_no', 
-        'user', 
-        'vip_type', 
-        'amount', 
-        'status',
-        'created_at', 
-        'paid_at'
-    )
-    list_filter = ('status', 'vip_type', 'created_at')
-    search_fields = ('order_no', 'user__phone', 'user__username')
-    raw_id_fields = ('user',)
-    date_hierarchy = 'created_at'
-    readonly_fields = ('order_no', 'created_at')
-    
-    fieldsets = (
-        (None, {
-            'fields': ('order_no', 'user', 'vip_type', 'amount')
-        }),
-        ('订单状态', {
-            'fields': ('status', 'created_at', 'paid_at')
-        }),
-    )
-
-    def has_delete_permission(self, request, obj=None):
-        # 禁止删除已支付的订单
-        if obj and obj.status == 'paid':
-            return False
-        return super().has_delete_permission(request, obj)
-
-    def has_change_permission(self, request, obj=None):
-        # 禁止修改已支付的订单的某些字段
-        if obj and obj.status == 'paid':
-            return False
-        return super().has_change_permission(request, obj)
-
-    def save_model(self, request, obj, form, change):
-        if not change:  # 如果是新建订单
-            # 生成订单号
-            import time
-            import random
-            timestamp = int(time.time())
-            random_num = random.randint(1000, 9999)
-            obj.order_no = f"VIP{timestamp}{random_num}"
-        super().save_model(request, obj, form, change)
 
 @admin.register(BasicInfo)
 class BasicInfoAdmin(admin.ModelAdmin):

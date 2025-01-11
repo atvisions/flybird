@@ -1,28 +1,28 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from . import views
+from .views import (
+    MembershipTierViewSet, UserMembershipViewSet,
+    MembershipOrderViewSet, PaymentCreateView,
+    PaymentNotifyView, PaymentReturnView,
+    AlipayNotifyView, AlipayReturnView,
+    UserPointViewSet, PointRecordListView,
+    PaymentVerifyView
+)
 
 router = DefaultRouter()
-router.register(r'tiers', views.MembershipTierViewSet)
-router.register(r'membership', views.UserMembershipViewSet, basename='membership')
-router.register(r'points', views.PointViewSet, basename='points')
+router.register(r'tiers', MembershipTierViewSet)
+router.register(r'membership', UserMembershipViewSet, basename='membership')
+router.register(r'orders', MembershipOrderViewSet, basename='orders')
+router.register(r'points', UserPointViewSet, basename='points')
 
-app_name = 'membership'
-
-# API路由
-api_urlpatterns = [
+urlpatterns = [
     path('', include(router.urls)),
-    path('purchase/', views.MembershipPurchaseView.as_view(), name='purchase'),
-    path('notify/alipay/', views.alipay_notify, name='alipay-notify'),
-    path('notify/alipay/return/', views.alipay_return, name='alipay-return'),
-    path('check-in/', views.check_in, name='check-in'),
+    path('payment/create/', PaymentCreateView.as_view(), name='create_payment'),
+    path('payment/success/', PaymentReturnView.as_view(), name='payment_success'),
+    path('payment/fail/', PaymentReturnView.as_view(), name='payment_fail'),
+    path('payment/verify/', PaymentVerifyView.as_view(), name='payment_verify'),
+    path('notify/alipay/', AlipayNotifyView.as_view(), name='alipay_notify'),
+    path('return/alipay/', AlipayReturnView.as_view(), name='alipay_return'),
+    path('points/records/', PointRecordListView.as_view(), name='point_records'),
 ]
 
-# 支付结果页面路由
-payment_urlpatterns = [
-    path('success/', views.payment_success, name='payment-success'),
-    path('fail/', views.payment_fail, name='payment-fail'),
-]
-
-# 导出不同的路由组
-urlpatterns = api_urlpatterns 

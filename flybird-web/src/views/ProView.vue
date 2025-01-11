@@ -352,65 +352,81 @@
     <div v-if="showPaymentModal" class="fixed inset-0 z-50">
       <!-- 遮罩层 -->
       <div class="absolute inset-0 bg-black bg-opacity-50" @click="closePaymentModal"></div>
-
+      
       <!-- 弹窗内容 -->
       <div class="relative z-10 min-h-screen px-4 flex items-center justify-center">
-        <div class="bg-white rounded-lg w-full max-w-md p-6">
+        <div class="bg-white rounded-xl w-full max-w-lg p-8">
           <!-- 关闭按钮 -->
           <button @click="closePaymentModal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-500">
             <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
-
+          
+          <!-- 标题 -->
+          <h3 class="text-2xl font-bold text-gray-900 mb-6 text-center">
+            确认订单
+          </h3>
+          
           <!-- 订单信息 -->
-          <div class="text-center mb-6">
-            <h3 class="text-lg font-medium text-gray-900">确认订单</h3>
-            <p class="mt-2 text-sm text-gray-500">请选择支付方式完成购买</p>
-          </div>
-
-          <div class="bg-gray-50 rounded-lg p-4 mb-6">
-            <div class="flex justify-between items-center">
-              <span class="text-gray-600">{{ selectedPlan?.name }}</span>
-              <span class="text-gray-900 font-medium">¥{{ selectedPlan?.price }}</span>
+          <div class="bg-gray-50 rounded-lg p-6 mb-6">
+            <div class="flex justify-between items-center mb-4">
+              <span class="text-gray-600">会员类型</span>
+              <span class="font-medium">{{ selectedPlan?.name }}</span>
+            </div>
+            <div class="flex justify-between items-center mb-4">
+              <span class="text-gray-600">会员时长</span>
+              <span class="font-medium">{{ selectedPlan?.period }}</span>
+            </div>
+            <div class="flex justify-between items-center text-lg">
+              <span class="text-gray-600">支付金额</span>
+              <span class="font-bold text-primary-600">¥{{ selectedPlan?.price }}</span>
             </div>
           </div>
-
+          
           <!-- 支付方式选择 -->
-          <div class="space-y-4">
-            <button v-for="method in paymentMethods" :key="method.id" @click="selectPaymentMethod(method)" :class="[
-              'w-full flex items-center justify-between px-4 py-3 border rounded-lg',
-              selectedPaymentMethod?.id === method.id
-                ? 'border-primary-600 bg-primary-50'
-                : 'border-gray-200 hover:border-primary-600'
-            ]">
-              <div class="flex items-center">
-                <img :src="method.icon" :alt="method.name" class="h-6 w-6">
-                <span class="ml-3 font-medium text-gray-900">{{ method.name }}</span>
-              </div>
-              <div class="flex-shrink-0 text-primary-600">
-                <svg v-if="selectedPaymentMethod?.id === method.id" class="h-5 w-5" viewBox="0 0 20 20"
-                  fill="currentColor">
-                  <path fill-rule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clip-rule="evenodd" />
-                </svg>
-              </div>
-            </button>
+          <div class="mb-6">
+            <h4 class="font-medium text-gray-900 mb-4">选择支付方式</h4>
+            <div class="grid grid-cols-2 gap-4">
+              <button
+                v-for="method in paymentMethods"
+                :key="method.id"
+                @click="selectPaymentMethod(method)"
+                class="flex items-center justify-center p-4 border rounded-lg transition-colors duration-200"
+                :class="[
+                  selectedPaymentMethod?.id === method.id
+                    ? 'border-primary-600 bg-primary-50'
+                    : 'border-gray-200 hover:border-primary-600'
+                ]"
+              >
+                <img :src="method.icon" :alt="method.name" class="h-8">
+              </button>
+            </div>
           </div>
-
-          <!-- 按钮组 -->
-          <div class="mt-6 flex space-x-4">
-            <!-- 取消按钮 -->
-            <button @click="closePaymentModal"
-              class="flex-1 px-4 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md font-medium transition-colors duration-200">
-              取消支付
+          
+          <!-- 温馨提示 -->
+          <div class="text-sm text-gray-500 mb-6">
+            <p>温馨提示：</p>
+            <ul class="list-disc list-inside space-y-1">
+              <li>支付完成后会员权益将立即生效</li>
+              <li>如遇支付问题请联系客服</li>
+            </ul>
+          </div>
+          
+          <!-- 底部按钮 -->
+          <div class="flex space-x-4">
+            <button 
+              @click="closePaymentModal"
+              class="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 transition-colors duration-200"
+            >
+              取消
             </button>
-
-            <!-- 确认支付按钮 -->
-            <button @click="handlePayment" :disabled="!selectedPaymentMethod"
-              class="flex-1 px-4 py-3 text-white bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-md font-medium transition-colors duration-200">
-              确认支付
+            <button 
+              @click="handlePayment"
+              :disabled="!selectedPaymentMethod"
+              class="flex-1 px-4 py-3 bg-primary-600 text-white rounded-md font-medium hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors duration-200"
+            >
+              立即支付
             </button>
           </div>
         </div>
@@ -455,203 +471,139 @@
   </div>
 </template>
 <script setup>
-
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { membership } from '@/api/membership'
 import { useRouter } from 'vue-router'
-import { useStore } from 'vuex'
-import HeadView from '../components/HeadView.vue'
-import FootView from '../components/FootView.vue'
 import { showToast } from '@/components/ToastMessage'
+import HeadView from '@/components/HeadView.vue'
+import FootView from '@/components/FootView.vue'
 import {
-  CalendarIcon,
-  StarIcon,
-  SparklesIcon,
-  CheckIcon,
-  DocumentArrowDownIcon,
-  DocumentTextIcon,
-  UserGroupIcon,
-  ChartBarIcon,
-  DocumentDuplicateIcon,
-  AcademicCapIcon,
-  ChatBubbleLeftRightIcon,
+  DocumentArrowDownIcon, SparklesIcon, UserGroupIcon,
+  DocumentTextIcon, ChatBubbleLeftRightIcon, CheckIcon,
+  CalendarIcon, StarIcon,
   InformationCircleIcon,
-  GiftIcon,
-  IdentificationIcon,
-  EnvelopeIcon,
   LinkIcon,
-  ShareIcon
+  ShareIcon,
+  EnvelopeIcon,
+  IdentificationIcon
 } from '@heroicons/vue/24/outline'
-const router = useRouter()
-const store = useStore()
 
-// 状态管理
+const router = useRouter()
+
+// 状态
+const activeTab = ref('purchase')
+const membershipTiers = ref([])
+const selectedPlan = ref(null)
+const selectedPaymentMethod = ref(null)
 const showPaymentModal = ref(false)
 const showQRCode = ref(false)
-const selectedPaymentMethod = ref(null)
 const qrCodeUrl = ref('')
-const selectedPlan = ref(null)
-const inviteCount = ref(0)
-const requiredInvites = ref(5)
 const isLoading = ref(false)
-const inviteLink = ref('https://example.com/invite/123456')
 
-// 标签页配置
+// Tab 选项
 const tabs = [
-  {
-    id: 'purchase',
-    name: '直接购买'
-  },
-  {
-    id: 'student',
-    name: '学生认证'
-  },
-  {
-    id: 'invite',
-    name: '邀请好友'
-  }
+  { id: 'purchase', name: '购买会员' },
+  { id: 'student', name: '学生认证' },
+  { id: 'invite', name: '邀请返利' }
 ]
-
-const activeTab = ref('purchase')
-// 会员特权列表
-const memberFeatures = [
-  {
-    id: 1,
-    name: '简历下载',
-    description: '无限次下载简历，支持多种格式导出',
-    icon: DocumentArrowDownIcon
-  },
-  {
-    id: 2,
-    name: '模板特权',
-    description: '解锁所有高级模板，支持自定义风格',
-    icon: DocumentTextIcon
-  },
-  {
-    id: 3,
-    name: 'AI优化',
-    description: '智能分析简历内容，提供专业修改建议',
-    icon: SparklesIcon
-  },
-  {
-    id: 4,
-    name: '一对一指导',
-    description: '专业顾问提供简历编写和求职指导',
-    icon: UserGroupIcon
-  },
-  {
-    id: 5,
-    name: '访问统计',
-    description: '查看简历被浏览和下载的详细数据',
-    icon: ChartBarIcon
-  },
-  {
-    id: 6,
-    name: '多份管理',
-    description: '创建多份简历，针对不同职位投递',
-    icon: DocumentDuplicateIcon
-  },
-  {
-    id: 7,
-    name: '求职经验',
-    description: '获取行业内部求职经验和面试技巧',
-    icon: AcademicCapIcon
-  },
-  {
-    id: 8,
-    name: 'VIP客服',
-    description: '专属客服通道，优先响应需求',
-    icon: ChatBubbleLeftRightIcon
-  }
-]
-
-// 会员方案 - 简化为只包含价格和周期信息
-const plans = [
-  {
-    id: 'monthly',
-    name: '月度会员',
-    icon: CalendarIcon,
-    price: '19.9',
-    originalPrice: '39.9',
-    period: '月',
-    features: [
-      'AI简历优化 5 次/月',
-      '简历模板无限制使用',
-      '求职数据分析',
-      '会员专属客服'
-    ]
-  },
-  {
-    id: 'yearly',
-    name: '年度会员',
-    icon: StarIcon,
-    price: '99',
-    originalPrice: '199',
-    period: '年',
-    hot: true,
-    features: [
-      'AI简历优化无限次数',
-      '简历模板无限制使用',
-      '求职数据分析',
-      '一对一简历指导',
-      '会员专属客服',
-      '优先体验新功能'
-    ]
-  },
-  {
-    id: 'lifetime',
-    name: '终身会员',
-    icon: SparklesIcon,
-    price: '299',
-    originalPrice: '599',
-    period: '终身',
-    features: [
-      '包含年度会员所有特权',
-      '终身享受会员权益',
-      'VIP专属标识',
-      '简历制作课程',
-      '面试辅导服务',
-      '会员价格锁定'
-    ]
-  }
-]
-
 
 // 支付方式
 const paymentMethods = [
   {
     id: 'alipay',
     name: '支付宝支付',
-    icon: '/icons/alipay.png'
+    icon: '/images/alipay.png'
   },
   {
     id: 'wechat',
     name: '微信支付',
-    icon: '/icons/wechat.png'
+    icon: '/images/wechat.png'
   }
 ]
 
-// 邀请记录数据
-const inviteHistory = ref([
-  {
-    id: 1,
-    name: '张三',
-    avatar: '/avatars/1.jpg',
-    date: '2024-03-20'
-  },
-  {
-    id: 2,
-    name: '李四',
-    avatar: '/avatars/2.jpg',
-    date: '2024-03-19'
+// 获取会员等级数据
+const fetchMembershipTiers = async () => {
+  try {
+    const response = await membership.getTiers()
+    if (response?.data?.code === 200) {
+      membershipTiers.value = response.data.data
+    }
+  } catch (error) {
+    console.error('获取会员等级失败:', error)
+    showToast('获取会员等级失败', 'error')
   }
-])
+}
 
-// 计算属性
-const isAuthenticated = computed(() => store.state.isAuthenticated)
-const userInfo = computed(() => store.state.userInfo)
-const inviteProgress = computed(() => {
-  return Math.min((inviteCount.value / requiredInvites.value) * 100, 100)
+// 转换会员等级数据为展示格式
+const plans = computed(() => {
+  if (!membershipTiers.value.length) return []
+  
+  const tier = membershipTiers.value[0] // 使用第一个会员等级
+  
+  // 生成三个不同时长的会员卡片
+  return [
+    {
+      id: `${tier.id}_monthly`,
+      name: '月度会员',
+      icon: CalendarIcon,
+      price: tier.price_monthly,
+      originalPrice: (parseFloat(tier.price_monthly) * 1.5).toFixed(2),
+      period: '月',
+      hot: false,
+      features: Object.values(tier.benefits).map(benefit => benefit.description)
+    },
+    {
+      id: `${tier.id}_quarterly`,
+      name: '季度会员',
+      icon: SparklesIcon,
+      price: tier.price_quarterly,
+      originalPrice: (parseFloat(tier.price_quarterly) * 1.5).toFixed(2),
+      period: '季',
+      hot: true, // 标记为热门选择
+      features: Object.values(tier.benefits).map(benefit => benefit.description)
+    },
+    {
+      id: `${tier.id}_yearly`,
+      name: '年度会员',
+      icon: StarIcon,
+      price: tier.price_yearly,
+      originalPrice: (parseFloat(tier.price_yearly) * 1.5).toFixed(2),
+      period: '年',
+      features: Object.values(tier.benefits).map(benefit => benefit.description)
+    }
+  ]
 })
+
+// 会员特权列表
+const memberFeatures = computed(() => {
+  if (!membershipTiers.value.length) return []
+  
+  const tier = membershipTiers.value[0]
+  return Object.entries(tier.benefits).map(([key, benefit]) => ({
+    id: key,
+    name: benefit.name,
+    description: benefit.description,
+    icon: getFeatureIcon(key)
+  }))
+})
+
+// 辅助函数
+const getPlanIcon = (name) => {
+  if (name.includes('月')) return CalendarIcon
+  if (name.includes('年')) return StarIcon
+  return SparklesIcon
+}
+
+const getFeatureIcon = (key) => {
+  const iconMap = {
+    'resume_export': DocumentArrowDownIcon,
+    'ai_chat': SparklesIcon,
+    'job_apply': UserGroupIcon,
+    'resume_optimization': DocumentTextIcon,
+    'priority_support': ChatBubbleLeftRightIcon
+  }
+  return iconMap[key] || DocumentTextIcon
+}
 
 // 方法
 const handleTabClick = (tabId) => {
@@ -659,11 +611,7 @@ const handleTabClick = (tabId) => {
 }
 
 const openPaymentModal = (plan) => {
-  if (!isAuthenticated.value) {
-    showToast('请先登录', 'warning')
-    router.push('/login')
-    return
-  }
+  // 直接显示支付弹窗
   selectedPlan.value = plan
   selectedPaymentMethod.value = null
   showPaymentModal.value = true
@@ -681,123 +629,69 @@ const selectPaymentMethod = (method) => {
 
 const handlePayment = async () => {
   if (!selectedPlan.value || !selectedPaymentMethod.value) {
+    showToast('请选择支付方式', 'warning')
     return
   }
 
   try {
     isLoading.value = true
-    const response = await store.dispatch('createOrder', {
-      planId: selectedPlan.value.id,
-      paymentMethod: selectedPaymentMethod.value.id,
-      amount: selectedPlan.value.price
+    
+    // 从选中计划的ID中提取会员等级ID和时长
+    const [tierId, duration] = selectedPlan.value.id.split('_')
+    
+    // 创建订单
+    const orderResponse = await membership.createOrder({
+      tier_id: parseInt(tierId),
+      duration: duration,
+      payment_method: selectedPaymentMethod.value.id
     })
 
-    if (selectedPaymentMethod.value.id === 'alipay') {
-      window.location.href = response.payUrl
-    } else {
-      qrCodeUrl.value = response.qrCode
-      showPaymentModal.value = false
-      showQRCode.value = true
+    if (orderResponse?.data?.code === 200) {
+      const orderData = orderResponse.data.data
+      
+      // 创建支付
+      const paymentResponse = await membership.createPayment({
+        order_no: orderData.order_no,
+        payment_method: selectedPaymentMethod.value.id
+      })
+
+      if (paymentResponse?.data?.code === 200) {
+        const paymentData = paymentResponse.data.data
+        
+        if (selectedPaymentMethod.value.id === 'alipay') {
+          showPaymentModal.value = false
+          // 在新窗口打开支付链接
+          const payWindow = window.open(paymentData.payment_url, '_blank')
+          if (payWindow) {
+            // 支付窗口打开成功
+            showToast('请在新窗口完成支付', 'info')
+          } else {
+            // 弹窗被拦截
+            showToast('请允许弹出窗口以完成支付', 'warning')
+            // 提供备选方案
+            const confirmOpen = confirm('支付窗口被拦截，是否手动打开支付页面？')
+            if (confirmOpen) {
+              window.location.href = paymentData.payment_url
+            }
+          }
+        }
+      }
     }
   } catch (error) {
     console.error('支付失败:', error)
-    showToast('支付失败，请重试', 'error')
+    showToast(error.response?.data?.message || '支付失败，请重试', 'error')
   } finally {
     isLoading.value = false
-  }
-}
-
-const closeQRCode = () => {
-  showQRCode.value = false
-  selectedPlan.value = null
-  selectedPaymentMethod.value = null
-  qrCodeUrl.value = ''
-}
-
-const handleVerification = async () => {
-  if (!isAuthenticated.value) {
-    showToast('请先登录', 'warning')
-    router.push('/login')
-    return
-  }
-
-  if (userInfo.value?.isStudent) {
-    showToast('您已经是学生会员了', 'info')
-    return
-  }
-
-  router.push('/verification')
-}
-
-const handleShare = async () => {
-  if (!isAuthenticated.value) {
-    showToast('请先登录', 'warning')
-    router.push('/login')
-    return
-  }
-
-  try {
-    isLoading.value = true
-    const { inviteLink, inviteCode } = await store.dispatch('generateInviteCode')
-
-    const shareText = `使用我的邀请码 ${inviteCode} 注册，即可获得会员优惠！`
-
-    if (navigator.share) {
-      await navigator.share({
-        title: '邀请好友加入泡泡智造',
-        text: shareText,
-        url: inviteLink
-      })
-    } else {
-      await navigator.clipboard.writeText(`${shareText}\n${inviteLink}`)
-      showToast('邀请链接已复制到剪贴板', 'success')
-    }
-  } catch (error) {
-    console.error('分享失败:', error)
-    showToast('分享失败，请重试', 'error')
-  } finally {
-    isLoading.value = false
-  }
-}
-
-const handleCopyLink = async () => {
-  try {
-    await navigator.clipboard.writeText(inviteLink.value)
-    showToast('邀请链接已复制到剪贴板', 'success')
-  } catch (error) {
-    showToast('复制失败，请重试', 'error')
-  }
-}
-
-const fetchInviteData = async () => {
-  try {
-    const data = await store.dispatch('fetchInviteStats')
-    inviteCount.value = data.inviteCount
-    requiredInvites.value = data.requiredInvites
-  } catch (error) {
-    console.error('获取邀请数据失败:', error)
   }
 }
 
 // 生命周期钩子
 onMounted(async () => {
-  if (activeTab.value === 'invite') {
-    await fetchInviteData()
-  }
+  await fetchMembershipTiers()
 })
 
-// 监听标签页变化
-watch(activeTab, async (newTab) => {
-  if (newTab === 'invite') {
-    await fetchInviteData()
-  }
-})
-
-// 添加选择方式的状态
+// 其他状态
 const selectedMethod = ref('edu_email')
-
-// 添加邀请方式的状态
-const selectedInviteMethod = ref('share_link')
 </script>
 <style>
 /* 渐变背景 */

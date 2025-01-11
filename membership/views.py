@@ -11,7 +11,7 @@ from .serializers import (
     MembershipOrderSerializer, UserPointSerializer,
     PointRecordSerializer
 )
-from .services import PaymentService
+from .services import PaymentService, MembershipCacheService
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 from rest_framework.decorators import api_view, permission_classes
@@ -32,9 +32,19 @@ logger = logging.getLogger('membership')
 
 class MembershipTierViewSet(viewsets.ReadOnlyModelViewSet):
     """会员等级视图集"""
-    queryset = MembershipTier.objects.all()
+    queryset = MembershipTier.objects.filter(status=True)  # 只显示启用的等级
     serializer_class = MembershipTierSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]  # 允许任何人访问
+    
+    def list(self, request):
+        """获取会员等级列表"""
+        queryset = self.get_queryset().order_by('sort_order')
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({
+            'code': 200,
+            'message': '获取成功',
+            'data': serializer.data
+        })
 
 class UserMembershipViewSet(viewsets.GenericViewSet):
     """用户会员视图集"""
@@ -534,7 +544,7 @@ def payment_success(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])  # 允许未认证访问
 def payment_fail(request):
-    """支付失败��面"""
+    """支付失败页面"""
     try:
         reason = request.GET.get('reason', 'unknown')
         order_no = request.GET.get('order_no')
@@ -567,3 +577,331 @@ def payment_fail(request):
             'message': '系统错误',
             'data': None
         }, status=500) 
+
+class MembershipOrderViewSet(viewsets.GenericViewSet):
+    """会员订单视图集"""
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = MembershipOrderSerializer
+    
+    def get_queryset(self):
+        return MembershipOrder.objects.filter(user=self.request.user)
+    
+    def list(self, request):
+        """获取订单列表"""
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({
+            'code': 200,
+            'message': '获取成功',
+            'data': serializer.data
+        })
+    
+    def create(self, request):
+        """创建订单"""
+        try:
+            logger.info(f"接收到订单创建请求: {request.data}")
+            
+            tier_id = request.data.get('tier_id')
+            duration = request.data.get('duration')
+            payment_method = request.data.get('payment_method')
+            
+            # 参数验证
+            if not all([tier_id, duration, payment_method]):
+                logger.warning(f"缺少必要参数: tier_id={tier_id}, duration={duration}, payment_method={payment_method}")
+                return Response({
+                    'code': 400,
+                    'message': '缺少必要参数'
+                }, status=400)
+            
+            logger.info(f"开始创建订单 - tier_id:{tier_id}, duration:{duration}, payment_method:{payment_method}")
+            logger.info(f"当前用户: {request.user.id}")
+
+            # 创建订单
+            try:
+                order_data = PaymentService.create_order(
+                    user=request.user,
+                    tier_id=tier_id,
+                    duration=duration,
+                    payment_method=payment_method
+                )
+                
+                logger.info(f"订单创建成功: {order_data}")
+                
+                return Response({
+                    'code': 200,
+                    'message': '创建订单成功',
+                    'data': order_data
+                })
+                
+            except ValueError as e:
+                logger.warning(f"订单创建失败(参数错误): {str(e)}")
+                return Response({
+                    'code': 400,
+                    'message': str(e)
+                }, status=400)
+                
+        except Exception as e:
+            logger.error(f"订单创建失败(系统错误): {str(e)}")
+            logger.error("完整错误信息:", exc_info=True)
+            return Response({
+                'code': 500,
+                'message': '系统错误，请稍后重试'
+            }, status=500)
+
+class PaymentCreateView(APIView):
+    """创建支付"""
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request):
+        try:
+            order_no = request.data.get('order_no')
+            payment_method = request.data.get('payment_method')
+            
+            logger.info(f"开始创建支付 - order_no: {order_no}, method: {payment_method}")
+            
+            # 获取订单
+            try:
+                order = MembershipOrder.objects.get(
+                    order_no=order_no,
+                    user=request.user,
+                    status='pending'
+                )
+            except MembershipOrder.DoesNotExist:
+                logger.error(f"订单不存在或状态异常: {order_no}")
+                return Response({
+                    'code': 404,
+                    'message': '订单不存在或状态异常'
+                }, status=404)
+            
+            # 创建支付
+            try:
+                payment_service = PaymentService()
+                payment_url = payment_service.create_payment(order)
+                
+                logger.info(f"支付链接创建成功 - URL: {payment_url}")
+                
+                return Response({
+                    'code': 200,
+                    'message': '创建支付成功',
+                    'data': {
+                        'payment_url': payment_url,
+                        'order_no': order.order_no,
+                        'amount': float(order.amount)
+                    }
+                })
+            except Exception as e:
+                logger.error(f"创建支付链接失败: {str(e)}", exc_info=True)
+                return Response({
+                    'code': 500,
+                    'message': '创建支付链接失败'
+                }, status=500)
+            
+        except Exception as e:
+            logger.error(f"创建支付失败: {str(e)}", exc_info=True)
+            return Response({
+                'code': 500,
+                'message': '系统错误，请稍后重试'
+            }, status=500)
+
+class PaymentNotifyView(APIView):
+    """支付通知处理"""
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        return alipay_notify(request)
+
+class PaymentReturnView(APIView):
+    """支付返回处理"""
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        try:
+            logger.info(f"收到支付同步回调: {request.GET}")
+            
+            # 获取参数
+            out_trade_no = request.GET.get('out_trade_no')
+            trade_no = request.GET.get('trade_no')
+            total_amount = request.GET.get('total_amount')
+            
+            logger.info(f"订单号: {out_trade_no}")
+            logger.info(f"支付宝交易号: {trade_no}")
+            logger.info(f"支付金额: {total_amount}")
+            
+            # 验证签名
+            payment_service = PaymentService()
+            verify_result = payment_service.verify_alipay_params(request.GET)
+            
+            if verify_result:
+                # 更新订单状态
+                try:
+                    order = MembershipOrder.objects.get(order_no=out_trade_no)
+                    PaymentService.complete_order(order)
+                    logger.info(f"订单 {out_trade_no} 处理成功")
+                    
+                    # 重定向到前端成功页面
+                    return redirect(f"{settings.FRONTEND_URL}/payment/success")
+                except MembershipOrder.DoesNotExist:
+                    logger.error(f"订单不存在: {out_trade_no}")
+                    return redirect(f"{settings.FRONTEND_URL}/payment/fail?reason=order_not_found")
+            else:
+                logger.error("支付宝签名验证失败")
+                return redirect(f"{settings.FRONTEND_URL}/payment/fail?reason=verify_failed")
+                
+        except Exception as e:
+            logger.error(f"处理支付回调异常: {str(e)}", exc_info=True)
+            return redirect(f"{settings.FRONTEND_URL}/payment/fail?reason=system_error")
+
+class AlipayNotifyView(APIView):
+    """支付宝异步通知"""
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        return alipay_notify(request)
+
+class AlipayReturnView(APIView):
+    """支付宝同步返回"""
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        return alipay_return(request)
+
+class UserPointViewSet(viewsets.GenericViewSet):
+    """用户积分视图集"""
+    serializer_class = UserPointSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return UserPoint.objects.filter(user=self.request.user)
+
+    @action(detail=False, methods=['get'])
+    def balance(self, request):
+        """获取积分余额"""
+        point, _ = UserPoint.objects.get_or_create(user=request.user)
+        serializer = self.get_serializer(point)
+        return Response({
+            'code': 200,
+            'message': '获取成功',
+            'data': serializer.data
+        })
+
+class PointRecordListView(APIView):
+    """积分记录列表"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        records = PointRecord.objects.filter(user=request.user)
+        serializer = PointRecordSerializer(records, many=True)
+        return Response({
+            'code': 200,
+            'message': '获取成功',
+            'data': serializer.data
+        }) 
+
+class PaymentVerifyView(APIView):
+    """支付验证"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        try:
+            order_no = request.data.get('order_no')
+            if not order_no:
+                return Response({
+                    'code': 400,
+                    'message': '缺少订单号'
+                }, status=400)
+
+            # 获取订单
+            try:
+                order = MembershipOrder.objects.get(
+                    order_no=order_no,
+                    user=request.user
+                )
+            except MembershipOrder.DoesNotExist:
+                return Response({
+                    'code': 404,
+                    'message': '订单不存在'
+                }, status=404)
+
+            # 如果订单已支付
+            if order.status == 'paid':
+                return Response({
+                    'code': 200,
+                    'message': '支付成功',
+                    'data': {
+                        'order_no': order.order_no,
+                        'status': order.status
+                    }
+                })
+
+            # 如果订单未支付，调用支付宝查询接口
+            payment_service = PaymentService()
+            try:
+                response = payment_service.alipay.api_alipay_trade_query(out_trade_no=order_no)
+                logger.info(f"支付宝查询结果: {response}")
+                
+                if response.get('code') == '10000':  # 接口调用成功
+                    trade_status = response.get('trade_status')
+                    if trade_status in ['TRADE_SUCCESS', 'TRADE_FINISHED']:
+                        try:
+                            with transaction.atomic():
+                                # 更新订单状态
+                                order.status = 'paid'
+                                order.paid_time = timezone.now()
+                                order.save()
+                                
+                                # 更新会员信息
+                                membership, created = UserMembership.objects.get_or_create(
+                                    user=order.user,
+                                    defaults={'tier': order.tier}
+                                )
+                                membership.tier = order.tier
+                                if not membership.expire_time or membership.expire_time < timezone.now():
+                                    membership.expire_time = timezone.now() + timezone.timedelta(days=order.days)
+                                else:
+                                    membership.expire_time = membership.expire_time + timezone.timedelta(days=order.days)
+                                membership.save()
+                                
+                                # 清除会员信息缓存
+                                MembershipCacheService.clear_user_membership_cache(order.user)
+                            
+                            logger.info(f"订单 {order_no} 处理成功")
+                            logger.info(f"会员信息更新成功 - 用户:{order.user.phone}, 等级:{order.tier.name}, 到期时间:{membership.expire_time}")
+                            
+                            return Response({
+                                'code': 200,
+                                'message': '支付成功',
+                                'data': {
+                                    'order_no': order.order_no,
+                                    'status': 'paid'
+                                }
+                            })
+                        except Exception as e:
+                            logger.error(f"更新订单状态失败: {str(e)}", exc_info=True)
+                            return Response({
+                                'code': 500,
+                                'message': '订单处理失败'
+                            }, status=500)
+                
+                return Response({
+                    'code': 400,
+                    'message': '支付未完成',
+                    'data': {
+                        'order_no': order.order_no,
+                        'status': order.status,
+                        'trade_status': response.get('trade_status')
+                    }
+                })
+                
+            except Exception as e:
+                logger.error(f"查询支付状态失败: {str(e)}", exc_info=True)
+                return Response({
+                    'code': 500,
+                    'message': '查询支付状态失败'
+                }, status=500)
+
+        except Exception as e:
+            logger.error(f"验证支付失败: {str(e)}", exc_info=True)
+            return Response({
+                'code': 500,
+                'message': '系统错误'
+            }, status=500) 

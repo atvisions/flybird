@@ -8,6 +8,7 @@ import logging
 import traceback
 from alipay import AliPay
 from .models import MembershipTier, MembershipOrder, UserMembership, PointRule, UserPoint, PointRecord
+import textwrap
 
 # 配置日志
 logging.basicConfig(
@@ -61,6 +62,7 @@ class MembershipService:
 
 class PaymentService:
     """支付服务"""
+    logger = logging.getLogger('membership')  # 添加类级别的 logger
     
     def __init__(self):
         self.alipay = self._init_alipay()
@@ -68,14 +70,55 @@ class PaymentService:
     def _init_alipay(self):
         """初始化支付宝客户端"""
         try:
-            # 读取密钥文件
-            with open(settings.ALIPAY_CONFIG['PRIVATE_KEY_PATH']) as f:
-                app_private_key_string = f.read()
+            try:
+                with open(settings.ALIPAY_CONFIG['PRIVATE_KEY_PATH']) as f:
+                    key_content = f.read()
+                    # 处理私钥格式
+                    lines = key_content.strip().split('\n')
+                    if len(lines) <= 2:  # 如果只有一行内容
+                        app_private_key_string = (
+                            "-----BEGIN RSA PRIVATE KEY-----\n" +
+                            '\n'.join(textwrap.wrap(lines[0], 64)) +
+                            "\n-----END RSA PRIVATE KEY-----"
+                        )
+                    else:
+                        app_private_key_string = key_content
+                logger.info("成功读取应用私钥")
+            except Exception as e:
+                logger.error(f"读取应用私钥失败: {str(e)}")
+                raise
             
-            with open(settings.ALIPAY_CONFIG['PUBLIC_KEY_PATH']) as f:
-                alipay_public_key_string = f.read()
+            # 读取公钥
+            try:
+                with open(settings.ALIPAY_CONFIG['PUBLIC_KEY_PATH']) as f:
+                    key_content = f.read()
+                    # 处理公钥格式
+                    lines = key_content.strip().split('\n')
+                    if len(lines) <= 2:  # 如果只有一行内容
+                        alipay_public_key_string = (
+                            "-----BEGIN PUBLIC KEY-----\n" +
+                            '\n'.join(textwrap.wrap(lines[0], 64)) +
+                            "\n-----END PUBLIC KEY-----"
+                        )
+                    else:
+                        alipay_public_key_string = key_content
+                logger.info("成功读取支付宝公钥")
+            except Exception as e:
+                logger.error(f"读取支付宝公钥失败: {str(e)}")
+                raise
             
             logger.info("成功读取支付宝密钥文件")
+            
+            # 打印处理后的密钥格式（仅打印头尾）
+            logger.info("私钥格式:")
+            logger.info(app_private_key_string.split('\n')[0])
+            logger.info('...')
+            logger.info(app_private_key_string.split('\n')[-1])
+            
+            logger.info("公钥格式:")
+            logger.info(alipay_public_key_string.split('\n')[0])
+            logger.info('...')
+            logger.info(alipay_public_key_string.split('\n')[-1])
             
             # 创建支付宝客户端
             alipay = AliPay(
@@ -92,47 +135,68 @@ class PaymentService:
             
         except Exception as e:
             logger.error(f"初始化支付宝客户端失败: {str(e)}")
-            logger.error(f"错误详情: {e.__class__.__name__}")
+            logger.error("完整错误信息:", exc_info=True)
             raise
     
     def create_payment(self, order):
         """创建支付链接"""
         try:
-            logger.info(f"开始创建支付链接: 订单号={order.order_no}")
-            logger.info(f"支付金额: {float(order.amount)}")
-            
-            # 构建商品信息
             subject = f'飞鸟简历 - {order.tier.name}'
             body = f'{order.days}天会员服务'
             
-            # 生成支付参数
-            order_string = self.alipay.api_alipay_trade_page_pay(
-                out_trade_no=order.order_no,
-                total_amount=float(order.amount),
-                subject=subject,
-                body=body,
-                return_url=settings.ALIPAY_CONFIG['RETURN_URL'],
-                notify_url=settings.ALIPAY_CONFIG['NOTIFY_URL'],
-                # 添加额外参数
-                timeout_express='15m',  # 订单有效期15分钟
-                product_code='FAST_INSTANT_TRADE_PAY'  # 固定值
-            )
+            logger.info(f"创建支付订单 - 订单号:{order.order_no}, 金额:{order.amount}")
             
-            # 生成完整支付URL
-            payment_url = f"{settings.ALIPAY_CONFIG['SANDBOX_URL']}?{order_string}"
+            # 检查支付宝客户端是否正确初始化
+            if not self.alipay:
+                logger.error("支付宝客户端未初始化")
+                raise ValueError("支付宝客户端未初始化")
             
-            logger.info(f"生成支付链接成功: {payment_url}")
+            # 构建支付参数
+            params = {
+                'out_trade_no': order.order_no,
+                'total_amount': float(order.amount),
+                'subject': subject,
+                'body': body,
+                'return_url': settings.ALIPAY_CONFIG['RETURN_URL'],
+                'notify_url': settings.ALIPAY_CONFIG['NOTIFY_URL'],
+                'timeout_express': '15m',
+                'product_code': 'FAST_INSTANT_TRADE_PAY'
+            }
+            
+            logger.info(f"支付参数: {params}")
+            
+            try:
+                order_string = self.alipay.api_alipay_trade_page_pay(**params)
+                logger.info("支付宝订单字符串生成成功")
+            except Exception as e:
+                logger.error(f"生成支付宝订单字符串失败: {str(e)}", exc_info=True)
+                raise
+            
+            # 使用正确的沙箱网关
+            gateway = "https://openapi-sandbox.dl.alipaydev.com/gateway.do"
+            payment_url = f"{gateway}?{order_string}"
+            
+            logger.info(f"生成支付链接: {payment_url}")
             return payment_url
                 
         except Exception as e:
             logger.error(f"创建支付链接失败: {str(e)}")
-            logger.error(f"错误详情: {e.__class__.__name__}")
+            logger.error("完整错误信息:", exc_info=True)
             raise
 
     @classmethod
-    def create_order(cls, user, tier, duration, payment_method='alipay'):
+    def create_order(cls, user, tier_id, duration, payment_method='alipay'):
         """创建订单"""
         try:
+            logger.info(f"开始创建订单 - user:{user.id}, tier_id:{tier_id}, duration:{duration}")
+            
+            # 获取会员等级
+            try:
+                tier = MembershipTier.objects.get(id=tier_id)
+            except MembershipTier.DoesNotExist:
+                logger.error(f"会员等级不存在: tier_id={tier_id}")
+                raise ValueError('会员等级不存在')
+
             # 计算订单金额
             if duration == 'monthly':
                 amount = tier.price_monthly
@@ -144,34 +208,36 @@ class PaymentService:
                 amount = tier.price_yearly
                 days = 365
             else:
+                logger.error(f"无效的时长: duration={duration}")
                 raise ValueError('Invalid duration')
 
-            # 创建订单记录
-            order = MembershipOrder.objects.create(
-                user=user,
-                tier=tier,
-                amount=amount,
-                days=days,
-                payment_method=payment_method,
-                status='pending'
-            )
+            logger.info(f"订单金额计算 - amount:{amount}, days:{days}")
 
-            # 根据支付方式创建支付
-            if payment_method == 'alipay':
-                payment_url = cls.create_alipay_payment(order)
-            else:
-                raise ValueError('Unsupported payment method')
+            # 创建订单记录
+            try:
+                order = MembershipOrder.objects.create(
+                    user=user,
+                    tier=tier,
+                    amount=amount,
+                    days=days,
+                    payment_method=payment_method,
+                    status='pending'
+                )
+                logger.info(f"订单创建成功 - order_no:{order.order_no}")
+            except Exception as e:
+                logger.error(f"订单记录创建失败: {str(e)}")
+                raise
 
             return {
                 'order_no': order.order_no,
-                'amount': float(order.amount),
-                'payment_url': payment_url
+                'amount': float(amount)
             }
 
         except Exception as e:
             logger.error(f"订单创建失败: {str(e)}")
-            logger.error(traceback.format_exc())
-            raise ValueError(f'Order creation failed: {str(e)}')
+            logger.error(f"完整错误信息:", exc_info=True)
+            logger.error(f"请求参数 - user:{user.id}, tier_id:{tier_id}, duration:{duration}")
+            raise
 
     @classmethod
     def create_alipay_payment(cls, order):
@@ -205,14 +271,8 @@ class PaymentService:
     def complete_order(cls, order):
         """完成订单"""
         try:
-            # 检查订单状态
             cls.logger.info(f"开始处理订单: {order.order_no}")
-            cls.logger.info(f"当前状态: {order.status}")
             
-            if order.status != 'pending':
-                cls.logger.info(f"订单状态不是待支付，跳过处理")
-                return False
-
             with transaction.atomic():
                 # 更新订单状态
                 order.status = 'paid'
@@ -258,7 +318,7 @@ class PaymentService:
             cls.logger.info(f"交易号: {data.get('trade_no')}")
             cls.logger.info(f"交易状态: {data.get('trade_status')}")
             cls.logger.info(f"签名: {data.get('sign')}")
-            cls.logger.info(f"签��类型: {data.get('sign_type')}")
+            cls.logger.info(f"签名类型: {data.get('sign_type')}")
             
             client = cls.create_alipay_client()
             
@@ -291,61 +351,169 @@ class PaymentService:
             cls.logger.error(f"异常详情: \n{traceback.format_exc()}")
             return None
 
+    def verify_alipay_params(self, params):
+        """验证支付宝回调参数"""
+        try:
+            # 移除sign和sign_type
+            sign = params.pop('sign', None)
+            params.pop('sign_type', None)
+            
+            # 验证签名
+            verify_result = self.alipay.verify(params, sign)
+            
+            # 恢复参数
+            params['sign'] = sign
+            params['sign_type'] = 'RSA2'
+            
+            return verify_result
+            
+        except Exception as e:
+            logger.error(f"验证支付宝参数失败: {str(e)}", exc_info=True)
+            return False
+
+    def query_payment(self, order_no):
+        """查询支付状态"""
+        try:
+            response = self.alipay.api_alipay_trade_query(out_trade_no=order_no)
+            if response.get('code') == '10000':  # 接口调用成功
+                return response.get('trade_status')
+            return None
+        except Exception as e:
+            self.logger.error(f"查询支付状态失败: {str(e)}", exc_info=True)
+            raise
+
 class PointService:
     """积分服务"""
-    @classmethod
-    def add_points(cls, user, event_type, description=None):
-        """添加积分"""
-        rule = PointRule.objects.filter(
-            event_type=event_type,
-            is_active=True
-        ).first()
-        
-        if not rule:
-            return None
-            
-        with transaction.atomic():
-            user_point, _ = UserPoint.objects.get_or_create(user=user)
-            
-            # 更新用户积分
-            user_point.balance += rule.points
-            user_point.total_earned += rule.points
-            user_point.save()
-            
-            # 创建积分记录
-            record = PointRecord.objects.create(
-                user=user,
-                rule=rule,
-                points=rule.points,
-                balance=user_point.balance,
-                event_type=event_type,
-                description=description or rule.description
-            )
-            
-            return record
-            
-    @classmethod
-    def deduct_points(cls, user, points, event_type, description):
-        """扣除积分"""
-        with transaction.atomic():
-            user_point = UserPoint.objects.select_for_update().get(user=user)
-            
-            # 检查积分是否足够
-            if user_point.balance < points:
-                raise ValueError('积分不足')
+    @staticmethod
+    def add_points(user, event_type, description=None, amount=None):
+        """
+        添加积分
+        :param user: 用户对象
+        :param event_type: 事件类型
+        :param description: 描述(可选)
+        :param amount: 指定积分数量(可选)
+        """
+        try:
+            with transaction.atomic():
+                # 获取或创建用户积分账户
+                point, _ = UserPoint.objects.get_or_create(user=user)
                 
-            # 更新用户积分
-            user_point.balance -= points
-            user_point.total_spent += points
-            user_point.save()
+                # 获取积分规则
+                try:
+                    rule = PointRule.objects.get(event_type=event_type, is_active=True)
+                except PointRule.DoesNotExist:
+                    logger.warning(f"积分规则不存在: {event_type}")
+                    return None
+                
+                # 计算实际积分
+                points = amount if amount is not None else rule.points
+                
+                # 检查是否有会员加成
+                if hasattr(user, 'membership') and user.membership.is_active:
+                    membership_tier = user.membership.tier
+                    point_multiplier = membership_tier.benefits.get('point_multiplier', 1)
+                    points = int(points * point_multiplier)
+                
+                # 更新积分余额
+                point.balance += points
+                point.total_earned += points
+                
+                # 更新积分等级
+                point.update_level()
+                point.save()
+                
+                # 创建积分记录
+                record = PointRecord.objects.create(
+                    user=user,
+                    rule=rule,
+                    points=points,
+                    balance=point.balance,
+                    event_type=event_type,
+                    description=description or rule.name
+                )
+                
+                logger.info(
+                    f"积分添加成功: "
+                    f"用户={user.phone}, "
+                    f"事件={event_type}, "
+                    f"积分={points}, "
+                    f"余额={point.balance}"
+                )
+                
+                return record
+                
+        except Exception as e:
+            logger.error(f"添加积分失败: {str(e)}")
+            return None
+
+    @staticmethod
+    def deduct_points(user, points, event_type, description):
+        """
+        扣除积分
+        :param user: 用户对象
+        :param points: 扣除的积分数量
+        :param event_type: 事件类型
+        :param description: 描述
+        """
+        try:
+            with transaction.atomic():
+                point = UserPoint.objects.select_for_update().get(user=user)
+                
+                # 检查积分是否足够
+                if point.balance < points:
+                    logger.warning(f"积分不足: 用户={user.phone}, 当前={point.balance}, 需要={points}")
+                    return False
+                
+                # 扣除积分
+                point.balance -= points
+                point.save()
+                
+                # 创建积分记录
+                PointRecord.objects.create(
+                    user=user,
+                    points=-points,
+                    balance=point.balance,
+                    event_type=event_type,
+                    description=description
+                )
+                
+                logger.info(
+                    f"积分扣除成功: "
+                    f"用户={user.phone}, "
+                    f"事件={event_type}, "
+                    f"积分={points}, "
+                    f"余额={point.balance}"
+                )
+                
+                return True
+                
+        except Exception as e:
+            logger.error(f"扣除积分失败: {str(e)}")
+            return False 
+
+class MembershipCacheService:
+    """会员信息缓存服务"""
+    
+    @staticmethod
+    def get_user_membership_info(user):
+        """获取用户会员信息"""
+        cache_key = f'user_membership_{user.id}'
+        info = cache.get(cache_key)
+        
+        if info is None:
+            membership = getattr(user, 'membership', None)
+            info = {
+                'is_vip': membership.is_active if membership else False,
+                'vip_type': membership.tier.key if membership and membership.is_active and membership.tier else 'none',
+                'vip_expire_time': membership.expire_time if membership else None,
+                'vip_status': membership.tier.name if membership and membership.is_active and membership.tier else '普通用户'
+            }
+            cache.set(cache_key, info, timeout=3600)  # 缓存1小时
             
-            # 创建积分记录
-            record = PointRecord.objects.create(
-                user=user,
-                points=-points,
-                balance=user_point.balance,
-                event_type=event_type,
-                description=description
-            )
-            
-            return record 
+        return info
+
+    @staticmethod
+    def clear_user_membership_cache(user):
+        """清除用户会员信息缓存"""
+        cache_key = f'user_membership_{user.id}'
+        cache.delete(cache_key) 

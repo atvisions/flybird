@@ -424,15 +424,19 @@ MEMBERSHIP_URLS = {
 ALIPAY_CONFIG = {
     'DEBUG': True,  # 沙箱环境
     'APP_ID': '2021000142698861',  # 沙箱应用ID
-    'NOTIFY_URL': f"{FRONTEND_URL}/api/v1/membership/notify/alipay/",  # 异步通知地址
-    'RETURN_URL': f"{FRONTEND_URL}/payment/success",  # 支付成功跳转页面
+    'NOTIFY_URL': f"{API_BASE_URL}/api/v1/membership/notify/alipay/",  # 异步通知地址
+    'RETURN_URL': "http://192.168.3.16:8080/payment/success",  # 直接跳转到前端成功页面
     'FAIL_URL': f"{FRONTEND_URL}/payment/fail",  # 支付失败跳转页面
-    'SANDBOX_URL': 'https://openapi-sandbox.dl.alipaydev.com/gateway.do',  # 支付宝沙箱网关
     'SANDBOX_LOGIN_URL': 'https://open.alipay.com/develop/sandbox/account',  # 沙箱登录地址
     'PRODUCTION_URL': 'https://openapi.alipay.com/gateway.do',
-    'PRIVATE_KEY_PATH': os.path.join(BASE_DIR, 'keys/alipay/app_private_key.pem'),
-    'PUBLIC_KEY_PATH': os.path.join(BASE_DIR, 'keys/alipay/alipay_public_key.pem')
+    'PRIVATE_KEY_PATH': os.path.join(BASE_DIR, 'keys', 'alipay', 'app_private_key.pem'),
+    'PUBLIC_KEY_PATH': os.path.join(BASE_DIR, 'keys', 'alipay', 'alipay_public_key.pem')
 }
+
+# 确保密钥目录存在
+ALIPAY_KEYS_DIR = os.path.join(BASE_DIR, 'keys', 'alipay')
+if not os.path.exists(ALIPAY_KEYS_DIR):
+    os.makedirs(ALIPAY_KEYS_DIR)
 
 # 支付相关URL
 PAYMENT_URLS = {

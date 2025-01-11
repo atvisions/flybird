@@ -11,12 +11,14 @@ import { eventBus } from '@/utils/eventBus'
 import VueCropper from 'vue-cropper'
 import 'vue-cropper/dist/index.css'
 import { useAuthStore } from '@/stores/auth'
+import store from './store'
 
 const app = createApp(App)
 const pinia = createPinia()
 app.use(pinia)
 app.use(ElementPlus)
 app.use(VueCropper)
+app.use(store)
 
 // 初始化认证状态
 await (async () => {
