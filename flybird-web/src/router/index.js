@@ -90,11 +90,17 @@ const routes = [
   },
   {
     path: '/user',
-    name: 'UserCenter',
     component: UserCenter,
-    meta: {
-      requiresAuth: true
-    }
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'UserCenter',
+        component: () => import('@/views/user/MyProfile/components/MobileUserCenter.vue'),
+        meta: { requiresAuth: true }
+      },
+      // 其他子路由...
+    ]
   },
   {
     path: '/about',

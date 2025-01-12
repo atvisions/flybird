@@ -77,6 +77,7 @@
               class="md:hidden"
               :current-tab="currentTab"
               :actions="mobileActions"
+              :menuGroups="profileMenuGroups"
               @tab-change="handleTabChange"
             />
           </Transition>
