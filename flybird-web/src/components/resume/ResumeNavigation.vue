@@ -34,7 +34,7 @@
             <button class="h-9 px-4 sm:px-5 bg-gradient-to-r from-rose-600 to-rose-700 text-white rounded-full hover:shadow-lg hover:shadow-rose-500/20 transition-all duration-300 text-sm font-medium flex items-center group">
               <PlusIcon class="w-4 h-4 mr-1.5 sm:mr-2 group-hover:scale-110 transition-transform" />
               <span class="hidden sm:inline">创建简历</span>
-              <span class="sm:hidden">创建</span>
+              
             </button>
           </template>
           <template v-else>

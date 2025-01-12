@@ -298,7 +298,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed, watch, nextTick } from 'vue'
 import { useModules } from '@/composables/useModules'
 import { useProfileData } from '@/composables/useProfileData'
 import useLoading from '@/composables/useLoading'
@@ -475,10 +475,10 @@ const handleUpdate = async (updateInfo) => {
   try {
     if (updateInfo?.type === 'avatar') {
       // 直接更新头像
-      if (profileData.value) {
-        profileData.value.avatar = updateInfo.value
-        // 使用已定义的 initData 函数替代
-        await initData()
+      if (profileData.value?.basic_info) {
+        profileData.value.basic_info.avatar = updateInfo.value
+        // 强制刷新
+        await nextTick()
       }
       return
     }

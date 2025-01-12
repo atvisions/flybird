@@ -1,4 +1,5 @@
 import request from '@/utils/request'
+import { API_URL } from '@/config/index'
 
 export const auth = {
   // 密码登录
@@ -16,13 +17,16 @@ export const auth = {
       return this.handleLoginResponse(response)
     } catch (error) {
       // 打印错误详情
+      console.error('Login error:', {
+        status: error.response?.status,
+        data: error.response?.data
+      })
       
       if (error.response) {
-        
-        // 直接抛出服务器返回的错误信息
-        throw new Error(error.response.data.message || '登录失败，请稍后重试')
+        // 直接抛出服务器返回的错误信息，不要再包装一层
+        throw error
       }
-      throw error
+      throw new Error('网络连接失败，请稍后重试')
     }
   },
   
@@ -151,7 +155,7 @@ export const auth = {
         }
       }
     }
-    console.error('Login response error:', response?.data)
+    // 如果不是成功响应，抛出错误
     throw new Error(response?.data?.message || '登录失败')
   }
 }

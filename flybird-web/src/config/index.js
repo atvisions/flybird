@@ -1,12 +1,29 @@
-export const API_URL = 'http://192.168.3.16:8000'
-export const API_PREFIX = '/api/v1'
-export const BASE_API_URL = `${API_URL}${API_PREFIX}`
-export const MEDIA_URL = `${API_URL}/media`
+const config = {
+  // 开发环境配置
+  development: {
+    API_URL: 'http://192.168.3.16:8000',
+    API_PREFIX: '/api/v1',
+    MEDIA_URL: 'http://192.168.3.16:8000/media',
+    SOCKET_URL: 'ws://192.168.3.16:8000/ws'
+  },
+  // 生产环境配置
+  production: {
+    API_URL: 'http://www.flybirdx.com:8000',
+    API_PREFIX: '/api/v1',
+    MEDIA_URL: 'http://www.flybirdx.com:8000/media',
+    SOCKET_URL: 'ws://www.flybirdx.com:8000/ws'
+  }
+}
 
-// 导出默认配置
+// 获取当前环境的配置
+const env = process.env.NODE_ENV || 'development'
+const currentConfig = config[env]
+
+// 导出配置
 export default {
-  API_URL,
-  API_PREFIX,
-  BASE_API_URL,
-  MEDIA_URL
-} 
+  ...currentConfig,
+  BASE_API_URL: `${currentConfig.API_URL}${currentConfig.API_PREFIX}`
+}
+
+// 为了向后兼容，导出单独的变量
+export const { API_URL, API_PREFIX, MEDIA_URL, SOCKET_URL } = currentConfig 

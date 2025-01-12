@@ -24,7 +24,8 @@ FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://192.168.3.16:8080') # 修改这
 ALLOWED_HOSTS = [
     '192.168.3.16',  # 你的局域网 IP
     '192.168.3.16:8080',
-    '*',    # 允许所有主机访问
+    'localhost',
+    '*'
 ]
 
 # ----------- 3. 应用配置 -----------
@@ -183,6 +184,9 @@ CORS_ALLOWED_ORIGINS = [
     "http://192.168.3.16:8080",
     "http://localhost:8080",
 ]
+
+# 允许所有源访问
+CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_CREDENTIALS = True
 

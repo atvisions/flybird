@@ -16,7 +16,7 @@
       <Listbox v-model="selectedCategory">
         <div class="relative">
           <ListboxButton
-            class="relative w-full cursor-pointer rounded-lg bg-white py-2.5 pl-3 pr-10 text-left border border-gray-300 focus:outline-none focus:ring-2 focus:ring-violet-500 sm:text-sm"
+            class="relative w-full cursor-pointer rounded-lg bg-white py-2.5 pl-3 pr-10 text-left border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-600 sm:text-sm"
           >
             <span class="flex items-center">
               <component 
@@ -48,7 +48,7 @@
               >
                 <li
                   :class="[
-                    active ? 'bg-violet-600 text-white' : 'text-gray-900',
+                    active ? 'bg-blue-50 text-blue-600' : 'text-gray-900',
                     'relative cursor-pointer select-none py-2 pl-3 pr-9'
                   ]"
                 >
@@ -56,7 +56,7 @@
                     <component 
                       :is="category.icon" 
                       :class="[
-                        active ? 'text-white' : 'text-gray-400',
+                        active ? 'text-blue-600' : 'text-gray-400',
                         'h-5 w-5 flex-shrink-0'
                       ]"
                       aria-hidden="true"
@@ -74,7 +74,7 @@
                   <span
                     v-if="selected"
                     :class="[
-                      active ? 'text-white' : 'text-violet-600',
+                      active ? 'text-blue-600' : 'text-blue-600',
                       'absolute inset-y-0 right-0 flex items-center pr-4'
                     ]"
                   >
@@ -93,8 +93,8 @@
       <label class="block text-sm font-medium text-gray-700 mb-2">文章封面</label>
       <div class="flex items-center gap-4">
         <div 
-          class="relative w-48 h-32 rounded-lg border-2 border-dashed border-gray-300 hover:border-violet-500 transition-colors overflow-hidden group"
-          :class="{ 'border-solid border-violet-500': form.cover }"
+          class="relative w-48 h-32 rounded-lg border-2 border-dashed border-gray-300 hover:border-blue-600 transition-colors overflow-hidden group"
+          :class="{ 'border-solid border-blue-600': form.cover }"
         >
           <input
             type="file"
@@ -102,7 +102,7 @@
             class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
             @change="handleCoverChange"
           >
-          <div v-if="!form.cover" class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 group-hover:text-violet-500">
+          <div v-if="!form.cover" class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 group-hover:text-blue-600">
             <PhotoIcon class="w-8 h-8 mb-1" />
             <span class="text-xs">点击上传封面</span>
           </div>
@@ -134,7 +134,7 @@
       <textarea
         v-model="form.summary"
         rows="3"
-        class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-violet-500 focus:ring-violet-500"
+        class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600"
         placeholder="写一段简短的介绍，会显示在文章列表中"
       ></textarea>
     </div>
@@ -171,7 +171,7 @@
             取消
           </button>
           <button 
-            class="px-6 h-10 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors"
+            class="px-6 h-10 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             @click="handleSubmit"
           >
             发布文章

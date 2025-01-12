@@ -18,14 +18,21 @@
           :class="isActiveAction(action.key) ? 'text-blue-600' : 'text-gray-500'"
         />
         <span class="text-xs mt-1 truncate">{{ action.label }}</span>
-        <span 
-          v-if="action.badge" 
-          class="absolute -top-1 right-1/4 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center"
-        >
-          {{ action.badge }}
-        </span>
       </button>
     </div>
+    <!-- 浮动发布按钮 -->
+    <button
+      v-if="shouldShowCreateButton"
+      @click.stop="handleCreate(currentActiveTab)"
+      class="fixed right-4 bottom-20 w-12 h-12 rounded-full flex items-center justify-center shadow-xl transition-colors z-50"
+      :class="[
+        currentActiveTab === 'templates' ? 'bg-red-500 hover:bg-red-600' : '',
+        currentActiveTab === 'community' ? 'bg-blue-600 hover:bg-blue-700' : '',
+        currentActiveTab === 'portfolio' ? 'bg-purple-600 hover:bg-purple-700' : ''
+      ]"
+    >
+      <PlusIcon class="w-6 h-6 text-white" />
+    </button>
   </div>
 
   <!-- 移动端更多菜单抽屉的遮罩层 -->
@@ -92,6 +99,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { showToast } from '@/components/ToastMessage'
 import {
   Bars3Icon,
   XMarkIcon,
@@ -116,7 +124,8 @@ import {
   BriefcaseIcon,
   AcademicCapIcon,
   BookOpenIcon,
-  LanguageIcon
+  LanguageIcon,
+  PlusIcon
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
@@ -274,6 +283,51 @@ const templateMenuGroups = [
   }
 ]
 
+// 添加 profileMenuGroups 定义
+const profileMenuGroups = [
+  {
+    title: '内容管理',
+    items: [
+      {
+        name: '用户中心',
+        path: '/user?tab=home',
+        icon: HomeIcon
+      },
+      {
+        name: '我的档案',
+        path: '/user?tab=profile',
+        icon: UserIcon
+      },
+      {
+        name: '我的简历',
+        path: '/user?tab=resumes',
+        icon: DocumentIcon
+      }
+    ]
+  },
+  {
+    title: '账号管理',
+    items: [
+      {
+        name: '会员中心',
+        path: '/user?tab=membership',
+        icon: StarIcon
+      },
+      {
+        name: '消息中心',
+        path: '/user?tab=messages',
+        icon: EnvelopeIcon
+      },
+      {
+        name: '账号设置',
+        path: '/user?tab=account',
+        icon: Cog6ToothIcon
+      }
+    ]
+  }
+]
+
+
 // 根据当前路由计算要显示的菜单组
 const currentMenuGroups = computed(() => {
   if (route.path.startsWith('/templates')) {
@@ -286,18 +340,68 @@ const currentMenuGroups = computed(() => {
     return portfolioMenuGroups
   }
   if (route.path.includes('/user')) {
-    if (route.query.tab === 'account' || 
-        route.query.tab === 'privacy') {
-      return settingsMenuGroups
-    }
     return profileMenuGroups
   }
   return communityMenuGroups
 })
+
+// 判断是否显示创建按钮
+const showCreateButton = (key) => {
+  return ['templates', 'community', 'portfolio'].includes(key)
+}
+
+// 获取当前激活的标签
+const currentActiveTab = computed(() => {
+  return mobileActions.find(action => isActiveAction(action.key))?.key
+})
+
+// 判断是否应该显示创建按钮
+const shouldShowCreateButton = computed(() => {
+  return currentActiveTab.value && showCreateButton(currentActiveTab.value)
+})
+
+// 处理创建按钮点击
+const handleCreate = (key) => {
+  switch (key) {
+    case 'community':
+      router.push('/community/create?type=article')
+      break
+    case 'templates':
+      router.push('/templates/create')
+      break
+    case 'portfolio':
+      try {
+        showToast('功能开发中', 'info')
+      } catch (error) {
+        console.error('Toast error:', error)
+      }
+      break
+    default:
+      console.warn('Unknown create action:', key)
+      break
+  }
+}
 </script>
 
 <style scoped>
 .safe-area-inset-bottom {
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 修改发布按钮动画 */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+button.fixed {
+  animation: pulse 2s infinite;
+  transition: transform 0.2s;
+}
+
+/* 添加按压效果 */
+button.fixed:active {
+  transform: scale(0.95);
 }
 </style> 

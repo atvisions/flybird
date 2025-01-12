@@ -75,17 +75,18 @@
           <!-- 消息图标 -->
           <button 
             @click.stop="toggleMessageMenu"
-            class="hidden md:block p-2 mr-2 text-gray-500 hover:text-indigo-600 relative message-menu"
-            :class="{ 'text-indigo-600': isMessageRoute }"
+            class="p-2 mr-4 text-gray-500 hover:text-gray-900 relative message-menu"
+            :class="{ 'text-gray-900': showMessageMenu || isMessageRoute }"
           >
-            <BellIcon 
-              class="w-5 h-5" 
-              :class="{ 'text-indigo-600': isMessageRoute }"
+            <!-- 使用实心图标 -->
+            <component 
+              :is="showMessageMenu || isMessageRoute ? BellIconSolid : BellIcon"
+              class="w-6 h-6" 
             />
             <!-- 未读消息数量 -->
             <span 
               v-if="unreadMessagesCount > 0"
-              class="absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 rounded-full text-[10px] font-medium text-white flex items-center justify-center px-1"
+              class="absolute -top-0 right-1 min-w-[18px] h-[18px] bg-red-500 rounded-full text-[11px] font-medium text-white flex items-center justify-center px-1"
             >
               {{ unreadMessagesCount > 99 ? '99+' : unreadMessagesCount }}
             </span>
@@ -93,9 +94,10 @@
 
           <!-- 消息下拉菜单 -->
           <div v-if="showMessageMenu" 
-            class="fixed lg:absolute top-[72px] bg-white shadow-lg z-[100] w-80 rounded-lg message-menu"
+            class="fixed lg:absolute top-[72px] bg-white shadow-xl z-[100] w-full lg:w-80 rounded-xl overflow-hidden message-menu border border-gray-100"
             :style="{
-              [isMobile ? '' : 'right']: isMobile ? '' : 'calc((100vw - 1280px) / 2 + 120px)',
+              right: isMobile ? '0' : 'calc((100vw - 1280px) / 2 + 120px)',
+              left: isMobile ? '0' : 'auto'
             }"
           >
             <!-- 消息菜单头部 -->
@@ -158,11 +160,19 @@
               @click.stop="toggleDropdown"
               class="flex items-center cursor-pointer"
             >
-              <img 
-                :src="avatarUrl"
-                class="h-8 w-8 rounded-full"
-                alt="用户头像"
-              />
+              <div class="relative">
+                <img 
+                  :src="avatarUrl"
+                  class="h-8 w-8 rounded-full object-cover"
+                  alt="用户头像"
+                />
+                <!-- VIP 标识 -->
+                <div v-if="isVip" 
+                  class="absolute -top-1 -right-1 w-4 h-4 bg-[#FFB800] rounded-full flex items-center justify-center border border-white shadow-sm"
+                >
+                  <span class="text-[10px] font-bold text-white">V</span>
+                </div>
+              </div>
               <span class="hidden lg:inline ml-2">{{ username }}</span>
               <ChevronDownIcon 
                 class="h-5 w-5 ml-1"
@@ -173,7 +183,7 @@
             <!-- 下拉菜单内容 -->
             <div 
               v-if="showDropdown"
-              class="fixed lg:absolute right-0 top-[60px] w-full lg:w-80 bg-white shadow-lg py-1 border-t lg:border lg:border-gray-100 z-50"
+              class="fixed lg:absolute right-0 top-[60px] w-full lg:w-80 bg-white shadow-xl rounded-xl overflow-hidden border border-gray-100 z-50"
               :class="[
                 isMobile ? 'inset-x-0' : '',
                 isMobile ? 'h-[calc(100vh-60px)]' : '',
@@ -184,13 +194,21 @@
               <!-- 用户信息头部 -->
               <div class="px-4 lg:px-6 py-5 border-b border-gray-100">
                 <div class="flex items-center space-x-3">
-                  <img 
-                    :src="avatarUrl"
-                    :key="avatarUrl"
-                    class="h-12 lg:h-14 w-12 lg:w-14 rounded-full"
-                    alt="用户头像" 
-                    @error="handleImageError" 
-                  />
+                  <div class="relative">
+                    <img 
+                      :src="avatarUrl"
+                      :key="avatarUrl"
+                      class="h-14 w-14 rounded-full object-cover"
+                      alt="用户头像" 
+                      @error="handleImageError" 
+                    />
+                    <!-- VIP 标识 -->
+                    <div v-if="isVip" 
+                      class="absolute top-0 right-0 w-5 h-5 bg-[#FFB800] rounded-full flex items-center justify-center border border-white shadow-sm"
+                    >
+                      <span class="text-[11px] font-bold text-white">V</span>
+                    </div>
+                  </div>
                   <div class="flex-1">
                     <div class="flex items-center justify-between">
                       <div>
@@ -213,18 +231,46 @@
                   </div>
                 </div>
                 <!-- 积分信息 -->
-                <div class="mt-4 flex items-center justify-between px-1">
-                  <div class="flex items-center space-x-2">
-                    <StarIcon class="w-4 h-4 text-[#1A56DB]" />
-                    <span class="text-sm text-gray-600">我的积分</span>
+                <div class="mt-4 bg-gray-50 rounded-lg p-4">
+                  <!-- 积分和签到 -->
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                      <StarIcon class="w-4 h-4 text-[#1A56DB]" />
+                      <span class="text-sm text-gray-600">我的积分</span>
+                    </div>
+                    <div class="flex items-center space-x-2 lg:space-x-4">
+                      <span class="text-base lg:text-lg font-medium text-[#1A56DB]">{{ pointsInfo?.balance || 0 }}</span>
+                      <button 
+                        @click="handleSignIn"
+                        class="px-2 py-1 text-xs rounded-full border whitespace-nowrap"
+                        :class="[
+                          !signInInfo?.can_sign_in
+                            ? 'border-gray-200 text-gray-400 bg-gray-100 cursor-not-allowed' 
+                            : 'border-blue-500 text-blue-600 hover:bg-blue-50'
+                        ]"
+                        :disabled="!signInInfo?.can_sign_in"
+                      >
+                        {{ !signInInfo?.can_sign_in ? '已签到' : '每日签到' }}
+                      </button>
+                    </div>
                   </div>
-                  <div class="flex items-center space-x-3">
-                    <span class="text-lg font-medium text-[#1A56DB]">{{ pointsInfo.balance || 0 }}</span>
+                  <!-- 签到进度 -->
+                  <div class="mt-3 flex items-center justify-between">
+                    <div class="flex items-center">
+                      <span class="text-xs text-gray-500">
+                        已连续签到 {{ signInInfo?.sign_in_days || 0 }} 天
+                        <template v-if="signInInfo?.next_reward">
+                          <span class="hidden lg:inline ml-2 text-blue-600">
+                            再签到 {{ signInInfo?.next_reward?.days }} 天可获得 {{ signInInfo?.next_reward?.points }} 积分奖励
+                          </span>
+                        </template>
+                      </span>
+                    </div>
                     <button 
                       @click="handlePointsDetail"
-                      class="text-xs text-gray-500 hover:text-gray-700 flex items-center"
+                      class="text-xs text-blue-600 hover:text-blue-700 flex items-center whitespace-nowrap ml-2"
                     >
-                      <span>查看详情</span>
+                      <span>积分明细</span>
                       <ChevronRightIcon class="w-4 h-4 ml-0.5" />
                     </button>
                   </div>
@@ -232,18 +278,60 @@
               </div>
 
               <!-- 菜单项 -->
-              <div class="py-2.5">
-                <button v-for="item in userMenuItems" :key="item.key"
-                  class="block w-full px-4 lg:px-6 py-3 lg:py-3.5 text-sm lg:text-base text-gray-700 hover:bg-blue-50 text-left transition-colors duration-200"
-                  @click="item.action">
-                  <div class="flex items-center space-x-3">
-                    <component 
-                      :is="getIcon(item.icon)" 
-                      class="flex-shrink-0 h-4 lg:h-5 w-4 lg:w-5 text-[#1A56DB]/60" 
-                    />
-                    <span>{{ item.label }}</span>
+              <div class="p-4">
+                <!-- 频道导航 -->
+                <div class="mb-4">
+                  <div class="text-xs font-medium text-gray-500 mb-2 px-1">频道</div>
+                  <div class="grid grid-cols-3 gap-2">
+                    <button v-for="item in mainMenuItems.slice(0, 3)" :key="item.key"
+                      class="flex flex-col items-center p-2.5 rounded-lg hover:bg-gray-50 transition-colors"
+                      @click="item.action"
+                    >
+                      <div :class="['w-8 h-8 rounded-md flex items-center justify-center mb-1', item.bgColor]">
+                        <component :is="getIcon(item.icon)" class="h-4 w-4" :class="item.iconColor" />
+                      </div>
+                      <span class="text-xs text-gray-600">{{ item.label }}</span>
+                    </button>
                   </div>
-                </button>
+                </div>
+
+                <!-- 管理中心 -->
+                <div class="mb-4">
+                  <div class="text-xs font-medium text-gray-500 mb-2 px-1">管理中心</div>
+                  <div class="grid grid-cols-3 gap-2">
+                    <button v-for="item in mainMenuItems.slice(3)" :key="item.key"
+                      class="flex flex-col items-center p-2.5 rounded-lg hover:bg-gray-50 transition-colors"
+                      @click="item.action"
+                    >
+                      <div :class="['w-8 h-8 rounded-md flex items-center justify-center mb-1', item.bgColor]">
+                        <component :is="getIcon(item.icon)" class="h-4 w-4" :class="item.iconColor" />
+                      </div>
+                      <span class="text-xs text-gray-600">{{ item.label }}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- 账号操作 -->
+                <div class="border-t border-gray-100 pt-3">
+                  <button v-for="item in accountMenuItems" :key="item.key"
+                    class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    @click="item.action"
+                  >
+                    <div :class="['w-5 h-5 flex items-center justify-center mr-3', item.iconColor]">
+                      <component :is="getIcon(item.icon)" class="h-4 w-4" :class="item.iconColor" />
+                    </div>
+                    {{ item.label }}
+                  </button>
+                  <button
+                    class="w-full flex items-center px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                    @click="handleLogout"
+                  >
+                    <div class="w-5 h-5 flex items-center justify-center mr-3">
+                      <ArrowRightOnRectangleIcon class="h-4 w-4 text-red-600" />
+                    </div>
+                    退出登录
+                  </button>
+                </div>
               </div>
 
             </div>
@@ -251,8 +339,12 @@
         </template>
 
         <!-- 移动端菜单按钮 -->
-        <button type="button" @click="toggleMenu"
-          class="lg:hidden inline-flex items-center justify-center rounded-md ml-2 p-2 text-gray-700">
+        <button 
+          v-if="!isAuthenticated"
+          type="button" 
+          @click="toggleMenu"
+          class="lg:hidden inline-flex items-center justify-center rounded-md ml-2 p-2 text-gray-700"
+        >
           <span class="sr-only">打开菜单</span>
           <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
@@ -261,90 +353,13 @@
       </div>
     </nav>
 
-    <!-- 用户下拉菜单 -->
-    <div v-if="userMenuOpen" :class="[
-      'fixed lg:absolute',
-      'top-[60px]',
-      'bg-white shadow-lg z-[100]',
-      'inset-x-0 lg:inset-x-auto',
-      'w-full lg:w-80 lg:rounded-lg'
-    ]" :style="{
-      [isMobile ? '' : 'right']: isMobile ? '' : '0',
-    }">
-      <!-- 用户信息头部 -->
-      <div class="px-6 py-5 border-b border-gray-100">
-        <div class="flex items-center space-x-3">
-          <img 
-            :src="avatarUrl"
-            :key="avatarUrl"
-            class="h-14 w-14 rounded-full"
-            alt="用户头像" 
-            @error="handleImageError" 
-          />
-          <div class="flex-1">
-            <div class="flex items-center justify-between">
-              <div>
-                <div class="text-lg font-medium text-gray-900">{{ username }}</div>
-                <div class="text-sm flex flex-col" :class="{
-                  'text-[#1A56DB]': isVip
-                }">
-                  <span>{{ vipTypeText }}</span>
-                  <span v-if="remainingDays" class="mt-0.5 text-xs">{{ remainingDays }}</span>
-                </div>
-              </div>
-              <button
-                @click="handleVipButton"
-                class="px-3 py-1.5 text-sm bg-gradient-to-r from-[#1A56DB] to-blue-500 text-white rounded-full hover:opacity-90 transition-opacity flex items-center whitespace-nowrap"
-              >
-                <SparklesIcon class="w-3.5 h-3.5 mr-1" />
-                {{ vipButtonText }}
-              </button>
-            </div>
-          </div>
-        </div>
-        <!-- 积分信息 -->
-        <div class="mt-4 flex items-center justify-between px-1">
-          <div class="flex items-center space-x-2">
-            <StarIcon class="w-4 h-4 text-[#1A56DB]" />
-            <span class="text-sm text-gray-600">我的积分</span>
-          </div>
-          <div class="flex items-center space-x-3">
-            <span class="text-lg font-medium text-[#1A56DB]">{{ pointsInfo.balance || 0 }}</span>
-            <button 
-              @click="handlePointsDetail"
-              class="text-xs text-gray-500 hover:text-gray-700 flex items-center"
-            >
-              <span>查看详情</span>
-              <ChevronRightIcon class="w-4 h-4 ml-0.5" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- 菜单项 -->
-      <div class="py-2.5">
-        <button v-for="item in userMenuItems" :key="item.key"
-          class="block w-full px-6 py-3.5 text-base text-gray-700 hover:bg-blue-50 text-left transition-colors duration-200"
-          @click="item.action">
-          <div class="flex items-center space-x-3">
-            <component 
-              :is="getIcon(item.icon)" 
-              class="flex-shrink-0 h-5 w-5 text-[#1A56DB]/60" 
-            />
-            <span>{{ item.label }}</span>
-          </div>
-        </button>
-      </div>
-
-    </div>
-
     <!-- 移动端菜单抽屉 -->
     <div v-if="mobileMenuOpen" class="fixed inset-0 z-50" @click="toggleMenu">
       <div class="fixed inset-0 bg-black/25"></div>
 
       <div class="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white sm:max-w-sm" @click.stop>
         <!-- 移动端菜单头部 -->
-        <div class="flex items-center justify-between p-4">
+        <div class="flex items-center justify-between p-4 border-b border-gray-100">
           <router-link to="/" class="flex items-center space-x-2" @click="toggleMenu">
             <img src="@/assets/images/logo.png" alt="" class="w-8 h-8">
             <span class="text-gray-500 text-xl whitespace-nowrap">飞鸟简历</span>
@@ -352,66 +367,37 @@
           <!-- 关闭按钮 -->
           <button type="button" @click="toggleMenu" class="p-2 text-gray-700">
             <span class="sr-only">关闭菜单</span>
-            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <XMarkIcon class="h-6 w-6" />
           </button>
         </div>
 
         <!-- 移动端菜单内容 -->
-        <div class="border-t border-gray-200">
+        <div class="py-2">
           <!-- 导航菜单 -->
           <div>
             <template v-for="item in navigation.main" :key="item.name">
               <!-- 普通菜单项 -->
               <router-link v-if="!item.children" :to="item.href"
                 class="block px-4 py-3 text-base text-gray-900 border-b border-gray-100"
-                :class="isCurrentRoute(item.href) ? 'text-indigo-600' : ''" @click="toggleMenu">
+                :class="isCurrentRoute(item.href) ? 'text-indigo-600' : ''" 
+                @click="toggleMenu">
                 {{ item.name }}
               </router-link>
-
-              <!-- 带子菜单的项 -->
-              <div v-else class="border-b border-gray-100">
-                <button class="flex items-center justify-between w-full px-4 py-3 text-base text-gray-900"
-                  @click="toggleMobileSubmenu(item.name)">
-                  <span>{{ item.name }}</span>
-                  <svg class="w-5 h-5 transition-transform duration-200"
-                    :class="{ 'rotate-180': mobileSubmenuOpen[item.name] }" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd"
-                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                      clip-rule="evenodd" />
-                  </svg>
-                </button>
-
-                <div v-show="mobileSubmenuOpen[item.name]" class="bg-gray-50">
-                  <template v-for="category in item.children" :key="category.name">
-                    <div class="px-4 py-2">
-                      <div class="font-medium text-gray-900">{{ category.name }}</div>
-                      <div class="mt-1 space-y-1">
-                        <router-link v-for="subItem in category.children" :key="subItem.name" :to="subItem.href"
-                          class="block py-1 pl-3 text-sm text-gray-600 hover:text-indigo-600" @click="toggleMenu">
-                          {{ subItem.name }}
-                        </router-link>
-                      </div>
-                    </div>
-                  </template>
-                </div>
-              </div>
             </template>
           </div>
 
           <!-- 未登录状态下显示登录注册按钮 -->
           <div v-if="!isAuthenticated" class="p-4 space-y-3">
-            <router-link to="/login?redirect=${encodeURIComponent($route.fullPath)}`"
+            <button 
               class="block w-full text-center px-4 py-2 text-[14px] text-gray-900 border border-gray-300 rounded-md hover:bg-gray-50"
-              @click="toggleMenu">
+              @click="handleLoginClick">
               登录
-            </router-link>
-            <router-link to="/register?redirect=${encodeURIComponent($route.fullPath)}`"
+            </button>
+            <button 
               class="block w-full text-center px-4 py-2 text-[14px] text-white bg-indigo-600 rounded-md hover:bg-indigo-500"
-              @click="toggleMenu">
+              @click="handleRegisterClick">
               注册
-            </router-link>
+            </button>
           </div>
         </div>
       </div>
@@ -484,6 +470,11 @@
         </div>
       </div>
     </Transition>
+
+    <!-- 只在登录后显示积分信息 -->
+    <div v-if="authStore.isAuthenticated" class="points-info">
+      <!-- 积分相关内容 -->
+    </div>
   </header>
 </template>
 <script setup>
@@ -521,6 +512,7 @@ import {
   ChevronDownIcon
 } from '@heroicons/vue/24/outline'
 
+import { BellIcon as BellIconSolid } from '@heroicons/vue/24/solid'
 
 // 添加图标映射函数
 const getIcon = (menuKey) => {
@@ -528,6 +520,9 @@ const getIcon = (menuKey) => {
     'home': Squares2X2Icon,
     'profile': UserIcon,
     'resumes': DocumentIcon,
+    'document': DocumentTextIcon,
+    'users': UserGroupIcon,
+    'photo': PhotoIcon,
     'favorites': HeartIcon,
     'notifications': BellIcon,
     'settings': Cog6ToothIcon,
@@ -548,8 +543,44 @@ const mobileMenuOpen = ref(false)
 const showDropdown = ref(false)
 const showMessageMenu = ref(false)
 const resourceMenuOpen = ref(false)
+const mobileSubmenuOpen = ref({})
 const dropdownRef = ref(null)
 const userBasicInfo = ref(null)
+
+// 添加用户菜单状态
+const userMenuOpen = ref(false)
+
+// 切换菜单状态
+const toggleUserMenu = () => {
+  userMenuOpen.value = !userMenuOpen.value
+}
+
+// 点击外部时关闭菜单
+const handleClickOutside = (event) => {
+  const target = event.target
+  
+  // 关闭用户菜单
+  const menu = document.querySelector('.user-menu')
+  const button = document.querySelector('.user-menu-button')
+  if (menu && !menu.contains(target) && !button.contains(target)) {
+    userMenuOpen.value = false
+  }
+  
+  // 关闭下拉菜单
+  if (dropdownRef.value && !dropdownRef.value.contains(target)) {
+    showDropdown.value = false
+  }
+  
+  // 关闭消息菜单
+  if (!target.closest('.message-menu')) {
+    showMessageMenu.value = false
+  }
+  
+  // 关闭资源菜单
+  if (!target.closest('.resource-menu')) {
+    resourceMenuOpen.value = false
+  }
+}
 
 // 切换下拉菜单
 const toggleDropdown = (e) => {
@@ -558,23 +589,6 @@ const toggleDropdown = (e) => {
   // 关闭其他菜单
   showMessageMenu.value = false
   resourceMenuOpen.value = false
-}
-
-// 处理点击事件
-const handleClickOutside = (event) => {
-  const target = event.target
-  // 如果点击的不是下拉菜单区域，关闭下拉菜单
-  if (dropdownRef.value && !dropdownRef.value.contains(target)) {
-    showDropdown.value = false
-  }
-  // 如果点击的不是消息菜单区域，关闭消息菜单
-  if (!target.closest('.message-menu')) {
-    showMessageMenu.value = false
-  }
-  // 如果点击的不是资源菜单区域，关闭资源菜单
-  if (!target.closest('.resource-menu')) {
-    resourceMenuOpen.value = false
-  }
 }
 
 // 模拟消息数据
@@ -655,16 +669,6 @@ const closeMenus = (e) => {
   }
   if (!e.target.closest('.user-dropdown') && !e.target.closest('.user-button')) {
     showDropdown.value = false
-  }
-}
-
-// 移动端菜单开关
-const toggleMenu = () => {
-  mobileMenuOpen.value = !mobileMenuOpen.value
-  if (mobileMenuOpen.value) {
-    userMenuOpen.value = false
-    resourceMenuOpen.value = false
-    mobileSubmenuOpen.value = {}
   }
 }
 
@@ -798,25 +802,16 @@ const isVip = computed(() => {
 
 // 会员类型文本
 const vipTypeText = computed(() => {
-  const userInfo = accountStore.userInfo
-  if (!userInfo) return '普通用户'
-  return userInfo.vip_status || '普通用户'
+  if (!isVip.value) return '普通用户'
+  return accountStore.userInfo?.vip_type === 'annual' ? '年度会员' : '月度会员'
 })
 
 // 剩余天数文本
 const remainingDays = computed(() => {
-  const userInfo = accountStore.userInfo
-  if (!userInfo?.is_vip || userInfo.vip_type === 'lifetime') return ''
-  
-  if (userInfo.vip_expire_time) {
-    const expireDate = new Date(userInfo.vip_expire_time)
-    const now = new Date()
-    const diffDays = Math.floor((expireDate - now) / (1000 * 60 * 60 * 24))
-    if (diffDays > 0) {
-      return `剩余 ${diffDays} 天`
-    }
-  }
-  return ''
+  if (!isVip.value || !accountStore.userInfo?.vip_expire_date) return ''
+  const expireDate = new Date(accountStore.userInfo.vip_expire_date)
+  const days = Math.ceil((expireDate - new Date()) / (1000 * 60 * 60 * 24))
+  return days > 0 ? `剩余 ${days} 天` : '即将到期'
 })
 
 // 会员按钮文本
@@ -864,61 +859,89 @@ const handleVipButton = () => {
 }
 
 // 用户菜单选项
-const userMenuItems = computed(() => {
-  return [
-    {
-      key: 'home',
-      label: '用户中心',
-      icon: 'home',
-      action: () => {
-        router.push('/user?tab=home')
-        showDropdown.value = false
-      }
-    },
-    {
-      key: 'profile',
-      label: '我的档案',
-      icon: 'profile',
-      action: () => {
-        router.push('/user?tab=profile')
-        showDropdown.value = false
-      }
-    },
-    {
-      key: 'resumes',
-      label: '我的简历',
-      icon: 'resumes',
-      action: () => {
-        router.push('/user?tab=resumes')
-        showDropdown.value = false
-      }
-    },
-    {
-      key: 'settings',
-      label: '账号设置',
-      icon: 'settings',
-      action: () => {
-        router.push('/user?tab=settings')
-        showDropdown.value = false
-      }
-    },
-    {
-      key: 'membership',
-      label: '会员中心',
-      icon: 'crown',
-      action: () => {
-        router.push('/user?tab=membership')
-        showDropdown.value = false
-      }
-    },
-    {
-      key: 'logout',
-      label: '退出登录',
-      icon: 'logout',
-      action: handleLogout
+const mainMenuItems = computed(() => [
+  {
+    key: 'templates',
+    label: '简历模板',
+    icon: 'document',
+    bgColor: 'bg-indigo-50',
+    iconColor: 'text-indigo-600',
+    action: () => {
+      router.push('/templates')
+      showDropdown.value = false
     }
-  ]
-})
+  },
+  {
+    key: 'community',
+    label: '社区',
+    icon: 'users',
+    bgColor: 'bg-pink-50',
+    iconColor: 'text-pink-600',
+    action: () => {
+      router.push('/community')
+      showDropdown.value = false
+    }
+  },
+  {
+    key: 'portfolio',
+    label: '作品集',
+    icon: 'photo',
+    bgColor: 'bg-orange-50',
+    iconColor: 'text-orange-600',
+    action: () => {
+      router.push('/portfolio')
+      showDropdown.value = false
+    }
+  },
+  {
+    key: 'home',
+    label: '创作管理',
+    icon: 'home',
+    bgColor: 'bg-blue-50',
+    iconColor: 'text-blue-600',
+    action: () => {
+      router.push('/user?tab=home')
+      showDropdown.value = false
+    }
+  },
+  {
+    key: 'profile',
+    label: '我的档案',
+    icon: 'profile',
+    bgColor: 'bg-purple-50',
+    iconColor: 'text-purple-600',
+    action: () => {
+      router.push('/user?tab=profile')
+      showDropdown.value = false
+    }
+  },
+  {
+    key: 'resumes',
+    label: '我的简历',
+    icon: 'resumes',
+    bgColor: 'bg-green-50',
+    iconColor: 'text-green-600',
+    action: () => {
+      router.push('/user?tab=resumes')
+      showDropdown.value = false
+    }
+  }
+])
+
+// 添加账号操作菜单项
+const accountMenuItems = computed(() => [
+  {
+    key: 'settings',
+    label: '账号设置',
+    icon: 'settings',
+    bgColor: 'bg-amber-50',
+    iconColor: 'text-amber-600',
+    action: () => {
+      router.push('/user?tab=account')
+      showDropdown.value = false
+    }
+  }
+])
 
 // 处理退出登录
 const handleLogout = async () => {
@@ -1021,44 +1044,136 @@ const pointsInfo = ref({
   balance: 0,
   level: 1,
   sign_in_days: 0,
-  total_earned: 0
+  total_earned: 0,
+  signed_today: false
 })
 
-// 获取积分信息
+// 添加签到信息的数据结构
+const signInInfo = ref({
+  can_sign_in: false,
+  sign_in_days: 0,
+  next_reward: null
+})
+
+// 获取签到状态
+const fetchSignInStatus = async () => {
+  try {
+    const response = await membership.getSignInStatus()
+    if (response?.data?.code === 200) {
+      signInInfo.value = response.data.data
+    }
+  } catch (error) {
+    console.error('获取签到状态失败:', error)
+  }
+}
+
+// 修改获取积分信息的方法
 const fetchPointsInfo = async () => {
+  if (!authStore.isAuthenticated) return
+  
   try {
     const response = await membership.getPointsInfo()
     if (response?.data?.code === 200) {
       pointsInfo.value = response.data.data
+      // 更新签到状态
+      await fetchSignInStatus()
+      console.log('积分信息更新:', {
+        pointsInfo: pointsInfo.value,
+        signInInfo: signInInfo.value
+      })
     }
   } catch (error) {
     console.error('获取积分信息失败:', error)
   }
 }
 
-// 合并重复的 onMounted
+// 修改签到处理方法
+const handleSignIn = async () => {
+  if (!signInInfo.value.can_sign_in) return
+  
+  try {
+    const response = await membership.signIn()
+    if (response?.data?.code === 200) {
+      const { points_earned } = response.data.data
+      showToast('签到成功', 'success')
+      showToast(`获得 ${points_earned} 积分`, 'success')
+      // 更新积分信息和签到状态
+      await Promise.all([
+        fetchPointsInfo(),
+        fetchSignInStatus()
+      ])
+    }
+  } catch (error) {
+    console.error('签到失败:', error)
+    showToast(error.message || '签到失败，请稍后重试', 'error')
+  }
+}
+
+// 确保在移动端和桌面端都能正确初始化数据
 onMounted(async () => {
-  // 添加事件监听
   document.addEventListener('click', handleClickOutside)
   window.addEventListener('resize', handleResize)
   
-  try {
-    await Promise.all([
-      fetchPointsInfo(),
-      accountStore.fetchUserInfo()
-    ])
-  } catch (error) {
-    console.error('初始化数据失败:', error)
+  // 只在已认证时获取数据
+  if (authStore.isAuthenticated) {
+    try {
+      // 先获取用户信息
+      await accountStore.fetchUserInfo()
+      
+      // 确保在移动端也获取积分信息
+      if (isMobile.value) {
+        await fetchPointsInfo()
+      }
+      
+      // 然后获取积分和签到信息
+      await Promise.all([
+        fetchPointsInfo(),
+        fetchSignInStatus()
+      ])
+      
+      console.log('初始化完成:', {
+        userInfo: accountStore.userInfo,
+        pointsInfo: pointsInfo.value,
+        signInInfo: signInInfo.value,
+        isMobile: isMobile.value
+      })
+    } catch (error) {
+      console.error('初始化数据失败:', error)
+      // 重置数据
+      pointsInfo.value = {
+        balance: 0,
+        level: 1,
+        sign_in_days: 0,
+        total_earned: 0
+      }
+      signInInfo.value = {
+        can_sign_in: false,
+        sign_in_days: 0,
+        next_reward: null
+      }
+    }
   }
 })
 
-onUnmounted(() => {
-  // 移除全局点击事件监听
-  document.removeEventListener('click', handleClickOutside)
-  window.removeEventListener('resize', handleResize)
-  eventBus.off('avatar-updated', handleAvatarUpdate)
-  window.removeEventListener('payment-success', refreshUserInfo)
-})
+// 添加监听器确保用户登录状态变化时更新数据
+watch(() => authStore.isAuthenticated, async (newValue) => {
+  if (newValue) {
+    await fetchPointsInfo()
+  } else {
+    // 重置数据
+    pointsInfo.value = {
+      balance: 0,
+      level: 1,
+      sign_in_days: 0,
+      total_earned: 0
+    }
+    signInInfo.value = {
+      can_sign_in: false,
+      sign_in_days: 0,
+      next_reward: null
+    }
+  }
+}, { immediate: true })
 
 // 处理菜单关闭
 const closeDropdown = () => {
@@ -1075,6 +1190,43 @@ const handleViewDetails = () => {
 const handlePointsDetail = () => {
   router.push('/user?tab=membership')
   showDropdown.value = false
+}
+
+// 添加子菜单切换函数
+const toggleSubmenu = (key) => {
+  mobileSubmenuOpen.value[key] = !mobileSubmenuOpen.value[key]
+}
+
+// 添加对移动端状态的监听
+watch(isMobile, async (newValue) => {
+  if (newValue && authStore.isAuthenticated) {
+    await fetchPointsInfo()
+  }
+})
+
+// 切换移动端菜单
+const toggleMenu = () => {
+  mobileMenuOpen.value = !mobileMenuOpen.value
+}
+
+// 监听登录状态变化
+watch(() => authStore.isLoggedIn, (newValue) => {
+  // 如果登录状态改变，关闭移动端菜单
+  if (newValue) {
+    mobileMenuOpen.value = false
+  }
+})
+
+// 修改登录链接的点击处理
+const handleLoginClick = () => {
+  toggleMenu() // 关闭菜单
+  router.push(`/login?redirect=${encodeURIComponent(route.fullPath)}`)
+}
+
+// 修改注册链接的点击处理
+const handleRegisterClick = () => {
+  toggleMenu() // 关闭菜单
+  router.push('/register')
 }
 
 </script>
@@ -1196,5 +1348,35 @@ const handlePointsDetail = () => {
 
 .text-amber-500 {
   animation: countUp 0.3s ease-out;
+}
+
+/* 添加阴影过渡效果 */
+.shadow-xl {
+  transition: box-shadow 0.2s ease;
+}
+
+/* 可以添加悬浮效果 */
+.message-menu:hover,
+.user-dropdown:hover {
+  background-color: rgba(243, 244, 246, 0.8);
+  transition: background-color 0.2s ease;
+}
+
+/* 确保移动端下拉菜单底部圆角 */
+@media (max-width: 1024px) {
+  .fixed.inset-x-0 {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+}
+
+/* 添加移动端样式 */
+@media (max-width: 640px) {
+  .truncate {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 </style>

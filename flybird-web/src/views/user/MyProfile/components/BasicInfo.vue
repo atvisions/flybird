@@ -14,7 +14,8 @@
         <!-- 头像部分 -->
         <div class="relative group">
           <img 
-            :src="userAvatar" 
+            :src="userAvatar"
+            :key="avatarUpdateTime"
             class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg user-avatar"
             alt="用户头像"
             @error="handleImageError"
@@ -104,7 +105,7 @@
   </div>
 
   <!-- 新的头像裁剪组件 -->
-  <ProfileAvatarUpload
+  <ProfileAvatarCropper
     ref="avatarUploadRef"
     v-model="showAvatarCropper"
     @upload="handleAvatarUpload"
@@ -148,8 +149,9 @@ import {
   TransitionChild,
   TransitionRoot
 } from '@headlessui/vue'
-import ProfileAvatarUpload from '@/components/ProfileAvatarUpload.vue'
+import ProfileAvatarCropper from '@/components/ProfileAvatarCropper.vue'
 import { useAccountStore } from '@/stores/account'
+import { useProfileStore } from '@/stores/profile'
 
 // 1. 首先声明 props
 const props = defineProps({
@@ -178,6 +180,7 @@ const emit = defineEmits(['update', 'edit', 'toggleBioExpand'])
 const store = useStore()
 const pageLoading = ref(true)
 const basicInfo = ref({})
+const profileStore = useProfileStore()
 
 // 4. 计算属性
 const formatBasicInfo = computed(() => {
@@ -195,10 +198,35 @@ const formatBasicInfo = computed(() => {
   }
 })
 
+// 添加一个 ref 来存储完整的头像 URL
+const avatarUrl = ref('')
+const avatarUpdateTime = ref(Date.now())
+
+// 修改计算属性
 const userAvatar = computed(() => {
-  const avatar = props.resumeData?.avatar
-  if (!avatar) return defaultAvatarImage
-  return avatar.startsWith('http') || avatar.startsWith('data:') ? avatar : `${MEDIA_URL}${avatar}`
+  // 优先使用 store 中的头像
+  const avatar = profileStore.profileAvatarUrl || props.resumeData?.avatar
+  
+  console.log('Computing userAvatar:', {
+    storeAvatar: profileStore.profileAvatarUrl,
+    propsAvatar: props.resumeData?.avatar,
+    finalAvatar: avatar,
+    updateTime: avatarUpdateTime.value
+  })
+
+  if (!avatar) {
+    avatarUrl.value = defaultAvatarImage
+    return defaultAvatarImage
+  }
+  
+  // 如果是相对路径，需要添加 MEDIA_URL
+  const fullUrl = avatar.startsWith('http') 
+    ? avatar 
+    : `${MEDIA_URL}/${avatar.replace(/^\/media\//, '')}`
+  
+  // 添加时间戳参数来避免缓存
+  avatarUrl.value = `${fullUrl}?t=${avatarUpdateTime.value}`
+  return avatarUrl.value
 })
 
 const currentGender = computed(() => {
@@ -307,23 +335,7 @@ const formatDate = (dateString) => {
   })
 }
 
-// 调试辅助函数
-const logResumeData = () => {
-  const plainData = {
-    name: props.resumeData.name,
-    gender: props.resumeData.gender,
-    phone: props.resumeData.phone,
-    email: props.resumeData.email,
-    location: props.resumeData.location,
-    birth_date: props.resumeData.birth_date,
-    personal_summary: props.resumeData.personal_summary,
-    created_at: props.resumeData.created_at,
-    updated_at: props.resumeData.updated_at
-  }
-  console.log('BasicInfo data:', plainData)
-}
-
-// 添加头像上传处理函数
+// 修改头像上传处理函数
 const handleAvatarUpload = async (file) => {
   try {
     loading.value = true
@@ -333,7 +345,8 @@ const handleAvatarUpload = async (file) => {
       type: file.type
     })
 
-    const response = await profile.uploadAvatar(file)
+    // 使用 profileStore 上传头像
+    const response = await profileStore.updateAvatar(file)
     console.log('职业头像上传响应:', response)
 
     if (response?.data?.code === 200) {
@@ -347,6 +360,11 @@ const handleAvatarUpload = async (file) => {
         emit('update', {
           type: 'avatar',
           value: response.data.data.avatar
+        })
+
+        // 强制刷新图片
+        nextTick(() => {
+          avatarUpdateTime.value = Date.now()
         })
       }
     } else {

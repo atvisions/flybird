@@ -71,45 +71,24 @@
           </div>
     
           <!-- 移动端底部导航 -->
-          <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 md:hidden z-50">
-            <div class="flex justify-around">
-              <button
-                v-for="action in mobileActions"
-                :key="action.key"
-                @click="action.handler"
-                class="flex flex-col items-center py-2 px-4 relative"
-              >
-                <component
-                  :is="action.icon"
-                  :class="[
-                    currentTab === action.key ? 'text-[#1A56DB]' : 'text-gray-400',
-                    'w-6 h-6'
-                  ]"
-                />
-                <span 
-                  class="text-xs mt-1"
-                  :class="currentTab === action.key ? 'text-[#1A56DB]' : 'text-gray-500'"
-                >
-                  {{ action.label }}
-                </span>
-                <span
-                  v-if="action.badge"
-                  class="absolute -top-1 right-2 min-w-[16px] h-4 bg-red-500 rounded-full text-[10px] font-medium text-white flex items-center justify-center px-1"
-                >
-                  {{ action.badge }}
-                </span>
-              </button>
-            </div>
-            <div class="safe-area-pb"></div>
-          </div>
+          <Transition name="fade">
+            <MobileTabBar
+              v-if="showMobileTabBar"
+              class="md:hidden"
+              :current-tab="currentTab"
+              :actions="mobileActions"
+              @tab-change="handleTabChange"
+            />
+          </Transition>
         </div>
       </main>
 
-      <FootView />
+      <!-- 仅在桌面端显示页脚 -->
+      <FootView class="hidden lg:block" />
     </div>
   </template>
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted, defineAsyncComponent } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, defineAsyncComponent, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import profile from '@/api/profile'
 import HeadView from '../../components/HeadView.vue'
@@ -220,7 +199,9 @@ watch(
 
 // 处理标签切换
 const handleTabChange = (key) => {
-  currentTab.value = key
+  if (showMobileTabBar.value) {
+    currentTab.value = key
+  }
 }
 
 // 将原有的tabs拆分为主要和次要标签
@@ -231,11 +212,6 @@ const tabs = [
     icon: Squares2X2Icon
   },
   { 
-    key: 'membership', 
-    name: '会员中心',
-    icon: SparklesIcon
-  },
-  { 
     key: 'profile', 
     name: '我的档案',
     icon: UserIcon
@@ -244,6 +220,11 @@ const tabs = [
     key: 'resumes', 
     name: '我的简历',
     icon: DocumentIcon
+  },
+  { 
+    key: 'membership', 
+    name: '会员中心',
+    icon: SparklesIcon
   },
   { 
     key: 'messages', 
@@ -271,32 +252,27 @@ const mobileActions = [
     key: 'home',
     label: '用户中心',
     icon: Squares2X2Icon,
-    handler: () => handleTabChange('home')
   },
   {
     key: 'profile',
     label: '档案',
     icon: UserIcon,
-    handler: () => handleTabChange('profile')
   },
   {
     key: 'resumes',
     label: '简历',
     icon: DocumentIcon,
-    handler: () => handleTabChange('resumes')
   },
   {
     key: 'messages',
     label: '消息',
     icon: BellIcon,
-    handler: () => handleTabChange('messages'),
     badge: unreadMessagesCount
   },
   {
     key: 'account',
     label: '设置',
     icon: Cog6ToothIcon,
-    handler: () => handleTabChange('account')
   }
 ]
 
@@ -367,14 +343,34 @@ const getTabMetric = (key) => {
   }
 }
 
-// 在组件挂载时获取数据
-onMounted(async () => {
-  await fetchCompleteness()
+// 修改状态管理
+const showMobileTabBar = ref(false)
+
+// 修改生命周期钩子
+onMounted(() => {
+  // 延迟显示 MobileTabBar，确保 DOM 完全加载
+  nextTick(() => {
+    showMobileTabBar.value = true
+  })
+  window.addEventListener('resize', handleResize)
+  fetchCompleteness()
 })
+
+onUnmounted(() => {
+  showMobileTabBar.value = false
+  window.removeEventListener('resize', handleResize)
+})
+
+// 修改 handleResize
+const handleResize = () => {
+  if (showMobileTabBar.value) {
+    window.dispatchEvent(new Event('resize'))
+  }
+}
 
 // 监听路由变化，在进入个人资料页时刷新数据
 watch(() => route.path, async (newPath) => {
-  if (newPath.includes('/user/profile')) {
+  if (showMobileTabBar.value && newPath.includes('/user/profile')) {
     await fetchCompleteness()
   }
 })
@@ -486,31 +482,27 @@ const isMobileView = computed(() => {
   return window.innerWidth < 768
 })
 
-const handleResize = () => {
-  // 触发响应式更新
-  window.dispatchEvent(new Event('resize'))
-}
-
-onMounted(() => {
-  window.addEventListener('resize', handleResize)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', handleResize)
-})
+// 添加 profileMenuGroups 数据
+const profileMenuGroups = [
+  {
+    title: '内容管理',
+    items: [
+      { key: 'home', label: '用户中心', icon: Squares2X2Icon },
+      { key: 'profile', label: '我的档案', icon: UserIcon },
+      { key: 'resumes', label: '我的简历', icon: DocumentIcon }
+    ]
+  },
+  {
+    title: '账号管理',
+    items: [
+      { key: 'messages', label: '消息', icon: BellIcon },
+      { key: 'account', label: '设置', icon: Cog6ToothIcon }
+    ]
+  }
+]
 </script>
  
  <style scoped>
- .safe-area-inset-bottom {
-   padding-bottom: env(safe-area-inset-bottom);
- }
- 
- @supports (padding-bottom: env(safe-area-inset-bottom)) {
-   .pb-16 {
-     padding-bottom: calc(4rem + env(safe-area-inset-bottom));
-   }
- }
- 
  /* 确保内容区域占满剩余空间 */
  main {
    min-height: calc(100vh - 60px);
@@ -518,5 +510,16 @@ onUnmounted(() => {
 
  .footer-container {
    margin-top: auto;
+ }
+
+ /* 添加过渡动画样式 */
+ .fade-enter-active,
+ .fade-leave-active {
+   transition: opacity 0.3s ease;
+ }
+
+ .fade-enter-from,
+ .fade-leave-to {
+   opacity: 0;
  }
  </style>

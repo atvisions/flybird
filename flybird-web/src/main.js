@@ -20,25 +20,30 @@ app.use(pinia)
 app.use(ElementPlus)
 app.use(VueCropper)
 app.use(store)
+app.use(router) // 先注册路由
 
-// 初始化认证状态
-await (async () => {
-  
-  const authStore = useAuthStore()
-  await authStore.initialize()
-  
-})()
+// 初始化应用
+const initApp = async () => {
+  try {
+    const authStore = useAuthStore()
+    await authStore.initialize()
+    console.log('Auth initialized:', {
+      isLoggedIn: authStore.isLoggedIn,
+      token: localStorage.getItem('token')
+    })
+  } catch (error) {
+    console.error('Auth initialization failed:', error)
+  } finally {
+    // 添加全局配置
+    app.config.globalProperties.$toast = showToast
+    window.$toast = showToast
+    app.config.globalProperties.eventBus = eventBus
+    app.config.globalProperties.$config = config
+    
+    // 最后挂载应用
+    app.mount('#app')
+  }
+}
 
-// 在认证初始化后再设置路由
-app.use(router)
-
-// 添加全局 Toast 方法
-app.config.globalProperties.$toast = showToast
-window.$toast = showToast  // 添加到 window 对象，供内联事件使用
-
-// 如果需要全局使用
-app.config.globalProperties.eventBus = eventBus
-
-app.config.globalProperties.$config = config
-
-app.mount('#app')
+// 启动应用
+initApp()

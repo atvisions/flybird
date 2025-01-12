@@ -106,4 +106,7 @@ export const getExpirationInfo = () => {
     formattedNow: new Date().toLocaleString(),
     isExpired: Date.now() >= expirationTime
   }
-} 
+}
+
+// 确保 token 的存储和获取是正确的
+const token = localStorage.getItem(STORAGE_KEYS.TOKEN) 

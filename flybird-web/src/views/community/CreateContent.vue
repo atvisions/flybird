@@ -10,8 +10,8 @@
             class="flex-1 h-20 rounded-lg border-2 transition-colors flex flex-col items-center justify-center gap-2"
             :class="[
               selectedType === type.id 
-                ? 'border-violet-600 bg-violet-50 text-violet-600' 
-                : 'border-gray-200 hover:border-violet-200'
+                ? 'border-blue-600 bg-blue-50 text-blue-600' 
+                : 'border-gray-200 hover:border-blue-200'
             ]"
             @click="selectedType = type.id"
           >
@@ -36,7 +36,7 @@
             <input
               type="text"
               v-model="topicForm.title"
-              class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-violet-500 focus:ring-violet-500"
+              class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600"
               placeholder="例如：Vue 和 React，哪个更适合新手入门？"
             >
           </div>
@@ -47,7 +47,7 @@
             <Listbox v-model="selectedTopicCategory">
               <div class="relative">
                 <ListboxButton
-                  class="relative w-full cursor-pointer rounded-lg bg-white py-2.5 pl-3 pr-10 text-left border border-gray-300 focus:outline-none focus:ring-2 focus:ring-violet-500 sm:text-sm"
+                  class="relative w-full cursor-pointer rounded-lg bg-white py-2.5 pl-3 pr-10 text-left border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-600 sm:text-sm"
                 >
                   <span class="flex items-center">
                     <component 
@@ -79,7 +79,7 @@
                     >
                       <li
                         :class="[
-                          active ? 'bg-violet-600 text-white' : 'text-gray-900',
+                          active ? 'bg-blue-50 text-blue-600' : 'text-gray-900',
                           'relative cursor-pointer select-none py-2 pl-3 pr-9'
                         ]"
                       >
@@ -87,7 +87,7 @@
                           <component 
                             :is="category.icon" 
                             :class="[
-                              active ? 'text-white' : 'text-gray-400',
+                              active ? 'text-blue-600' : 'text-gray-400',
                               'h-5 w-5 flex-shrink-0'
                             ]"
                             aria-hidden="true"
@@ -105,7 +105,7 @@
                         <span
                           v-if="selected"
                           :class="[
-                            active ? 'text-white' : 'text-violet-600',
+                            active ? 'text-blue-600' : 'text-blue-600',
                             'absolute inset-y-0 right-0 flex items-center pr-4'
                           ]"
                         >
@@ -128,7 +128,7 @@
                 <input
                   type="text"
                   v-model="topicForm.optionA"
-                  class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-violet-500 focus:ring-violet-500"
+                  class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600"
                   placeholder="例如：Vue"
                 >
               </div>
@@ -137,7 +137,7 @@
                 <input
                   type="text"
                   v-model="topicForm.optionB"
-                  class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-violet-500 focus:ring-violet-500"
+                  class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600"
                   placeholder="例如：React"
                 >
               </div>
@@ -150,7 +150,7 @@
             <textarea
               v-model="topicForm.content"
               rows="6"
-              class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-violet-500 focus:ring-violet-500"
+              class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600"
               placeholder="详细描述这个话题，可以分析两个选项的优劣势..."
             ></textarea>
           </div>
@@ -175,7 +175,7 @@
                 type="text"
                 v-model="newTopicTag"
                 @keydown.enter="addTopicTag"
-                class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+                class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
                 placeholder="按回车添加标签"
               >
             </div>
@@ -196,7 +196,7 @@
                   取消
                 </button>
                 <button 
-                  class="px-6 h-10 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors"
+                  class="px-6 h-10 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   @click="submitTopic"
                 >
                   发布话题
@@ -215,7 +215,7 @@
             <input
               type="text"
               v-model="questionForm.title"
-              class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-violet-500 focus:ring-violet-500"
+              class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600"
               placeholder="一句话描述你的问题"
             >
           </div>
@@ -228,7 +228,7 @@
               <Listbox v-model="questionForm.type">
                 <div class="relative">
                   <ListboxButton
-                    class="relative w-full cursor-pointer rounded-lg bg-white py-2.5 pl-3 pr-10 text-left border border-gray-300 focus:outline-none focus:ring-2 focus:ring-violet-500 sm:text-sm"
+                    class="relative w-full cursor-pointer rounded-lg bg-white py-2.5 pl-3 pr-10 text-left border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-600 sm:text-sm"
                   >
                     <span class="flex items-center">
                       <component 
@@ -260,7 +260,7 @@
                       >
                         <li
                           :class="[
-                            active ? 'bg-violet-600 text-white' : 'text-gray-900',
+                            active ? 'bg-blue-50 text-blue-600' : 'text-gray-900',
                             'relative cursor-pointer select-none py-2 pl-3 pr-9'
                           ]"
                         >
@@ -268,7 +268,7 @@
                             <component 
                               :is="type.icon" 
                               :class="[
-                                active ? 'text-white' : 'text-gray-400',
+                                active ? 'text-blue-600' : 'text-gray-400',
                                 'h-5 w-5 flex-shrink-0'
                               ]"
                               aria-hidden="true"
@@ -286,7 +286,7 @@
                           <span
                             v-if="selected"
                             :class="[
-                              active ? 'text-white' : 'text-violet-600',
+                              active ? 'text-blue-600' : 'text-blue-600',
                               'absolute inset-y-0 right-0 flex items-center pr-4'
                             ]"
                           >
@@ -306,7 +306,7 @@
               <Listbox v-model="selectedCategory">
                 <div class="relative">
                   <ListboxButton
-                    class="relative w-full cursor-pointer rounded-lg bg-white py-2.5 pl-3 pr-10 text-left border border-gray-300 focus:outline-none focus:ring-2 focus:ring-violet-500 sm:text-sm"
+                    class="relative w-full cursor-pointer rounded-lg bg-white py-2.5 pl-3 pr-10 text-left border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-600 sm:text-sm"
                   >
                     <span class="flex items-center">
                       <component 
@@ -338,7 +338,7 @@
                       >
                         <li
                           :class="[
-                            active ? 'bg-violet-600 text-white' : 'text-gray-900',
+                            active ? 'bg-blue-50 text-blue-600' : 'text-gray-900',
                             'relative cursor-pointer select-none py-2 pl-3 pr-9'
                           ]"
                         >
@@ -346,7 +346,7 @@
                             <component 
                               :is="category.icon" 
                               :class="[
-                                active ? 'text-white' : 'text-gray-400',
+                                active ? 'text-blue-600' : 'text-gray-400',
                                 'h-5 w-5 flex-shrink-0'
                               ]"
                               aria-hidden="true"
@@ -364,7 +364,7 @@
                           <span
                             v-if="selected"
                             :class="[
-                              active ? 'text-white' : 'text-violet-600',
+                              active ? 'text-blue-600' : 'text-blue-600',
                               'absolute inset-y-0 right-0 flex items-center pr-4'
                             ]"
                           >
@@ -389,7 +389,7 @@
                   <input
                     type="number"
                     v-model="questionForm.bounty"
-                    class="block w-full rounded-lg border-gray-300 pl-6 shadow-sm focus:border-violet-500 focus:ring-violet-500"
+                    class="block w-full rounded-lg border-gray-300 pl-6 shadow-sm focus:border-blue-600 focus:ring-blue-600"
                     placeholder="输入金额"
                     min="1"
                   >
@@ -403,7 +403,7 @@
                 >
                   <div class="relative">
                     <ListboxButton
-                      class="relative w-full cursor-pointer rounded-lg bg-white py-2.5 pl-3 pr-10 text-left border border-gray-300 focus:outline-none focus:ring-2 focus:ring-violet-500 sm:text-sm"
+                      class="relative w-full cursor-pointer rounded-lg bg-white py-2.5 pl-3 pr-10 text-left border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-600 sm:text-sm"
                     >
                       <span class="block truncate">{{ questionForm.bountyDays }}天</span>
                       <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
@@ -427,7 +427,7 @@
                         >
                           <li
                             :class="[
-                              active ? 'bg-violet-600 text-white' : 'text-gray-900',
+                              active ? 'bg-blue-50 text-blue-600' : 'text-gray-900',
                               'relative cursor-pointer select-none py-2 pl-3 pr-9'
                             ]"
                           >
@@ -437,7 +437,7 @@
                             <span
                               v-if="selected"
                               :class="[
-                                active ? 'text-white' : 'text-violet-600',
+                                active ? 'text-blue-600' : 'text-blue-600',
                                 'absolute inset-y-0 right-0 flex items-center pr-4'
                               ]"
                             >
@@ -462,7 +462,7 @@
             <textarea
               v-model="questionForm.content"
               rows="6"
-              class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-violet-500 focus:ring-violet-500"
+              class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600"
               placeholder="详细描述你的问题，以便他人更好地帮助你"
             ></textarea>
           </div>
@@ -487,7 +487,7 @@
                 type="text"
                 v-model="newTag"
                 @keydown.enter="addTag"
-                class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+                class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
                 placeholder="按回车添加标签"
               >
             </div>
@@ -508,7 +508,7 @@
                   取消
                 </button>
                 <button 
-                  class="px-6 h-10 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors"
+                  class="px-6 h-10 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   @click="submitQuestion"
                 >
                   发布问题

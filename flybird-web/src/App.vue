@@ -1,7 +1,5 @@
 <template>
   <div class="min-h-screen bg-gray-50">
-
-    
     <!-- 主要内容区域 -->
     <main>
       <router-view></router-view>
@@ -20,16 +18,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, defineAsyncComponent } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-import { API_URL, BASE_API_URL } from '@/config'
-
-const router = useRouter()
-const authStore = useAuthStore()
-
-// 不需要登录的路由
-const publicRoutes = ['/login', '/register', '/reset-password']
+import { ref, defineAsyncComponent } from 'vue'
 
 // Toast 相关状态
 const toastMessage = ref('')
@@ -42,23 +31,9 @@ const handleToastDestroy = () => {
   toastType.value = 'info'
 }
 
-onMounted(() => {
-  // 检查认证状态
-  if (!authStore.isAuthenticated) {
-    const currentPath = router.currentRoute.value.path
-    // 只有非公开路由才需要重定向到登录页
-    if (!publicRoutes.includes(currentPath)) {
-      // 保存当前路径用于登录后重定向
-      const redirect = encodeURIComponent(currentPath)
-      router.push(`/login?redirect=${redirect}`)
-    }
-  }
-})
-
 // 异步导入组件
 const ToastMessage = defineAsyncComponent(() => import('@/components/ToastMessage.vue'))
 </script>
-
 <style>
 .app-wrapper {
   position: relative;
