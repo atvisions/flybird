@@ -488,6 +488,7 @@ import { eventBus } from '@/utils/eventBus'
 import { showToast } from '@/components/ToastMessage'
 import request from '@/utils/request'
 import { membership } from '@/api/membership'
+import config from '@/config'
 
 // 导入所需的图标
 import {
@@ -712,10 +713,15 @@ const avatarUrl = computed(() => {
     return avatar
   }
   // 如果是相对路径，则拼接基础 URL
-  return avatar.startsWith('/') 
-    ? `${process.env.VUE_APP_API_BASE_URL}${avatar}`
-    : `${process.env.VUE_APP_API_BASE_URL}/${avatar}`
+  return avatar.startsWith('/media') 
+    ? `${config.API_URL}${avatar}`
+    : `${config.API_URL}/media/${avatar}`
 })
+
+// 处理图片加载错误
+const handleImageError = (e) => {
+  e.target.src = defaultAvatar
+}
 
 // 判断是否在消息页面
 const isMessageRoute = computed(() => {

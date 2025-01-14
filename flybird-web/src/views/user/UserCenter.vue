@@ -127,16 +127,9 @@ const LoadingComponent = {
 const MyProfile = defineAsyncComponent({
   loader: () => import('@/views/user/MyProfile/index.vue'),
   loadingComponent: LoadingComponent,
-  timeout: 10000,  // 增加超时时间到10秒
-  delay: 200,
-  onError(error, retry, fail, attempts) {
-    if (attempts <= 3) {
-      // 重试3次
-      retry()
-    } else {
-      fail()
-    }
-  }
+  timeout: 10000,  // 10秒超时
+  delay: 0,        // 立即显示加载组件
+  suspensible: false  // 禁用 suspense
 })
 
 const MyResumes = defineAsyncComponent({
@@ -156,7 +149,9 @@ const AccountSettings = defineAsyncComponent({
 const UserHome = defineAsyncComponent({
   loader: () => import('@/views/user/MyProfile/components/UserHome.vue'),
   loadingComponent: LoadingComponent,
-  timeout: 10000
+  timeout: 10000,
+  delay: 0,
+  suspensible: false
 })
 
 const MyMessages = defineAsyncComponent({

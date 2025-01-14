@@ -7,9 +7,6 @@ from .serializers import ChangePasswordSerializer, ChangePhoneSerializer
 from ..utils.email import verify_email_code, send_verification_email, generate_email_code
 import logging
 import re
-from django.db import IntegrityError
-from django.core.cache import cache
-from ..models import User
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -49,58 +46,21 @@ class ChangePhoneView(APIView):
     permission_classes = [IsAuthenticated]
     
     def post(self, request):
-        try:
-            logger.info(f"Received change phone request - data: {request.data}")
-            
-            serializer = ChangePhoneSerializer(data=request.data, context={'request': request})
-            if not serializer.is_valid():
-                logger.error(f"Validation failed - errors: {serializer.errors}")
-                return Response({
-                    'detail': serializer.errors
-                }, status=status.HTTP_400_BAD_REQUEST)
-                
-            phone = serializer.validated_data['phone']
-            code = serializer.validated_data['code']
-            
-            # 验证码校验
-            cache_key = f'sms_code_change_phone_{phone}'
-            cached_code = cache.get(cache_key)
-            logger.info(f"Validating code - cached: {cached_code}, received: {code}")
-            
-            if not cached_code:
-                return Response({
-                    'detail': '验证码已过期，请重新获取'
-                }, status=status.HTTP_400_BAD_REQUEST)
-                
-            if cached_code != code:
-                return Response({
-                    'detail': '验证码错误'
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-            # 检查手机号是否已被使用
-            if User.objects.filter(phone=phone).exclude(id=request.user.id).exists():
-                return Response({
-                    'detail': '该手机号已被其他用户使用'
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-            # 更新手机号
+        """修改手机号"""
+        serializer = ChangePhoneSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
             user = request.user
-            user.phone = phone
-            user.save(update_fields=['phone'])
-            
-            # 清除验证码缓存
-            cache.delete(cache_key)
-            
+            user.phone = serializer.validated_data['phone']
+            user.save()
             return Response({
                 'code': 200,
                 'message': '手机号修改成功'
             })
-            
-        except Exception as e:
-            logger.error(f"Change phone failed - error: {str(e)}")
-            return Response({
-                'detail': str(e)
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({
+            'code': 400,
+            'message': '手机号修改失败',
+            'errors': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 class DeleteAccountView(APIView):
     """删除账号"""
@@ -139,13 +99,6 @@ class BindEmailView(APIView):
     def post(self, request):
         email = request.data.get('email')
         code = request.data.get('code')
-        password = request.data.get('password')
-        
-        # 验证密码
-        if not request.user.check_password(password):
-            return Response({
-                'detail': '密码错误'
-            }, status=status.HTTP_400_BAD_REQUEST)
         
         # 验证邮箱格式
         if not email or not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
@@ -171,19 +124,6 @@ class SendEmailCodeView(APIView):
     
     def post(self, request):
         email = request.data.get('email')
-        password = request.data.get('password')
-        
-        logger.info(f"Received request to send email code for user {request.user.username}")
-        logger.info(f"Email: {email}")
-        
-        # 验证密码
-        if not request.user.check_password(password):
-            logger.error(f"Password validation failed for user {request.user.username}")
-            return Response({
-                'detail': '密码错误'
-            }, status=status.HTTP_400_BAD_REQUEST)
-            
-        logger.info(f"Password validation successful for user {request.user.username}")
         
         # 验证邮箱格式
         if not email or not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):

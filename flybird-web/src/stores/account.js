@@ -4,6 +4,7 @@ import { user } from '@/api/user'
 import defaultAvatar from '@/assets/images/default-avatar.png'
 import { showToast } from '@/components/ToastMessage'
 import { useAuthStore } from '@/stores/auth'
+import config from '@/config'
 
 export const useAccountStore = defineStore('account', {
   state: () => ({
@@ -18,7 +19,12 @@ export const useAccountStore = defineStore('account', {
       if (!avatar || avatar === 'null' || avatar === 'undefined' || typeof avatar === 'undefined' || avatar === null) {
         return defaultAvatar
       }
-      return avatar
+      if (avatar.startsWith('http') || avatar.startsWith('data:image')) {
+        return avatar
+      }
+      return avatar.startsWith('/media') 
+        ? `${config.API_URL}${avatar}`
+        : `${config.API_URL}/media/${avatar}`
     },
     username: (state) => state.userInfo?.username || '未设置用户名',
     uid: (state) => state.userInfo?.uid,

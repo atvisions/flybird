@@ -11,7 +11,6 @@ import { eventBus } from '@/utils/eventBus'
 import VueCropper from 'vue-cropper'
 import 'vue-cropper/dist/index.css'
 import { useAuthStore } from '@/stores/auth'
-import store from './store'
 import config from './config'
 
 const app = createApp(App)
@@ -19,8 +18,7 @@ const pinia = createPinia()
 app.use(pinia)
 app.use(ElementPlus)
 app.use(VueCropper)
-app.use(store)
-app.use(router) // 先注册路由
+app.use(router)
 
 // 初始化应用
 const initApp = async () => {

@@ -20,10 +20,7 @@ const env = process.env.NODE_ENV || 'development'
 const currentConfig = config[env]
 
 // 导出配置
-export default {
-  ...currentConfig,
-  BASE_API_URL: `${currentConfig.API_URL}${currentConfig.API_PREFIX}`
-}
+export default currentConfig
 
 // 为了向后兼容，导出单独的变量
 export const { API_URL, API_PREFIX, MEDIA_URL, SOCKET_URL } = currentConfig 
