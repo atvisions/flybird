@@ -298,12 +298,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch, nextTick } from 'vue'
+import { ref, onMounted, computed, watch, nextTick, onUnmounted } from 'vue'
 import { useModules } from '@/composables/useModules'
 import { useProfileData } from '@/composables/useProfileData'
 import useLoading from '@/composables/useLoading'
 import profile from '@/api/profile'
 import { ElMessage } from 'element-plus'
+import { eventBus } from '@/utils/eventBus'
 import {
   Dialog,
   DialogPanel,
@@ -960,6 +961,23 @@ const updateModules = (data) => {
 // 初始化
 onMounted(() => {
   initData()
+  // 监听完整度更新事件
+  eventBus.on('completeness-updated', async () => {
+    try {
+      // 获取最新的完整度数据
+      const completenessResponse = await profile.getCompleteness()
+      if (completenessResponse.data?.code === 200) {
+        completionData.value = completenessResponse.data.data
+      }
+    } catch (error) {
+      console.error('获取完整度数据失败:', error)
+    }
+  })
+})
+
+// 组件卸载时移除事件监听
+onUnmounted(() => {
+  eventBus.off('completeness-updated')
 })
 
 // 添加删除处理函数

@@ -19,7 +19,8 @@
     <!-- 头像上传对话框 -->
     <avatar-upload-dialog
       v-model="showAvatarDialog"
-      @success="handleAvatarSuccess"
+      :loading="loading"
+      @upload="handleAvatarSuccess"
     />
   </div>
 </template>
@@ -29,13 +30,16 @@ import { ref, computed, onMounted, watch, nextTick, onUnmounted } from 'vue'
 import { useProfileStore } from '@/stores/profile'
 import { eventBus } from '@/utils/eventBus'
 import { Plus } from '@element-plus/icons-vue'
-import AvatarUploadDialog from './dialogs/AvatarUploadDialog.vue'
+import { showToast } from '@/components/ToastMessage'
+import AvatarUploadDialog from './MyProfile/dialogs/AvatarUploadDialog.vue'
+import profile from '@/api/profile'
 
 const profileStore = useProfileStore()
 const showAvatarDialog = ref(false)
 const avatarKey = ref(0)
 const currentAvatar = ref(null)
 const imageLoaded = ref(false)
+const loading = ref(false)
 
 const handleImageLoad = () => {
   imageLoaded.value = true
@@ -67,9 +71,38 @@ onUnmounted(() => {
   eventBus.off('avatar-updated')
 })
 
-const handleAvatarSuccess = async () => {
-  showAvatarDialog.value = false
+const handleAvatarSuccess = async (file) => {
+  try {
+    loading.value = true
+    // 使用 profileStore 的 updateAvatar 方法
+    await profileStore.updateAvatar(file)
+    // 重新获取基本信息以更新分值
+    await profileStore.fetchBasicInfo()
+    // 获取最新的完整度数据
+    const completenessResponse = await profile.getCompleteness()
+    if (completenessResponse?.data?.code === 200) {
+      // 触发完整度更新事件
+      eventBus.emit('completeness-updated', completenessResponse.data.data)
+    }
+    // 触发头像更新事件
+    eventBus.emit('avatar-updated', profileStore.basicInfo?.avatar)
+    showAvatarDialog.value = false
+    showToast('头像上传成功', 'success')
+  } catch (error) {
+    console.error('头像上传失败:', error)
+    showToast(error.message || '头像上传失败，请稍后重试', 'error')
+  } finally {
+    loading.value = false
+  }
 }
+
+// 添加监听器以确保头像更新后重新获取基本信息
+watch(() => profileStore.basicInfo?.avatar, async (newAvatar) => {
+  if (newAvatar) {
+    // 重新获取基本信息以更新分值
+    await profileStore.fetchBasicInfo()
+  }
+})
 </script>
 
 <style scoped>

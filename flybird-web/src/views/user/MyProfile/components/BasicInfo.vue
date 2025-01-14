@@ -339,43 +339,24 @@ const formatDate = (dateString) => {
 const handleAvatarUpload = async (file) => {
   try {
     loading.value = true
-    console.log('开始上传职业头像:', {
-      file,
-      size: file.size,
-      type: file.type
-    })
-
     // 使用 profileStore 上传头像
-    const response = await profileStore.updateAvatar(file)
-    console.log('职业头像上传响应:', response)
-
-    if (response?.data?.code === 200) {
-      showToast('职业头像上传成功', 'success')
-      
-      // 更新本地数据
-      if (props.resumeData) {
-        props.resumeData.avatar = response.data.data.avatar
-        
-        // 触发父组件更新
-        emit('update', {
-          type: 'avatar',
-          value: response.data.data.avatar
-        })
-
-        // 强制刷新图片
-        nextTick(() => {
-          avatarUpdateTime.value = Date.now()
-        })
-      }
-    } else {
-      throw new Error(response.data?.message || '上传失败')
+    await profileStore.updateAvatar(file)
+    
+    // 触发头像更新事件
+    eventBus.emit('avatar-updated')
+    
+    // 获取最新的完整度数据并触发更新事件
+    const completenessResponse = await profile.getCompleteness()
+    if (completenessResponse.data?.code === 200) {
+      eventBus.emit('completeness-updated')
     }
+    
+    showToast('头像上传成功', 'success')
   } catch (error) {
-    console.error('职业头像上传失败:', error)
-    showToast(error.message || '职业头像上传失败，请稍后重试', 'error')
+    console.error('头像上传失败:', error)
+    showToast(error.message || '头像上传失败，请重试', 'error')
   } finally {
     loading.value = false
-    showAvatarCropper.value = false
   }
 }
 
