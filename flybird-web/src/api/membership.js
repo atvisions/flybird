@@ -59,4 +59,21 @@ export function signIn() {
     url: '/api/v1/membership/points/check-in/',
     method: 'post'
   })
-} 
+}
+
+// 获取积分记录
+export function getPointsRecords(params) {
+  return request({
+    url: '/api/v1/membership/points/records/',
+    method: 'get',
+    params
+  })
+}
+
+// 获取订单记录
+export function getOrders() {
+  return request({
+    url: '/api/v1/membership/orders/',
+    method: 'get'
+  })
+}

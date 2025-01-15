@@ -121,7 +121,7 @@ import { ref, computed, nextTick, watch, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import defaultAvatarImage from '@/assets/images/default-avatar.png'
 import { useStore } from 'vuex'
-import { MEDIA_URL } from '@/config'
+import config from '@/config'
 import { showToast } from '@/components/ToastMessage'
 import {
   PencilIcon,
@@ -152,6 +152,7 @@ import {
 import ProfileAvatarCropper from '@/components/ProfileAvatarCropper.vue'
 import { useAccountStore } from '@/stores/account'
 import { useProfileStore } from '@/stores/profile'
+import { user } from '@/api/user'
 
 // 1. 首先声明 props
 const props = defineProps({
@@ -176,13 +177,17 @@ const props = defineProps({
 // 2. 声明 emits
 const emit = defineEmits(['update', 'edit', 'toggleBioExpand'])
 
-// 3. 导入和初始化其他变量
+// 3. 声明其他必要的响应式变量
+const showAvatarCropper = ref(false)
+const avatarUploadRef = ref(null)
+
+// 4. 导入和初始化其他变量
 const store = useStore()
 const pageLoading = ref(true)
 const basicInfo = ref({})
 const profileStore = useProfileStore()
 
-// 4. 计算属性
+// 5. 计算属性
 const formatBasicInfo = computed(() => {
   // 优先使用父组件传入的 resumeData
   const info = props.resumeData || {}
@@ -204,11 +209,10 @@ const avatarUpdateTime = ref(Date.now())
 
 // 修改计算属性
 const userAvatar = computed(() => {
-  // 优先使用 store 中的头像
-  const avatar = profileStore.profileAvatarUrl || props.resumeData?.avatar
+  // 只使用 resumeData 中的头像，不使用 store 中的头像
+  const avatar = props.resumeData?.avatar
   
-  console.log('Computing userAvatar:', {
-    storeAvatar: profileStore.profileAvatarUrl,
+  console.log('Computing profile avatar:', {
     propsAvatar: props.resumeData?.avatar,
     finalAvatar: avatar,
     updateTime: avatarUpdateTime.value
@@ -219,10 +223,15 @@ const userAvatar = computed(() => {
     return defaultAvatarImage
   }
   
-  // 如果是相对路径，需要添加 MEDIA_URL
-  const fullUrl = avatar.startsWith('http') 
-    ? avatar 
-    : `${MEDIA_URL}/${avatar.replace(/^\/media\//, '')}`
+  // 如果是完整的URL或base64，直接使用
+  if (avatar.startsWith('http') || avatar.startsWith('data:image')) {
+    avatarUrl.value = avatar
+    return avatar
+  }
+  
+  // 处理相对路径
+  const cleanPath = avatar.replace(/^\/?(media\/)?/, '')
+  const fullUrl = `${config.mediaURL}/${cleanPath}`
   
   // 添加时间戳参数来避免缓存
   avatarUrl.value = `${fullUrl}?t=${avatarUpdateTime.value}`
@@ -233,7 +242,7 @@ const currentGender = computed(() => {
   return props.resumeData?.gender
 })
 
-// 5. 监听器
+// 6. 监听器
 watch(
   () => props.resumeData,
   (newVal) => {
@@ -244,7 +253,7 @@ watch(
   { immediate: true }
 )
 
-// 6. 生命周期钩子
+// 7. 生命周期钩子
 onMounted(async () => {
   try {
     pageLoading.value = true
@@ -264,7 +273,7 @@ onMounted(async () => {
   }
 })
 
-// 7. 方法定义
+// 8. 方法定义
 const handleFileChange = async (event) => {
   const file = event.target.files[0]
   if (!file) return
@@ -299,7 +308,7 @@ const toggleBioExpand = () => {
   emit('toggleBioExpand')
 }
 
-// 8. 工具函数
+// 9. 工具函数
 const calculateAge = (birthDate) => {
   if (!birthDate) return ''
   
@@ -339,24 +348,33 @@ const formatDate = (dateString) => {
 const handleAvatarUpload = async (file) => {
   try {
     loading.value = true
-    // 使用 profileStore 上传头像
-    await profileStore.updateAvatar(file)
     
-    // 触发头像更新事件
-    eventBus.emit('avatar-updated')
+    // 使用 profile API 上传证件照
+    const response = await profile.uploadAvatar(file)
     
-    // 获取最新的完整度数据并触发更新事件
-    const completenessResponse = await profile.getCompleteness()
-    if (completenessResponse.data?.code === 200) {
-      eventBus.emit('completeness-updated')
+    if (response.data?.code === 200) {
+      // 更新时间戳触发头像重新加载
+      avatarUpdateTime.value = Date.now()
+      
+      // 获取最新的完整度数据
+      const completenessResponse = await profile.getCompleteness()
+      if (completenessResponse.data?.code === 200) {
+        eventBus.emit('completeness-updated')
+      }
+      
+      // 触发父组件更新
+      emit('update')
+      
+      showToast('证件照上传成功', 'success')
+    } else {
+      throw new Error(response.data?.message || '证件照上传失败')
     }
-    
-    showToast('头像上传成功', 'success')
   } catch (error) {
-    console.error('头像上传失败:', error)
-    showToast(error.message || '头像上传失败，请重试', 'error')
+    console.error('证件照上传失败:', error)
+    showToast(error.message || '证件照上传失败，请重试', 'error')
   } finally {
     loading.value = false
+    showAvatarCropper.value = false
   }
 }
 
@@ -384,8 +402,6 @@ const validateFile = (file) => {
 }
 
 // 添加状态
-const showAvatarCropper = ref(false)
-const avatarUploadRef = ref(null)
 const loading = ref(false)
 
 // 监听 resumeData 变化

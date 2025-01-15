@@ -98,6 +98,7 @@
               <button 
                 class="group px-8 py-4 bg-black text-white rounded-full text-lg font-medium hover:bg-gray-900 transition-all hover:scale-105 flex items-center justify-center"
               >
+                <DocumentIcon class="w-6 h-6 mr-2" />
                 开始创建简历
                
               </button>
@@ -105,6 +106,7 @@
                 class="px-8 py-4 border-2 border-black text-black rounded-full text-lg font-medium hover:bg-black hover:text-white transition-all flex items-center justify-center"
                 @click="handleImportClick"
               >
+                <ArrowDownTrayIcon class="w-6 h-6 mr-2" />
                 导入简历
               </button>
             </div>
@@ -432,16 +434,23 @@
         <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
           <h2 class="text-4xl font-bold text-gray-900 mb-6">准备好开始了吗？</h2>
           <p class="text-xl text-gray-600 mb-10">3分钟完成简历创建，提升求职竞争力</p>
-          <button class="px-12 py-4 bg-black text-white rounded-full text-lg font-medium hover:bg-gray-900 transition-all hover:scale-105">
-            免费创建简历
-          </button>
+          <div class="flex justify-center gap-4">
+            <button class="px-8 py-4 bg-black text-white rounded-full text-lg font-medium hover:bg-gray-900 transition-all hover:scale-105 flex items-center">
+              <DocumentIcon class="w-6 h-6 mr-2" />
+              免费创建简历
+            </button>
+            <button @click="handleImportClick" class="px-8 py-4 bg-white text-black border-2 border-black rounded-full text-lg font-medium hover:bg-gray-50 transition-all hover:scale-105 flex items-center">
+              <ArrowDownTrayIcon class="w-6 h-6 mr-2" />
+              导入简历
+            </button>
+          </div>
         </div>
       </div>
     </div>
     <FootView />
     <!-- 添加弹窗组件 -->
     <ProDialog v-model="showProDialog" />
-    <ResumeImport v-model="showImportDialog" />
+    <ResumeImport v-model="showImportDialog" @success="handleImportSuccess" />
   </div>
 </template>
 
@@ -449,9 +458,9 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import HeadView from '../components/HeadView.vue'
 import FootView from '../components/FootView.vue'
-import ProDialog from '../components/ProDialog.vue'
-import ResumeImport from './user/MyProfile/components/ResumeImport.vue'
-import { useUserStore } from '@/stores/user'
+import ProDialog from '@/components/dialogs/ProDialog.vue'
+import ResumeImport from '@/views/user/MyProfile/components/ResumeImport.vue'
+import { useAccountStore } from '@/stores/account'
 import { useRouter } from 'vue-router'
 import { StarIcon } from '@heroicons/vue/20/solid'
 import { 
@@ -755,30 +764,23 @@ onUnmounted(() => {
 // 添加状态变量
 const showProDialog = ref(false)
 const showImportDialog = ref(false)
-const userStore = useUserStore()
+const accountStore = useAccountStore()
 const router = useRouter()
 
 // 处理导入按钮点击
-const handleImportClick = async () => {
-  // 检查是否登录
-  if (!userStore.isLoggedIn) {
-    // 未登录，跳转到登录页
-    router.push({
-      path: '/login',
-      query: { redirect: router.currentRoute.value.fullPath }
-    })
-    return
-  }
-
-  // 检查是否是会员
-  if (!userStore.isPro) {
-    // 不是会员，显示会员套餐弹窗
+const handleImportClick = () => {
+  if (accountStore.userInfo?.is_vip) {
+    showImportDialog.value = true
+  } else {
     showProDialog.value = true
-    return
   }
+}
 
-  // 是会员，显示导入弹窗
-  showImportDialog.value = true
+// 处理导入成功
+const handleImportSuccess = () => {
+  showImportDialog.value = false
+  // 导入成功后跳转到用户档案页
+  router.push('/user?tab=profile')
 }
 </script>
 

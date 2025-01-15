@@ -579,12 +579,12 @@ const route = useRoute()
 const username = route.params.username
 
 // 控制状态
-const showShareMenu = ref(false)
-const showFollowers = ref(false)
-const showFollowing = ref(false)
-const showVisits = ref(false)
-const isFollowing = ref(false)
-const activeList = ref('followers')
+let showShareMenu = ref(false)
+let showFollowers = ref(false)
+let showFollowing = ref(false)
+let showVisits = ref(false)
+let isFollowing = ref(false)
+let activeList = ref('followers')
 
 // 用户信息
 const userInfo = ref({
@@ -616,7 +616,7 @@ const tabs = [
   { key: 'topics', label: '话题' }
 ]
 
-const currentTab = ref('articles')
+let currentTab = ref('articles')
 
 // 文章列表数据
 const articles = ref([
@@ -880,11 +880,11 @@ const copyLink = async () => {
 }
 
 // 用户列表显示状态
-const showUserList = ref(false)
-const userListType = ref('')  // 'followers' | 'following' | 'visits'
+let showUserList = ref(false)
+let userListType = ref('followers')  // 'followers' | 'following' | 'visits'
 
 // 移动端菜单状态
-const isMobileMenuOpen = ref(false)
+let isMobileMenuOpen = ref(false)
 
 // 用户列表选项配置
 const userListOptions = computed(() => [

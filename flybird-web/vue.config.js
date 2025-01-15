@@ -1,9 +1,18 @@
 const { defineConfig } = require('@vue/cli-service')
 const path = require('path')
+require('dotenv').config()
 
 module.exports = defineConfig({
   transpileDependencies: true,
-  lintOnSave: false,
+  runtimeCompiler: true,
+  configureWebpack: {
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, 'src'),
+        'vue$': 'vue/dist/vue.esm-bundler.js'
+      }
+    }
+  },
   chainWebpack: config => {
     // 设置页面标题
     config.plugin('html').tap(args => {
@@ -11,29 +20,15 @@ module.exports = defineConfig({
       return args
     })
   },
-  configureWebpack: {
-    resolve: {
-      alias: {
-        '@': path.resolve(__dirname, 'src')
-      }
-    }
-  },
   devServer: {
     port: 8080,
     proxy: {
       '/api': {
-        target: 'http://192.168.2.25:8000',
+        target: 'http://192.168.3.16:8000',
         changeOrigin: true,
+        ws: true,
         pathRewrite: {
           '^/api': '/api'
-        },
-        onProxyReq(proxyReq) {
-          // 添加调试日志
-          console.log('Proxy Request:', {
-            method: proxyReq.method,
-            path: proxyReq.path,
-            headers: proxyReq.getHeaders()
-          })
         }
       }
     }

@@ -441,7 +441,7 @@ import {
   SparklesIcon
 } from '@heroicons/vue/24/outline'
 import { useRouter } from 'vue-router'
-import { membership } from '@/api/membership'
+import * as membership from '@/api/membership'
 import { formatDate } from '@/utils/date'
 import { useAccountStore } from '@/stores/account'
 

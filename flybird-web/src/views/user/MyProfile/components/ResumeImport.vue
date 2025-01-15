@@ -4,13 +4,14 @@
     <el-dialog
       v-model="dialogVisible"
       title="导入简历"
-      width="500px"
+      width="550px"
       :close-on-click-modal="false"
+      class="resume-import-dialog"
     >
-      <div class="p-4">
+      <div class="p-6">
         <!-- 上传区域 -->
         <div
-          class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center"
+          class="border-2 border-dashed border-gray-200 hover:border-blue-400 rounded-2xl p-8 text-center transition-all duration-300 bg-gray-50/50 hover:bg-blue-50/50 group cursor-pointer"
           @drop.prevent="handleDrop"
           @dragover.prevent
           @click="triggerFileInput"
@@ -22,10 +23,10 @@
             @change="handleFileChange"
             accept=".doc,.docx,.pdf,.jpg,.jpeg,.png"
           />
-          <div class="space-y-2">
-            <DocumentArrowUpIcon class="w-12 h-12 mx-auto text-gray-400" />
+          <div class="space-y-4">
+            <DocumentArrowUpIcon class="w-16 h-16 mx-auto text-gray-300 group-hover:text-blue-400 transition-colors duration-300" />
             <div class="text-sm text-gray-600">
-              <span class="font-medium text-blue-600 hover:text-blue-500">
+              <span class="font-medium text-blue-500 hover:text-blue-600 transition-colors">
                 点击上传
               </span>
               或将文件拖拽到这里
@@ -37,15 +38,20 @@
         </div>
 
         <!-- 文件信息 -->
-        <div v-if="selectedFile" class="mt-4">
-          <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
-            <div class="flex items-center space-x-2">
-              <DocumentIcon class="w-5 h-5 text-gray-400" />
-              <span class="text-sm text-gray-900">{{ selectedFile.name }}</span>
+        <div v-if="selectedFile" class="mt-6">
+          <div class="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                <DocumentIcon class="w-6 h-6 text-blue-500" />
+              </div>
+              <div class="flex flex-col">
+                <span class="text-sm font-medium text-gray-900">{{ selectedFile.name }}</span>
+                <span class="text-xs text-gray-500">{{ formatFileSize(selectedFile.size) }}</span>
+              </div>
             </div>
             <button
               @click="clearFile"
-              class="text-gray-400 hover:text-gray-500"
+              class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
             >
               <XMarkIcon class="w-5 h-5" />
             </button>
@@ -53,14 +59,14 @@
         </div>
 
         <!-- 导入进度 -->
-        <div v-if="importing" class="mt-4">
-          <div class="flex items-center justify-between">
-            <span class="text-sm text-gray-500">正在解析文件...</span>
-            <span class="text-sm text-gray-500">{{ importProgress }}%</span>
+        <div v-if="importing" class="mt-6">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm font-medium text-gray-700">正在解析文件...</span>
+            <span class="text-sm font-medium text-blue-500">{{ importProgress }}%</span>
           </div>
-          <div class="mt-2 h-2 bg-gray-200 rounded-full">
+          <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
             <div
-              class="h-2 bg-blue-600 rounded-full transition-all duration-300"
+              class="h-full bg-gradient-to-r from-blue-400 to-blue-500 rounded-full transition-all duration-300 ease-out"
               :style="{ width: importProgress + '%' }"
             ></div>
           </div>
@@ -69,13 +75,19 @@
 
       <!-- 对话框底部按钮 -->
       <template #footer>
-        <div class="flex justify-end space-x-3">
-          <el-button @click="closeDialog">取消</el-button>
+        <div class="flex justify-end space-x-3 px-6 pb-6">
+          <el-button 
+            @click="closeDialog"
+            class="!px-6 !h-10 !rounded-lg border !border-gray-200 !text-gray-700 hover:!bg-gray-50"
+          >
+            取消
+          </el-button>
           <el-button
             type="primary"
             @click="handleImport(selectedFile)"
             :loading="importing"
             :disabled="!selectedFile"
+            class="!px-6 !h-10 !rounded-lg !bg-blue-500 hover:!bg-blue-600 !border-none"
           >
             {{ importing ? '导入中...' : '开始导入' }}
           </el-button>
@@ -89,70 +101,73 @@
       title="导入预览"
       width="800px"
       :close-on-click-modal="false"
+      class="resume-preview-dialog"
     >
-      <div class="p-4">
-        <div class="space-y-6">
+      <div class="p-6">
+        <div class="space-y-8">
           <!-- 基本信息 -->
-          <div v-if="previewData?.basic_info">
-            <h3 class="text-sm font-medium text-gray-900 mb-3">基本信息</h3>
-            <div class="grid grid-cols-2 gap-4">
+          <div v-if="previewData?.basic_info" class="preview-section">
+            <div class="flex items-center space-x-2 mb-4">
+              <UserIcon class="w-5 h-5 text-blue-500" />
+              <h3 class="text-lg font-medium text-gray-900">基本信息</h3>
+            </div>
+            <div class="grid grid-cols-2 gap-6">
               <!-- 头像显示 -->
               <div v-if="previewData.basic_info.avatar" class="col-span-2 mb-4">
-                <label class="block text-xs text-gray-500">头像</label>
-                <div class="mt-1">
+                <label class="block text-sm font-medium text-gray-700 mb-2">头像</label>
+                <div class="relative group">
                   <img 
                     :src="previewData.basic_info.avatar" 
-                    class="w-32 h-32 object-cover rounded-lg border border-gray-200"
+                    class="w-32 h-32 object-cover rounded-xl shadow-sm group-hover:shadow-md transition-shadow"
                     alt="用户头像"
                   />
                 </div>
               </div>
               <!-- 个人简介 -->
               <div v-if="previewData.basic_info.personal_summary" class="col-span-2">
-                <label class="block text-xs text-gray-500">个人简介</label>
-                <div class="mt-1">
-                  <textarea
-                    v-model="previewData.basic_info.personal_summary"
-                    rows="3"
-                    class="block w-full border-gray-300 rounded-md shadow-sm text-sm"
-                  ></textarea>
-                </div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">个人简介</label>
+                <textarea
+                  v-model="previewData.basic_info.personal_summary"
+                  rows="3"
+                  class="block w-full rounded-lg border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                ></textarea>
               </div>
               <!-- 其他基本信息 -->
-              <div v-for="(value, key) in previewData.basic_info" :key="key">
+              <div v-for="(value, key) in previewData.basic_info" :key="key" class="space-y-1">
                 <template v-if="!['avatar', 'personal_summary'].includes(key)">
-                  <label class="block text-xs text-gray-500">{{ getFieldLabel('basic_info', key) }}</label>
-                  <div class="mt-1">
-                    <input
-                      type="text"
-                      v-model="previewData.basic_info[key]"
-                      class="block w-full border-gray-300 rounded-md shadow-sm text-sm"
-                    />
-                  </div>
+                  <label class="block text-sm font-medium text-gray-700">{{ getFieldLabel('basic_info', key) }}</label>
+                  <input
+                    type="text"
+                    v-model="previewData.basic_info[key]"
+                    class="block w-full rounded-lg border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                  />
                 </template>
               </div>
             </div>
           </div>
 
           <!-- 工作经历 -->
-          <div v-if="previewData?.work_experiences?.length">
-            <h3 class="text-sm font-medium text-gray-900 mb-3">工作经历</h3>
-            <div v-for="(exp, index) in previewData.work_experiences" :key="index" class="mb-4 p-4 border rounded-lg">
-              <div class="grid grid-cols-2 gap-4">
-                <div v-for="(value, key) in exp" :key="key">
-                  <label class="block text-xs text-gray-500">{{ getFieldLabel('work_experience', key) }}</label>
+          <div v-if="previewData?.work_experiences?.length" class="preview-section">
+            <div class="flex items-center space-x-2 mb-4">
+              <BriefcaseIcon class="w-5 h-5 text-blue-500" />
+              <h3 class="text-lg font-medium text-gray-900">工作经历</h3>
+            </div>
+            <div v-for="(exp, index) in previewData.work_experiences" :key="index" class="mb-6 p-6 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+              <div class="grid grid-cols-2 gap-6">
+                <div v-for="(value, key) in exp" :key="key" class="space-y-1">
+                  <label class="block text-sm font-medium text-gray-700">{{ getFieldLabel('work_experience', key) }}</label>
                   <div class="mt-1">
                     <input
                       v-if="!['description', 'achievements', 'technologies'].includes(key)"
                       type="text"
                       v-model="previewData.work_experiences[index][key]"
-                      class="block w-full border-gray-300 rounded-md shadow-sm text-sm"
+                      class="block w-full rounded-lg border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
                     />
                     <textarea
                       v-else
                       v-model="previewData.work_experiences[index][key]"
                       rows="3"
-                      class="block w-full border-gray-300 rounded-md shadow-sm text-sm"
+                      class="block w-full rounded-lg border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
                     ></textarea>
                   </div>
                 </div>
@@ -161,24 +176,27 @@
           </div>
 
           <!-- 教育经历 -->
-          <div v-if="previewData?.educations?.length">
-            <h3 class="text-sm font-medium text-gray-900 mb-3">教育经历</h3>
-            <div v-for="(edu, index) in previewData.educations" :key="index" class="mb-4 p-4 border rounded-lg">
-              <div class="grid grid-cols-2 gap-4">
-                <div v-for="(value, key) in edu" :key="key">
-                  <label class="block text-xs text-gray-500">{{ getFieldLabel('education', key) }}</label>
+          <div v-if="previewData?.educations?.length" class="preview-section">
+            <div class="flex items-center space-x-2 mb-4">
+              <AcademicCapIcon class="w-5 h-5 text-blue-500" />
+              <h3 class="text-lg font-medium text-gray-900">教育经历</h3>
+            </div>
+            <div v-for="(edu, index) in previewData.educations" :key="index" class="mb-6 p-6 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+              <div class="grid grid-cols-2 gap-6">
+                <div v-for="(value, key) in edu" :key="key" class="space-y-1">
+                  <label class="block text-sm font-medium text-gray-700">{{ getFieldLabel('education', key) }}</label>
                   <div class="mt-1">
                     <input
                       v-if="!['description', 'achievements'].includes(key)"
                       type="text"
                       v-model="previewData.educations[index][key]"
-                      class="block w-full border-gray-300 rounded-md shadow-sm text-sm"
+                      class="block w-full rounded-lg border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
                     />
                     <textarea
                       v-else
                       v-model="previewData.educations[index][key]"
                       rows="3"
-                      class="block w-full border-gray-300 rounded-md shadow-sm text-sm"
+                      class="block w-full rounded-lg border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
                     ></textarea>
                   </div>
                 </div>
@@ -187,24 +205,27 @@
           </div>
 
           <!-- 项目经历 -->
-          <div v-if="previewData?.projects?.length">
-            <h3 class="text-sm font-medium text-gray-900 mb-3">项目经历</h3>
-            <div v-for="(proj, index) in previewData.projects" :key="index" class="mb-4 p-4 border rounded-lg">
-              <div class="grid grid-cols-2 gap-4">
-                <div v-for="(value, key) in proj" :key="key">
-                  <label class="block text-xs text-gray-500">{{ getFieldLabel('project', key) }}</label>
+          <div v-if="previewData?.projects?.length" class="preview-section">
+            <div class="flex items-center space-x-2 mb-4">
+              <RocketLaunchIcon class="w-5 h-5 text-blue-500" />
+              <h3 class="text-lg font-medium text-gray-900">项目经历</h3>
+            </div>
+            <div v-for="(proj, index) in previewData.projects" :key="index" class="mb-6 p-6 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+              <div class="grid grid-cols-2 gap-6">
+                <div v-for="(value, key) in proj" :key="key" class="space-y-1">
+                  <label class="block text-sm font-medium text-gray-700">{{ getFieldLabel('project', key) }}</label>
                   <div class="mt-1">
                     <input
                       v-if="!['description', 'achievement'].includes(key)"
                       type="text"
                       v-model="previewData.projects[index][key]"
-                      class="block w-full border-gray-300 rounded-md shadow-sm text-sm"
+                      class="block w-full rounded-lg border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
                     />
                     <textarea
                       v-else
                       v-model="previewData.projects[index][key]"
                       rows="3"
-                      class="block w-full border-gray-300 rounded-md shadow-sm text-sm"
+                      class="block w-full rounded-lg border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
                     ></textarea>
                   </div>
                 </div>
@@ -213,84 +234,16 @@
           </div>
 
           <!-- 技能特长 -->
-          <div v-if="previewData?.skills?.length">
-            <h3 class="text-sm font-medium text-gray-900 mb-3">技能特长</h3>
-            <div class="p-4 border rounded-lg">
+          <div v-if="previewData?.skills?.length" class="preview-section">
+            <div class="flex items-center space-x-2 mb-4">
+              <LightBulbIcon class="w-5 h-5 text-blue-500" />
+              <h3 class="text-lg font-medium text-gray-900">技能特长</h3>
+            </div>
+            <div class="p-6 bg-white rounded-xl border border-gray-100 shadow-sm">
               <div class="flex flex-wrap gap-2">
                 <div v-for="(skill, index) in previewData.skills" :key="index" 
-                  class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gray-100">
+                  class="inline-flex items-center px-4 py-2 rounded-lg text-sm bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors">
                   {{ skill.name }}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 学习经历 -->
-          <div v-if="previewData?.studies?.length">
-            <h3 class="text-sm font-medium text-gray-900 mb-3">学习经历</h3>
-            <div v-for="(study, index) in previewData.studies" :key="index" class="mb-4 p-4 border rounded-lg">
-              <div class="grid grid-cols-2 gap-4">
-                <div v-for="(value, key) in study" :key="key">
-                  <label class="block text-xs text-gray-500">{{ getFieldLabel('study', key) }}</label>
-                  <div class="mt-1">
-                    <input
-                      v-if="!['description'].includes(key)"
-                      type="text"
-                      v-model="previewData.studies[index][key]"
-                      class="block w-full border-gray-300 rounded-md shadow-sm text-sm"
-                    />
-                    <textarea
-                      v-else
-                      v-model="previewData.studies[index][key]"
-                      rows="3"
-                      class="block w-full border-gray-300 rounded-md shadow-sm text-sm"
-                    ></textarea>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 语言能力 -->
-          <div v-if="previewData?.languages?.length">
-            <h3 class="text-sm font-medium text-gray-900 mb-3">语言能力</h3>
-            <div v-for="(lang, index) in previewData.languages" :key="index" class="mb-4 p-4 border rounded-lg">
-              <div class="grid grid-cols-2 gap-4">
-                <div v-for="(value, key) in lang" :key="key">
-                  <label class="block text-xs text-gray-500">{{ getFieldLabel('language', key) }}</label>
-                  <div class="mt-1">
-                    <input
-                      type="text"
-                      v-model="previewData.languages[index][key]"
-                      class="block w-full border-gray-300 rounded-md shadow-sm text-sm"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 社交主页 -->
-          <div v-if="previewData?.social_links?.length">
-            <h3 class="text-sm font-medium text-gray-900 mb-3">社交主页</h3>
-            <div v-for="(link, index) in previewData.social_links" :key="index" class="mb-4 p-4 border rounded-lg">
-              <div class="grid grid-cols-2 gap-4">
-                <div v-for="(value, key) in link" :key="key">
-                  <label class="block text-xs text-gray-500">{{ getFieldLabel('social_link', key) }}</label>
-                  <div class="mt-1">
-                    <input
-                      v-if="!['description'].includes(key)"
-                      type="text"
-                      v-model="previewData.social_links[index][key]"
-                      class="block w-full border-gray-300 rounded-md shadow-sm text-sm"
-                    />
-                    <textarea
-                      v-else
-                      v-model="previewData.social_links[index][key]"
-                      rows="3"
-                      class="block w-full border-gray-300 rounded-md shadow-sm text-sm"
-                    ></textarea>
-                  </div>
                 </div>
               </div>
             </div>
@@ -300,12 +253,18 @@
 
       <!-- 预览对话框底部按钮 -->
       <template #footer>
-        <div class="flex justify-end space-x-3">
-          <el-button @click="showPreviewDialog = false">取消</el-button>
+        <div class="flex justify-end space-x-3 px-6 pb-6">
+          <el-button 
+            @click="showPreviewDialog = false"
+            class="!px-6 !h-10 !rounded-lg border !border-gray-200 !text-gray-700 hover:!bg-gray-50"
+          >
+            取消
+          </el-button>
           <el-button
             type="primary"
             @click="confirmImport"
             :loading="importing"
+            class="!px-6 !h-10 !rounded-lg !bg-blue-500 hover:!bg-blue-600 !border-none"
           >
             确认导入
           </el-button>
@@ -321,7 +280,12 @@ import { ElMessage } from 'element-plus'
 import {
   DocumentArrowUpIcon,
   DocumentIcon,
-  XMarkIcon
+  XMarkIcon,
+  UserIcon,
+  BriefcaseIcon,
+  AcademicCapIcon,
+  RocketLaunchIcon,
+  LightBulbIcon
 } from '@heroicons/vue/24/outline'
 import profile from '@/api/profile'
 import { eventBus } from '@/utils/eventBus'
@@ -481,6 +445,15 @@ const handleFileChange = (event) => {
   if (validateFile(file)) {
     selectedFile.value = file
   }
+}
+
+// 格式化文件大小
+const formatFileSize = (bytes) => {
+  if (!bytes) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`
 }
 
 // 验证文件
@@ -820,6 +793,60 @@ onUnmounted(() => {
 
 <style scoped>
 .resume-import {
-  /* 添加需要的样式 */
+  /* 基础样式 */
+}
+
+/* 自定义对话框样式 */
+:deep(.el-dialog) {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+:deep(.el-dialog__header) {
+  margin: 0;
+  padding: 20px 24px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+:deep(.el-dialog__title) {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+:deep(.el-dialog__headerbtn) {
+  top: 20px;
+  right: 20px;
+}
+
+:deep(.el-dialog__body) {
+  padding: 0;
+}
+
+:deep(.el-button--primary) {
+  --el-button-hover-bg-color: #2563eb;
+  --el-button-hover-border-color: #2563eb;
+}
+
+/* 预览部分的样式 */
+.preview-section {
+  background-color: #ffffff;
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+/* 输入框聚焦时的样式 */
+input:focus, textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+/* 添加平滑过渡效果 */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
 }
 </style> 

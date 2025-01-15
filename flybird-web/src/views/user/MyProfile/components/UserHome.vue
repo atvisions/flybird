@@ -30,7 +30,6 @@
           <!-- 头像和基本身份信息区块 -->
           <div 
             class="relative group w-20 h-20 mx-auto -mb-10 z-20 cursor-pointer"
-            @click="openEditModal"
           >
             <img
               :src="userAvatar"
@@ -39,9 +38,20 @@
               @error="handleImageError"
             />
             <!-- 添加悬停效果 -->
-            <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+            <div 
+              class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+              @click="handleAvatarSelect"
+            >
               <PencilIcon class="w-6 h-6 text-white" />
             </div>
+            <!-- 隐藏的文件输入框 -->
+            <input
+              ref="avatarInput"
+              type="file"
+              accept="image/*"
+              class="hidden"
+              @change="handleAvatarChange"
+            />
           </div>
 
           <div class="bg-white rounded-b-lg border border-gray-100 p-4 pb-6 transition-shadow hover:shadow-lg relative">
@@ -575,36 +585,47 @@ const userInfo = computed(() => {
 
 // 计算头像 URL
 const userAvatar = computed(() => {
-  if (!userInfo.value?.avatar) return defaultAvatar
-  if (userInfo.value.avatar.startsWith('http') || userInfo.value.avatar.startsWith('data:image')) {
-    return userInfo.value.avatar
+  const avatar = userInfo.value?.avatar
+  if (!avatar) return defaultAvatar
+  
+  // 如果是完整的 URL 或 base64 图片，直接使用
+  if (avatar.startsWith('http') || avatar.startsWith('data:image')) {
+    return avatar
   }
-  return userInfo.value.avatar.startsWith('/media') 
-    ? `${config.API_URL}${userInfo.value.avatar}`
-    : `${config.API_URL}/media/${userInfo.value.avatar}`
+  
+  // 处理相对路径，移除可能的前导 /media/
+  const cleanPath = avatar.replace(/^\/?(media\/)?/, '')
+  return `${config.mediaURL}/${cleanPath}`
 })
 
 // 编辑头像 URL 的计算属性
 const editAvatarUrl = computed(() => {
-  const avatarUrl = editForm.value.avatar || userInfo.value?.avatar
-  if (!avatarUrl) return defaultAvatar
-  if (avatarUrl.startsWith('http') || avatarUrl.startsWith('data:image')) {
-    return avatarUrl
+  const avatar = editForm.value.avatar || userInfo.value?.avatar
+  if (!avatar) return defaultAvatar
+  
+  // 如果是完整的 URL 或 base64 图片，直接使用
+  if (avatar.startsWith('http') || avatar.startsWith('data:image')) {
+    return avatar
   }
-  return avatarUrl.startsWith('/media') 
-    ? `${config.API_URL}${avatarUrl}`
-    : `${config.API_URL}/media/${avatarUrl}`
+  
+  // 处理相对路径，移除可能的前导 /media/
+  const cleanPath = avatar.replace(/^\/?(media\/)?/, '')
+  return `${config.mediaURL}/${cleanPath}`
 })
 
 // 添加背景图 URL 的计算属性
 const backgroundUrl = computed(() => {
-  if (!userInfo.value?.background) return defaultBackground
-  if (userInfo.value.background.startsWith('http') || userInfo.value.background.startsWith('data:image')) {
-    return userInfo.value.background
+  const background = userInfo.value?.background
+  if (!background) return defaultBackground
+  
+  // 如果是完整的 URL 或 base64 图片，直接使用
+  if (background.startsWith('http') || background.startsWith('data:image')) {
+    return background
   }
-  return userInfo.value.background.startsWith('/media') 
-    ? `${config.API_URL}${userInfo.value.background}`
-    : `${config.API_URL}/media/${userInfo.value.background}`
+  
+  // 处理相对路径，移除可能的前导 /media/
+  const cleanPath = background.replace(/^\/?(media\/)?/, '')
+  return `${config.mediaURL}/${cleanPath}`
 })
 
 // 获取用户信息
@@ -759,6 +780,7 @@ const closeEditModal = () => {
   usernameError.value = ''
 }
 
+// 修改头像上传处理函数
 const handleAvatarChange = async (event) => {
   const file = event.target.files[0]
   if (!file) return
@@ -777,20 +799,22 @@ const handleAvatarChange = async (event) => {
   
   try {
     loading.value = true
+    const formData = new FormData()
+    formData.append('avatar', file)
     
-    // 直接使用 user API 上传头像
     const response = await user.updateAvatar(file)
     
-    if (response.data.code === 200) {
-      const newAvatar = response.data.data.avatar
+    if (response.data?.code === 200) {
       // 更新 accountStore 中的头像
       await accountStore.fetchUserInfo()
-      // 更新编辑表单中的头像
-      editForm.value.avatar = newAvatar
-      showToast('头像上传成功', 'success')
       
-      // 触发全局事件，通知其他组件（如 HeadView）更新头像
-      eventBus.emit('avatar-updated', newAvatar)
+      // 更新编辑表单中的头像
+      editForm.value.avatar = response.data.data.avatar
+      
+      // 触发头像更新事件
+      eventBus.emit('avatar-updated')
+      
+      showToast('头像上传成功', 'success')
     }
   } catch (error) {
     console.error('头像上传失败:', error)
@@ -941,6 +965,11 @@ onMounted(() => {
 onUnmounted(() => {
   eventBus.off('avatar-updated')
 })
+
+// 添加响应式变量
+const showAvatarCropper = ref(false)
+const avatarUploadRef = ref(null)
+const avatarUpdateTime = ref(Date.now())
 </script>
 
 <style scoped>

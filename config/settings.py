@@ -15,17 +15,52 @@ DEBUG = True
 ROOT_URLCONF = 'config.urls'
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# ----------- 2. 域名配置 -----------
-BASE_DOMAIN = os.getenv('BASE_DOMAIN', 'http://192.168.2.25:8080')  # 修改这里
-BACKEND_DOMAIN = os.getenv('BACKEND_DOMAIN', '192.168.2.25:8000')   # 修改这里
-FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://192.168.2.25:8080') # 修改这里
+# ----------- 2. 域名和URL配置 -----------
+# 基础域名配置
+BASE_DOMAIN = os.getenv('BASE_DOMAIN', 'flybirdx.com')
+BACKEND_DOMAIN = os.getenv('BACKEND_DOMAIN', '192.168.3.16:8000')
+FRONTEND_DOMAIN = os.getenv('FRONTEND_DOMAIN', '192.168.3.16:8080')
+
+# URL配置
+BACKEND_URL = f"http://{BACKEND_DOMAIN}"
+FRONTEND_URL = f"http://{FRONTEND_DOMAIN}"
+API_BASE_URL = BACKEND_URL
+API_PREFIX = '/api/v1'
+MEDIA_BASE_URL = f"{BACKEND_URL}/media"
+WEBSOCKET_URL = f"ws://{BACKEND_DOMAIN}/ws"
+
+# 支付相关URL
+PAYMENT_URLS = {
+    'SUCCESS_URL': f"{FRONTEND_URL}/payment/success",
+    'FAIL_URL': f"{FRONTEND_URL}/payment/fail",
+    'ALIPAY_NOTIFY_URL': f"{BACKEND_URL}{API_PREFIX}/membership/notify/alipay/",
+    'ALIPAY_RETURN_URL': f"{FRONTEND_URL}/payment/success",
+}
+
+# 会员相关URL
+MEMBERSHIP_URLS = {
+    'RENEWAL': f"{FRONTEND_URL}/membership/renewal",
+}
 
 # 允许访问的主机
 ALLOWED_HOSTS = [
-    '192.168.2.25',  # 你的局域网 IP
-    '192.168.2.25:8080',
+    BACKEND_DOMAIN,
+    FRONTEND_DOMAIN,
     'localhost',
     '*'
+]
+
+# CORS配置
+CORS_ALLOWED_ORIGINS = [
+    FRONTEND_URL,
+    "http://localhost:8080",
+]
+
+# CSRF配置
+CSRF_TRUSTED_ORIGINS = [
+    f"http://{BASE_DOMAIN}",
+    f"http://www.{BASE_DOMAIN}",
+    FRONTEND_URL,
 ]
 
 # ----------- 3. 应用配置 -----------
@@ -181,7 +216,7 @@ REST_FRAMEWORK = {
 
 # ----------- 10. CORS配置 -----------
 CORS_ALLOWED_ORIGINS = [
-    "http://192.168.2.25:8080",
+    "http://192.168.3.16:8080",
     "http://localhost:8080",
 ]
 
@@ -331,11 +366,30 @@ PAYMENT_CONFIG = {
     }
 }
 
-# 支付宝配置（简化问）
-ALIPAY_APP_ID = PAYMENT_CONFIG['alipay']['app_id']
-ALIPAY_NOTIFY_URL = PAYMENT_CONFIG['alipay']['notify_url']
-ALIPAY_RETURN_URL = PAYMENT_CONFIG['alipay']['return_url']
-ALIPAY_SERVER_URL = PAYMENT_CONFIG['alipay']['server_url']
+# 支付宝配置
+ALIPAY_CONFIG = {
+    'DEBUG': os.getenv('ALIPAY_DEBUG', 'True').lower() == 'true',
+    'APP_ID': os.getenv('ALIPAY_APP_ID', '2021000142698861'),
+    'NOTIFY_URL': PAYMENT_URLS['ALIPAY_NOTIFY_URL'],
+    'RETURN_URL': PAYMENT_URLS['ALIPAY_RETURN_URL'],
+    'SANDBOX_LOGIN_URL': 'https://open.alipay.com/develop/sandbox/account',
+    'SERVER_URL': os.getenv('ALIPAY_SERVER_URL', 'https://openapi-sandbox.dl.alipaydev.com/gateway.do'),
+    'PRIVATE_KEY_PATH': os.path.join(BASE_DIR, 'keys', 'alipay', 'app_private_key.pem'),
+    'PUBLIC_KEY_PATH': os.path.join(BASE_DIR, 'keys', 'alipay', 'alipay_public_key.pem'),
+    'SIGN_TYPE': 'RSA2',
+    'CHARSET': 'utf-8',
+}
+
+# 确保密钥目录存在
+ALIPAY_KEYS_DIR = os.path.join(BASE_DIR, 'keys', 'alipay')
+if not os.path.exists(ALIPAY_KEYS_DIR):
+    os.makedirs(ALIPAY_KEYS_DIR)
+
+# 简化的支付宝配置（用于向后兼容）
+ALIPAY_APP_ID = ALIPAY_CONFIG['APP_ID']
+ALIPAY_NOTIFY_URL = ALIPAY_CONFIG['NOTIFY_URL']
+ALIPAY_RETURN_URL = ALIPAY_CONFIG['RETURN_URL']
+ALIPAY_SERVER_URL = ALIPAY_CONFIG['SERVER_URL']
 
 # ----------- Celery配置 -----------
 CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
@@ -368,13 +422,6 @@ SMS_CONFIG = {
     'USE_VIRTUAL_SMS': True,  # 是否使用虚拟短信（测试模式）
     'VIRTUAL_SMS_CODE': '123456'  # 虚拟短信的固定验证码
 }
-
-# CSRF配置
-CSRF_TRUSTED_ORIGINS = [
-    f"http://{BASE_DOMAIN}",
-    f"http://www.{BASE_DOMAIN}",
-    "http://localhost:8080",
-]
 
 # ----------- 17. 其他配置 -----------
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -428,35 +475,11 @@ DEFAULT_FROM_EMAIL = 'service@popo.work'  # 默认发件人
 EMAIL_TIMEOUT = 5  # 设置超时时间
 
 # API基础URL(开发环境)
-API_BASE_URL = os.getenv('API_BASE_URL', 'http://192.168.2.25:8000')
-FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://192.168.2.25:8080')  
+API_BASE_URL = os.getenv('API_BASE_URL', 'http://192.168.3.16:8000')
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://192.168.3.16:8080')  
 # 会员相关URL
 MEMBERSHIP_URLS = {
     'renewal': f"{FRONTEND_URL}/membership/renewal",  # 会员续费页面
-}
-
-# 支付宝配置
-ALIPAY_CONFIG = {
-    'DEBUG': True,  # 沙箱环境
-    'APP_ID': '2021000142698861',  # 沙箱应用ID
-    'NOTIFY_URL': f"{API_BASE_URL}/api/v1/membership/notify/alipay/",  # 异步通知地址
-    'RETURN_URL': "http://192.168.2.25:8080/payment/success",  # 直接跳转到前端成功页面
-    'FAIL_URL': f"{FRONTEND_URL}/payment/fail",  # 支付失败跳转页面
-    'SANDBOX_LOGIN_URL': 'https://open.alipay.com/develop/sandbox/account',  # 沙箱登录地址
-    'PRODUCTION_URL': 'https://openapi.alipay.com/gateway.do',
-    'PRIVATE_KEY_PATH': os.path.join(BASE_DIR, 'keys', 'alipay', 'app_private_key.pem'),
-    'PUBLIC_KEY_PATH': os.path.join(BASE_DIR, 'keys', 'alipay', 'alipay_public_key.pem')
-}
-
-# 确保密钥目录存在
-ALIPAY_KEYS_DIR = os.path.join(BASE_DIR, 'keys', 'alipay')
-if not os.path.exists(ALIPAY_KEYS_DIR):
-    os.makedirs(ALIPAY_KEYS_DIR)
-
-# 支付相关URL
-PAYMENT_URLS = {
-    'SUCCESS_URL': '/payment/success/',  # 支付成功页面
-    'FAIL_URL': '/payment/fail/',  # 支付失败页面
 }
 
 # 百度文心一言配置

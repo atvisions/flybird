@@ -8,7 +8,7 @@ from django.db import transaction
 import os
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, date
 import requests
 from ..models import BasicInfo, WorkExperience, Education, Project, Skill, Language, SocialLink
 import uuid
@@ -26,18 +26,54 @@ class ResumeImportView(APIView):
         """解析日期字符串"""
         if not date_str:
             return None
-        try:
-            return datetime.strptime(date_str, '%Y-%m-%d').date()
-        except:
+        
+        # 如果已经是日期对象，直接返回
+        if isinstance(date_str, (datetime, date)):
+            return date_str if isinstance(date_str, date) else date_str.date()
+        
+        # 清理日期字符串
+        date_str = str(date_str).strip()
+        
+        # 常见日期格式列表
+        date_formats = [
+            '%Y-%m-%d',
+            '%Y/%m/%d',
+            '%Y.%m.%d',
+            '%Y年%m月%d日',
+            '%Y-%m',
+            '%Y/%m',
+            '%Y.%m',
+            '%Y年%m月',
+            '%Y'
+        ]
+        
+        for fmt in date_formats:
             try:
-                # 尝试解析其他常见日期格式
-                for fmt in ['%Y/%m/%d', '%Y.%m.%d', '%Y年%m月%d日']:
-                    try:
-                        return datetime.strptime(date_str, fmt).date()
-                    except:
-                        continue
-            except:
-                return None
+                parsed_date = datetime.strptime(date_str, fmt).date()
+                # 如果只有年份，设置为该年的1月1日
+                if fmt == '%Y':
+                    return date(int(date_str), 1, 1)
+                # 如果只有年月，设置为该月的1日
+                if fmt in ['%Y-%m', '%Y/%m', '%Y.%m', '%Y年%m月']:
+                    return parsed_date.replace(day=1)
+                return parsed_date
+            except ValueError:
+                continue
+            
+        # 如果所有格式都失败了，尝试提取年份
+        try:
+            # 匹配4位数字作为年份
+            import re
+            year_match = re.search(r'\d{4}', date_str)
+            if year_match:
+                year = int(year_match.group())
+                if 1900 <= year <= 2100:  # 合理的年份范围
+                    return date(year, 1, 1)
+        except:
+            pass
+        
+        # 如果实在无法解析，返回当前日期
+        return date.today()
 
     def _clean_user_data(self, user):
         """清理用户现有数据"""
@@ -126,12 +162,33 @@ class ResumeImportView(APIView):
         
         try:
             for data in data_list:
+                # 记录原始数据
+                logger.info(f"项目数据: {data}")
+                
+                # 处理日期
+                start_date = self._parse_date(data.get('start_date'))
+                end_date = self._parse_date(data.get('end_date'))
+                
+                # 如果没有开始日期，使用结束日期，或者默认使用当前日期
+                if not start_date:
+                    if end_date:
+                        start_date = end_date
+                    else:
+                        start_date = date.today()
+                        end_date = date.today()
+                
+                # 如果有开始日期但没有结束日期，且不是当前项目
+                if start_date and not end_date and not data.get('is_current'):
+                    end_date = date.today()
+                
+                logger.info(f"处理后的日期 - 开始: {start_date}, 结束: {end_date}")
+                
                 Project.objects.create(
                     user=user,
                     name=data.get('name', ''),
                     role=data.get('role', ''),
-                    start_date=self._parse_date(data.get('start_date')),
-                    end_date=self._parse_date(data.get('end_date')),
+                    start_date=start_date,
+                    end_date=end_date,
                     is_current=data.get('is_current', False),
                     description=data.get('description', ''),
                     achievement=data.get('achievement', '')
@@ -166,11 +223,30 @@ class ResumeImportView(APIView):
             return
         
         try:
+            # 如果是字符串，转换为列表
+            if isinstance(data_list, str):
+                # 尝试解析 JSON 字符串
+                try:
+                    data_list = json.loads(data_list)
+                except json.JSONDecodeError:
+                    # 如果不是 JSON，按逗号分割
+                    data_list = [{'name': lang.strip()} for lang in data_list.split(',') if lang.strip()]
+            
+            # 确保 data_list 是列表
+            if not isinstance(data_list, list):
+                data_list = [data_list]
+            
             for data in data_list:
+                # 如果是字符串，转换为字典
+                if isinstance(data, str):
+                    data = {'name': data.strip()}
+                
+                logger.info(f"处理语言数据: {data}")
+                
                 Language.objects.create(
                     user=user,
                     name=data.get('name', ''),
-                    proficiency=data.get('proficiency', ''),
+                    proficiency=data.get('proficiency', '熟练'),
                     certification=data.get('certification', ''),
                     score=data.get('score', '')
                 )
@@ -212,6 +288,30 @@ class ResumeImportView(APIView):
             # 使用简历解析服务
             resume_service = ResumeService()
             parsed_data = resume_service.parse_resume(file_path)
+            
+            # 检查头像数据
+            logger.info("检查解析结果中的头像数据:")
+            if parsed_data:
+                # 检查 basic_info 中的头像
+                if 'basic_info' in parsed_data:
+                    avatar = parsed_data.get('basic_info', {}).get('avatar')
+                    logger.info(f"basic_info.avatar: {bool(avatar)}")
+                    if avatar:
+                        logger.info(f"头像数据类型: {type(avatar)}")
+                        if isinstance(avatar, str):
+                            logger.info(f"头像数据长度: {len(avatar)}")
+                            logger.info(f"头像数据前缀: {avatar[:100] if len(avatar) > 100 else avatar}")
+                
+                # 检查 result 中的头像
+                if 'result' in parsed_data:
+                    avatar_data = parsed_data.get('result', {}).get('avatar_data')
+                    avatar_url = parsed_data.get('result', {}).get('avatar_url')
+                    logger.info(f"result.avatar_data: {bool(avatar_data)}")
+                    logger.info(f"result.avatar_url: {bool(avatar_url)}")
+                    if avatar_data:
+                        logger.info(f"avatar_data类型: {type(avatar_data)}")
+                    if avatar_url:
+                        logger.info(f"avatar_url: {avatar_url}")
             
             logger.info("简历解析成功")
             return parsed_data

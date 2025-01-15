@@ -703,19 +703,23 @@ const username = computed(() => {
 })
 
 const avatarUrl = computed(() => {
-  if (!isAuthenticated.value) return defaultAvatar
-  const avatar = accountStore.avatar
-  if (!avatar || avatar === 'null' || avatar === 'undefined') {
+  const avatar = accountStore.userInfo?.avatar
+  
+  // 如果没有头像，返回默认头像
+  if (!avatar) {
     return defaultAvatar
   }
-  // 检查 avatar 是否是完整的 URL 或 base64 数据
+  
+  // 如果是完整的 URL 或 base64 图片，直接使用
   if (avatar.startsWith('http') || avatar.startsWith('data:image')) {
     return avatar
   }
-  // 如果是相对路径，则拼接基础 URL
-  return avatar.startsWith('/media') 
-    ? `${config.API_URL}${avatar}`
-    : `${config.API_URL}/media/${avatar}`
+  
+  // 处理相对路径，移除可能的前导 /media/
+  const cleanPath = avatar.replace(/^\/?(media\/)?/, '')
+  
+  // 使用 config.mediaURL 构建完整的 URL
+  return `${config.mediaURL}/${cleanPath}`
 })
 
 // 处理图片加载错误
@@ -1313,31 +1317,6 @@ const handleRegisterClick = () => {
   .resource-menu {
     position: relative;
   }
-}
-
-/* 消息图标动画 */
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
-}
-
-.animate-pulse {
-  animation: pulse 2s infinite;
-}
-
-/* 消息数量的动画效果 */
-@keyframes scaleIn {
-  from {
-    transform: scale(0);
-  }
-  to {
-    transform: scale(1);
-  }
-}
-
-.absolute {
-  animation: scaleIn 0.2s ease-out;
 }
 
 /* 添加积分数字动画 */
