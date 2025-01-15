@@ -11,6 +11,7 @@ from .certificate import CertificateView, CertificateDetailView
 from .social import SocialLinkView, SocialLinkDetailView
 from .layout import ProfileLayoutView
 from .portfolio import PortfolioView, PortfolioDetailView
+from .import_view import ResumeImportView
 
 __all__ = [
     'BasicProfileView',
@@ -29,5 +30,6 @@ __all__ = [
     'SocialLinkDetailView',
     'ProfileLayoutView',
     'PortfolioView',
-    'PortfolioDetailView'
+    'PortfolioDetailView',
+    'ResumeImportView'
 ] 

@@ -1,53 +1,45 @@
 import { defineStore } from 'pinia'
-import request from '@/utils/request'
-import { showToast } from '@/components/ToastMessage'
+import { ref, computed } from 'vue'
 
-export const useUserStore = defineStore('user', {
-  state: () => ({
-    userInfo: null,
-    loading: false,
-    error: null
-  }),
-
-  getters: {
-    userBasicInfo: (state) => state.userInfo,
-    username: (state) => state.userInfo?.username,
-    avatar: (state) => state.userInfo?.avatar,
-    isLoading: (state) => state.loading,
-    hasError: (state) => state.error !== null
-  },
-
-  actions: {
-    async getUserInfo() {
-      try {
-        this.loading = true
-        this.error = null
-        
-        const response = await request.get('/api/v1/users/userInfo/')
-        
-        if (response?.data?.code === 200) {
-          this.userInfo = response.data.data
-          return this.userInfo
-        }
-        
-        throw new Error(response?.data?.message || '获取用户信息失败')
-      } catch (error) {
-        console.error('获取用户信息失败:', error)
-        this.error = error.message
-        throw error
-      } finally {
-        this.loading = false
-      }
-    },
-
-    clearUserInfo() {
-      this.userInfo = null
-      this.loading = false
-      this.error = null
-    },
-
-    setUserInfo(info) {
-      this.userInfo = info
-    }
+export const useUserStore = defineStore('user', () => {
+  const token = ref(localStorage.getItem('token') || '')
+  const userInfo = ref(null)
+  
+  // 判断是否登录
+  const isLoggedIn = computed(() => {
+    return !!token.value
+  })
+  
+  // 判断是否是会员
+  const isPro = computed(() => {
+    return userInfo.value?.is_pro || false
+  })
+  
+  // 设置用户信息
+  const setUserInfo = (info) => {
+    userInfo.value = info
+  }
+  
+  // 设置 token
+  const setToken = (newToken) => {
+    token.value = newToken
+    localStorage.setItem('token', newToken)
+  }
+  
+  // 清除用户信息
+  const clearUser = () => {
+    token.value = ''
+    userInfo.value = null
+    localStorage.removeItem('token')
+  }
+  
+  return {
+    token,
+    userInfo,
+    isLoggedIn,
+    isPro,
+    setUserInfo,
+    setToken,
+    clearUser
   }
 }) 

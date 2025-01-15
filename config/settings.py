@@ -16,14 +16,14 @@ ROOT_URLCONF = 'config.urls'
 WSGI_APPLICATION = 'config.wsgi.application'
 
 # ----------- 2. 域名配置 -----------
-BASE_DOMAIN = os.getenv('BASE_DOMAIN', 'http://192.168.3.16:8080')  # 修改这里
-BACKEND_DOMAIN = os.getenv('BACKEND_DOMAIN', '192.168.3.16:8000')   # 修改这里
-FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://192.168.3.16:8080') # 修改这里
+BASE_DOMAIN = os.getenv('BASE_DOMAIN', 'http://192.168.2.25:8080')  # 修改这里
+BACKEND_DOMAIN = os.getenv('BACKEND_DOMAIN', '192.168.2.25:8000')   # 修改这里
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://192.168.2.25:8080') # 修改这里
 
 # 允许访问的主机
 ALLOWED_HOSTS = [
-    '192.168.3.16',  # 你的局域网 IP
-    '192.168.3.16:8080',
+    '192.168.2.25',  # 你的局域网 IP
+    '192.168.2.25:8080',
     'localhost',
     '*'
 ]
@@ -181,7 +181,7 @@ REST_FRAMEWORK = {
 
 # ----------- 10. CORS配置 -----------
 CORS_ALLOWED_ORIGINS = [
-    "http://192.168.3.16:8080",
+    "http://192.168.2.25:8080",
     "http://localhost:8080",
 ]
 
@@ -223,6 +223,19 @@ FILE_UPLOAD_SETTINGS = {
         'document': 10 * 1024 * 1024,  # 10MB
         'video': 50 * 1024 * 1024,  # 50MB
     }
+}
+
+# 简历上传配置
+RESUME_UPLOAD_SETTINGS = {
+    'ALLOWED_TYPES': [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'image/jpeg',
+        'image/png'
+    ],
+    'MAX_SIZE': 10 * 1024 * 1024,  # 10MB
+    'UPLOAD_DIR': 'resumes'  # 相对于 MEDIA_ROOT 的路径
 }
 
 # ----------- 12. 日志配置 -----------
@@ -415,8 +428,8 @@ DEFAULT_FROM_EMAIL = 'service@popo.work'  # 默认发件人
 EMAIL_TIMEOUT = 5  # 设置超时时间
 
 # API基础URL(开发环境)
-API_BASE_URL = os.getenv('API_BASE_URL', 'http://192.168.3.16:8000')
-FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://192.168.3.16:8080')  
+API_BASE_URL = os.getenv('API_BASE_URL', 'http://192.168.2.25:8000')
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://192.168.2.25:8080')  
 # 会员相关URL
 MEMBERSHIP_URLS = {
     'renewal': f"{FRONTEND_URL}/membership/renewal",  # 会员续费页面
@@ -427,7 +440,7 @@ ALIPAY_CONFIG = {
     'DEBUG': True,  # 沙箱环境
     'APP_ID': '2021000142698861',  # 沙箱应用ID
     'NOTIFY_URL': f"{API_BASE_URL}/api/v1/membership/notify/alipay/",  # 异步通知地址
-    'RETURN_URL': "http://192.168.3.16:8080/payment/success",  # 直接跳转到前端成功页面
+    'RETURN_URL': "http://192.168.2.25:8080/payment/success",  # 直接跳转到前端成功页面
     'FAIL_URL': f"{FRONTEND_URL}/payment/fail",  # 支付失败跳转页面
     'SANDBOX_LOGIN_URL': 'https://open.alipay.com/develop/sandbox/account',  # 沙箱登录地址
     'PRODUCTION_URL': 'https://openapi.alipay.com/gateway.do',

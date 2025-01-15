@@ -16,7 +16,7 @@ module.exports = defineConfig({
   chainWebpack: config => {
     config.plugin('define').tap(args => {
       Object.assign(args[0], {
-        'import.meta.env.VITE_API_URL': JSON.stringify('http://192.168.3.16:8000')
+        'import.meta.env.VITE_API_URL': JSON.stringify('http://192.168.2.25:8000')
       })
       return args
     })
@@ -30,7 +30,7 @@ module.exports = defineConfig({
   devServer: {
     proxy: {
       '/v1': {
-        target: 'http://192.168.3.16:8000',
+        target: 'http://192.168.2.25:8000',
         changeOrigin: true,
         ws: true,
         pathRewrite: {

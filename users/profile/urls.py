@@ -4,6 +4,7 @@ from .views.layout import ProfileLayoutView
 from .views.completeness import ProfileCompletenessView
 from .views.content_quality import ContentQualityView
 from .views.profile import ProfileDataView
+from .views import ResumeImportView
 
 app_name = 'profile'
 
@@ -24,4 +25,6 @@ urlpatterns = [
     path('<str:module_type>/', ProfileDataView.as_view(), name='profile-module'),
     path('<str:module_type>/<int:pk>/', ProfileDataView.as_view(), name='profile-module-detail'),
     
+    # 简历导入
+    path('data/import/', ResumeImportView.as_view(), name='resume-import'),
 ]

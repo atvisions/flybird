@@ -103,6 +103,7 @@
               </button>
               <button 
                 class="px-8 py-4 border-2 border-black text-black rounded-full text-lg font-medium hover:bg-black hover:text-white transition-all flex items-center justify-center"
+                @click="handleImportClick"
               >
                 导入简历
               </button>
@@ -438,6 +439,9 @@
       </div>
     </div>
     <FootView />
+    <!-- 添加弹窗组件 -->
+    <ProDialog v-model="showProDialog" />
+    <ResumeImport v-model="showImportDialog" />
   </div>
 </template>
 
@@ -445,6 +449,10 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import HeadView from '../components/HeadView.vue'
 import FootView from '../components/FootView.vue'
+import ProDialog from '../components/ProDialog.vue'
+import ResumeImport from './user/MyProfile/components/ResumeImport.vue'
+import { useUserStore } from '@/stores/user'
+import { useRouter } from 'vue-router'
 import { StarIcon } from '@heroicons/vue/20/solid'
 import { 
   DocumentDuplicateIcon, 
@@ -743,6 +751,35 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('resize', checkDesktop)
 })
+
+// 添加状态变量
+const showProDialog = ref(false)
+const showImportDialog = ref(false)
+const userStore = useUserStore()
+const router = useRouter()
+
+// 处理导入按钮点击
+const handleImportClick = async () => {
+  // 检查是否登录
+  if (!userStore.isLoggedIn) {
+    // 未登录，跳转到登录页
+    router.push({
+      path: '/login',
+      query: { redirect: router.currentRoute.value.fullPath }
+    })
+    return
+  }
+
+  // 检查是否是会员
+  if (!userStore.isPro) {
+    // 不是会员，显示会员套餐弹窗
+    showProDialog.value = true
+    return
+  }
+
+  // 是会员，显示导入弹窗
+  showImportDialog.value = true
+}
 </script>
 
 <style scoped>

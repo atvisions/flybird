@@ -13,6 +13,7 @@ from .portfolio import Portfolio
 from .project import Project
 from .social import SocialLink
 from .layout import ProfileLayout
+from .study import Study
 from .ai import AIOptimizationSuggestion, AIQualityImprovement, AIOptimizationQuota
 
 __all__ = [
@@ -26,6 +27,7 @@ __all__ = [
     'Portfolio',
     'Project',
     'SocialLink',
+    'Study',
     'AIOptimizationSuggestion',
     'AIQualityImprovement',
     'AIOptimizationQuota',

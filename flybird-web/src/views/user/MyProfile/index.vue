@@ -39,7 +39,6 @@
         @toggleBioExpand="toggleBioExpand"
       />
 
-
       <!-- 简历状态 -->
       <ResumeStatus
         :completion-data="completionData"
@@ -961,24 +960,48 @@ const updateModules = (data) => {
 // 初始化
 onMounted(() => {
   initData()
+  // 监听档案更新事件
+  eventBus.on('profile-updated', async () => {
+    await fetchProfileData()
+  })
+  
   // 监听完整度更新事件
   eventBus.on('completeness-updated', async () => {
-    try {
-      // 获取最新的完整度数据
-      const completenessResponse = await profile.getCompleteness()
-      if (completenessResponse.data?.code === 200) {
-        completionData.value = completenessResponse.data.data
-      }
-    } catch (error) {
-      console.error('获取完整度数据失败:', error)
-    }
+    await fetchCompletenessData()
   })
 })
 
-// 组件卸载时移除事件监听
+// 移除事件监听
 onUnmounted(() => {
+  eventBus.off('profile-updated')
   eventBus.off('completeness-updated')
 })
+
+// 获取档案数据
+const fetchProfileData = async () => {
+  try {
+    const response = await profile.getData()
+    if (response.data?.code === 200) {
+      // 更新档案数据
+      profileData.value = response.data.data
+    }
+  } catch (error) {
+    console.error('获取档案数据失败:', error)
+  }
+}
+
+// 获取完整度数据
+const fetchCompletenessData = async () => {
+  try {
+    const response = await profile.getCompleteness()
+    if (response.data?.code === 200) {
+      // 更新完整度数据
+      completionData.value = response.data.data
+    }
+  } catch (error) {
+    console.error('获取完整度数据失败:', error)
+  }
+}
 
 // 添加删除处理函数
 const handleDelete = async (type, id) => {

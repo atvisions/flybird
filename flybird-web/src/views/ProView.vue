@@ -472,7 +472,7 @@
 </template>
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { membership } from '@/api/membership'
+import * as membership from '@/api/membership'
 import { useRouter } from 'vue-router'
 import { showToast } from '@/components/ToastMessage'
 import HeadView from '@/components/HeadView.vue'
@@ -540,7 +540,6 @@ const plans = computed(() => {
   
   const tier = membershipTiers.value[0] // 使用第一个会员等级
   
-  // 生成三个不同时长的会员卡片
   return [
     {
       id: `${tier.id}_monthly`,
@@ -559,7 +558,7 @@ const plans = computed(() => {
       price: tier.price_quarterly,
       originalPrice: (parseFloat(tier.price_quarterly) * 1.5).toFixed(2),
       period: '季',
-      hot: true, // 标记为热门选择
+      hot: true,
       features: Object.values(tier.benefits).map(benefit => benefit.description)
     },
     {
@@ -569,6 +568,7 @@ const plans = computed(() => {
       price: tier.price_yearly,
       originalPrice: (parseFloat(tier.price_yearly) * 1.5).toFixed(2),
       period: '年',
+      hot: false,
       features: Object.values(tier.benefits).map(benefit => benefit.description)
     }
   ]
@@ -661,19 +661,7 @@ const handlePayment = async () => {
         if (selectedPaymentMethod.value.id === 'alipay') {
           showPaymentModal.value = false
           // 在新窗口打开支付链接
-          const payWindow = window.open(paymentData.payment_url, '_blank')
-          if (payWindow) {
-            // 支付窗口打开成功
-            showToast('请在新窗口完成支付', 'info')
-          } else {
-            // 弹窗被拦截
-            showToast('请允许弹出窗口以完成支付', 'warning')
-            // 提供备选方案
-            const confirmOpen = confirm('支付窗口被拦截，是否手动打开支付页面？')
-            if (confirmOpen) {
-              window.location.href = paymentData.payment_url
-            }
-          }
+          window.open(paymentData.payment_url, '_blank')
         }
       }
     }

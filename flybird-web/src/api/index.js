@@ -1,4 +1,4 @@
-import membership from './membership'
+import * as membership from './membership'
 
 export {
   membership

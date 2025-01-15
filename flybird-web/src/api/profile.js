@@ -132,6 +132,33 @@ const profile = {
     }
   },
 
+  // 解析简历文件
+  parseResume(formData, onProgress) {
+    return request({
+      url: '/api/v1/users/profile/data/import/',
+      method: 'post',
+      data: formData,
+      timeout: 120000, // 设置120秒超时
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      },
+      onUploadProgress: (progressEvent) => {
+        if (onProgress) {
+          const progress = Math.min((progressEvent.loaded / progressEvent.total) * 100, 99)
+          onProgress(progress)
+        }
+      }
+    })
+  },
+
+  // 导入简历数据
+  importResumeData(data) {
+    return request({
+      url: '/api/v1/users/profile/data/import/',
+      method: 'put',
+      data
+    })
+  }
 }
 
 export default profile 

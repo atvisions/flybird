@@ -74,7 +74,7 @@
         <!-- 其他操作按钮 -->
         <div class="grid grid-cols-2 gap-3 mt-6">
           <button
-            @click="$emit('import')"
+            @click="showImportDialog = true"
             class="flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all duration-200"
           >
             <ArrowDownTrayIcon class="w-4 h-4 mr-1.5" />
@@ -156,6 +156,12 @@
       :profile-data="props.profileData"
       @apply="handleOptimizeApply"
     />
+  
+    <!-- 简历导入对话框 -->
+    <ResumeImport
+      v-model="showImportDialog"
+      @success="handleImportSuccess"
+    />
   </template>
   
   <script setup>
@@ -177,6 +183,7 @@
     TransitionChild,
     TransitionRoot
   } from '@headlessui/vue'
+  import ResumeImport from './ResumeImport.vue'
 
   const props = defineProps({
     completionData: {
@@ -193,7 +200,7 @@
     }
   })
 
-  defineEmits(['ai-optimize', 'import', 'preview'])
+  const emit = defineEmits(['ai-optimize', 'import', 'preview', 'update'])
 
   // 预览对话框控制
   const showPreview = ref(false)
@@ -288,6 +295,16 @@
       deep: true 
     }
   )
+
+  // 简历导入对话框控制
+  const showImportDialog = ref(false)
+
+  // 处理导入成功
+  const handleImportSuccess = () => {
+    showImportDialog.value = false
+    // 触发父组件更新数据
+    emit('update')
+  }
   </script>
 
 <style scoped>

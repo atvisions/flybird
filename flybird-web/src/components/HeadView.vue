@@ -487,7 +487,7 @@ import navigation from '@/config/navigation.json'
 import { eventBus } from '@/utils/eventBus'
 import { showToast } from '@/components/ToastMessage'
 import request from '@/utils/request'
-import { membership } from '@/api/membership'
+import { getTiers, getPointsInfo, getSignInStatus, signIn } from '@/api/membership'
 import config from '@/config'
 
 // 导入所需的图标
@@ -1064,7 +1064,7 @@ const signInInfo = ref({
 // 获取签到状态
 const fetchSignInStatus = async () => {
   try {
-    const response = await membership.getSignInStatus()
+    const response = await getSignInStatus()
     if (response?.data?.code === 200) {
       signInInfo.value = response.data.data
     }
@@ -1078,7 +1078,7 @@ const fetchPointsInfo = async () => {
   if (!authStore.isAuthenticated) return
   
   try {
-    const response = await membership.getPointsInfo()
+    const response = await getPointsInfo()
     if (response?.data?.code === 200) {
       pointsInfo.value = response.data.data
       // 更新签到状态
@@ -1098,7 +1098,7 @@ const handleSignIn = async () => {
   if (!signInInfo.value.can_sign_in) return
   
   try {
-    const response = await membership.signIn()
+    const response = await signIn()
     if (response?.data?.code === 200) {
       const { points_earned } = response.data.data
       showToast('签到成功', 'success')

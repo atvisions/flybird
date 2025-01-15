@@ -1,10 +1,10 @@
 const config = {
   // 开发环境配置
   development: {
-    API_URL: 'http://192.168.3.16:8000',
+    API_URL: 'http://192.168.2.25:8000',
     API_PREFIX: '/api/v1',
-    MEDIA_URL: 'http://192.168.3.16:8000/media',
-    SOCKET_URL: 'ws://192.168.3.16:8000/ws'
+    MEDIA_URL: 'http://192.168.2.25:8000/media',
+    SOCKET_URL: 'ws://192.168.2.25:8000/ws'
   },
   // 生产环境配置
   production: {

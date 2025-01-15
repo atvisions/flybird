@@ -126,11 +126,11 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { useAccountStore } from '@/stores/account'
+import { ElMessage } from 'element-plus'
+import * as membership from '@/api/membership'
 import HeadView from '@/components/HeadView.vue'
 import FootView from '@/components/FootView.vue'
-import { membership } from '@/api/membership'
-import { showToast } from '@/components/ToastMessage'
-import { useAccountStore } from '@/stores/account'
 
 const accountStore = useAccountStore()
 const route = useRoute()
@@ -145,6 +145,16 @@ const errorMessages = {
   'verify_failed': '支付验证失败',
   'system_error': '系统错误',
   'unknown': '未知错误'
+}
+
+const showToast = (message, type = 'info') => {
+  ElMessage({
+    message,
+    type,
+    duration: 3000,
+    showClose: true,
+    center: true
+  })
 }
 
 const verifyPayment = async (orderNo) => {
