@@ -1,9 +1,10 @@
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import profile from '@/api/profile'
+import { useProfileStore } from '@/stores/profile'
 
 export function useProfileData() {
-  
+  const profileStore = useProfileStore()
   const loading = ref(true)
   const basicInfo = ref({})
   const profileData = ref({})
@@ -26,7 +27,6 @@ export function useProfileData() {
           ...response.data.data.basic_info
         }
     
-        
         // 更新 profileData
         profileData.value = { 
           ...profileData.value, 

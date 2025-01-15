@@ -180,8 +180,8 @@
               />
             </button>
 
-            <!-- 下拉菜单内容 -->
-            <div 
+                        <!-- 下拉菜单内容 -->
+                        <div 
               v-if="showDropdown"
               class="fixed lg:absolute right-0 top-[60px] w-full lg:w-80 bg-white shadow-xl rounded-xl overflow-hidden border border-gray-100 z-50"
               :class="[
@@ -277,64 +277,65 @@
                 </div>
               </div>
 
-              <!-- 菜单项 -->
-              <div class="p-4">
-                <!-- 频道导航 -->
-                <div class="mb-4">
-                  <div class="text-xs font-medium text-gray-500 mb-2 px-1">频道</div>
-                  <div class="grid grid-cols-3 gap-2">
-                    <button v-for="item in mainMenuItems.slice(0, 3)" :key="item.key"
-                      class="flex flex-col items-center p-2.5 rounded-lg hover:bg-gray-50 transition-colors"
-                      @click="item.action"
-                    >
-                      <div :class="['w-8 h-8 rounded-md flex items-center justify-center mb-1', item.bgColor]">
-                        <component :is="getIcon(item.icon)" class="h-4 w-4" :class="item.iconColor" />
-                      </div>
-                      <span class="text-xs text-gray-600">{{ item.label }}</span>
-                    </button>
-                  </div>
-                </div>
-
-                <!-- 管理中心 -->
-                <div class="mb-4">
-                  <div class="text-xs font-medium text-gray-500 mb-2 px-1">管理中心</div>
-                  <div class="grid grid-cols-3 gap-2">
-                    <button v-for="item in mainMenuItems.slice(3)" :key="item.key"
-                      class="flex flex-col items-center p-2.5 rounded-lg hover:bg-gray-50 transition-colors"
-                      @click="item.action"
-                    >
-                      <div :class="['w-8 h-8 rounded-md flex items-center justify-center mb-1', item.bgColor]">
-                        <component :is="getIcon(item.icon)" class="h-4 w-4" :class="item.iconColor" />
-                      </div>
-                      <span class="text-xs text-gray-600">{{ item.label }}</span>
-                    </button>
-                  </div>
-                </div>
-
-                <!-- 账号操作 -->
-                <div class="border-t border-gray-100 pt-3">
-                  <button v-for="item in accountMenuItems" :key="item.key"
-                    class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    @click="item.action"
-                  >
-                    <div :class="['w-5 h-5 flex items-center justify-center mr-3', item.iconColor]">
-                      <component :is="getIcon(item.icon)" class="h-4 w-4" :class="item.iconColor" />
-                    </div>
-                    {{ item.label }}
-                  </button>
-                  <button
-                    class="w-full flex items-center px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                    @click="handleLogout"
-                  >
-                    <div class="w-5 h-5 flex items-center justify-center mr-3">
-                      <ArrowRightOnRectangleIcon class="h-4 w-4 text-red-600" />
-                    </div>
-                    退出登录
-                  </button>
-                </div>
+              <!-- 导航菜单 -->
+              <div class="px-2 py-2">
+                <router-link 
+                  to="/user?tab=home"
+                  class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"
+                  @click="showDropdown = false"
+                >
+                  <UserIcon class="w-5 h-5 mr-3 text-gray-400" />
+                  用户中心
+                </router-link>
+                <router-link 
+                  to="/user?tab=profile"
+                  class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"
+                  @click="showDropdown = false"
+                >
+                  <IdentificationIcon class="w-5 h-5 mr-3 text-gray-400" />
+                  我的档案
+                </router-link>
+                <router-link 
+                  to="/user?tab=resumes"
+                  class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"
+                  @click="showDropdown = false"
+                >
+                  <DocumentTextIcon class="w-5 h-5 mr-3 text-gray-400" />
+                  我的简历
+                </router-link>
+                <router-link 
+                  to="/user?tab=membership"
+                  class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"
+                  @click="showDropdown = false"
+                >
+                  <SparklesIcon class="w-5 h-5 mr-3 text-gray-400" />
+                  会员中心
+                </router-link>
+                <router-link 
+                  to="/user?tab=account"
+                  class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"
+                  @click="showDropdown = false"
+                >
+                  <Cog6ToothIcon class="w-5 h-5 mr-3 text-gray-400" />
+                  账号设置
+                </router-link>
               </div>
 
+              <!-- 分割线 -->
+              <div class="border-t border-gray-100 my-1"></div>
+
+              <!-- 退出登录 -->
+              <div class="px-2 py-2">
+                <button 
+                  @click="handleLogout"
+                  class="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg"
+                >
+                  <ArrowRightOnRectangleIcon class="w-5 h-5 mr-3" />
+                  退出登录
+                </button>
+              </div>
             </div>
+
           </div>
         </template>
 
@@ -510,7 +511,8 @@ import {
   SparklesIcon,
   StarIcon,
   ChevronRightIcon,
-  ChevronDownIcon
+  ChevronDownIcon,
+  IdentificationIcon
 } from '@heroicons/vue/24/outline'
 
 import { BellIcon as BellIconSolid } from '@heroicons/vue/24/solid'

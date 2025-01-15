@@ -663,10 +663,12 @@ import { useChangePassword } from '@/composables/useChangePassword'
 import { account } from '@/api/account'
 import { useAuthStore } from '@/stores/auth'
 import { useUserStore } from '@/stores/user'
+import { useAccountStore } from '@/stores/account'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const userStore = useUserStore()
+const accountStore = useAccountStore()
 
 // 手机号掩码处理函数
 const maskPhone = (phone) => {
@@ -674,9 +676,9 @@ const maskPhone = (phone) => {
   return phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2')
 }
 
-// 从 userStore 获取用户信息
-const phone = computed(() => userStore.userInfo?.phone)
-const email = computed(() => userStore.userInfo?.email)
+// 从 accountStore 获取用户信息
+const phone = computed(() => accountStore.userInfo?.phone)
+const email = computed(() => accountStore.userInfo?.email)
 
 // 弹窗状态
 const showEmailModal = ref(false)
@@ -720,7 +722,7 @@ const confirmUnbindEmail = async () => {
     
     if (response?.data?.message) {
       closeUnbindEmailModal()
-      await userStore.getUserInfo()
+      await accountStore.fetchUserInfo()
       showToast(response.data.message || '邮箱解绑成功', 'success')
     }
   } catch (error) {
@@ -876,7 +878,7 @@ const userInfoLoading = ref(false)
 const fetchUserInfo = async () => {
   try {
     userInfoLoading.value = true
-    await userStore.getUserInfo()
+    await accountStore.fetchUserInfo()
   } catch (error) {
     console.error('获取用户信息失败:', error)
     showToast('获取用户信息失败', 'error')
@@ -892,6 +894,21 @@ onMounted(() => {
     console.log('Password modal state changed:', newVal)
   })
 })
+
+// 监听 accountStore 中的用户信息变化
+watch(
+  [() => accountStore.userInfo, () => authStore.isLoggedIn],
+  ([newUserInfo, isLoggedIn]) => {
+    if (newUserInfo && isLoggedIn) {
+      userInfo.value = {
+        ...newUserInfo
+      }
+    } else {
+      userInfo.value = null
+    }
+  },
+  { immediate: true, deep: true }
+)
 
 // 手机号管理相关方法
 const openPhoneModal = () => {
@@ -992,7 +1009,7 @@ const handlePhoneUpdate = async () => {
     if (response?.data?.code === 200 || response?.status === 200) {
       showToast(response.data?.message || '手机号修改成功', 'success')
       closePhoneModal()
-      await userStore.getUserInfo()
+      await accountStore.fetchUserInfo()
     }
   } catch (error) {
     console.error('手机号更新失败:', error)
@@ -1139,7 +1156,7 @@ const handleEmailUpdate = async () => {
     if (response?.data?.message) {
       showToast(response.data.message, 'success')
       closeEmailModal()
-      await userStore.getUserInfo()
+      await accountStore.fetchUserInfo()
     }
   } catch (error) {
     console.error('邮箱更新失败:', error)

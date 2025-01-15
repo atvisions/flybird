@@ -487,8 +487,10 @@ import {
   EnvelopeIcon,
   IdentificationIcon
 } from '@heroicons/vue/24/outline'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const authStore = useAuthStore()
 
 // 状态
 const activeTab = ref('purchase')
@@ -611,7 +613,14 @@ const handleTabClick = (tabId) => {
 }
 
 const openPaymentModal = (plan) => {
-  // 直接显示支付弹窗
+  // 检查用户是否已登录
+  if (!authStore.isAuthenticated) {
+    // 保存当前路径，登录后可以跳转回来
+    router.push(`/login?redirect=${encodeURIComponent(router.currentRoute.value.fullPath)}`)
+    return
+  }
+
+  // 已登录，显示支付弹窗
   selectedPlan.value = plan
   selectedPaymentMethod.value = null
   showPaymentModal.value = true

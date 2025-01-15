@@ -65,7 +65,7 @@
                 @click="handleUpgrade"
                 class="w-full py-3 bg-gradient-to-b from-[#EEA852] to-[#EC6833] text-[#FFF5C8] font-medium rounded-full hover:opacity-90 transition-all duration-300 transform hover:scale-105"
               >
-                {{ accountStore.userInfo?.is_vip ? '导入简历' : '立即开通' }}
+                立即购买
               </button>
             </div>
           </div>
@@ -122,20 +122,8 @@ const closeDialog = () => {
 }
 
 const handleUpgrade = () => {
-  console.log('当前会员状态:', {
-    userInfo: accountStore.userInfo,
-    isVip: accountStore.userInfo?.is_vip,
-    全部状态: accountStore
-  })
-  
   closeDialog()
-  if (accountStore.userInfo?.is_vip) {
-    // 如果是会员，执行导入操作
-    props.onImport?.()
-  } else {
-    // 如果不是会员，跳转到会员页面
-    router.push('/pro')
-  }
+  router.push('/pro')
 }
 </script>
 

@@ -3,7 +3,6 @@ import { auth } from '@/api/auth'
 import request from '@/utils/request'
 import { useRouter } from 'vue-router'
 import { useAccountStore } from '@/stores/account'
-import { useUserStore } from '@/stores/user'
 import { showToast } from '@/components/ToastMessage'
 import { STORAGE_KEYS } from '@/utils/storage'
 
@@ -117,9 +116,7 @@ export const useAuthStore = defineStore('auth', {
         // 清除 store 状态
         this.clearAuth()
         const accountStore = useAccountStore()
-        const userStore = useUserStore()
         accountStore.clearUserInfo()
-        userStore.clearUserInfo()
         
         // 清除请求头中的 token
         delete request.defaults.headers.common['Authorization']

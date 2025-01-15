@@ -1,93 +1,95 @@
 <template>
-  <div class="fixed bottom-0 left-0 right-0 bg-white border-t lg:hidden safe-area-inset-bottom z-50">
-    <div class="grid grid-cols-5 gap-1">
+  <div>
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t lg:hidden safe-area-inset-bottom z-50">
+      <div class="grid grid-cols-5 gap-1">
+        <button
+          v-for="action in mobileActions"
+          :key="action.key"
+          @click="action.handler"
+          class="flex flex-col items-center py-2 px-1 relative"
+          :class="[
+            isActiveAction(action.key)
+              ? 'text-blue-600'
+              : 'text-gray-500'
+          ]"
+        >
+          <component 
+            :is="action.icon" 
+            class="w-6 h-6"
+            :class="isActiveAction(action.key) ? 'text-blue-600' : 'text-gray-500'"
+          />
+          <span class="text-xs mt-1 truncate">{{ action.label }}</span>
+        </button>
+      </div>
+      <!-- 浮动发布按钮 -->
       <button
-        v-for="action in mobileActions"
-        :key="action.key"
-        @click="action.handler"
-        class="flex flex-col items-center py-2 px-1 relative"
+        v-if="shouldShowCreateButton"
+        @click.stop="handleCreate(currentActiveTab)"
+        class="fixed right-4 bottom-20 w-12 h-12 rounded-full flex items-center justify-center shadow-xl transition-colors z-50"
         :class="[
-          isActiveAction(action.key)
-            ? 'text-blue-600'
-            : 'text-gray-500'
+          currentActiveTab === 'templates' ? 'bg-red-500 hover:bg-red-600' : '',
+          currentActiveTab === 'community' ? 'bg-blue-600 hover:bg-blue-700' : '',
+          currentActiveTab === 'portfolio' ? 'bg-purple-600 hover:bg-purple-700' : ''
         ]"
       >
-        <component 
-          :is="action.icon" 
-          class="w-6 h-6"
-          :class="isActiveAction(action.key) ? 'text-blue-600' : 'text-gray-500'"
-        />
-        <span class="text-xs mt-1 truncate">{{ action.label }}</span>
+        <PlusIcon class="w-6 h-6 text-white" />
       </button>
     </div>
-    <!-- 浮动发布按钮 -->
-    <button
-      v-if="shouldShowCreateButton"
-      @click.stop="handleCreate(currentActiveTab)"
-      class="fixed right-4 bottom-20 w-12 h-12 rounded-full flex items-center justify-center shadow-xl transition-colors z-50"
+
+    <!-- 移动端更多菜单抽屉的遮罩层 -->
+    <div 
+      v-if="isMobileMenuOpen" 
+      class="fixed inset-0 bg-black bg-opacity-25 z-[60] lg:hidden"
+      @click="closeMenu"
+    />
+    
+    <!-- 移动端更多菜单抽屉 -->
+    <div 
       :class="[
-        currentActiveTab === 'templates' ? 'bg-red-500 hover:bg-red-600' : '',
-        currentActiveTab === 'community' ? 'bg-blue-600 hover:bg-blue-700' : '',
-        currentActiveTab === 'portfolio' ? 'bg-purple-600 hover:bg-purple-700' : ''
+        'fixed inset-y-0 left-0 w-64 bg-white shadow-xl z-[70] transform transition-transform duration-300 ease-in-out lg:hidden',
+        isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
       ]"
     >
-      <PlusIcon class="w-6 h-6 text-white" />
-    </button>
-  </div>
-
-  <!-- 移动端更多菜单抽屉的遮罩层 -->
-  <div 
-    v-if="isMobileMenuOpen" 
-    class="fixed inset-0 bg-black bg-opacity-25 z-[60] lg:hidden"
-    @click="closeMenu"
-  />
-  
-  <!-- 移动端更多菜单抽屉 -->
-  <div 
-    :class="[
-      'fixed inset-y-0 left-0 w-64 bg-white shadow-xl z-[70] transform transition-transform duration-300 ease-in-out lg:hidden',
-      isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-    ]"
-  >
-    <div class="h-full flex flex-col">
-      <div class="p-4 border-b border-gray-200">
-        <div class="flex items-center justify-between">
-          <h2 class="text-lg font-medium text-gray-900">更多功能</h2>
-          <button 
-            @click="closeMenu"
-            class="text-gray-500"
-          >
-            <XMarkIcon class="w-6 h-6" />
-          </button>
+      <div class="h-full flex flex-col">
+        <div class="p-4 border-b border-gray-200">
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-medium text-gray-900">更多功能</h2>
+            <button 
+              @click="closeMenu"
+              class="text-gray-500"
+            >
+              <XMarkIcon class="w-6 h-6" />
+            </button>
+          </div>
         </div>
-      </div>
-      
-      <div class="flex-1 overflow-y-auto">
-        <div class="px-3 py-4">
-          <div v-for="group in currentMenuGroups" :key="group.title" class="mb-6">
-            <h3 class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-              {{ group.title }}
-            </h3>
-            <div class="space-y-1">
-              <router-link
-                v-for="item in group.items"
-                :key="item.path"
-                :to="item.path"
-                class="group flex items-center w-full px-3 py-2 text-sm font-medium rounded-md"
-                :class="[
-                  route.path === item.path
-                    ? 'bg-blue-50 text-blue-600'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                ]"
-                @click="closeMenu"
-              >
-                <component
-                  :is="item.icon"
-                  class="mr-3 h-6 w-6"
-                  :class="route.path === item.path ? 'text-blue-600' : 'text-gray-400'"
-                />
-                {{ item.name }}
-              </router-link>
+        
+        <div class="flex-1 overflow-y-auto">
+          <div class="px-3 py-4">
+            <div v-for="group in currentMenuGroups" :key="group.title" class="mb-6">
+              <h3 class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                {{ group.title }}
+              </h3>
+              <div class="space-y-1">
+                <router-link
+                  v-for="item in group.items"
+                  :key="item.path"
+                  :to="item.path"
+                  class="group flex items-center w-full px-3 py-2 text-sm font-medium rounded-md"
+                  :class="[
+                    route.path === item.path
+                      ? 'bg-blue-50 text-blue-600'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  ]"
+                  @click="closeMenu"
+                >
+                  <component
+                    :is="item.icon"
+                    class="mr-3 h-6 w-6"
+                    :class="route.path === item.path ? 'text-blue-600' : 'text-gray-400'"
+                  />
+                  {{ item.name }}
+                </router-link>
+              </div>
             </div>
           </div>
         </div>
@@ -137,8 +139,18 @@ const props = defineProps({
   unreadMessages: {
     type: Number,
     default: 0
+  },
+  currentTab: {
+    type: String,
+    default: ''
+  },
+  actions: {
+    type: Array,
+    default: () => []
   }
 })
+
+const emit = defineEmits(['tabChange'])
 
 const route = useRoute()
 const router = useRouter()

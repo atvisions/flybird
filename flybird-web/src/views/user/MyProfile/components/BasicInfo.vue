@@ -182,7 +182,7 @@ const showAvatarCropper = ref(false)
 const avatarUploadRef = ref(null)
 
 // 4. 导入和初始化其他变量
-const store = useStore()
+const accountStore = useAccountStore()
 const pageLoading = ref(true)
 const basicInfo = ref({})
 const profileStore = useProfileStore()
@@ -257,19 +257,15 @@ watch(
 onMounted(async () => {
   try {
     pageLoading.value = true
-    // 不需要在这里获取数据，因为父组件会处理
-  } catch (error) {
-    console.error('初始化失败:', error)
-  } finally {
-    pageLoading.value = false
-  }
-})
-
-onMounted(async () => {
-  try {
-    await store.dispatch('fetchCompleteness')
+    // 获取完整度数据
+    const completenessResponse = await profile.getCompleteness()
+    if (completenessResponse.data?.code === 200) {
+      eventBus.emit('completeness-updated', completenessResponse.data.data)
+    }
   } catch (error) {
     console.error('Failed to fetch completeness:', error)
+  } finally {
+    pageLoading.value = false
   }
 })
 
@@ -392,7 +388,7 @@ const validateFile = (file) => {
   }
 
   // 验证文件大小（例如限制为 2MB）
-  const maxSize = 20 * 1024 * 1024 // 2MB
+  const maxSize = 2 * 1024 * 1024 // 2MB
   if (file.size > maxSize) {
     showToast('图片大小不能超过 2MB', 'error')
     return false
