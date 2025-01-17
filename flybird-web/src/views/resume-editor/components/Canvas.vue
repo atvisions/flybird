@@ -419,16 +419,23 @@ defineExpose({
   overflow: hidden;
   background: #f5f5f5;
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  width: 100%;
 }
 
 .canvas-wrapper {
-  width: 100%;
-  height: 100%;
-  overflow: auto;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
-  padding: 20px;
+  align-items: center;
+  overflow: hidden;
 }
 
 .canvas-content {
@@ -437,7 +444,10 @@ defineExpose({
   background: #ffffff;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
   position: relative;
-  transform-origin: top center;
-  outline: none; /* 移除焦点时的轮廓 */
+  transform-origin: center;
+  outline: none;
+  flex-shrink: 0;
 }
+
+/* 移除滚动条相关样式 */
 </style> 

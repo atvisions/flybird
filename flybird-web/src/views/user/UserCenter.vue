@@ -3,12 +3,12 @@
     <HeadView />
     <!-- 主要内容区域 -->
     <main class="flex-1 flex flex-col">
-      <div class="flex-1 py-4 lg:py-6 mt-[60px] md:mt-[72px] md:overflow-visible overflow-x-hidden">
+      <div class="flex-1 mt-[60px] md:mt-[72px]">
         <div class="mx-auto max-w-7xl px-2 sm:px-4 lg:px-8 mt-4 lg:mt-0 relative">
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
             <!-- 左侧导航 - 仅桌面端显示 -->
             <div class="hidden lg:block lg:col-span-3">
-              <div class="bg-white rounded-lg shadow overflow-hidden sticky top-24">
+              <div class="bg-white rounded-lg shadow overflow-hidden fixed" style="top: 96px; left: calc((100% - 1280px) / 2 + 32px); width: calc((1280px - 64px) / 12 * 3 - 12px);">
                 <nav class="space-y-1">
                   <button
                       v-for="tab in tabs"
@@ -46,13 +46,13 @@
             </div>
   
             <!-- 中间内容区 -->
-            <div class="lg:col-span-6 pb-20 lg:pb-0 w-full space-y-4">
+            <div class="lg:col-span-6 pb-20 lg:pb-0 w-full space-y-4 mt-2">
               <component :is="currentComponent" />
             </div>
   
             <!-- 右侧广告位 - 仅桌面端显示 -->
             <div class="hidden lg:block lg:col-span-3">
-              <div class="bg-white rounded-lg shadow p-4 sticky top-24">
+              <div class="bg-white rounded-lg shadow p-4 fixed" style="top: 96px; right: calc((100% - 1280px) / 2 + 32px); width: calc((1280px - 64px) / 12 * 3 - 12px);">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">推荐职位</h3>
                 <div class="space-y-4">
                   <div v-for="job in recommendedJobs" :key="job.id" class="flex space-x-3">
@@ -69,19 +69,19 @@
             </div>
           </div>
         </div>
-  
-        <!-- 移动端底部导航 -->
-        <Transition name="fade">
-          <MobileTabBar
-            v-if="showMobileTabBar"
-            class="md:hidden"
-            :current-tab="currentTab"
-            :actions="mobileActions"
-            :menuGroups="profileMenuGroups"
-            @tab-change="handleTabChange"
-          />
-        </Transition>
       </div>
+  
+      <!-- 移动端底部导航 -->
+      <Transition name="fade">
+        <MobileTabBar
+          v-if="showMobileTabBar"
+          class="md:hidden"
+          :current-tab="currentTab"
+          :actions="mobileActions"
+          :menuGroups="profileMenuGroups"
+          @tab-change="handleTabChange"
+        />
+      </Transition>
     </main>
 
     <!-- 仅在桌面端显示页脚 -->
@@ -501,21 +501,27 @@ const profileMenuGroups = [
 <style scoped>
 /* 确保内容区域占满剩余空间 */
 main {
- min-height: calc(100vh - 60px);
+  min-height: calc(100vh - 60px);
+}
+
+@media (min-width: 1024px) {
+  .max-w-7xl {
+    max-width: 1200px;
+  }
 }
 
 .footer-container {
- margin-top: auto;
+  margin-top: auto;
 }
 
 /* 添加过渡动画样式 */
 .fade-enter-active,
 .fade-leave-active {
- transition: opacity 0.3s ease;
+  transition: opacity 0.3s ease;
 }
 
 .fade-enter-from,
 .fade-leave-to {
- opacity: 0;
+  opacity: 0;
 }
 </style>
