@@ -52,8 +52,10 @@ ALLOWED_HOSTS = [
 
 # CORS配置
 CORS_ALLOWED_ORIGINS = [
-    FRONTEND_URL,
     "http://localhost:8080",
+    "http://127.0.0.1:8080",
+    "http://localhost:5173",  # Vite 默认端口
+    "http://127.0.0.1:5173"
 ]
 
 # CSRF配置
@@ -87,6 +89,7 @@ LOCAL_APPS = [
     'articles.apps.ArticlesConfig',
     'qa.apps.QaConfig',
     'membership.apps.MembershipConfig',
+    'resume',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS + ['django_celery_beat']

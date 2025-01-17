@@ -13,12 +13,33 @@ import 'vue-cropper/dist/index.css'
 import { useAuthStore } from '@/stores/auth'
 import config from './config'
 
+// Vuetify
+import 'vuetify/styles'
+import { createVuetify } from 'vuetify'
+import * as components from 'vuetify/components'
+import * as directives from 'vuetify/directives'
+import { aliases, mdi } from 'vuetify/iconsets/mdi'
+import '@mdi/font/css/materialdesignicons.css'
+
+const vuetify = createVuetify({
+  components,
+  directives,
+  icons: {
+    defaultSet: 'mdi',
+    aliases,
+    sets: {
+      mdi,
+    },
+  },
+})
+
 const app = createApp(App)
 const pinia = createPinia()
 app.use(pinia)
 app.use(ElementPlus)
 app.use(VueCropper)
 app.use(router)
+app.use(vuetify)
 
 // 初始化应用
 const initApp = async () => {

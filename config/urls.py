@@ -10,6 +10,7 @@ urlpatterns = [
     path('api/v1/membership/', include('membership.urls')),
     path('ckeditor5/', include('django_ckeditor_5.urls')),
     path('api/v1/users/', include('users.urls')),
+    path('api/v1/resume/', include('resume.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:

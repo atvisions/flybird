@@ -89,6 +89,16 @@ const routes = [
     ]
   },
   {
+    path: '/resume/editor',
+    name: 'resume-editor',
+    component: () => import('@/views/resume-editor/index.vue'),
+    meta: {
+      title: '简历编辑器',
+      requiresAuth: true,
+      layout: 'blank'
+    }
+  },
+  {
     path: '/user',
     component: UserCenter,
     meta: { requiresAuth: true },

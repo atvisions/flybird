@@ -10,6 +10,7 @@
   "dependencies": {
     "@headlessui/vue": "^1.7.23",
     "@heroicons/vue": "^2.2.0",
+    "@mdi/font": "^7.4.47",
     "@wangeditor/editor": "^5.1.23",
     "@wangeditor/editor-for-vue": "^5.1.12",
     "ant-design-vue": "^4.2.6",
@@ -17,6 +18,9 @@
     "core-js": "^3.8.3",
     "element-plus": "^2.9.1",
     "flowbite": "^2.5.2",
+    "grapesjs": "^0.22.5",
+    "grapesjs-blocks-basic": "^1.0.2",
+    "grapesjs-preset-webpage": "^1.0.3",
     "highlight.js": "^11.11.1",
     "marked": "^15.0.6",
     "mitt": "^3.0.1",
@@ -28,7 +32,10 @@
     "vue": "^3.2.13",
     "vue-advanced-cropper": "^2.8.9",
     "vue-cropper": "^1.0.3",
+    "vue-grid-layout": "^3.0.0-beta1",
     "vue-router": "^4.0.3",
+    "vuedraggable": "^4.1.0",
+    "vuetify": "^3.7.6",
     "vuex": "^4.0.0"
   },
   "devDependencies": {
