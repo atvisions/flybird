@@ -49,3 +49,4 @@ keys/*
 .env
 keys/
 *.pem
+node_modules

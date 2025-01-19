@@ -90,8 +90,8 @@ const routes = [
   },
   {
     path: '/resume/editor',
-    name: 'resume-editor',
-    component: () => import('@/views/resume-editor/index.vue'),
+    name: 'template-editor',
+    component: () => import('@/views/template-editor/index.vue'),
     meta: {
       title: '简历编辑器',
       requiresAuth: true,

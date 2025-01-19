@@ -1,0 +1,100 @@
+/* 右侧属性面板 */
+.editor-panel {
+  height: 100%;
+  width: 320px;
+  background-color: #fff;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.panel-content {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.editor-panel h3 {
+  margin: 0 0 20px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+}
+
+.panel-section {
+  margin-bottom: 28px;
+}
+
+.panel-section h4 {
+  margin: 0 0 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: #666;
+  font-weight: 500;
+}
+
+.input-group {
+  display: flex;
+  gap: 12px;
+}
+
+.input-group input,
+.input-group select,
+.form-group textarea {
+  flex: 1;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #333;
+  background-color: #fff;
+  transition: all 0.2s;
+}
+
+.input-group input:hover,
+.input-group select:hover,
+.form-group textarea:hover {
+  border-color: #d9d9d9;
+}
+
+.input-group input:focus,
+.input-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+}
+
+.form-group textarea {
+  height: auto;
+  padding: 12px;
+  line-height: 1.5;
+}
+
+.button-group {
+  display: flex;
+  gap: 8px;
+}
+
+.empty-panel {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 14px;
+} 

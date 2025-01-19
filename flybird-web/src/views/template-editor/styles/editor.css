@@ -1,0 +1,66 @@
+/* 编辑器基础布局 */
+.template-editor {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100vh;
+  background-color: #ffffff;
+}
+
+.editor-content {
+  flex: 1;
+  display: flex;
+  gap: 24px;
+  padding: 24px;
+  min-height: 0;
+  background-color: #fafafa;
+  overflow: hidden;
+}
+
+/* 顶部工具栏 */
+.editor-toolbar {
+  height: 64px;
+  padding: 0 24px;
+  background-color: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  position: relative;
+  z-index: 10;
+}
+
+.toolbar-left,
+.toolbar-right {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* 画布区域 */
+.editor-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.canvas-container {
+  flex: 1;
+  overflow: auto;
+}
+
+.editor-footer {
+  height: 48px;
+  padding: 0 24px;
+  background-color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-top: 1px solid #f0f0f0;
+} 
+
