@@ -2,8 +2,12 @@
   <div class="template-editor">
     <!-- 顶部工具栏 -->
     <EditorToolbar
+      :can-undo="canvasRef?.canUndo()"
+      :can-redo="canvasRef?.canRedo()"
       @clear="handleClear"
       @save="handleSave"
+      @undo="handleUndo"
+      @redo="handleRedo"
     />
 
     <!-- 主要内容区域 -->
@@ -94,6 +98,7 @@ import EditorPanel from './components/EditorPanel.vue'
 // 导入组合式函数
 import { useZoom } from './composables/useZoom'
 import { useCanvas } from './composables/useCanvas'
+import { useCanvasConfig } from './composables/useCanvasConfig'
 
 // 画布引用
 const canvasRef = ref(null)
@@ -116,6 +121,8 @@ const {
   handleClear,
   handleSave
 } = useCanvas()
+
+const { canvasConfig } = useCanvasConfig()
 
 const handleTrackClick = (e) => {
   if (e.target.classList.contains('zoom-handle')) return
@@ -191,6 +198,21 @@ onUnmounted(() => {
     isFullscreen.value = !!document.fullscreenElement
   })
 })
+
+// 处理元素更新
+const handleElementsChange = (newElements) => {
+  // Implementation needed
+}
+
+// 处理撤销
+const handleUndo = () => {
+  canvasRef.value?.handleUndo()
+}
+
+// 处理重做
+const handleRedo = () => {
+  canvasRef.value?.handleRedo()
+}
 </script>
 
 <style>

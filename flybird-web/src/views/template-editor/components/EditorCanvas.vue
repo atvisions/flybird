@@ -30,16 +30,7 @@
               :width="element.width"
               :height="element.height"
               @click.stop.prevent="handleElementSelect(element)"
-            >
-              <div
-                v-if="element.id === selectedElement?.id"
-                class="element-delete-btn"
-                @click.stop="handleElementDelete(element)"
-                title="删除元素"
-              >
-                <Delete theme="outline" size="14" fill="currentColor" />
-              </div>
-            </component>
+            />
           </div>
           <vue-moveable
             v-if="selectedElement"
@@ -100,7 +91,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import VueMoveable from 'vue3-moveable'
-import { Delete } from '@icon-park/vue-next'
+import { useHistory } from '../composables/useHistory'
 
 // 导入基础组件
 import Rectangle from './shapes/Rectangle.vue'
@@ -149,14 +140,17 @@ const props = defineProps({
 
 const emit = defineEmits([
   'element-select',
-  'elements-change',
-  'element-delete'
+  'elements-change'
 ])
+
+// 历史记录管理
+const { pushState, undo, redo, canUndo, canRedo } = useHistory()
 
 // 本地状态
 const currentElement = ref(null)
 const elementsList = ref([])
 const isKeepingRatio = ref(false)
+const isOperating = ref(false)  // 添加操作状态标记
 
 // 计算属性
 const contentStyle = computed(() => ({
@@ -211,22 +205,6 @@ const handleElementSelect = (element) => {
   emit('element-select', element)
 }
 
-// 处理元素删除
-const handleElementDelete = (element) => {
-  // 更新元素列表，移除被删除的元素
-  const updatedElements = elementsList.value.filter(el => el.id !== element.id)
-  
-  // 更新本地状态
-  elementsList.value = updatedElements
-  
-  // 清除选中状态
-  currentElement.value = null
-  emit('element-select', null)
-  
-  // 触发更新事件
-  emit('elements-change', updatedElements)
-}
-
 // 处理画布点击
 const handleCanvasClick = (e) => {
   if (e.target.closest('.moveable-control-box') || 
@@ -263,10 +241,30 @@ const handleDrag = (e) => {
   emit('elements-change', updatedElements)
 }
 
+// 处理拖拽开始
+const handleDragStart = () => {
+  if (!props.selectedElement) return
+  isOperating.value = true
+  // 在开始拖拽时，保存完整的元素状态
+  currentElement.value = { ...props.selectedElement }
+}
+
+// 处理拖拽结束
+const handleDragEnd = () => {
+  if (currentElement.value && isOperating.value) {
+    isOperating.value = false
+    // 在结束拖拽时，保存完整的元素状态
+    emit('element-select', currentElement.value)
+    // 保存到历史记录
+    pushState(elementsList.value)
+    currentElement.value = null
+  }
+}
+
 // 处理缩放开始
 const handleResizeStart = ({ target, clientX, clientY, direction }) => {
   if (!props.selectedElement) return
-  
+  isOperating.value = true
   // 保存完整的当前状态
   currentElement.value = { 
     ...props.selectedElement,
@@ -323,12 +321,12 @@ const handleResize = ({ target, width, height, drag, transform, dist, direction 
   emit('elements-change', updatedElements)
 }
 
+// 处理缩放结束
 const handleResizeEnd = ({ target, isDrag, clientX, clientY }) => {
-  // 清理临时状态
-  const element = elementsList.value.find(el => el.id === currentElement.value?.id)
-  if (element) {
+  if (currentElement.value && isOperating.value) {
+    isOperating.value = false
     // 删除临时状态
-    const { _resizeStartState, ...cleanElement } = element
+    const { _resizeStartState, ...cleanElement } = currentElement.value
     
     // 更新元素列表
     const updatedElements = elementsList.value.map(el => 
@@ -342,6 +340,8 @@ const handleResizeEnd = ({ target, isDrag, clientX, clientY }) => {
     // 触发更新事件
     emit('elements-change', updatedElements)
     emit('element-select', cleanElement)
+    // 保存到历史记录
+    pushState(updatedElements)
   }
 }
 
@@ -370,23 +370,25 @@ const handleRotate = (e) => {
   emit('element-select', updatedElement)
 }
 
-const handleDragStart = () => {
+// 处理旋转开始
+const handleRotateStart = () => {
   if (!props.selectedElement) return
-  // 在开始拖拽时，保存完整的元素状态
-  currentElement.value = { ...props.selectedElement }
+  isOperating.value = true
 }
 
-const handleDragEnd = () => {
-  if (currentElement.value) {
-    // 在结束拖拽时，保存完整的元素状态
-    emit('element-select', currentElement.value)
-    currentElement.value = null
+// 处理旋转结束
+const handleRotateEnd = () => {
+  if (currentElement.value && isOperating.value) {
+    isOperating.value = false
+    // 保存到历史记录
+    pushState(elementsList.value)
   }
 }
 
-// 处理圆角
+// 处理圆角开始
 const handleRoundStart = () => {
   if (!currentElement.value || currentElement.value.type !== 'rectangle') return
+  isOperating.value = true
   currentElement.value._roundStartState = currentElement.value
 }
 
@@ -410,13 +412,36 @@ const handleRound = ({ target, borderRadius }) => {
     el.id === updatedElement.id ? updatedElement : el
   )
   
+  // 更新元素列表
+  elementsList.value = updatedElements
+  
+  // 触发更新事件
   emit('elements-change', updatedElements)
+  
+  // 触发选中元素更新事件，实时更新右侧面板
+  emit('element-select', updatedElement)
 }
 
+// 处理圆角结束
 const handleRoundEnd = () => {
-  if (currentElement.value) {
+  if (currentElement.value && isOperating.value) {
+    isOperating.value = false
     const { _roundStartState, ...cleanElement } = currentElement.value
+    
+    // 更新元素列表
+    const updatedElements = elementsList.value.map(el => 
+      el.id === cleanElement.id ? cleanElement : el
+    )
+    
+    // 更新状态
+    elementsList.value = updatedElements
     currentElement.value = cleanElement
+    
+    // 触发更新事件
+    emit('elements-change', updatedElements)
+    emit('element-select', cleanElement)
+    // 保存到历史记录
+    pushState(updatedElements)
   }
 }
 
@@ -521,12 +546,61 @@ const handleDrop = (e) => {
   
   emit('elements-change', [...props.elements, newElement])
   emit('element-select', newElement)
+  // 保存到历史记录
+  pushState([...props.elements, newElement])
 }
 
-// 处理键盘事件
+// 处理撤销
+const handleUndo = () => {
+  const previousState = undo()
+  if (previousState) {
+    elementsList.value = previousState
+    emit('elements-change', previousState)
+    emit('element-select', null)
+  }
+}
+
+// 处理重做
+const handleRedo = () => {
+  const nextState = redo()
+  if (nextState) {
+    elementsList.value = nextState
+    emit('elements-change', nextState)
+    emit('element-select', null)
+  }
+}
+
+// 处理键盘快捷键
 const handleKeyDown = (e) => {
   if (e.key === 'Shift') {
     isKeepingRatio.value = true
+  }
+  
+  // 处理删除键
+  if ((e.key === 'Delete' || e.key === 'Backspace') && props.selectedElement) {
+    // 过滤掉被删除的元素
+    const updatedElements = elementsList.value.filter(el => el.id !== props.selectedElement.id)
+    
+    // 更新元素列表
+    elementsList.value = updatedElements
+    
+    // 触发更新事件
+    emit('elements-change', updatedElements)
+    
+    // 清除选中状态
+    emit('element-select', null)
+  }
+
+  // 撤销快捷键 (Cmd/Ctrl + Z)
+  if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
+    e.preventDefault()
+    handleUndo()
+  }
+
+  // 重做快捷键 (Cmd/Ctrl + Shift + Z 或 Cmd/Ctrl + Y)
+  if ((e.metaKey || e.ctrlKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+    e.preventDefault()
+    handleRedo()
   }
 }
 
@@ -545,6 +619,14 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown)
   window.removeEventListener('keyup', handleKeyUp)
+})
+
+// 导出方法和状态给父组件
+defineExpose({
+  handleUndo,
+  handleRedo,
+  canUndo,
+  canRedo
 })
 </script>
 
@@ -608,31 +690,6 @@ onUnmounted(() => {
 .element-selected {
   outline-color: #1890ff !important;
   z-index: 2 !important;
-}
-
-.element-delete-btn {
-  position: absolute;
-  top: -24px;
-  right: -24px;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #fff;
-  border: 1px solid #ff4d4f;
-  border-radius: 50%;
-  color: #ff4d4f;
-  cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s;
-  z-index: 1000;
-}
-
-.element-delete-btn:hover {
-  background: #ff4d4f;
-  color: #fff;
-  transform: scale(1.1);
 }
 
 :deep(.moveable-control-box) {
