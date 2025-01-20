@@ -5,25 +5,21 @@
       <template v-if="element">
         <h3>元素属性</h3>
         <div class="panel-section">
-          <h4>位置和大小</h4>
+          <h4>基础属性</h4>
           <div class="form-group">
             <label>位置</label>
             <div class="input-group">
               <input
                 type="number"
                 :value="element.x"
-                @input="(e) => updateElementProp('x', e.target.value)"
+                @input="(e) => updateElementProp('x', parseInt(e.target.value))"
                 placeholder="X"
-                step="1"
-                min="0"
               >
               <input
                 type="number"
                 :value="element.y"
-                @input="(e) => updateElementProp('y', e.target.value)"
+                @input="(e) => updateElementProp('y', parseInt(e.target.value))"
                 placeholder="Y"
-                step="1"
-                min="0"
               >
             </div>
           </div>
@@ -33,52 +29,139 @@
               <input
                 type="number"
                 :value="element.width"
-                @input="(e) => updateElementProp('width', e.target.value)"
+                @input="(e) => updateElementProp('width', parseInt(e.target.value))"
                 placeholder="宽度"
-                step="1"
-                min="1"
               >
               <input
                 type="number"
                 :value="element.height"
-                @input="(e) => updateElementProp('height', e.target.value)"
+                @input="(e) => updateElementProp('height', parseInt(e.target.value))"
                 placeholder="高度"
-                step="1"
-                min="1"
               >
             </div>
           </div>
           <div class="form-group">
             <label>旋转</label>
-            <div class="rotate-control">
+            <div class="input-group">
               <input
-                type="range"
+                type="number"
                 :value="element.rotate || 0"
-                @input="(e) => {
-                  const value = Math.round(parseFloat(e.target.value) || 0)
-                  updateElementProp('rotate', value)
-                }"
-                min="0"
-                max="360"
-                step="1"
+                @input="(e) => updateElementProp('rotate', parseInt(e.target.value))"
+                placeholder="角度"
               >
-              <div class="input-group">
-                <input
-                  type="number"
-                  :value="element.rotate || 0"
-                  @input="(e) => {
-                    const value = Math.round(parseFloat(e.target.value) || 0)
-                    updateElementProp('rotate', value)
-                  }"
-                  placeholder="角度"
-                  step="1"
-                  min="0"
-                  max="360"
-                >
-                <span class="unit">°</span>
-              </div>
+              <span class="unit">°</span>
             </div>
           </div>
+          <div class="form-group">
+            <label>透明度</label>
+            <div class="opacity-control">
+              <input
+                type="range"
+                :value="element.props?.opacity || 1"
+                @input="(e) => handleElementPropChange('opacity', parseFloat(e.target.value))"
+                min="0"
+                max="1"
+                step="0.1"
+              >
+              <input
+                type="number"
+                :value="Math.round((element.props?.opacity || 1) * 10) / 10"
+                @input="(e) => handleElementPropChange('opacity', Math.min(1, Math.max(0, parseFloat(e.target.value) || 0)))"
+                min="0"
+                max="1"
+                step="0.1"
+                style="width: 60px"
+              >
+            </div>
+          </div>
+          <!-- 标题样式设置 -->
+          <template v-if="element?.type === 'h3' || element?.type === 'h4'">
+            <!-- 字体大小 -->
+            <div class="form-group">
+              <label>字体大小</label>
+              <div class="input-group">
+                <input 
+                  type="number" 
+                  :value="element.props?.fontSize"
+                  @input="(e) => handleElementPropChange('fontSize', Number(e.target.value))"
+                  min="12"
+                  max="72"
+                  step="1"
+                >
+                <span class="unit">px</span>
+              </div>
+            </div>
+
+            <!-- 文本对齐 -->
+            <div class="form-group">
+              <label>对齐方式</label>
+              <div class="button-group">
+                <button 
+                  class="btn-icon" 
+                  :class="{ active: element.props?.textAlign === 'left' }"
+                  @click="() => {
+                    handleElementPropChange('textAlign', 'left')
+                    console.log('Changed textAlign to left:', element.props)
+                  }"
+                >
+                  <AlignTextLeftOne theme="outline" size="16" :fill="element.props?.textAlign === 'left' ? '#1890ff' : '#333'" />
+                </button>
+                <button 
+                  class="btn-icon" 
+                  :class="{ active: element.props?.textAlign === 'center' }"
+                  @click="() => {
+                    handleElementPropChange('textAlign', 'center')
+                    console.log('Changed textAlign to center:', element.props)
+                  }"
+                >
+                  <AlignTextCenterOne theme="outline" size="16" :fill="element.props?.textAlign === 'center' ? '#1890ff' : '#333'" />
+                </button>
+                <button 
+                  class="btn-icon" 
+                  :class="{ active: element.props?.textAlign === 'right' }"
+                  @click="() => {
+                    handleElementPropChange('textAlign', 'right')
+                    console.log('Changed textAlign to right:', element.props)
+                  }"
+                >
+                  <AlignTextRightOne theme="outline" size="16" :fill="element.props?.textAlign === 'right' ? '#1890ff' : '#333'" />
+                </button>
+              </div>
+            </div>
+
+            <!-- 字体颜色 -->
+            <div class="form-group">
+              <label>字体颜色</label>
+              <div class="color-picker">
+                <input 
+                  type="color" 
+                  :value="element.props?.color"
+                  @input="(e) => handleElementPropChange('color', e.target.value)"
+                >
+                <input 
+                  type="text"
+                  :value="element.props?.color"
+                  @input="(e) => handleElementPropChange('color', e.target.value)"
+                  placeholder="#000000"
+                >
+              </div>
+            </div>
+
+            <!-- 行高 -->
+            <div class="form-group">
+              <label>行高</label>
+              <div class="input-group">
+                <input 
+                  type="number" 
+                  :value="element.props?.lineHeight"
+                  @input="(e) => handleElementPropChange('lineHeight', Number(e.target.value))"
+                  min="1"
+                  max="3"
+                  step="0.1"
+                >
+              </div>
+            </div>
+          </template>
         </div>
 
         <div class="panel-section">
@@ -86,117 +169,19 @@
           <!-- 形状通用样式设置 -->
           <template v-if="['rectangle', 'circle', 'triangle', 'star'].includes(element.type)">
             <div class="form-group">
-              <label>背景颜色</label>
-              <div class="color-settings">
-                <div class="color-type-switch">
-                  <button 
-                    :class="{ active: !isGradient }"
-                    @click="isGradient = false"
-                  >
-                    纯色
-                  </button>
-                  <button 
-                    :class="{ active: isGradient }"
-                    @click="isGradient = true"
-                  >
-                    渐变
-                  </button>
-                </div>
-                <div v-if="!isGradient" class="color-picker">
-                  <input 
-                    type="color" 
-                    :value="element.props?.fill || '#ffffff'"
-                    @input="(e) => updateElementProp('props', {
-                      ...element.props,
-                      fill: e.target.value
-                    })"
-                  >
-                  <input 
-                    type="text"
-                    :value="element.props?.fill || '#ffffff'"
-                    @input="(e) => updateElementProp('props', {
-                      ...element.props,
-                      fill: e.target.value
-                    })"
-                    placeholder="#FFFFFF"
-                  >
-                  <button 
-                    class="btn-save-color" 
-                    title="添加到颜色变量"
-                    @click="addColorVar(element.props?.fill)"
-                  >
-                    <Plus theme="outline" size="14" />
-                  </button>
-                </div>
-                <div class="gradient-settings" v-else>
-                  <div class="gradient-header">
-                    <select v-model="gradientType">
-                      <option value="linear">线性渐变</option>
-                      <option value="radial">径向渐变</option>
-                    </select>
-                    <select v-if="gradientType === 'linear'" v-model="gradientDirection">
-                      <option value="to right">从左到右</option>
-                      <option value="to bottom">从上到下</option>
-                      <option value="to bottom right">对角线</option>
-                    </select>
-                  </div>
-                  <div class="gradient-preview">
-                    <div 
-                      class="gradient-bar"
-                      :style="{ background: previewGradient }"
-                      @click="addGradientStop"
-                    >
-                      <div 
-                        v-for="(stop, index) in gradientStops" 
-                        :key="index"
-                        class="gradient-stop"
-                        :style="{ 
-                          left: `${stop.position}%`,
-                          backgroundColor: stop.color
-                        }"
-                        @mousedown="startDragging(index, $event)"
-                      >
-                        <div class="gradient-stop-color">
-                          <input 
-                            type="color" 
-                            :value="stop.color"
-                            @input="(e) => updateGradientStop(index, e.target.value)"
-                          >
-                        </div>
-                      </div>
-                    </div>
-                    <button 
-                      class="btn-save-gradient" 
-                      title="添加到颜色变量"
-                      @click="addColorVar(element.props?.fill)"
-                    >
-                      <Plus theme="outline" size="14" />
-                    </button>
-                  </div>
-                </div>
-                <div class="color-blocks" v-if="colorVars.length > 0">
-                  <div 
-                    v-for="(color, index) in colorVars" 
-                    :key="index"
-                    class="color-block"
-                  >
-                    <div 
-                      class="color-preview"
-                      :style="{ background: color }"
-                      :title="color"
-                      @click="updateElementProp('props', {
-                        ...element.props,
-                        fill: color
-                      })"
-                    ></div>
-                    <button 
-                      class="btn-delete-color"
-                      @click="removeColorVar(index)"
-                    >
-                      <Delete theme="outline" size="12" />
-                    </button>
-                  </div>
-                </div>
+              <label>填充颜色</label>
+              <div class="color-picker">
+                <input 
+                  type="color" 
+                  :value="element.props?.fill"
+                  @input="(e) => handleElementPropChange('fill', e.target.value)"
+                >
+                <input 
+                  type="text"
+                  :value="element.props?.fill"
+                  @input="(e) => handleElementPropChange('fill', e.target.value)"
+                  placeholder="#1890FF"
+                >
               </div>
             </div>
 
@@ -231,20 +216,14 @@
                 <div class="color-picker">
                   <input
                     type="color"
-                    :value="element.props?.stroke || '#000000'"
-                    @input="(e) => updateElementProp('props', {
-                      ...element.props,
-                      stroke: e.target.value
-                    })"
+                    :value="element.props?.stroke"
+                    @input="(e) => handleElementPropChange('stroke', e.target.value)"
                   >
                   <input 
                     type="text"
-                    :value="element.props?.stroke || '#000000'"
-                    @input="(e) => updateElementProp('props', {
-                      ...element.props,
-                      stroke: e.target.value
-                    })"
-                    placeholder="#000000"
+                    :value="element.props?.stroke"
+                    @input="(e) => handleElementPropChange('stroke', e.target.value)"
+                    placeholder="#096DD9"
                   >
                 </div>
               </div>
@@ -424,100 +403,104 @@
                 </div>
               </div>
             </div>
-
-            <div class="form-group">
-              <label>透明度</label>
-              <div class="opacity-control">
-                <input
-                  type="range"
-                  :value="element.props?.opacity || 1"
-                  @input="(e) => updateElementProp('props', {
-                    ...element.props,
-                    opacity: parseFloat(e.target.value)
-                  })"
-                  min="0"
-                  max="1"
-                  step="0.1"
-                >
-                <div class="input-group">
-                  <input
-                    type="number"
-                    :value="element.props?.opacity || 1"
-                    @input="(e) => updateElementProp('props', {
-                      ...element.props,
-                      opacity: Math.min(1, Math.max(0, parseFloat(e.target.value) || 0))
-                    })"
-                    min="0"
-                    max="1"
-                    step="0.1"
-                  >
-                </div>
-              </div>
-            </div>
           </template>
 
-          <template v-if="element.type === 'text'">
+          <!-- 文本属性 -->
+          <template v-if="element?.type === 'text' || element?.type === 'title'">
+            <!-- 文本内容 -->
             <div class="form-group">
               <label>文本内容</label>
               <textarea
-                :value="element.content"
-                @input="updateElementProp('content', $event.target.value)"
+                :value="element.props?.content"
+                @input="(e) => handleElementPropChange('content', e.target.value)"
                 rows="3"
+                placeholder="请输入文本内容"
               ></textarea>
             </div>
+            
+            <!-- 字体大小 -->
             <div class="form-group">
-              <label>字体</label>
+              <label>字体大小</label>
               <div class="input-group">
-                <select
-                  :value="element.fontFamily"
-                  @change="updateElementProp('fontFamily', $event.target.value)"
-                >
-                  <option value="Arial">Arial</option>
-                  <option value="Microsoft YaHei">微软雅黑</option>
-                  <option value="SimSun">宋体</option>
-                </select>
-                <input
-                  type="number"
-                  :value="element.fontSize"
-                  @input="updateElementProp('fontSize', $event.target.value)"
+                <input 
+                  type="number" 
+                  :value="element.props?.fontSize"
+                  @input="(e) => handleElementPropChange('fontSize', Number(e.target.value))"
                   min="12"
                   max="72"
                   step="1"
                 >
+                <span class="unit">px</span>
               </div>
             </div>
-            <div class="form-group">
-              <label>文字颜色</label>
-              <input
-                type="color"
-                :value="element.color"
-                @input="updateElementProp('color', $event.target.value)"
-              >
-            </div>
+
+            <!-- 文本对齐 -->
             <div class="form-group">
               <label>对齐方式</label>
               <div class="button-group">
-                <button
-                  class="btn"
-                  :class="{ active: element.textAlign === 'left' }"
-                  @click="updateElementProp('textAlign', 'left')"
+                <button 
+                  class="btn-icon" 
+                  :class="{ active: element.props?.textAlign === 'left' }"
+                  @click="() => {
+                    handleElementPropChange('textAlign', 'left')
+                    console.log('Changed textAlign to left:', element.props)
+                  }"
                 >
-                  <AlignTextLeft theme="outline" size="16" />
+                  <AlignTextLeftOne theme="outline" size="16" :fill="element.props?.textAlign === 'left' ? '#1890ff' : '#333'" />
                 </button>
-                <button
-                  class="btn"
-                  :class="{ active: element.textAlign === 'center' }"
-                  @click="updateElementProp('textAlign', 'center')"
+                <button 
+                  class="btn-icon" 
+                  :class="{ active: element.props?.textAlign === 'center' }"
+                  @click="() => {
+                    handleElementPropChange('textAlign', 'center')
+                    console.log('Changed textAlign to center:', element.props)
+                  }"
                 >
-                  <AlignTextCenter theme="outline" size="16" />
+                  <AlignTextCenterOne theme="outline" size="16" :fill="element.props?.textAlign === 'center' ? '#1890ff' : '#333'" />
                 </button>
-                <button
-                  class="btn"
-                  :class="{ active: element.textAlign === 'right' }"
-                  @click="updateElementProp('textAlign', 'right')"
+                <button 
+                  class="btn-icon" 
+                  :class="{ active: element.props?.textAlign === 'right' }"
+                  @click="() => {
+                    handleElementPropChange('textAlign', 'right')
+                    console.log('Changed textAlign to right:', element.props)
+                  }"
                 >
-                  <AlignTextRight theme="outline" size="16" />
+                  <AlignTextRightOne theme="outline" size="16" :fill="element.props?.textAlign === 'right' ? '#1890ff' : '#333'" />
                 </button>
+              </div>
+            </div>
+
+            <!-- 字体颜色 -->
+            <div class="form-group">
+              <label>字体颜色</label>
+              <div class="color-picker">
+                <input 
+                  type="color" 
+                  :value="element.props?.color"
+                  @input="(e) => handleElementPropChange('color', e.target.value)"
+                >
+                <input 
+                  type="text"
+                  :value="element.props?.color"
+                  @input="(e) => handleElementPropChange('color', e.target.value)"
+                  placeholder="#000000"
+                >
+              </div>
+            </div>
+
+            <!-- 行高 -->
+            <div class="form-group">
+              <label>行高</label>
+              <div class="input-group">
+                <input 
+                  type="number" 
+                  :value="element.props?.lineHeight"
+                  @input="(e) => handleElementPropChange('lineHeight', Number(e.target.value))"
+                  min="1"
+                  max="3"
+                  step="0.1"
+                >
               </div>
             </div>
           </template>
@@ -668,9 +651,9 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { 
-  AlignTextLeft, 
-  AlignTextCenter, 
-  AlignTextRight, 
+  AlignTextLeftOne, 
+  AlignTextCenterOne, 
+  AlignTextRightOne, 
   Delete, 
   Plus, 
   Setting,
@@ -983,22 +966,53 @@ watch(() => props.currentCanvasId, () => {
 
 // 控制标尺设置的显示/隐藏
 const showRulerSettings = ref(false)
+
+// 更新文本属性
+const handleElementPropChange = (prop, value) => {
+  if (!props.element) return
+
+  console.log('Changing prop:', prop, 'to value:', value)  // 添加日志
+
+  const updatedProps = {
+    ...props.element.props,
+    [prop]: value
+  }
+
+  console.log('Updated props:', updatedProps)  // 添加日志
+
+  // 触发更新事件
+  emit('update', {
+    id: props.element.id,
+    type: props.element.type,
+    x: props.element.x,
+    y: props.element.y,
+    width: props.element.width,
+    height: props.element.height,
+    rotate: props.element.rotate,
+    props: updatedProps
+  })
+}
 </script>
 
 <style scoped>
 .editor-panel {
+  width: 320px;
   padding: 10px;
   height: 100%;
   overflow-y: auto;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  flex-shrink: 0;  /* 防止面板被压缩 */
 }
 
 .panel-content {
   display: flex;
   flex-direction: column;
+  gap: 16px;
 }
 
 .panel-section {
-  padding: 8px;
+  padding: 16px;
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
@@ -1008,14 +1022,14 @@ h3 {
   font-size: 16px;
   font-weight: 600;
   color: #1f2937;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 h4 {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
-  color: #374151;
-  margin-bottom: 10px;
+  color: #4b5563;
+  margin-bottom: 8px;
 }
 
 .form-group {
@@ -1103,51 +1117,55 @@ label {
 
 .button-group {
   display: flex;
-  gap: 8px;
+  gap: 1px;
+  background: #f0f0f0;
+  padding: 2px;
+  border-radius: 6px;
+  margin-top: 4px;
+  width: 108px;  /* 36px * 3 (每个按钮宽度) */
 }
 
-.btn {
-  display: flex;
+.btn-icon {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background-color: #fff;
-  color: #6b7280;
+  height: 32px;
+  width: 34px;
+  padding: 0;
+  border: none;
+  background: white;
   cursor: pointer;
+  color: #666;
   transition: all 0.2s;
 }
 
-.btn:hover {
-  border-color: #a5b4fc;
-  color: #4f46e5;
+.btn-icon:first-child {
+  border-radius: 6px 0 0 6px;
 }
 
-.btn.active {
-  background-color: #4f46e5;
-  border-color: #4f46e5;
-  color: #fff;
+.btn-icon:last-child {
+  border-radius: 0 6px 6px 0;
+}
+
+.btn-icon:hover {
+  color: #1890ff;
+  background-color: #f5f5f5;
+}
+
+.btn-icon.active {
+  color: #1890ff;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-icon.active :deep(svg) {
+  fill: #1890ff !important;
 }
 
 .unit {
   color: #6b7280;
   font-size: 13px;
 }
-
-/* 删除或注释掉通用的 input[type="range"] 样式 */
-/* input[type="range"] {
-  width: 100%;
-  height: 4px;
-  background: #e8e8e8;
-  border-radius: 2px;
-  outline: none;
-  -webkit-appearance: none;
-  margin: 0;
-  padding: 6px 0;
-  cursor: pointer;
-} */
 
 textarea {
   width: 100%;
@@ -1255,101 +1273,6 @@ textarea:focus {
   border-radius: 10px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   z-index: 2;
-}
-
-.btn-icon {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 16px;
-  height: 16px;
-  padding: 2px;
-  border: none;
-  background: rgba(255, 255, 255, 0.9);
-  color: #666;
-  cursor: pointer;
-  opacity: 0;
-  z-index: 3;
-  border-radius: 4px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.btn-icon:hover {
-  background: #fff;
-  color: #ff4d4f;
-  transform: scale(1.1);
-}
-
-.canvas-item:hover .btn-icon {
-  opacity: 1;
-}
-
-/* 继承现有的样式 */
-@import '../styles/panel.css';
-@import '../styles/controls.css';
-
-.switch-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.switch-item {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.switch-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 4px 0;
-}
-
-.switch-text {
-  font-size: 13px;
-  color: #666;
-}
-
-.switch-controls {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.switch-settings {
-  margin-left: 0;
-  margin-top: 8px;
-  padding: 8px;
-  background-color: #fafafa;
-  border-radius: 4px;
-}
-
-.section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.section-header h4 {
-  margin: 0;
-}
-
-.switch-text-group {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.switch-text {
-  font-size: 13px;
-  color: #666;
 }
 
 .btn-add {
@@ -1474,7 +1397,6 @@ textarea:focus {
   border: 1px solid #d9d9d9;
   border-radius: 4px;
   cursor: pointer;
-  background-color: #fff;
 }
 
 .color-picker input[type="color"]:hover {
@@ -1979,37 +1901,78 @@ textarea:focus {
 
 .opacity-control input[type="range"] {
   flex: 1;
-  width: 100%;
   height: 4px;
+  -webkit-appearance: none;
   background: #e5e7eb;
   border-radius: 2px;
   outline: none;
-  -webkit-appearance: none;
-  margin: 0;
-  padding: 6px 0;
-  cursor: pointer;
 }
 
 .opacity-control input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 16px;
   height: 16px;
-  background: #fff;
-  border: 2px solid #4f46e5;
+  background: white;
+  border: 2px solid #1890ff;
+  border-radius: 50%;
+  cursor: pointer;
+  margin-top: 0px; /* (16px - 4px) / 2 */
+}
+
+.opacity-control input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: white;
+  border: 2px solid #1890ff;
   border-radius: 50%;
   cursor: pointer;
 }
 
-.opacity-control input[type="range"]::-webkit-slider-thumb:hover {
-  transform: scale(1.1);
+.opacity-control input[type="range"]::-ms-thumb {
+  width: 16px;
+  height: 16px;
+  background: white;
+  border: 2px solid #1890ff;
+  border-radius: 50%;
+  cursor: pointer;
 }
 
-.opacity-control .input-group {
-  width: 80px;
-  flex-shrink: 0;
+.opacity-control input[type="number"] {
+  width: 60px;
+  text-align: center;
 }
 
-.opacity-control .input-group input[type="number"] {
+.switch-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.switch-item:last-child {
+  margin-bottom: 0;
+}
+
+.switch-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   width: 100%;
+}
+
+.switch-text {
+  font-size: 13px;
+  color: #4b5563;
+}
+
+:deep(.switch-component) {
+  transform: scale(1.2);
+  margin-left: 8px;
+}
+
+/* 确保开关按钮的点击区域足够大 */
+:deep(.switch-component label) {
+  min-width: 44px;
+  min-height: 22px;
 }
 </style> 

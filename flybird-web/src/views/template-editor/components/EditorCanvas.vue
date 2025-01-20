@@ -38,6 +38,7 @@
               :width="element.width"
               :height="element.height"
               @click.stop.prevent="handleElementSelect(element)"
+              @update="(payload) => handleElementUpdate(element, payload)"
             />
           </div>
           <vue-moveable
@@ -757,6 +758,33 @@ const getSnapTargets = () => {
   })
   
   return targets
+}
+
+// 处理元素更新
+const handleElementUpdate = (element, payload) => {
+  console.log('Updating element:', element.id, 'with payload:', payload)  // 添加日志
+  
+  const updatedElement = {
+    ...element,
+    props: {
+      ...element.props,
+      ...(payload.props || {})
+    }
+  }
+  
+  console.log('Updated element:', updatedElement)  // 添加日志
+  
+  // 更新元素列表
+  const updatedElements = elementsList.value.map(el => 
+    el.id === element.id ? updatedElement : el
+  )
+  
+  // 更新状态
+  elementsList.value = updatedElements
+  
+  // 触发更新事件
+  emit('elements-change', updatedElements)
+  emit('element-select', updatedElement)
 }
 
 // 导出方法和状态给父组件

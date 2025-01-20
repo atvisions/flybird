@@ -1,18 +1,38 @@
 <template>
-  <div class="circle" :style="style"></div>
+  <div 
+    class="shape-circle"
+    :style="{
+      width: `${width}px`,
+      height: `${height}px`,
+      backgroundColor: props.fill || '#1890ff',
+      borderColor: props.stroke || '#096dd9',
+      borderWidth: `${props.strokeWidth || 0}px`,
+      borderStyle: props.strokeStyle || 'solid',
+      borderRadius: '50%',
+      opacity: props.opacity || 1
+    }"
+  ></div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
 
 const props = defineProps({
+  width: {
+    type: Number,
+    required: true
+  },
+  height: {
+    type: Number,
+    required: true
+  },
   fill: {
     type: String,
-    default: '#ffffff'
+    default: '#1890ff'
   },
   stroke: {
     type: String,
-    default: '#000000'
+    default: '#096dd9'
   },
   strokeWidth: {
     type: Number,
@@ -22,13 +42,9 @@ const props = defineProps({
     type: String,
     default: 'solid'
   },
-  width: {
+  opacity: {
     type: Number,
-    default: 100
-  },
-  height: {
-    type: Number,
-    default: 100
+    default: 1
   }
 })
 

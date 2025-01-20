@@ -1,18 +1,38 @@
 <template>
-  <div class="rectangle" :style="style"></div>
+  <div 
+    class="shape-rectangle"
+    :style="{
+      width: `${width}px`,
+      height: `${height}px`,
+      backgroundColor: props.fill || '#1890ff',
+      borderColor: props.stroke || '#096dd9',
+      borderWidth: `${props.strokeWidth || 0}px`,
+      borderStyle: props.strokeStyle || 'solid',
+      borderRadius: `${props.radius || 0}px`,
+      opacity: props.opacity || 1
+    }"
+  ></div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
 
 const props = defineProps({
+  width: {
+    type: Number,
+    required: true
+  },
+  height: {
+    type: Number,
+    required: true
+  },
   fill: {
     type: String,
-    default: '#ffffff'
+    default: '#1890ff'
   },
   stroke: {
     type: String,
-    default: '#000000'
+    default: '#096dd9'
   },
   strokeWidth: {
     type: Number,
@@ -22,17 +42,13 @@ const props = defineProps({
     type: String,
     default: 'solid'
   },
-  opacity: {
-    type: Number,
-    default: 1
-  },
-  rotation: {
-    type: Number,
-    default: 0
-  },
   radius: {
     type: Number,
     default: 0
+  },
+  opacity: {
+    type: Number,
+    default: 1
   }
 })
 

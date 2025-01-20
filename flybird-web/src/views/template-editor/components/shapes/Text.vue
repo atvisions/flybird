@@ -1,27 +1,48 @@
 <template>
   <div 
-    class="shape-text"
+    class="text-element"
     :style="{
-      color,
-      fontSize: `${fontSize}px`,
-      fontFamily,
-      fontWeight,
-      fontStyle: italic ? 'italic' : 'normal',
-      textDecoration: underline ? 'underline' : 'none',
-      textAlign,
-      opacity,
-      lineHeight: `${lineHeight}em`
+      width: `${width}px`,
+      height: `${height}px`,
+      color: props.color || '#000000',
+      fontSize: `${props.fontSize || 14}px`,
+      fontFamily: props.fontFamily || 'Arial',
+      lineHeight: props.lineHeight || 1.5,
+      opacity: props.opacity || 1,
+      padding: '4px'
     }"
-    :contenteditable="editable"
-    @blur="handleBlur"
-  >{{ content }}</div>
+  >
+    <div 
+      class="text-content" 
+      contenteditable="true"
+      @input="handleInput"
+      @blur="handleBlur"
+      :style="{
+        textAlign: props.textAlign || 'left',
+        width: '100%',
+        height: '100%'
+      }"
+    >{{ props.content || '请输入文本' }}</div>
+  </div>
 </template>
 
 <script setup>
 const props = defineProps({
+  width: {
+    type: Number,
+    required: true
+  },
+  height: {
+    type: Number,
+    required: true
+  },
   content: {
     type: String,
-    default: '文本'
+    default: '请输入文本'
+  },
+  textAlign: {
+    type: String,
+    default: 'left'
   },
   color: {
     type: String,
@@ -35,22 +56,6 @@ const props = defineProps({
     type: String,
     default: 'Arial'
   },
-  fontWeight: {
-    type: [String, Number],
-    default: 'normal'
-  },
-  italic: {
-    type: Boolean,
-    default: false
-  },
-  underline: {
-    type: Boolean,
-    default: false
-  },
-  textAlign: {
-    type: String,
-    default: 'left'
-  },
   lineHeight: {
     type: Number,
     default: 1.5
@@ -58,32 +63,57 @@ const props = defineProps({
   opacity: {
     type: Number,
     default: 1
-  },
-  editable: {
-    type: Boolean,
-    default: true
   }
 })
 
-const emit = defineEmits(['update:content'])
+const emit = defineEmits(['update'])
+
+const handleInput = (e) => {
+  emit('update', {
+    props: {
+      textAlign: props.textAlign,
+      color: props.color,
+      fontSize: props.fontSize,
+      fontFamily: props.fontFamily,
+      lineHeight: props.lineHeight,
+      opacity: props.opacity,
+      content: e.target.textContent
+    }
+  })
+}
 
 const handleBlur = (e) => {
-  emit('update:content', e.target.textContent)
+  emit('update', {
+    props: {
+      textAlign: props.textAlign,
+      color: props.color,
+      fontSize: props.fontSize,
+      fontFamily: props.fontFamily,
+      lineHeight: props.lineHeight,
+      opacity: props.opacity,
+      content: e.target.textContent
+    }
+  })
 }
 </script>
 
 <style scoped>
-.shape-text {
-  width: 100%;
-  height: 100%;
+.text-element {
   box-sizing: border-box;
-  white-space: pre-wrap;
+  overflow: hidden;
   word-break: break-word;
-  outline: none;
-  cursor: text;
+  user-select: none;
+  background: white;
 }
 
-.shape-text:focus {
+.text-content {
+  outline: none;
+  user-select: text;
+  width: 100%;
+  height: 100%;
+}
+
+.text-content:focus {
   outline: none;
 }
 </style> 

@@ -1,12 +1,18 @@
 <template>
   <div class="star" :style="style">
-    <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+    <svg 
+      :width="width" 
+      :height="height" 
+      :viewBox="`0 0 ${width} ${height}`"
+      :style="{
+        opacity: opacity || 1
+      }"
+    >
       <path 
-        :d="starPath" 
-        :fill="fill"
-        :stroke="stroke"
-        :stroke-width="strokeWidth"
-        :stroke-dasharray="strokeStyle === 'dashed' ? '5,5' : ''"
+        :d="getStarPath()" 
+        :fill="fill || '#1890ff'"
+        :stroke="stroke || '#096dd9'"
+        :stroke-width="strokeWidth || 0"
       />
     </svg>
   </div>
@@ -16,52 +22,50 @@
 import { computed } from 'vue'
 
 const props = defineProps({
-  points: {
+  width: {
     type: Number,
-    default: 5
+    required: true
+  },
+  height: {
+    type: Number,
+    required: true
   },
   fill: {
     type: String,
-    default: '#ffffff'
+    default: '#1890ff'
   },
   stroke: {
     type: String,
-    default: '#000000'
+    default: '#096dd9'
   },
   strokeWidth: {
     type: Number,
     default: 0
   },
-  strokeStyle: {
-    type: String,
-    default: 'solid'
-  },
-  width: {
+  opacity: {
     type: Number,
-    default: 100
-  },
-  height: {
-    type: Number,
-    default: 100
+    default: 1
   }
 })
 
-const starPath = computed(() => {
-  const points = props.points
-  const outerRadius = 50
-  const innerRadius = outerRadius * 0.382 // 黄金比例
-  let path = ''
+const getStarPath = () => {
+  const centerX = props.width / 2
+  const centerY = props.height / 2
+  const outerRadius = Math.min(props.width, props.height) / 2
+  const innerRadius = outerRadius * 0.382
+  const points = []
   
-  for (let i = 0; i < points * 2; i++) {
+  for (let i = 0; i < 10; i++) {
     const radius = i % 2 === 0 ? outerRadius : innerRadius
-    const angle = (i * Math.PI) / points
-    const x = 50 + radius * Math.sin(angle)
-    const y = 50 - radius * Math.cos(angle)
-    path += (i === 0 ? 'M' : 'L') + x + ',' + y
+    const angle = (i * Math.PI) / 5 - Math.PI / 2
+    points.push([
+      centerX + radius * Math.cos(angle),
+      centerY + radius * Math.sin(angle)
+    ])
   }
   
-  return path + 'Z'
-})
+  return `M ${points[0][0]},${points[0][1]} ${points.slice(1).map(p => `L ${p[0]},${p[1]}`).join(' ')} Z`
+}
 
 const style = computed(() => ({
   width: '100%',
