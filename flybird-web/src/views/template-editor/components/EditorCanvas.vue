@@ -1,6 +1,19 @@
 <template>
   <div class="editor-canvas">
-    <div class="canvas-container">
+    <!-- 标尺组件移到外层 -->
+    <Ruler
+      v-if="canvasConfig.showRuler"
+      :width="canvasConfig.width"
+      :height="canvasConfig.height"
+      :scale="scale"
+      :startX="rulerOffset.x"
+      :startY="rulerOffset.y"
+      :shadow="shadow"
+      :cornerActive="true"
+      :thick="20"
+      :rulerColor="canvasConfig.rulerColor || '#999999'"
+    />
+    <div class="canvas-container" :style="containerStyle">
       <div class="canvas-content" :style="contentStyle">
         <div 
           class="canvas-wrapper"
@@ -11,7 +24,7 @@
         >
           <!-- 网格 -->
           <div 
-            v-show="canvasConfig.showGrid" 
+            v-if="canvasConfig.showGrid" 
             class="canvas-grid"
             :style="gridStyle"
           ></div>
@@ -48,6 +61,11 @@
             :snapCenter="true"
             :elementSnapDirections="{ top: true, left: true, bottom: true, right: true }"
             :elementGuidelines="elements.map(el => `[data-id='${el.id}']`)"
+            :snapThreshold="5"
+            :snapGridWidth="canvasConfig.showGrid ? canvasConfig.gridSize : 0"
+            :snapGridHeight="canvasConfig.showGrid ? canvasConfig.gridSize : 0"
+            :isDisplayGridGuidelines="canvasConfig.showGrid"
+            :gridGuidelines="getGridGuidelines()"
             :bounds="{
               left: 0,
               top: 0,
@@ -92,6 +110,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import VueMoveable from 'vue3-moveable'
 import { useHistory } from '../composables/useHistory'
+import Ruler from './Ruler.vue'  // 导入标尺组件
 
 // 导入基础组件
 import Rectangle from './shapes/Rectangle.vue'
@@ -153,21 +172,44 @@ const isKeepingRatio = ref(false)
 const isOperating = ref(false)  // 添加操作状态标记
 
 // 计算属性
-const contentStyle = computed(() => ({
-  transform: `scale(${props.scale})`,
-  transformOrigin: 'center top'
+const contentStyle = computed(() => {
+  const scale = props.scale
+  const width = props.canvasConfig.width
+  const height = props.canvasConfig.height
+  
+  return {
+    position: 'relative',
+    minWidth: scale > 1 ? `${width * scale + 200}px` : '100%',
+    minHeight: scale > 1 ? `${height * scale + 200}px` : '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '40px',
+    boxSizing: 'border-box'
+  }
+})
+
+const containerStyle = computed(() => ({
+  position: 'absolute',
+  inset: '20px',
+  overflow: 'auto'
 }))
 
 const canvasStyle = computed(() => ({
+  position: 'relative',
   width: `${props.canvasConfig.width}px`,
   height: `${props.canvasConfig.height}px`,
-  backgroundColor: props.canvasConfig.backgroundColor || '#ffffff'
+  backgroundColor: props.canvasConfig.backgroundColor || '#ffffff',
+  boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
+  flexShrink: 0,
+  transform: `scale(${props.scale})`,
+  transformOrigin: 'center'
 }))
 
 const gridStyle = computed(() => ({
   backgroundImage: `
-    linear-gradient(${props.canvasConfig.gridColor} 1px, transparent 0),
-    linear-gradient(90deg, ${props.canvasConfig.gridColor} 1px, transparent 0)
+    linear-gradient(90deg, ${props.canvasConfig.gridColor} 1px, transparent 0),
+    linear-gradient(${props.canvasConfig.gridColor} 1px, transparent 0)
   `,
   backgroundSize: `${props.canvasConfig.gridSize}px ${props.canvasConfig.gridSize}px`,
   width: '100%',
@@ -175,7 +217,35 @@ const gridStyle = computed(() => ({
   position: 'absolute',
   top: 0,
   left: 0,
-  pointerEvents: 'none'
+  pointerEvents: 'none',
+  opacity: 0.5,
+  zIndex: 0,
+  backgroundPosition: '0 0',
+  backgroundRepeat: 'repeat',
+  imageRendering: 'pixelated'
+}))
+
+// 计算标尺偏移量
+const rulerOffset = computed(() => {
+  const container = document.querySelector('.canvas-container')
+  const wrapper = document.querySelector('.canvas-wrapper')
+  if (!container || !wrapper) return { x: 0, y: 0 }
+
+  const containerRect = container.getBoundingClientRect()
+  const wrapperRect = wrapper.getBoundingClientRect()
+
+  return {
+    x: (wrapperRect.left - containerRect.left) / props.scale,
+    y: (wrapperRect.top - containerRect.top) / props.scale
+  }
+})
+
+// 添加 shadow 计算属性
+const shadow = computed(() => ({
+  x: 0,
+  y: 0,
+  width: props.canvasConfig.width,
+  height: props.canvasConfig.height
 }))
 
 // 获取元素样式
@@ -199,6 +269,23 @@ watch(() => props.selectedElement, (newVal) => {
 watch(() => props.elements, (newVal) => {
   elementsList.value = newVal
 }, { immediate: true })
+
+// 监听缩放变化
+watch(() => props.scale, (newScale, oldScale) => {
+  console.log('Scale changed from', oldScale, 'to', newScale)
+  console.log('Container size:', {
+    width: document.querySelector('.canvas-container')?.offsetWidth,
+    height: document.querySelector('.canvas-container')?.offsetHeight
+  })
+  console.log('Content size:', {
+    width: document.querySelector('.canvas-content')?.offsetWidth,
+    height: document.querySelector('.canvas-content')?.offsetHeight
+  })
+  console.log('Wrapper size:', {
+    width: document.querySelector('.canvas-wrapper')?.offsetWidth,
+    height: document.querySelector('.canvas-wrapper')?.offsetHeight
+  })
+})
 
 // 处理元素选中
 const handleElementSelect = (element) => {
@@ -621,6 +708,26 @@ onUnmounted(() => {
   window.removeEventListener('keyup', handleKeyUp)
 })
 
+// 生成网格参考线
+const getGridGuidelines = () => {
+  if (!props.canvasConfig.showGrid) return []
+  
+  const guidelines = []
+  const gridSize = props.canvasConfig.gridSize
+  
+  // 生成垂直网格线
+  for (let x = 0; x <= props.canvasConfig.width; x += gridSize) {
+    guidelines.push({ type: 'vertical', pos: x })
+  }
+  
+  // 生成水平网格线
+  for (let y = 0; y <= props.canvasConfig.height; y += gridSize) {
+    guidelines.push({ type: 'horizontal', pos: y })
+  }
+  
+  return guidelines
+}
+
 // 导出方法和状态给父组件
 defineExpose({
   handleUndo,
@@ -635,61 +742,49 @@ defineExpose({
   position: relative;
   width: 100%;
   height: 100%;
-  overflow: auto;
+  overflow: hidden;
   background-color: #f5f5f5;
 }
 
 .canvas-container {
-  min-width: 100%;
-  min-height: 100%;
-  padding: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
+  position: absolute;
+  inset: 20px;  /* 为标尺留出空间 */
+  overflow: auto;
+  background-color: #f0f0f0;
 }
 
 .canvas-content {
   position: relative;
-  display: inline-flex;
+  min-width: 100%;
+  min-height: 100%;
+  display: flex;
   align-items: center;
   justify-content: center;
-  will-change: transform;
+  padding: 40px;
+  box-sizing: border-box;
 }
 
 .canvas-wrapper {
   position: relative;
   background-color: #fff;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  transform-origin: center center;
   flex-shrink: 0;
   margin: auto;
-  transition: background-color 0.3s;
 }
 
 .elements-container {
-  position: relative;
-  width: 100%;
-  height: 100%;
-}
-
-.canvas-grid {
-  opacity: 0.5;
-  transition: opacity 0.3s;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
 }
 
 .canvas-element {
-  position: absolute;
-  user-select: none;
-  touch-action: none;
-  outline: 2px solid transparent;
-  transition: outline-color 0.2s;
-  cursor: pointer;
-  z-index: 1;
+  pointer-events: auto;
 }
 
 .element-selected {
-  outline-color: #1890ff !important;
-  z-index: 2 !important;
+  outline: 1px solid #1890ff;
 }
 
 :deep(.moveable-control-box) {

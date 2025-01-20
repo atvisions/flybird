@@ -643,7 +643,6 @@
                 <div class="switch-text-group">
                   <span class="switch-text">显示网格</span>
                   <button 
-                    v-if="getCurrentCanvas()?.config?.showGrid"
                     class="btn-icon"
                     @click="showGridSettings = !showGridSettings"
                   >
@@ -656,14 +655,14 @@
                 />
               </div>
               <!-- 网格设置 -->
-              <div v-if="getCurrentCanvas()?.config?.showGrid && showGridSettings" class="switch-settings">
+              <div v-if="showGridSettings" class="switch-settings">
                 <div class="form-group">
                   <label>网格大小</label>
                   <div class="input-group">
                     <input 
                       type="number"
                       :value="getCurrentCanvas()?.config?.gridSize"
-                      @input="(e) => handleConfigChange('gridSize', Number(e.target.value))"
+                      @input="(e) => handleConfigChange('gridSize', Math.max(5, Math.min(50, Number(e.target.value))))"
                       min="5"
                       max="50"
                       step="5"
@@ -693,11 +692,38 @@
             <!-- 标尺 -->
             <div class="switch-item">
               <div class="switch-header">
-                <span class="switch-text">显示标尺</span>
+                <div class="switch-text-group">
+                  <span class="switch-text">显示标尺</span>
+                  <button 
+                    class="btn-icon"
+                    @click="showRulerSettings = !showRulerSettings"
+                  >
+                    <Setting theme="outline" size="14" />
+                  </button>
+                </div>
                 <Switch 
                   :model-value="getCurrentCanvas()?.config?.showRuler"
                   @update:model-value="(value) => handleConfigChange('showRuler', value)"
                 />
+              </div>
+              <!-- 标尺设置 -->
+              <div v-if="showRulerSettings" class="switch-settings">
+                <div class="form-group">
+                  <label>标尺颜色</label>
+                  <div class="color-picker">
+                    <input 
+                      type="color"
+                      :value="getCurrentCanvas()?.config?.rulerColor || '#999999'"
+                      @input="(e) => handleConfigChange('rulerColor', e.target.value)"
+                    >
+                    <input 
+                      type="text"
+                      :value="getCurrentCanvas()?.config?.rulerColor || '#999999'"
+                      @input="(e) => handleConfigChange('rulerColor', e.target.value)"
+                      placeholder="#999999"
+                    >
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -965,10 +991,11 @@ const updateElementProp = (prop, value) => {
 
 // 更新画布配置
 const handleConfigChange = (key, value) => {
-  console.log('EditorPanel handleConfigChange:', key, value)
   const currentCanvas = getCurrentCanvas()
-  if (currentCanvas) {
-    emit('update-canvas-config', { [key]: value }, false)
+  if (currentCanvas?.config) {
+    const newConfig = { [key]: value }
+    console.log('更新画布配置:', key, value) // 添加日志
+    emit('update-canvas-config', newConfig)
   }
 }
 
@@ -980,8 +1007,15 @@ const updateBackgroundColor = (color) => {
 // 应用到所有画布
 const applyToAllCanvas = () => {
   const currentCanvas = getCurrentCanvas()
-  if (currentCanvas?.config?.backgroundColor) {
-    emit('update-canvas-config', { backgroundColor: currentCanvas.config.backgroundColor }, true)
+  if (currentCanvas?.config) {
+    const config = {
+      backgroundColor: currentCanvas.config.backgroundColor,
+      showGrid: currentCanvas.config.showGrid,
+      gridSize: currentCanvas.config.gridSize,
+      gridColor: currentCanvas.config.gridColor
+    }
+    console.log('应用到所有画布:', config) // 添加日志
+    emit('update-canvas-config', config, true)
   }
 }
 
@@ -1020,6 +1054,14 @@ const getContrastColor = (backgroundColor) => {
 const removeColorVar = (index) => {
   colorVars.value.splice(index, 1)
 }
+
+// 监听画布ID变化，重置网格设置面板
+watch(() => props.currentCanvasId, () => {
+  showGridSettings.value = false
+})
+
+// 控制标尺设置的显示/隐藏
+const showRulerSettings = ref(false)
 </script>
 
 <style scoped>
