@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import { useCanvasConfig } from './useCanvasConfig'
 
 // 画布配置
 const A4_CONFIG = {
@@ -6,14 +7,12 @@ const A4_CONFIG = {
   height: 1123, // 297mm = 1123px
 }
 
+// 使用 useCanvasConfig 中的默认配置
+const { canvasConfig: defaultConfig } = useCanvasConfig()
+
 // 默认画布配置
 const DEFAULT_CANVAS_CONFIG = {
-  backgroundColor: '#ffffff',
-  showGrid: false,
-  gridSize: 20,
-  gridColor: 'rgba(0, 0, 0, 0.1)',
-  showRuler: false,
-  showGuides: false,
+  ...defaultConfig.value,
   width: A4_CONFIG.width,
   height: A4_CONFIG.height,
 }

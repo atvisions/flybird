@@ -6,8 +6,7 @@ const defaultConfig = {
   showGrid: true,  // 默认显示网格
   gridSize: 10,    // 默认网格大小改为10px
   gridColor: 'rgba(0, 0, 0, 0.15)',  // 增加网格颜色的透明度
-  showRuler: false,
-  showGuides: false,
+  showGuideLine: true,  // 默认显示辅助线
   width: 794,  // A4 宽度
   height: 1123 // A4 高度
 }

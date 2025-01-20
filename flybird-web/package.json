@@ -37,6 +37,7 @@
     "vue-router": "^4.0.3",
     "vue3-draggable-resizable": "^1.6.5",
     "vue3-moveable": "^0.28.0",
+    "vue3-ruler-tool": "^0.0.1",
     "vuedraggable": "^4.1.0",
     "vuetify": "^3.7.6",
     "vuex": "^4.0.0"

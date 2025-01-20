@@ -640,90 +640,11 @@
             <!-- 网格 -->
             <div class="switch-item">
               <div class="switch-header">
-                <div class="switch-text-group">
-                  <span class="switch-text">显示网格</span>
-                  <button 
-                    class="btn-icon"
-                    @click="showGridSettings = !showGridSettings"
-                  >
-                    <Setting theme="outline" size="14" />
-                  </button>
-                </div>
+                <span class="switch-text">显示网格</span>
                 <Switch 
                   :model-value="getCurrentCanvas()?.config?.showGrid"
                   @update:model-value="(value) => handleConfigChange('showGrid', value)"
                 />
-              </div>
-              <!-- 网格设置 -->
-              <div v-if="showGridSettings" class="switch-settings">
-                <div class="form-group">
-                  <label>网格大小</label>
-                  <div class="input-group">
-                    <input 
-                      type="number"
-                      :value="getCurrentCanvas()?.config?.gridSize"
-                      @input="(e) => handleConfigChange('gridSize', Math.max(5, Math.min(50, Number(e.target.value))))"
-                      min="5"
-                      max="50"
-                      step="5"
-                    >
-                    <span class="unit">px</span>
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label>网格颜色</label>
-                  <div class="color-picker">
-                    <input 
-                      type="color"
-                      :value="getCurrentCanvas()?.config?.gridColor"
-                      @input="(e) => handleConfigChange('gridColor', e.target.value)"
-                    >
-                    <input 
-                      type="text"
-                      :value="getCurrentCanvas()?.config?.gridColor"
-                      @input="(e) => handleConfigChange('gridColor', e.target.value)"
-                      placeholder="rgba(0, 0, 0, 0.1)"
-                    >
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 标尺 -->
-            <div class="switch-item">
-              <div class="switch-header">
-                <div class="switch-text-group">
-                  <span class="switch-text">显示标尺</span>
-                  <button 
-                    class="btn-icon"
-                    @click="showRulerSettings = !showRulerSettings"
-                  >
-                    <Setting theme="outline" size="14" />
-                  </button>
-                </div>
-                <Switch 
-                  :model-value="getCurrentCanvas()?.config?.showRuler"
-                  @update:model-value="(value) => handleConfigChange('showRuler', value)"
-                />
-              </div>
-              <!-- 标尺设置 -->
-              <div v-if="showRulerSettings" class="switch-settings">
-                <div class="form-group">
-                  <label>标尺颜色</label>
-                  <div class="color-picker">
-                    <input 
-                      type="color"
-                      :value="getCurrentCanvas()?.config?.rulerColor || '#999999'"
-                      @input="(e) => handleConfigChange('rulerColor', e.target.value)"
-                    >
-                    <input 
-                      type="text"
-                      :value="getCurrentCanvas()?.config?.rulerColor || '#999999'"
-                      @input="(e) => handleConfigChange('rulerColor', e.target.value)"
-                      placeholder="#999999"
-                    >
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -732,8 +653,8 @@
               <div class="switch-header">
                 <span class="switch-text">显示辅助线</span>
                 <Switch 
-                  :model-value="getCurrentCanvas()?.config?.showGuides"
-                  @update:model-value="(value) => handleConfigChange('showGuides', value)"
+                  :model-value="getCurrentCanvas()?.config?.showGuideLine"
+                  @update:model-value="(value) => handleConfigChange('showGuideLine', value)"
                 />
               </div>
             </div>

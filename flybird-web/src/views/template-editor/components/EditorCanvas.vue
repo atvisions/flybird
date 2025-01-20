@@ -1,17 +1,12 @@
 <template>
   <div class="editor-canvas">
     <!-- 标尺组件移到外层 -->
-    <Ruler
-      v-if="canvasConfig.showRuler"
-      :width="canvasConfig.width"
-      :height="canvasConfig.height"
-      :scale="scale"
-      :startX="rulerOffset.x"
-      :startY="rulerOffset.y"
-      :shadow="shadow"
-      :cornerActive="true"
-      :thick="20"
-      :rulerColor="canvasConfig.rulerColor || '#999999'"
+    <GuideLine
+      :width="canvasConfig?.width || 0"
+      :height="canvasConfig?.height || 0"
+      :snap-threshold="5"
+      :snap-targets="getSnapTargets()"
+      :show-guide-line="canvasConfig.showGuideLine"
     />
     <div class="canvas-container" :style="containerStyle">
       <div class="canvas-content" :style="contentStyle">
@@ -110,7 +105,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import VueMoveable from 'vue3-moveable'
 import { useHistory } from '../composables/useHistory'
-import Ruler from './Ruler.vue'  // 导入标尺组件
+import GuideLine from './GuideLine.vue'
 
 // 导入基础组件
 import Rectangle from './shapes/Rectangle.vue'
@@ -172,27 +167,24 @@ const isKeepingRatio = ref(false)
 const isOperating = ref(false)  // 添加操作状态标记
 
 // 计算属性
-const contentStyle = computed(() => {
-  const scale = props.scale
-  const width = props.canvasConfig.width
-  const height = props.canvasConfig.height
-  
-  return {
-    position: 'relative',
-    minWidth: scale > 1 ? `${width * scale + 200}px` : '100%',
-    minHeight: scale > 1 ? `${height * scale + 200}px` : '100%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '40px',
-    boxSizing: 'border-box'
-  }
-})
+const contentStyle = computed(() => ({
+  position: 'relative',
+  minWidth: props.scale >= 1 ? `${props.canvasConfig.width * props.scale + 40}px` : '100%',
+  minHeight: props.scale >= 1 ? `${props.canvasConfig.height * props.scale + 40}px` : '100%',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  boxSizing: 'border-box'
+}))
 
 const containerStyle = computed(() => ({
   position: 'absolute',
-  inset: '20px',
-  overflow: 'auto'
+  top: '20px',
+  left: '20px',
+  bottom: '20px',
+  right: '0',  /* 右边不需要间距 */
+  overflow: 'auto',
+  backgroundColor: '#f0f0f0'
 }))
 
 const canvasStyle = computed(() => ({
@@ -228,15 +220,11 @@ const gridStyle = computed(() => ({
 // 计算标尺偏移量
 const rulerOffset = computed(() => {
   const container = document.querySelector('.canvas-container')
-  const wrapper = document.querySelector('.canvas-wrapper')
-  if (!container || !wrapper) return { x: 0, y: 0 }
-
-  const containerRect = container.getBoundingClientRect()
-  const wrapperRect = wrapper.getBoundingClientRect()
+  if (!container) return { x: 0, y: 0 }
 
   return {
-    x: (wrapperRect.left - containerRect.left) / props.scale,
-    y: (wrapperRect.top - containerRect.top) / props.scale
+    x: container.scrollLeft / props.scale,
+    y: container.scrollTop / props.scale
   }
 })
 
@@ -286,6 +274,16 @@ watch(() => props.scale, (newScale, oldScale) => {
     height: document.querySelector('.canvas-wrapper')?.offsetHeight
   })
 })
+
+// 添加调试信息
+watch(() => props.canvasConfig, (newConfig) => {
+  console.log('Canvas config changed:', {
+    showGuideLine: newConfig?.showGuideLine,
+    width: newConfig?.width,
+    height: newConfig?.height,
+    rulerColor: newConfig?.rulerColor
+  })
+}, { immediate: true, deep: true })
 
 // 处理元素选中
 const handleElementSelect = (element) => {
@@ -728,6 +726,39 @@ const getGridGuidelines = () => {
   return guidelines
 }
 
+// 添加获取吸附目标的方法
+const getSnapTargets = () => {
+  if (!props.elements) return []
+  
+  const targets = []
+  
+  // 添加画布边界
+  targets.push(
+    { x: 0, y: 0 },
+    { x: props.canvasConfig.width, y: 0 },
+    { x: 0, y: props.canvasConfig.height },
+    { x: props.canvasConfig.width, y: props.canvasConfig.height }
+  )
+  
+  // 添加画布中心线
+  targets.push(
+    { x: props.canvasConfig.width / 2, y: props.canvasConfig.height / 2 }
+  )
+  
+  // 添加元素的边界点
+  props.elements.forEach(element => {
+    targets.push(
+      { x: element.x, y: element.y }, // 左上角
+      { x: element.x + element.width, y: element.y }, // 右上角
+      { x: element.x, y: element.y + element.height }, // 左下角
+      { x: element.x + element.width, y: element.y + element.height }, // 右下角
+      { x: element.x + element.width / 2, y: element.y + element.height / 2 } // 中心点
+    )
+  })
+  
+  return targets
+}
+
 // 导出方法和状态给父组件
 defineExpose({
   handleUndo,
@@ -744,11 +775,26 @@ defineExpose({
   height: 100%;
   overflow: hidden;
   background-color: #f5f5f5;
+  padding: 20px 0 0 20px; /* 为标尺留出空间 */
+}
+
+/* 修改标尺样式 */
+:deep(.sketch-ruler) {
+  position: absolute;
+  z-index: 3;
+  left: 20px; /* 对齐内容区域 */
+  top: 20px;  /* 对齐内容区域 */
+  right: 0;
+  bottom: 0;
+  pointer-events: auto;
+}
+
+:deep(.sketch-ruler .indicator) {
+  z-index: 4;
 }
 
 .canvas-container {
   position: absolute;
-  inset: 20px;  /* 为标尺留出空间 */
   overflow: auto;
   background-color: #f0f0f0;
 }
@@ -760,7 +806,6 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px;
   box-sizing: border-box;
 }
 
