@@ -40,53 +40,123 @@
               >
             </div>
           </div>
-          <div class="form-group">
-            <label>旋转</label>
-            <input
-              type="range"
-              :value="element.rotation"
-              @input="updateElementProp('rotation', $event.target.value)"
-              min="0"
-              max="360"
-            >
-          </div>
         </div>
 
         <div class="panel-section">
           <h4>样式</h4>
-          <template v-if="element.type === 'shape'">
+          <!-- 形状通用样式设置 -->
+          <template v-if="['rectangle', 'circle', 'triangle', 'star'].includes(element.type)">
             <div class="form-group">
-              <label>背景色</label>
-              <input
-                type="color"
-                :value="element.backgroundColor"
-                @input="updateElementProp('backgroundColor', $event.target.value)"
-              >
+              <label>背景颜色</label>
+              <div class="color-picker">
+                <input 
+                  type="color" 
+                  :value="element.props?.fill || '#ffffff'"
+                  @input="(e) => updateElementProp('props', {
+                    ...element.props,
+                    fill: e.target.value
+                  })"
+                >
+                <input 
+                  type="text"
+                  :value="element.props?.fill || '#ffffff'"
+                  @input="(e) => updateElementProp('props', {
+                    ...element.props,
+                    fill: e.target.value
+                  })"
+                  placeholder="#FFFFFF"
+                >
+              </div>
             </div>
+
             <div class="form-group">
               <label>边框</label>
-              <div class="input-group">
-                <input
-                  type="number"
-                  :value="element.borderWidth"
-                  @input="updateElementProp('borderWidth', $event.target.value)"
-                  placeholder="边框宽度"
-                >
+              <div class="border-settings">
+                <div class="input-group">
+                  <input
+                    type="number"
+                    :value="element.props?.strokeWidth || 1"
+                    @input="(e) => updateElementProp('props', {
+                      ...element.props,
+                      strokeWidth: Math.max(0, parseInt(e.target.value) || 0)
+                    })"
+                    min="0"
+                    max="20"
+                    placeholder="粗细"
+                  >
+                  <span class="unit">px</span>
+                </div>
                 <select
-                  :value="element.borderStyle"
-                  @change="updateElementProp('borderStyle', $event.target.value)"
+                  :value="element.props?.strokeStyle || 'solid'"
+                  @change="(e) => updateElementProp('props', {
+                    ...element.props,
+                    strokeStyle: e.target.value
+                  })"
                 >
                   <option value="solid">实线</option>
                   <option value="dashed">虚线</option>
                   <option value="dotted">点线</option>
                 </select>
-                <input
-                  type="color"
-                  :value="element.borderColor"
-                  @input="updateElementProp('borderColor', $event.target.value)"
-                >
+                <div class="color-picker">
+                  <input
+                    type="color"
+                    :value="element.props?.stroke || '#000000'"
+                    @input="(e) => updateElementProp('props', {
+                      ...element.props,
+                      stroke: e.target.value
+                    })"
+                  >
+                  <input 
+                    type="text"
+                    :value="element.props?.stroke || '#000000'"
+                    @input="(e) => updateElementProp('props', {
+                      ...element.props,
+                      stroke: e.target.value
+                    })"
+                    placeholder="#000000"
+                  >
+                </div>
               </div>
             </div>
+
+            <!-- 如果是矩形，显示圆角设置 -->
+            <template v-if="element.type === 'rectangle'">
+              <div class="form-group">
+                <label>圆角</label>
+                <div class="radius-control">
+                  <input
+                    type="range"
+                    :value="element.props?.radius || 0"
+                    @input="(e) => {
+                      const value = Math.min(50, Math.max(0, parseInt(e.target.value) || 0))
+                      updateElementProp('props', {
+                        ...element.props,
+                        radius: value
+                      })
+                    }"
+                    min="0"
+                    max="50"
+                    step="1"
+                  >
+                  <div class="input-group">
+                    <input 
+                      type="number" 
+                      min="0"
+                      max="50"
+                      :value="element.props?.radius || 0"
+                      @input="(e) => {
+                        const value = Math.min(50, Math.max(0, parseInt(e.target.value) || 0))
+                        updateElementProp('props', {
+                          ...element.props,
+                          radius: value
+                        })
+                      }"
+                    >
+                    <span class="unit">px</span>
+                  </div>
+                </div>
+              </div>
+            </template>
           </template>
 
           <template v-if="element.type === 'text'">
@@ -159,14 +229,39 @@
         <div class="panel-section">
           <h4>层级</h4>
           <div class="form-group">
-            <label>层级</label>
-            <input
-              type="number"
-              :value="element.zIndex"
-              @input="updateElementProp('zIndex', $event.target.value)"
-              min="1"
-              step="1"
-            >
+            <div class="z-index-group">
+              <div class="z-index-control">
+                <button 
+                  class="btn-stepper"
+                  @click="updateElementProp('zIndex', Math.max(1, (element.zIndex || 1) - 1))"
+                >-</button>
+                <input
+                  type="number"
+                  :value="element.zIndex || 1"
+                  @input="(e) => updateElementProp('zIndex', Math.max(1, parseInt(e.target.value) || 1))"
+                  min="1"
+                  step="1"
+                >
+                <button 
+                  class="btn-stepper"
+                  @click="updateElementProp('zIndex', (element.zIndex || 1) + 1)"
+                >+</button>
+              </div>
+              <button 
+                class="btn-arrow"
+                title="置于顶层"
+                @click="updateElementProp('zIndex', 9999)"
+              >
+                <Up theme="filled" size="16" fill="#374151" />
+              </button>
+              <button 
+                class="btn-arrow"
+                title="置于底层"
+                @click="updateElementProp('zIndex', 1)"
+              >
+                <Down theme="filled" size="16" fill="#374151" />
+              </button>
+            </div>
           </div>
         </div>
       </template>
@@ -328,7 +423,16 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { AlignTextLeft, AlignTextCenter, AlignTextRight, Delete, Plus, Setting } from '@icon-park/vue-next'
+import { 
+  AlignTextLeft, 
+  AlignTextCenter, 
+  AlignTextRight, 
+  Delete, 
+  Plus, 
+  Setting,
+  Up,
+  Down
+} from '@icon-park/vue-next'
 import Switch from './Switch.vue'
 
 const props = defineProps({
@@ -361,12 +465,13 @@ const getCurrentCanvas = () => {
 
 // 更新元素属性
 const updateElementProp = (prop, value) => {
-  if (props.element) {
-    emit('update', {
-      ...props.element,
-      [prop]: value
-    })
-  }
+  if (!props.element) return
+
+  // 直接更新属性，保持与画布组件相同的更新逻辑
+  emit('update', {
+    ...props.element,
+    [prop]: value
+  })
 }
 
 // 更新画布配置
@@ -413,6 +518,196 @@ const getContrastColor = (backgroundColor) => {
 </script>
 
 <style scoped>
+.editor-panel {
+  padding: 10px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.panel-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-section {
+  padding: 8px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 12px;
+}
+
+h4 {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 10px;
+}
+
+.form-group {
+  margin-bottom: 12px;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+label {
+  display: block;
+  font-size: 13px;
+  color: #4b5563;
+  margin-bottom: 8px;
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.input-group input[type="number"],
+.input-group input[type="text"],
+.input-group select {
+  flex: 1;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #374151;
+  background-color: #fff;
+  transition: all 0.2s;
+}
+
+.input-group input[type="number"]:hover,
+.input-group input[type="text"]:hover,
+.input-group select:hover {
+  border-color: #a5b4fc;
+}
+
+.input-group input[type="number"]:focus,
+.input-group input[type="text"]:focus,
+.input-group select:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+  outline: none;
+}
+
+.color-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.color-picker input[type="color"] {
+  width: 36px;
+  height: 36px;
+  padding: 2px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  background-color: #fff;
+  transition: all 0.2s;
+}
+
+.color-picker input[type="text"] {
+  flex: 1;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.border-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.button-group {
+  display: flex;
+  gap: 8px;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background-color: #fff;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn:hover {
+  border-color: #a5b4fc;
+  color: #4f46e5;
+}
+
+.btn.active {
+  background-color: #4f46e5;
+  border-color: #4f46e5;
+  color: #fff;
+}
+
+.unit {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+input[type="range"] {
+  width: 100%;
+  height: 4px;
+  background: #e5e7eb;
+  border-radius: 2px;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border: 2px solid #4f46e5;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #374151;
+  resize: vertical;
+  min-height: 80px;
+}
+
+textarea:hover {
+  border-color: #a5b4fc;
+}
+
+textarea:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+  outline: none;
+}
+
 .canvas-list {
   display: flex;
   align-items: center;
@@ -573,11 +868,6 @@ const getContrastColor = (backgroundColor) => {
   border-radius: 4px;
 }
 
-.unit {
-  color: #999;
-  margin-left: 4px;
-}
-
 .section-header {
   display: flex;
   align-items: center;
@@ -676,5 +966,232 @@ const getContrastColor = (backgroundColor) => {
   border-radius: 4px;
   font-size: 14px;
   color: #333;
+}
+
+.border-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.border-settings .input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.border-settings select {
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  background-color: #fff;
+  cursor: pointer;
+}
+
+.border-settings select:hover {
+  border-color: #40a9ff;
+}
+
+.border-settings select:focus {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+  outline: none;
+}
+
+.color-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.color-picker input[type="color"] {
+  width: 32px;
+  height: 32px;
+  padding: 2px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: #fff;
+}
+
+.color-picker input[type="color"]:hover {
+  border-color: #40a9ff;
+}
+
+.color-picker input[type="text"] {
+  flex: 1;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #333;
+}
+
+.color-picker input[type="text"]:hover {
+  border-color: #40a9ff;
+}
+
+.color-picker input[type="text"]:focus {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+  outline: none;
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.input-group input[type="number"] {
+  width: 60px;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #333;
+}
+
+.input-group input[type="number"]:hover {
+  border-color: #40a9ff;
+}
+
+.input-group input[type="number"]:focus {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+  outline: none;
+}
+
+.unit {
+  color: #999;
+  font-size: 14px;
+}
+
+.radius-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.radius-control input[type="range"] {
+  flex: 1;
+  height: 4px;
+  background: #e5e7eb;
+  border-radius: 2px;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.radius-control input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border: 2px solid #4f46e5;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.radius-control .input-group {
+  width: 80px;
+  flex-shrink: 0;
+}
+
+.radius-control .input-group input[type="number"] {
+  width: 100%;
+}
+
+.z-index-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.z-index-control {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  height: 32px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.z-index-control input[type="number"] {
+  flex: 1;
+  height: 100%;
+  border: none;
+  text-align: center;
+  font-size: 14px;
+  color: #374151;
+  padding: 0;
+  -moz-appearance: textfield;
+  min-width: 40px;
+}
+
+.z-index-control input[type="number"]::-webkit-outer-spin-button,
+.z-index-control input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.btn-stepper {
+  width: 32px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f9fafb;
+  border: none;
+  color: #374151;
+  font-size: 16px;
+  font-weight: normal;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+  line-height: 1;
+}
+
+.btn-stepper:hover {
+  background: #f3f4f6;
+  color: #4f46e5;
+}
+
+.btn-stepper:active {
+  background: #e5e7eb;
+}
+
+.btn-arrow {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.btn-arrow:hover {
+  background: #f3f4f6;
+  border-color: #a5b4fc;
+  color: #4f46e5;
+}
+
+.btn-arrow:active {
+  background: #e5e7eb;
+}
+
+.btn-arrow svg {
+  width: 16px;
+  height: 16px;
 }
 </style> 

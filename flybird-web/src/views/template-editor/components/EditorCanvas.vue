@@ -36,16 +36,11 @@
             :draggable="true"
             :resizable="true"
             :rotatable="true"
-            :roundable="selectedElement?.type === 'rectangle'"
+            :roundable="true"
             :roundType="'border-radius'"
             :roundClickable="true"
-            :roundRadius="selectedElement?.props?.radius || 0"
+            :roundRadius="0"
             :renderDirections="['nw', 'n', 'ne', 'w', 'e', 'sw', 's', 'se']"
-            :renderRoundControls="true"
-            :roundPadding="20"
-            :roundControls="['tl', 'tr', 'bl', 'br']"
-            :roundRelative="true"
-            :roundThreshold="5"
             :keepRatio="isKeepingRatio"
             :snappable="true"
             :snapCenter="true"
@@ -389,19 +384,31 @@ const handleRotateEnd = () => {
 
 // 圆角控制
 const handleRoundStart = (e) => {
-  console.log('圆角调整开始，完整事件对象:', e)
-  console.log('当前选中元素:', currentElement.value)
+  console.log('圆角调整开始:', e)
+  if (!currentElement.value || currentElement.value.type !== 'rectangle') return
+  
+  // 记录开始状态
+  const element = elementsList.value.find(el => el.id === currentElement.value.id)
+  if (element) {
+    element._roundStartRadius = element.props.radius || 0
+  }
 }
 
-const handleRound = ({ target, borderRadius, dist, delta }) => {
-  if (!currentElement.value) return
+const handleRound = ({ target, borderRadius, dist }) => {
+  if (!currentElement.value || currentElement.value.type !== 'rectangle') return
+  
+  const element = elementsList.value.find(el => el.id === currentElement.value.id)
+  if (!element) return
   
   console.log('圆角调整中:', {
     borderRadius,
     dist,
-    delta,
     currentElement: currentElement.value
   })
+  
+  // 使用 dist 来计算新的圆角值
+  const startRadius = element._roundStartRadius || 0
+  const newRadius = Math.max(0, Math.min(50, startRadius + dist[0]))
   
   const updatedElements = elementsList.value.map(el => {
     if (el.id === currentElement.value.id) {
@@ -409,7 +416,7 @@ const handleRound = ({ target, borderRadius, dist, delta }) => {
         ...el,
         props: {
           ...el.props,
-          radius: parseInt(borderRadius) || 0
+          radius: Math.round(newRadius)
         }
       }
     }
@@ -423,7 +430,13 @@ const handleRound = ({ target, borderRadius, dist, delta }) => {
 }
 
 const handleRoundEnd = (e) => {
-  console.log('圆角调整结束，完整事件对象:', e)
+  console.log('圆角调整结束:', e)
+  
+  // 清理临时状态
+  const element = elementsList.value.find(el => el.id === currentElement.value?.id)
+  if (element) {
+    delete element._roundStartRadius
+  }
 }
 
 // 处理键盘事件
@@ -532,15 +545,15 @@ onUnmounted(() => {
 
 :deep(.moveable-round) {
   position: absolute;
-  width: 16px !important;
-  height: 16px !important;
-  margin-left: -8px !important;
-  margin-top: -8px !important;
+  width: 12px !important;
+  height: 12px !important;
+  margin-left: -6px !important;
+  margin-top: -6px !important;
   background-color: #fff !important;
   border: 2px solid #1890ff !important;
   border-radius: 50% !important;
   cursor: pointer !important;
-  z-index: 102 !important;
+  z-index: 150 !important;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
 }
 
@@ -550,12 +563,11 @@ onUnmounted(() => {
 }
 
 :deep(.moveable-round-line) {
-  position: absolute;
-  width: 2px !important;
-  height: 2px !important;
   background-color: #1890ff !important;
-  transform-origin: 50% 50% !important;
-  z-index: 101 !important;
+  height: 1px !important;
+  width: 1px !important;
+  transform-origin: 0 0 !important;
+  z-index: 149 !important;
   opacity: 0.5 !important;
 }
 
