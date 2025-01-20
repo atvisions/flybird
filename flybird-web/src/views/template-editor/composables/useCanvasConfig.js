@@ -1,26 +1,22 @@
-import { ref } from 'vue'
+import { computed } from 'vue'
+import { useCanvas } from '../composables/useCanvas'
 
 export function useCanvasConfig() {
-  // 画布配置
-  const canvasConfig = ref({
-    backgroundColor: '#ffffff',
-    showGrid: true,
-    gridSize: 20,
-    gridColor: 'rgba(0, 0, 0, 0.05)',
-    showRuler: true,
-    showGuides: true
+  const { getCurrentCanvas, updateCanvasConfig } = useCanvas()
+
+  // 通过计算属性获取当前画布的配置
+  const canvasConfig = computed(() => {
+    const canvas = getCurrentCanvas()
+    return canvas?.config
   })
 
   // 更新画布配置
-  const updateCanvasConfig = (config) => {
-    canvasConfig.value = {
-      ...canvasConfig.value,
-      ...config
-    }
+  const updateConfig = (config) => {
+    updateCanvasConfig(config)
   }
 
   return {
     canvasConfig,
-    updateCanvasConfig
+    updateCanvasConfig: updateConfig
   }
 } 

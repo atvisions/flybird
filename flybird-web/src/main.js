@@ -12,6 +12,8 @@ import VueCropper from 'vue-cropper'
 import 'vue-cropper/dist/index.css'
 import { useAuthStore } from '@/stores/auth'
 import config from './config'
+import VueDraggableResizable from 'vue3-draggable-resizable'
+import 'vue3-draggable-resizable/dist/Vue3DraggableResizable.css'
 
 // Vuetify
 import 'vuetify/styles'
@@ -40,6 +42,7 @@ app.use(ElementPlus)
 app.use(VueCropper)
 app.use(router)
 app.use(vuetify)
+app.use(VueDraggableResizable)
 
 // 初始化应用
 const initApp = async () => {

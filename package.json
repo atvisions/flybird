@@ -3,6 +3,7 @@
     "@icon-park/vue-next": "^1.4.2",
     "swiper": "^11.2.0",
     "uuid": "^11.0.5",
-    "vue-advanced-cropper": "^2.8.9"
+    "vue-advanced-cropper": "^2.8.9",
+    "vue3-draggable-resizable": "^1.6.5"
   }
 }

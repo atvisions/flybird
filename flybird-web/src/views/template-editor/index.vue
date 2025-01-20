@@ -18,9 +18,10 @@
             ref="canvasRef"
             :scale="scale"
             :elements="getCurrentCanvas()?.elements || []"
-            :canvas-list="canvasList"
+            :canvas-list="templateData.canvases"
             :current-canvas-id="currentCanvasId"
-            :canvas-config="canvasConfig"
+            :canvas-config="getCurrentCanvas()?.config"
+            :selected-element="selectedElement"
             @element-select="handleElementSelect"
             @elements-change="updateCanvasElements"
             @switch-canvas="switchCanvas"
@@ -29,7 +30,7 @@
           />
         </div>
         <div class="editor-footer">
-          <span class="canvas-pages">Page {{ currentCanvasId }}/{{ canvasList.length }}</span>
+          <span class="canvas-pages">Page {{ currentCanvasId }}/{{ templateData.canvases.length }}</span>
           <div class="footer-content">
             <div class="zoom-control">
               <button class="zoom-btn" @click="handleZoomOut" :disabled="scale <= MIN_SCALE">
@@ -69,9 +70,9 @@
       <!-- 右侧属性面板 -->
       <EditorPanel
         :element="selectedElement"
-        :canvas-list="canvasList"
+        :canvas-list="templateData.canvases"
         :current-canvas-id="currentCanvasId"
-        :canvas-config="canvasConfig"
+        :canvas-config="getCurrentCanvas()?.config"
         @update="handleElementUpdate"
         @add-canvas="addCanvas"
         @delete-canvas="removeCanvas"
@@ -92,37 +93,29 @@ import EditorPanel from './components/EditorPanel.vue'
 
 // 导入组合式函数
 import { useZoom } from './composables/useZoom'
-import { useElement } from './composables/useElement'
 import { useCanvas } from './composables/useCanvas'
-import { useCanvasConfig } from './composables/useCanvasConfig'
 
 // 画布引用
 const canvasRef = ref(null)
 
 // 使用组合式函数
 const { scale, MIN_SCALE, MAX_SCALE, SCALE_STEP, handleZoomIn, handleZoomOut, handleZoomChange } = useZoom()
-const { selectedElement, handleElementSelect, handleElementUpdate, handleClear, handleSave } = useElement(canvasRef)
 const { 
-  canvasList, 
+  templateData,
   currentCanvasId, 
   addCanvas, 
   removeCanvas, 
   switchCanvas, 
   getCurrentCanvas,
-  updateCanvasElements 
+  updateCanvasElements,
+  updateCanvasConfig,
+  A4_CONFIG,
+  selectedElement,
+  handleElementSelect,
+  handleElementUpdate,
+  handleClear,
+  handleSave
 } = useCanvas()
-const { canvasConfig, updateCanvasConfig } = useCanvasConfig()
-
-// 确保 canvasConfig 有默认值
-if (!canvasConfig.value) {
-  canvasConfig.value = {
-    backgroundColor: '#ffffff',
-    showGrid: true,
-    gridSize: 20,
-    gridColor: 'rgba(0, 0, 0, 0.05)',
-    showRuler: true
-  }
-}
 
 const handleTrackClick = (e) => {
   if (e.target.classList.contains('zoom-handle')) return
@@ -199,6 +192,11 @@ onUnmounted(() => {
   })
 })
 </script>
+
+<style>
+@import './styles/editor.css';
+@import './styles/drag.css';
+</style>
 
 <style scoped>
 @import './styles/editor.css';

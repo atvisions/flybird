@@ -1,35 +1,154 @@
 import { ref } from 'vue'
-import { COMPONENT_GROUPS } from '../constants/components'
 
 export function useComponents() {
-  const componentGroups = ref(COMPONENT_GROUPS)
-
-  const handleDragStart = (event, component) => {
-    event.dataTransfer.effectAllowed = 'copy'
-    
-    const dragData = {
-      type: component.type,
-      subType: component.subType,
-      label: component.label,
-      defaultConfig: {
-        ...component.defaultConfig,
-        width: component.defaultConfig?.width || 100,
-        height: component.defaultConfig?.height || 100,
-        backgroundColor: component.defaultConfig?.backgroundColor || '#ffffff',
-        borderColor: component.defaultConfig?.borderColor || '#000000',
-        borderWidth: component.defaultConfig?.borderWidth || 1,
-        borderStyle: component.defaultConfig?.borderStyle || 'solid',
-        rotation: component.defaultConfig?.rotation || 0
-      }
+  const components = ref([
+    {
+      type: 'basic',
+      title: '基础图形',
+      items: [
+        { 
+          type: 'rectangle', 
+          name: '矩形', 
+          icon: 'rectangle-one',
+          defaultProps: {
+            width: 100,
+            height: 100,
+            fill: '#f5f5f5',
+            stroke: '#d9d9d9',
+            strokeWidth: 1,
+            opacity: 1
+          }
+        },
+        { 
+          type: 'circle', 
+          name: '圆形', 
+          icon: 'round',
+          defaultProps: {
+            width: 100,
+            height: 100,
+            fill: '#f5f5f5',
+            stroke: '#d9d9d9',
+            strokeWidth: 1,
+            opacity: 1
+          }
+        },
+        { 
+          type: 'triangle', 
+          name: '三角形', 
+          icon: 'triangle',
+          defaultProps: {
+            width: 100,
+            height: 100,
+            fill: '#f5f5f5',
+            stroke: '#d9d9d9',
+            strokeWidth: 1,
+            opacity: 1
+          }
+        },
+        { 
+          type: 'line', 
+          name: '线条', 
+          icon: 'minus',
+          defaultProps: {
+            width: 100,
+            height: 4,
+            stroke: '#d9d9d9',
+            strokeWidth: 2,
+            opacity: 1
+          }
+        },
+        { 
+          type: 'arrow', 
+          name: '箭头', 
+          icon: 'arrow-right',
+          defaultProps: {
+            width: 100,
+            height: 4,
+            stroke: '#d9d9d9',
+            strokeWidth: 2,
+            opacity: 1
+          }
+        },
+        { 
+          type: 'star', 
+          name: '星形', 
+          icon: 'star',
+          defaultProps: {
+            width: 100,
+            height: 100,
+            fill: '#f5f5f5',
+            stroke: '#d9d9d9',
+            strokeWidth: 1,
+            opacity: 1,
+            points: 5
+          }
+        }
+      ]
+    },
+    {
+      type: 'text',
+      title: '文本',
+      items: [
+        { 
+          type: 'title', 
+          name: '标题', 
+          icon: 'title-level',
+          defaultProps: {
+            width: 200,
+            height: 40,
+            content: '标题',
+            color: '#595959',
+            fontSize: 24,
+            fontFamily: 'Arial',
+            fontWeight: 'bold',
+            textAlign: 'center',
+            italic: false,
+            underline: false,
+            lineHeight: 1.2,
+            opacity: 1,
+            editable: true
+          }
+        },
+        { 
+          type: 'text', 
+          name: '文本', 
+          icon: 'text',
+          defaultProps: {
+            width: 200,
+            height: 80,
+            content: '请输入文本',
+            color: '#8c8c8c',
+            fontSize: 14,
+            fontFamily: 'Arial',
+            fontWeight: 'normal',
+            textAlign: 'left',
+            italic: false,
+            underline: false,
+            lineHeight: 1.5,
+            opacity: 1,
+            editable: true
+          }
+        }
+      ]
     }
+  ])
+
+  const handleDragStart = (e, component) => {
+    e.dataTransfer.setData('component', JSON.stringify(component))
     
-    console.log('Drag start data:', dragData)
-    
-    event.dataTransfer.setData('text/plain', JSON.stringify(dragData))
+    // 设置拖拽时的视觉效果
+    if (e.dataTransfer.setDragImage) {
+      const dragImage = document.createElement('div')
+      dragImage.className = 'drag-image'
+      dragImage.textContent = component.name
+      document.body.appendChild(dragImage)
+      e.dataTransfer.setDragImage(dragImage, 0, 0)
+      setTimeout(() => document.body.removeChild(dragImage), 0)
+    }
   }
 
   return {
-    componentGroups,
+    components,
     handleDragStart
   }
 } 

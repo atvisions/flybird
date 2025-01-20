@@ -186,16 +186,17 @@
               :class="{ active: currentCanvasId === canvas.id }"
               @click="$emit('switch-canvas', canvas.id)"
             >
-              <div class="canvas-info">
-                <span class="canvas-name">{{ canvas.id }}</span>
-                <button 
-                  v-if="canvas.id !== 1"
-                  class="btn-icon" 
-                  @click.stop="$emit('delete-canvas', canvas.id)"
-                >
-                  <Delete theme="outline" size="12" />
-                </button>
+              <div class="canvas-preview" :style="{ backgroundColor: canvas.config.backgroundColor }">
+                <div class="canvas-overlay"></div>
               </div>
+              <div class="canvas-index">{{ canvas.id }}</div>
+              <button 
+                v-if="canvas.id !== 1"
+                class="btn-icon" 
+                @click.stop="$emit('delete-canvas', canvas.id)"
+              >
+                <Delete theme="outline" size="12" />
+              </button>
             </div>
             <button 
               v-if="canvasList.length < 5"
@@ -211,22 +212,32 @@
         <div class="panel-section">
           <h4>画布属性</h4>
           
-          <!-- 缩放控制 -->
-          <div class="zoom-control">
-            <span class="canvas-pages">{{ currentCanvasId }}/{{ canvasList.length }}</span>
-            <div class="zoom-buttons">
-              <!-- 缩放按钮 -->
-            </div>
-          </div>
-          
           <!-- 背景设置 -->
           <div class="form-group">
-            <label>背景颜色</label>
-            <input 
-              type="color" 
-              :value="canvasConfig.backgroundColor"
-              @input="updateCanvasConfig('backgroundColor', $event.target.value)"
-            >
+            <div class="form-header">
+              <label>背景颜色</label>
+              <div class="form-actions">
+                <button 
+                  class="btn-text"
+                  @click="applyToAllCanvas"
+                >
+                  应用到所有画布
+                </button>
+              </div>
+            </div>
+            <div class="color-picker">
+              <input 
+                type="color" 
+                :value="getCurrentCanvas()?.config?.backgroundColor || '#ffffff'"
+                @input="updateBackgroundColor($event.target.value)"
+              >
+              <input 
+                type="text"
+                :value="getCurrentCanvas()?.config?.backgroundColor || '#ffffff'"
+                @input="updateBackgroundColor($event.target.value)"
+                placeholder="#FFFFFF"
+              >
+            </div>
           </div>
         </div>
 
@@ -240,7 +251,7 @@
                 <div class="switch-text-group">
                   <span class="switch-text">显示网格</span>
                   <button 
-                    v-if="canvasConfig.showGrid"
+                    v-if="getCurrentCanvas()?.config?.showGrid"
                     class="btn-icon"
                     @click="showGridSettings = !showGridSettings"
                   >
@@ -248,32 +259,41 @@
                   </button>
                 </div>
                 <Switch 
-                  :checked="canvasConfig.showGrid"
-                  @change="updateCanvasConfig('showGrid', $event)"
+                  :model-value="getCurrentCanvas()?.config?.showGrid"
+                  @update:model-value="(value) => handleConfigChange('showGrid', value)"
                 />
               </div>
               <!-- 网格设置 -->
-              <div v-if="canvasConfig.showGrid && showGridSettings" class="switch-settings">
+              <div v-if="getCurrentCanvas()?.config?.showGrid && showGridSettings" class="switch-settings">
                 <div class="form-group">
                   <label>网格大小</label>
                   <div class="input-group">
                     <input 
                       type="number"
-                      :value="canvasConfig.gridSize"
-                      @input="updateCanvasConfig('gridSize', Number($event.target.value))"
+                      :value="getCurrentCanvas()?.config?.gridSize"
+                      @input="(e) => handleConfigChange('gridSize', Number(e.target.value))"
                       min="5"
                       max="50"
+                      step="5"
                     >
                     <span class="unit">px</span>
                   </div>
                 </div>
                 <div class="form-group">
                   <label>网格颜色</label>
-                  <input 
-                    type="color"
-                    :value="canvasConfig.gridColor"
-                    @input="updateCanvasConfig('gridColor', $event.target.value)"
-                  >
+                  <div class="color-picker">
+                    <input 
+                      type="color"
+                      :value="getCurrentCanvas()?.config?.gridColor"
+                      @input="(e) => handleConfigChange('gridColor', e.target.value)"
+                    >
+                    <input 
+                      type="text"
+                      :value="getCurrentCanvas()?.config?.gridColor"
+                      @input="(e) => handleConfigChange('gridColor', e.target.value)"
+                      placeholder="rgba(0, 0, 0, 0.1)"
+                    >
+                  </div>
                 </div>
               </div>
             </div>
@@ -283,8 +303,8 @@
               <div class="switch-header">
                 <span class="switch-text">显示标尺</span>
                 <Switch 
-                  :checked="canvasConfig.showRuler"
-                  @change="updateCanvasConfig('showRuler', $event)"
+                  :model-value="getCurrentCanvas()?.config?.showRuler"
+                  @update:model-value="(value) => handleConfigChange('showRuler', value)"
                 />
               </div>
             </div>
@@ -294,8 +314,8 @@
               <div class="switch-header">
                 <span class="switch-text">显示辅助线</span>
                 <Switch 
-                  :checked="canvasConfig.showGuides"
-                  @change="updateCanvasConfig('showGuides', $event)"
+                  :model-value="getCurrentCanvas()?.config?.showGuides"
+                  @update:model-value="(value) => handleConfigChange('showGuides', value)"
                 />
               </div>
             </div>
@@ -307,7 +327,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { AlignTextLeft, AlignTextCenter, AlignTextRight, Delete, Plus, Setting } from '@icon-park/vue-next'
 import Switch from './Switch.vue'
 
@@ -323,10 +343,6 @@ const props = defineProps({
   currentCanvasId: {
     type: Number,
     required: true
-  },
-  canvasConfig: {
-    type: Object,
-    required: true
   }
 })
 
@@ -337,6 +353,11 @@ const emit = defineEmits([
   'switch-canvas',
   'update-canvas-config'
 ])
+
+// 获取当前画布
+const getCurrentCanvas = () => {
+  return props.canvasList.find(canvas => canvas.id === props.currentCanvasId)
+}
 
 // 更新元素属性
 const updateElementProp = (prop, value) => {
@@ -349,16 +370,46 @@ const updateElementProp = (prop, value) => {
 }
 
 // 更新画布配置
-const updateCanvasConfig = (key, value) => {
-  const newConfig = {
-    ...props.canvasConfig,
-    [key]: value
+const handleConfigChange = (key, value) => {
+  console.log('EditorPanel handleConfigChange:', key, value)
+  const currentCanvas = getCurrentCanvas()
+  if (currentCanvas) {
+    emit('update-canvas-config', { [key]: value }, false)
   }
-  emit('update-canvas-config', newConfig)
+}
+
+// 更新背景颜色
+const updateBackgroundColor = (color) => {
+  handleConfigChange('backgroundColor', color)
+}
+
+// 应用到所有画布
+const applyToAllCanvas = () => {
+  const currentCanvas = getCurrentCanvas()
+  if (currentCanvas?.config?.backgroundColor) {
+    emit('update-canvas-config', { backgroundColor: currentCanvas.config.backgroundColor }, true)
+  }
 }
 
 // 控制网格设置的显示/隐藏
 const showGridSettings = ref(false)
+
+// 计算文字颜色（根据背景色自动调整）
+const getContrastColor = (backgroundColor) => {
+  // 移除可能的空格和#号
+  const hex = backgroundColor.replace(/\s/g, '').replace('#', '')
+  
+  // 转换为RGB
+  const r = parseInt(hex.substring(0, 2), 16)
+  const g = parseInt(hex.substring(2, 4), 16)
+  const b = parseInt(hex.substring(4, 6), 16)
+  
+  // 计算亮度
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000
+  
+  // 根据亮度返回黑色或白色
+  return brightness > 128 ? '#333333' : '#ffffff'
+}
 </script>
 
 <style scoped>
@@ -384,54 +435,100 @@ const showGridSettings = ref(false)
   height: 55px;
   position: relative;
   background-color: #fff;
-  border: 1px solid #e8e8e8;
-  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
+  overflow: hidden;
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.canvas-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.06),
+    0 4px 8px rgba(0, 0, 0, 0.04);
 }
 
 .canvas-item.active {
   border-color: #1890ff;
+  box-shadow: 
+    0 0 0 2px rgba(24, 144, 255, 0.2),
+    0 2px 4px rgba(0, 0, 0, 0.04);
 }
 
-.canvas-info {
+.canvas-preview {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  transition: all 0.3s;
+  overflow: hidden;
+}
+
+.canvas-overlay {
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.1),
+    rgba(0, 0, 0, 0.05)
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+.canvas-index {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: #666;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 1px 6px;
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  z-index: 2;
+}
+
+.btn-icon {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 16px;
+  height: 16px;
+  padding: 2px;
+  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  color: #666;
+  cursor: pointer;
+  opacity: 0;
+  z-index: 3;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.canvas-name {
-  font-size: 14px;
-  color: #666;
-}
-
-.btn-icon {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  padding: 2px;
-  border: none;
-  background: none;
-  color: #999;
-  cursor: pointer;
-  opacity: 0;
-  z-index: 2;
+.btn-icon:hover {
+  background: #fff;
+  color: #ff4d4f;
+  transform: scale(1.1);
 }
 
 .canvas-item:hover .btn-icon {
   opacity: 1;
-}
-
-.form-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
 }
 
 /* 继承现有的样式 */
@@ -524,20 +621,60 @@ const showGridSettings = ref(false)
 }
 
 .zoom-control {
+  display: none;
+}
+
+.form-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
+  justify-content: space-between;
+  margin-bottom: 8px;
 }
 
-.canvas-pages {
-  font-size: 13px;
-  color: #666;
-}
-
-.zoom-buttons {
+.form-actions {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.btn-text {
+  padding: 4px 8px;
+  border: none;
+  background: none;
+  color: #666;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.btn-text:hover {
+  color: #1890ff;
+  background: rgba(24, 144, 255, 0.1);
+}
+
+.color-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.color-picker input[type="color"] {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.color-picker input[type="text"] {
+  flex: 1;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #333;
 }
 </style> 

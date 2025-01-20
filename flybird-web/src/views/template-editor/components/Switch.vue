@@ -1,43 +1,44 @@
 <template>
   <button 
     class="switch"
-    :class="{ checked: checked }"
+    :class="{ 'switch-checked': modelValue }"
+    @click="toggle"
     type="button"
-    role="switch"
-    :aria-checked="checked"
-    @click="$emit('change', !checked)"
   >
-    <span class="switch-handle"></span>
+    <div class="switch-handle"></div>
   </button>
 </template>
 
 <script setup>
-defineProps({
-  checked: {
+const props = defineProps({
+  modelValue: {
     type: Boolean,
     default: false
   }
 })
 
-defineEmits(['change'])
+const emit = defineEmits(['update:modelValue'])
+
+const toggle = () => {
+  emit('update:modelValue', !props.modelValue)
+}
 </script>
 
 <style scoped>
 .switch {
   position: relative;
-  display: inline-flex;
-  align-items: center;
-  width: 36px;
-  height: 20px;
-  padding: 0;
+  display: inline-block;
+  width: 28px;
+  height: 16px;
+  background-color: rgba(0, 0, 0, 0.25);
+  border-radius: 100px;
   border: none;
-  border-radius: 10px;
-  background-color: #bfbfbf;
   cursor: pointer;
   transition: all 0.2s;
+  padding: 0;
 }
 
-.switch.checked {
+.switch-checked {
   background-color: #1890ff;
 }
 
@@ -45,16 +46,15 @@ defineEmits(['change'])
   position: absolute;
   top: 2px;
   left: 2px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
+  width: 12px;
+  height: 12px;
   background-color: #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
   transition: all 0.2s;
 }
 
-.switch.checked .switch-handle {
-  left: 18px;
+.switch-checked .switch-handle {
+  left: 14px;
 }
 
 .switch:focus {
@@ -63,10 +63,10 @@ defineEmits(['change'])
 }
 
 .switch:active .switch-handle {
-  width: 20px;
+  width: 14px;
 }
 
-.switch.checked:active .switch-handle {
-  left: 14px;
+.switch-checked:active .switch-handle {
+  left: 12px;
 }
 </style> 

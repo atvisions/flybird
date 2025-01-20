@@ -1,16 +1,21 @@
 import { ref } from 'vue'
 
 export function useTabs() {
+  const activeTab = ref('components')
+  
   const tabs = [
-    { key: 'templates', label: '模板' },
     { key: 'components', label: '组件' },
-    { key: 'icons', label: '图标' }
+    { key: 'layers', label: '图层' },
+    { key: 'templates', label: '模板' }
   ]
   
-  const activeTab = ref('components')
-
+  const switchTab = (tab) => {
+    activeTab.value = tab
+  }
+  
   return {
+    activeTab,
     tabs,
-    activeTab
+    switchTab
   }
 } 
