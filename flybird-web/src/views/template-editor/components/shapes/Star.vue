@@ -1,18 +1,12 @@
 <template>
-  <div class="shape-star">
-    <svg 
-      width="100%" 
-      height="100%" 
-      viewBox="0 0 100 100" 
-      preserveAspectRatio="none"
-    >
+  <div class="star" :style="style">
+    <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
       <path 
         :d="starPath" 
         :fill="fill"
         :stroke="stroke"
         :stroke-width="strokeWidth"
         :stroke-dasharray="strokeStyle === 'dashed' ? '5,5' : ''"
-        :opacity="opacity"
       />
     </svg>
   </div>
@@ -36,15 +30,19 @@ const props = defineProps({
   },
   strokeWidth: {
     type: Number,
-    default: 1
+    default: 0
   },
   strokeStyle: {
     type: String,
     default: 'solid'
   },
-  opacity: {
+  width: {
     type: Number,
-    default: 1
+    default: 100
+  },
+  height: {
+    type: Number,
+    default: 100
   }
 })
 
@@ -64,11 +62,21 @@ const starPath = computed(() => {
   
   return path + 'Z'
 })
+
+const style = computed(() => ({
+  width: '100%',
+  height: '100%',
+  position: 'relative',
+  boxSizing: 'border-box'
+}))
 </script>
 
 <style scoped>
-.shape-star {
-  width: 100%;
-  height: 100%;
+.star {
+  display: block;
+}
+
+.star svg {
+  display: block;
 }
 </style> 

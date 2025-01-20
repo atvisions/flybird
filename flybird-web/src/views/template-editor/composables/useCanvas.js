@@ -132,8 +132,19 @@ export function useCanvas() {
   const handleElementUpdate = (updates) => {
     if (!selectedElement.value) return
     
+    // 处理数值类型的属性
+    const numericProps = ['x', 'y', 'width', 'height', 'rotate', 'zIndex']
+    const processedUpdates = { ...updates }
+
+    // 确保数值类型的属性被正确处理
+    Object.keys(updates).forEach(key => {
+      if (numericProps.includes(key)) {
+        processedUpdates[key] = Math.max(0, parseInt(updates[key]) || 0)
+      }
+    })
+    
     // 更新选中元素
-    const updatedElement = { ...selectedElement.value, ...updates }
+    const updatedElement = { ...selectedElement.value, ...processedUpdates }
     selectedElement.value = updatedElement
 
     // 更新画布中的元素
@@ -142,7 +153,8 @@ export function useCanvas() {
       const updatedElements = canvas.elements.map(el => 
         el.id === updatedElement.id ? updatedElement : el
       )
-      updateCanvasElements(updatedElements)
+      canvas.elements = updatedElements
+      canvas.updateTime = new Date().toISOString()
     }
   }
 

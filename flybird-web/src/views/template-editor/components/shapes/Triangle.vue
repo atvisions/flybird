@@ -1,47 +1,48 @@
 <template>
-  <div 
-    class="shape-triangle"
-    :style="{
-      width: 'var(--width, 100px)',
-      height: 'var(--height, 100px)',
-      position: 'relative'
-    }"
-  >
-    <div 
-      class="triangle-fill"
-      :style="{
-        borderWidth: `calc(var(--height, 100px) / 2) calc(var(--width, 100px) / 2)`,
-        borderColor: `${fill} transparent transparent ${fill}`,
-        opacity: opacity
-      }"
-    ></div>
-    <div 
-      v-if="strokeWidth > 0"
-      class="triangle-stroke"
-      :style="{
-        borderWidth: `calc((var(--height, 100px) + ${2 * strokeWidth}px) / 2) calc((var(--width, 100px) + ${2 * strokeWidth}px) / 2)`,
-        borderColor: `${stroke} transparent transparent ${stroke}`,
-        top: `-${strokeWidth}px`,
-        left: `-${strokeWidth}px`,
-        opacity: opacity
-      }"
-    ></div>
+  <div class="triangle-wrapper">
+    <svg 
+      :width="width" 
+      :height="height" 
+      :viewBox="`0 0 ${width} ${height}`"
+      xmlns="http://www.w3.org/2000/svg"
+      preserveAspectRatio="none"
+    >
+      <path
+        :d="getPath"
+        :fill="fill"
+        :stroke="stroke"
+        :stroke-width="strokeWidth"
+        :stroke-dasharray="strokeStyle === 'dashed' ? '5,5' : 'none'"
+        :opacity="opacity"
+        vector-effect="non-scaling-stroke"
+      />
+    </svg>
   </div>
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue'
+
+const props = defineProps({
+  width: {
+    type: Number,
+    required: true
+  },
+  height: {
+    type: Number,
+    required: true
+  },
   fill: {
     type: String,
-    default: '#ffffff'
+    default: '#1890ff'
   },
   stroke: {
     type: String,
-    default: '#000000'
+    default: '#096dd9'
   },
   strokeWidth: {
     type: Number,
-    default: 1
+    default: 2
   },
   strokeStyle: {
     type: String,
@@ -52,28 +53,30 @@ defineProps({
     default: 1
   }
 })
+
+const getPath = computed(() => {
+  // 创建直角等腰三角形的路径
+  return `M 0 ${props.height} L ${props.width} ${props.height} L 0 0 Z`
+})
 </script>
 
 <style scoped>
-.shape-triangle {
-  box-sizing: border-box;
+.triangle-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.triangle-fill {
-  position: absolute;
-  width: 0;
-  height: 0;
-  border-style: solid;
-  box-sizing: border-box;
+svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
 }
 
-.triangle-stroke {
-  position: absolute;
-  width: 0;
-  height: 0;
-  border-style: solid;
-  box-sizing: border-box;
-  pointer-events: none;
-  z-index: -1;
+path {
+  vector-effect: non-scaling-stroke;
 }
 </style> 
