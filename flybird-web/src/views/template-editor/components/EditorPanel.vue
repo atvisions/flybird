@@ -9,35 +9,47 @@
           <div class="form-group">
             <label>位置</label>
             <div class="input-group">
-              <input
-                type="number"
-                :value="element.x"
-                @input="(e) => updateElementProp('x', parseInt(e.target.value))"
-                placeholder="X"
-              >
-              <input
-                type="number"
-                :value="element.y"
-                @input="(e) => updateElementProp('y', parseInt(e.target.value))"
-                placeholder="Y"
-              >
+              <div class="input-item">
+                <label>X</label>
+                <input
+                  type="number"
+                  :value="element.x"
+                  @input="(e) => updateElementProp('x', parseInt(e.target.value))"
+                  placeholder="X坐标"
+                >
+              </div>
+              <div class="input-item">
+                <label>Y</label>
+                <input
+                  type="number"
+                  :value="element.y"
+                  @input="(e) => updateElementProp('y', parseInt(e.target.value))"
+                  placeholder="Y坐标"
+                >
+              </div>
             </div>
           </div>
           <div class="form-group">
             <label>尺寸</label>
             <div class="input-group">
-              <input
-                type="number"
-                :value="element.width"
-                @input="(e) => updateElementProp('width', parseInt(e.target.value))"
-                placeholder="宽度"
-              >
-              <input
-                type="number"
-                :value="element.height"
-                @input="(e) => updateElementProp('height', parseInt(e.target.value))"
-                placeholder="高度"
-              >
+              <div class="input-item">
+                <label>宽</label>
+                <input
+                  type="number"
+                  :value="element.width"
+                  @input="(e) => updateElementProp('width', parseInt(e.target.value))"
+                  placeholder="宽度"
+                >
+              </div>
+              <div class="input-item">
+                <label>高</label>
+                <input
+                  type="number"
+                  :value="element.height"
+                  @input="(e) => updateElementProp('height', parseInt(e.target.value))"
+                  placeholder="高度"
+                >
+              </div>
             </div>
           </div>
           <div class="form-group">
@@ -48,6 +60,9 @@
                 :value="element.rotate || 0"
                 @input="(e) => updateElementProp('rotate', parseInt(e.target.value))"
                 placeholder="角度"
+                min="0"
+                max="360"
+                step="1"
               >
               <span class="unit">°</span>
             </div>
@@ -1450,8 +1465,9 @@ textarea:focus {
 }
 
 .unit {
+  margin-left: 4px;
   color: #999;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .radius-control {

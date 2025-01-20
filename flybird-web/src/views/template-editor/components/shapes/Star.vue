@@ -4,8 +4,11 @@
       :width="width" 
       :height="height" 
       :viewBox="`0 0 ${width} ${height}`"
+      preserveAspectRatio="none"
       :style="{
-        opacity: opacity || 1
+        opacity: opacity || 1,
+        width: '100%',
+        height: '100%'
       }"
     >
       <path 
@@ -13,6 +16,7 @@
         :fill="fill || '#1890ff'"
         :stroke="stroke || '#096dd9'"
         :stroke-width="strokeWidth || 0"
+        vector-effect="non-scaling-stroke"
       />
     </svg>
   </div>
@@ -68,8 +72,8 @@ const getStarPath = () => {
 }
 
 const style = computed(() => ({
-  width: '100%',
-  height: '100%',
+  width: `${props.width}px`,
+  height: `${props.height}px`,
   position: 'relative',
   boxSizing: 'border-box'
 }))
@@ -82,5 +86,10 @@ const style = computed(() => ({
 
 .star svg {
   display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }
 </style> 

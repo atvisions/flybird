@@ -43,46 +43,48 @@
           </div>
           <vue-moveable
             v-if="selectedElement"
+            ref="moveableRef"
             :target="`[data-id='${selectedElement.id}']`"
             :draggable="true"
             :resizable="true"
             :rotatable="true"
-            :roundable="selectedElement?.type === 'rectangle'"
-            :roundType="'border-radius'"
-            :roundClickable="true"
-            :roundRadius="selectedElement?.props?.radius || 0"
-            :renderDirections="['nw', 'n', 'ne', 'w', 'e', 'sw', 's', 'se']"
+            :scalable="true"
+            :origin="true"
             :keepRatio="isKeepingRatio"
+            :throttleDrag="0"
+            :throttleRotate="0"
+            :throttleResize="0"
+            :renderDirections="['nw', 'n', 'ne', 'w', 'e', 'sw', 's', 'se']"
+            :transformOrigin="'50% 50%'"
             :snappable="true"
             :snapCenter="true"
-            :elementSnapDirections="{ top: true, left: true, bottom: true, right: true }"
-            :elementGuidelines="elements.map(el => `[data-id='${el.id}']`)"
-            :snapThreshold="5"
-            :snapGridWidth="canvasConfig.showGrid ? canvasConfig.gridSize : 0"
-            :snapGridHeight="canvasConfig.showGrid ? canvasConfig.gridSize : 0"
-            :isDisplayGridGuidelines="canvasConfig.showGrid"
-            :gridGuidelines="getGridGuidelines()"
+            :snapThreshold="10"
+            :elementGuidelines="getElementGuidelines()"
+            :snapDistFormat="v => `${v}px`"
+            :isDisplaySnapDigit="true"
+            :snapDigit="0"
             :bounds="{
               left: 0,
               top: 0,
               right: canvasConfig.width,
               bottom: canvasConfig.height
             }"
-            :origin="false"
-            :hideDefaultLines="false"
-            :isDisplaySnapDigit="true"
-            :snapDigit="0"
-            :snapDistFormat="v => `${v}px`"
-            :preventClickDefault="true"
-            :preventDragDefault="true"
-            :scalable="true"
-            :pinchable="true"
-            :dragArea="false"
-            :transformOrigin="'50% 50%'"
             :verticalGuidelines="[0, canvasConfig.width / 2, canvasConfig.width]"
             :horizontalGuidelines="[0, canvasConfig.height / 2, canvasConfig.height]"
-            :zoom="1"
-            :padding="{ left: 0, top: 0, right: 0, bottom: 0 }"
+            :snapGap="true"
+            :elementSnapDirections="{
+              center: true,
+              middle: true
+            }"
+            :snapDirections="{
+              center: true,
+              middle: true
+            }"
+            :snapGridWidth="0"
+            :snapGridHeight="0"
+            :renderMode="'transform'"
+            :stopPropagation="true"
+            :preventDefault="true"
             @dragStart="handleDragStart"
             @drag="handleDrag"
             @dragEnd="handleDragEnd"
@@ -92,9 +94,6 @@
             @rotateStart="handleRotateStart"
             @rotate="handleRotate"
             @rotateEnd="handleRotateEnd"
-            @roundStart="handleRoundStart"
-            @round="handleRound"
-            @roundEnd="handleRoundEnd"
           />
         </div>
       </div>
@@ -243,11 +242,11 @@ const getElementStyle = (element) => ({
   width: `${element.width}px`,
   height: `${element.height}px`,
   transform: `translate(${element.x}px, ${element.y}px) rotate(${element.rotate || 0}deg)`,
-  transformOrigin: 'center center',
+  transformOrigin: '50% 50%',
   zIndex: element.zIndex || 1,
-  pointerEvents: 'auto',
-  touchAction: 'none',
-  ...element.style
+  backfaceVisibility: 'hidden',
+  perspective: 1000,
+  willChange: 'transform'
 })
 
 // 监听 props 变化
@@ -300,235 +299,111 @@ const handleCanvasClick = (e) => {
   emit('element-select', null)
 }
 
-// 处理拖拽
-const handleDrag = (e) => {
-  console.log('拖拽事件:', e)
-  if (!currentElement.value || !e.beforeTranslate) return
-  
-  const [x, y] = e.beforeTranslate
-  
-  // 更新当前选中元素的位置，保持其他属性不变
-  const updatedElement = {
-    ...currentElement.value,
-    x: Math.round(x),
-    y: Math.round(y)
-  }
-  
-  // 更新元素列表
-  const updatedElements = elementsList.value.map(el => 
-    el.id === updatedElement.id ? updatedElement : el
-  )
-  
-  // 更新本地状态
-  elementsList.value = updatedElements
-  currentElement.value = updatedElement
-  
-  // 触发更新事件
-  emit('elements-change', updatedElements)
-}
-
 // 处理拖拽开始
 const handleDragStart = () => {
   if (!props.selectedElement) return
   isOperating.value = true
-  // 在开始拖拽时，保存完整的元素状态
   currentElement.value = { ...props.selectedElement }
+}
+
+// 处理拖拽
+const handleDrag = ({ beforeTranslate }) => {
+  if (!currentElement.value) return
+  
+  const [x, y] = beforeTranslate
+  
+  // 确保元素不会超出画布边界
+  const boundedX = Math.max(0, Math.min(x, props.canvasConfig.width - currentElement.value.width))
+  const boundedY = Math.max(0, Math.min(y, props.canvasConfig.height - currentElement.value.height))
+  
+  const updatedElement = {
+    ...currentElement.value,
+    x: Math.round(boundedX),
+    y: Math.round(boundedY)
+  }
+  
+  // 直接更新 DOM 样式，不触发 Vue 更新
+  const element = document.querySelector(`[data-id='${updatedElement.id}']`)
+  if (element) {
+    element.style.transform = `translate(${updatedElement.x}px, ${updatedElement.y}px) rotate(${updatedElement.rotate || 0}deg)`
+  }
+  
+  currentElement.value = updatedElement
 }
 
 // 处理拖拽结束
 const handleDragEnd = () => {
-  if (currentElement.value && isOperating.value) {
-    isOperating.value = false
-    // 在结束拖拽时，保存完整的元素状态
-    emit('element-select', currentElement.value)
-    // 保存到历史记录
-    pushState(elementsList.value)
-    currentElement.value = null
-  }
+  if (!currentElement.value) return
+  isOperating.value = false
+  updateElement(currentElement.value)
+  emit('element-select', currentElement.value)
+  pushState(elementsList.value)
+  currentElement.value = null
 }
 
 // 处理缩放开始
-const handleResizeStart = ({ target, clientX, clientY, direction }) => {
+const handleResizeStart = () => {
   if (!props.selectedElement) return
-  isOperating.value = true
-  // 保存完整的当前状态
-  currentElement.value = { 
-    ...props.selectedElement,
-    _resizeStartState: {
-      width: props.selectedElement.width,
-      height: props.selectedElement.height,
-      x: props.selectedElement.x,
-      y: props.selectedElement.y,
-      direction
+  currentElement.value = { ...props.selectedElement }
+}
+
+// 优化更新逻辑
+const updateElement = (updatedElement) => {
+  const index = elementsList.value.findIndex(el => el.id === updatedElement.id)
+  if (index !== -1) {
+    elementsList.value[index] = updatedElement
+    // 只在拖拽或旋转结束时触发更新事件
+    if (!isOperating.value) {
+      emit('elements-change', elementsList.value)
     }
   }
 }
 
 // 处理缩放
-const handleResize = ({ target, width, height, drag, transform, dist, direction }) => {
-  if (!currentElement.value || !currentElement.value._resizeStartState) return
+const handleResize = ({ width, height, drag }) => {
+  if (!currentElement.value) return
+  isOperating.value = true
   
-  // 使用 dist 来计算新的尺寸
-  const startState = currentElement.value._resizeStartState
-  const newWidth = Math.max(10, startState.width + (dist?.[0] || 0))
-  const newHeight = Math.max(10, startState.height + (dist?.[1] || 0))
+  // 获取当前位置
+  const [x, y] = drag?.beforeTranslate || [currentElement.value.x, currentElement.value.y]
   
-  // 计算新的位置
-  let newX = currentElement.value.x
-  let newY = currentElement.value.y
+  // 限制宽度和高度不超出画布
+  const maxWidth = props.canvasConfig.width - x
+  const maxHeight = props.canvasConfig.height - y
+  const boundedWidth = Math.min(width, maxWidth)
+  const boundedHeight = Math.min(height, maxHeight)
   
-  // 如果有拖拽位置，使用拖拽位置
-  if (drag?.beforeTranslate) {
-    [newX, newY] = drag.beforeTranslate
-  }
-
-  // 创建更新后的元素
+  // 限制位置不超出画布
+  const boundedX = Math.max(0, Math.min(x, props.canvasConfig.width - boundedWidth))
+  const boundedY = Math.max(0, Math.min(y, props.canvasConfig.height - boundedHeight))
+  
   const updatedElement = {
     ...currentElement.value,
-    width: Math.round(newWidth),
-    height: Math.round(newHeight),
-    x: Math.round(newX),
-    y: Math.round(newY),
-    rotate: transform?.rotate ?? currentElement.value.rotate ?? 0
+    width: Math.round(boundedWidth),
+    height: Math.round(boundedHeight),
+    x: Math.round(boundedX),
+    y: Math.round(boundedY)
   }
   
-  // 更新当前元素
+  // 直接更新 DOM 样式
+  const element = document.querySelector(`[data-id='${updatedElement.id}']`)
+  if (element) {
+    element.style.width = `${updatedElement.width}px`
+    element.style.height = `${updatedElement.height}px`
+    element.style.transform = `translate(${updatedElement.x}px, ${updatedElement.y}px) rotate(${updatedElement.rotate || 0}deg)`
+  }
+  
   currentElement.value = updatedElement
-  
-  // 更新元素列表
-  const updatedElements = elementsList.value.map(el => 
-    el.id === updatedElement.id ? updatedElement : el
-  )
-  
-  // 更新元素列表
-  elementsList.value = updatedElements
-  
-  // 触发更新事件
-  emit('elements-change', updatedElements)
 }
 
 // 处理缩放结束
-const handleResizeEnd = ({ target, isDrag, clientX, clientY }) => {
-  if (currentElement.value && isOperating.value) {
-    isOperating.value = false
-    // 删除临时状态
-    const { _resizeStartState, ...cleanElement } = currentElement.value
-    
-    // 更新元素列表
-    const updatedElements = elementsList.value.map(el => 
-      el.id === cleanElement.id ? cleanElement : el
-    )
-    
-    // 更新状态
-    elementsList.value = updatedElements
-    currentElement.value = cleanElement
-    
-    // 触发更新事件
-    emit('elements-change', updatedElements)
-    emit('element-select', cleanElement)
-    // 保存到历史记录
-    pushState(updatedElements)
-  }
-}
-
-// 处理旋转
-const handleRotate = (e) => {
-  if (!props.selectedElement || typeof e.rotate !== 'number') return
-  
-  // 创建更新后的元素，四舍五入角度值
-  const updatedElement = {
-    ...props.selectedElement,
-    rotate: Math.round(e.rotate)
-  }
-  
-  // 更新元素列表
-  const updatedElements = elementsList.value.map(el => 
-    el.id === props.selectedElement.id ? updatedElement : el
-  )
-  
-  // 更新本地状态
-  elementsList.value = updatedElements
-  
-  // 触发更新事件
-  emit('elements-change', updatedElements)
-  
-  // 触发选中元素更新事件，实时更新右侧面板
-  emit('element-select', updatedElement)
-}
-
-// 处理旋转开始
-const handleRotateStart = () => {
-  if (!props.selectedElement) return
-  isOperating.value = true
-}
-
-// 处理旋转结束
-const handleRotateEnd = () => {
-  if (currentElement.value && isOperating.value) {
-    isOperating.value = false
-    // 保存到历史记录
-    pushState(elementsList.value)
-  }
-}
-
-// 处理圆角开始
-const handleRoundStart = () => {
-  if (!currentElement.value || currentElement.value.type !== 'rectangle') return
-  isOperating.value = true
-  currentElement.value._roundStartState = currentElement.value
-}
-
-const handleRound = ({ target, borderRadius }) => {
-  if (!currentElement.value || currentElement.value.type !== 'rectangle') return
-  
-  // 更新当前选中元素的圆角
-  const updatedElement = {
-    ...currentElement.value,
-    props: {
-      ...currentElement.value.props,
-      radius: Math.round(borderRadius)
-    }
-  }
-  
-  // 更新当前元素引用
-  currentElement.value = updatedElement
-  
-  // 更新元素列表
-  const updatedElements = elementsList.value.map(el => 
-    el.id === updatedElement.id ? updatedElement : el
-  )
-  
-  // 更新元素列表
-  elementsList.value = updatedElements
-  
-  // 触发更新事件
-  emit('elements-change', updatedElements)
-  
-  // 触发选中元素更新事件，实时更新右侧面板
-  emit('element-select', updatedElement)
-}
-
-// 处理圆角结束
-const handleRoundEnd = () => {
-  if (currentElement.value && isOperating.value) {
-    isOperating.value = false
-    const { _roundStartState, ...cleanElement } = currentElement.value
-    
-    // 更新元素列表
-    const updatedElements = elementsList.value.map(el => 
-      el.id === cleanElement.id ? cleanElement : el
-    )
-    
-    // 更新状态
-    elementsList.value = updatedElements
-    currentElement.value = cleanElement
-    
-    // 触发更新事件
-    emit('elements-change', updatedElements)
-    emit('element-select', cleanElement)
-    // 保存到历史记录
-    pushState(updatedElements)
-  }
+const handleResizeEnd = () => {
+  if (!currentElement.value) return
+  isOperating.value = false
+  updateElement(currentElement.value)
+  emit('element-select', currentElement.value)
+  pushState(elementsList.value)
+  currentElement.value = null
 }
 
 // 处理元素拖放
@@ -787,6 +662,52 @@ const handleElementUpdate = (element, payload) => {
   emit('element-select', updatedElement)
 }
 
+// 简化旋转处理函数
+const handleRotateStart = () => {
+  if (!props.selectedElement) return
+  currentElement.value = { ...props.selectedElement }
+}
+
+// 处理旋转
+const handleRotate = ({ rotate }) => {
+  if (!currentElement.value) return
+  isOperating.value = true
+  
+  const updatedElement = {
+    ...currentElement.value,
+    rotate: Math.round(rotate % 360)
+  }
+  
+  // 直接更新 DOM 样式，不触发 Vue 更新
+  const element = document.querySelector(`[data-id='${updatedElement.id}']`)
+  if (element) {
+    element.style.transform = `translate(${updatedElement.x}px, ${updatedElement.y}px) rotate(${updatedElement.rotate}deg)`
+  }
+  
+  currentElement.value = updatedElement
+}
+
+// 处理旋转结束
+const handleRotateEnd = () => {
+  if (!currentElement.value) return
+  isOperating.value = false
+  updateElement(currentElement.value)
+  emit('element-select', currentElement.value)
+  pushState(elementsList.value)
+  currentElement.value = null
+}
+
+// 修改 getElementGuidelines 函数
+const getElementGuidelines = () => {
+  return props.elements
+    .filter(el => el.id !== props.selectedElement?.id)
+    .map(el => ({
+      element: `[data-id='${el.id}']`,
+      className: 'guideline',
+      centerRect: true
+    }))
+}
+
 // 导出方法和状态给父组件
 defineExpose({
   handleUndo,
@@ -863,82 +784,66 @@ defineExpose({
 :deep(.moveable-control-box) {
   --moveable-color: #1890ff;
   z-index: 100;
-  pointer-events: auto !important;
-}
-
-:deep(.moveable-line) {
-  background-color: #1890ff;
-  pointer-events: none;
+  pointer-events: none !important;
 }
 
 :deep(.moveable-control) {
-  background-color: #fff;
-  border: 2px solid #1890ff;
   pointer-events: auto !important;
-}
-
-:deep(.moveable-round) {
-  position: absolute;
+  background-color: #fff !important;
+  border: 2px solid #1890ff !important;
   width: 12px !important;
   height: 12px !important;
   margin-left: -6px !important;
   margin-top: -6px !important;
-  background-color: #fff !important;
-  border: 2px solid #1890ff !important;
-  border-radius: 50% !important;
-  cursor: pointer !important;
-  z-index: 150 !important;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
 }
 
-:deep(.moveable-round:hover) {
-  transform: scale(1.2) !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
-}
-
-:deep(.moveable-round-line) {
-  background-color: #1890ff !important;
-  height: 1px !important;
-  width: 1px !important;
-  transform-origin: 0 0 !important;
-  z-index: 149 !important;
-  opacity: 0.5 !important;
-}
-
-:deep(.moveable-round-group) {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  z-index: 101 !important;
-}
-
-:deep(.moveable-round-control) {
-  display: block !important;
-  position: absolute !important;
-  width: 16px !important;
-  height: 16px !important;
-  margin-left: -8px !important;
-  margin-top: -8px !important;
-  background-color: #fff !important;
-  border: 2px solid #1890ff !important;
-  border-radius: 50% !important;
-  cursor: pointer !important;
-  z-index: 102 !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
-}
-
-:deep(.moveable-round-control:hover) {
-  transform: scale(1.2) !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
-}
-
-:deep(.moveable-round-group .moveable-line) {
-  background-color: #1890ff !important;
+:deep(.moveable-line) {
+  background-color: #ff4d4f !important;
+  opacity: 1 !important;
   height: 2px !important;
-  opacity: 0.5 !important;
+  box-shadow: 0 0 4px rgba(255, 77, 79, 0.5) !important;
 }
 
-.radius-control {
-  display: none;
+:deep(.moveable-line.moveable-vertical) {
+  width: 2px !important;
+}
+
+:deep(.moveable-line.moveable-horizontal) {
+  height: 2px !important;
+}
+
+:deep(.moveable-guideline) {
+  background-color: #ff4d4f !important;
+  opacity: 1 !important;
+  z-index: 100;
+  position: absolute !important;
+}
+
+:deep(.moveable-guideline.moveable-vertical) {
+  width: 2px !important;
+  height: 100vh !important;
+  top: 0 !important;
+  transform: translateX(-50%) !important;
+}
+
+:deep(.moveable-guideline.moveable-horizontal) {
+  height: 2px !important;
+  width: 100vw !important;
+  left: 0 !important;
+  transform: translateY(-50%) !important;
+}
+
+:deep(.moveable-gap) {
+  background-color: #ff4d4f !important;
+  opacity: 1 !important;
+}
+
+:deep(.moveable-gap-text) {
+  background-color: #ff4d4f !important;
+  color: white !important;
+  font-size: 12px !important;
+  padding: 2px 4px !important;
+  border-radius: 2px !important;
 }
 </style>
