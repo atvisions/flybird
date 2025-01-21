@@ -7,7 +7,6 @@
         <div class="panel-section">
           <h4>基础属性</h4>
           <div class="form-group">
-            <label>位置</label>
             <div class="input-group">
               <div class="input-item">
                 <label>X</label>
@@ -27,11 +26,6 @@
                   placeholder="Y坐标"
                 >
               </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>尺寸</label>
-            <div class="input-group">
               <div class="input-item">
                 <label>宽</label>
                 <input
@@ -54,17 +48,24 @@
           </div>
           <div class="form-group">
             <label>旋转</label>
-            <div class="input-group">
+            <div class="rotate-control">
               <input
-                type="number"
+                type="range"
                 :value="element.rotate || 0"
                 @input="(e) => updateElementProp('rotate', parseInt(e.target.value))"
-                placeholder="角度"
                 min="0"
                 max="360"
                 step="1"
               >
-              <span class="unit">°</span>
+              <input
+                type="number"
+                :value="element.rotate || 0"
+                @input="(e) => updateElementProp('rotate', parseInt(e.target.value))"
+                min="0"
+                max="360"
+                step="1"
+                style="width: 70px"
+              >
             </div>
           </div>
           <div class="form-group">
@@ -80,12 +81,12 @@
               >
               <input
                 type="number"
-                :value="Math.round((element.props?.opacity || 1) * 10) / 10"
+                :value="element.props?.opacity || 1"
                 @input="(e) => handleElementPropChange('opacity', Math.min(1, Math.max(0, parseFloat(e.target.value) || 0)))"
                 min="0"
                 max="1"
                 step="0.1"
-                style="width: 60px"
+                style="width: 70px"
               >
             </div>
           </div>
@@ -114,32 +115,35 @@
                 <button 
                   class="btn-icon" 
                   :class="{ active: element.props?.textAlign === 'left' }"
-                  @click="() => {
-                    handleElementPropChange('textAlign', 'left')
-                    console.log('Changed textAlign to left:', element.props)
-                  }"
+                  @click="() => handleElementPropChange('textAlign', 'left')"
                 >
-                  <AlignTextLeftOne theme="outline" size="16" :fill="element.props?.textAlign === 'left' ? '#1890ff' : '#333'" />
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="2" y="4" width="8" height="1.5" :fill="element.props?.textAlign === 'left' ? '#1890ff' : '#333'" />
+                    <rect x="2" y="7.25" width="12" height="1.5" :fill="element.props?.textAlign === 'left' ? '#1890ff' : '#333'" />
+                    <rect x="2" y="10.5" width="8" height="1.5" :fill="element.props?.textAlign === 'left' ? '#1890ff' : '#333'" />
+                  </svg>
                 </button>
                 <button 
                   class="btn-icon" 
                   :class="{ active: element.props?.textAlign === 'center' }"
-                  @click="() => {
-                    handleElementPropChange('textAlign', 'center')
-                    console.log('Changed textAlign to center:', element.props)
-                  }"
+                  @click="() => handleElementPropChange('textAlign', 'center')"
                 >
-                  <AlignTextCenterOne theme="outline" size="16" :fill="element.props?.textAlign === 'center' ? '#1890ff' : '#333'" />
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="4" width="8" height="1.5" :fill="element.props?.textAlign === 'center' ? '#1890ff' : '#333'" />
+                    <rect x="2" y="7.25" width="12" height="1.5" :fill="element.props?.textAlign === 'center' ? '#1890ff' : '#333'" />
+                    <rect x="4" y="10.5" width="8" height="1.5" :fill="element.props?.textAlign === 'center' ? '#1890ff' : '#333'" />
+                  </svg>
                 </button>
                 <button 
                   class="btn-icon" 
                   :class="{ active: element.props?.textAlign === 'right' }"
-                  @click="() => {
-                    handleElementPropChange('textAlign', 'right')
-                    console.log('Changed textAlign to right:', element.props)
-                  }"
+                  @click="() => handleElementPropChange('textAlign', 'right')"
                 >
-                  <AlignTextRightOne theme="outline" size="16" :fill="element.props?.textAlign === 'right' ? '#1890ff' : '#333'" />
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="6" y="4" width="8" height="1.5" :fill="element.props?.textAlign === 'right' ? '#1890ff' : '#333'" />
+                    <rect x="2" y="7.25" width="12" height="1.5" :fill="element.props?.textAlign === 'right' ? '#1890ff' : '#333'" />
+                    <rect x="6" y="10.5" width="8" height="1.5" :fill="element.props?.textAlign === 'right' ? '#1890ff' : '#333'" />
+                  </svg>
                 </button>
               </div>
             </div>
@@ -188,12 +192,12 @@
               <div class="color-picker">
                 <input 
                   type="color" 
-                  :value="element.props?.fill"
+                  :value="element.props?.fill || '#1890FF'"
                   @input="(e) => handleElementPropChange('fill', e.target.value)"
                 >
                 <input 
                   type="text"
-                  :value="element.props?.fill"
+                  :value="element.props?.fill || '#1890FF'"
                   @input="(e) => handleElementPropChange('fill', e.target.value)"
                   placeholder="#1890FF"
                 >
@@ -203,40 +207,62 @@
             <div class="form-group">
               <label>边框</label>
               <div class="border-settings">
-                <div class="input-group">
-                  <input
-                    type="number"
-                    :value="element.props?.strokeWidth || 0"
-                    @input="(e) => updateElementProp('props', {
-                      ...element.props,
-                      strokeWidth: Math.max(0, parseInt(e.target.value) || 0)
-                    })"
-                    min="0"
-                    max="20"
-                    placeholder="粗细"
-                  >
-                  <span class="unit">px</span>
+                <div class="border-row">
+                  <div class="button-group">
+                    <button 
+                      class="btn-icon" 
+                      :class="{ active: element.props?.strokeStyle === 'solid' }"
+                      @click="() => handleElementPropChange('strokeStyle', 'solid')"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="2" y="7.5" width="12" height="1.5" :fill="element.props?.strokeStyle === 'solid' ? '#1890ff' : '#333'" />
+                      </svg>
+                    </button>
+                    <button 
+                      class="btn-icon" 
+                      :class="{ active: element.props?.strokeStyle === 'dashed' }"
+                      @click="() => handleElementPropChange('strokeStyle', 'dashed')"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="2" y="7.5" width="3" height="1.5" :fill="element.props?.strokeStyle === 'dashed' ? '#1890ff' : '#333'" />
+                        <rect x="6.5" y="7.5" width="3" height="1.5" :fill="element.props?.strokeStyle === 'dashed' ? '#1890ff' : '#333'" />
+                        <rect x="11" y="7.5" width="3" height="1.5" :fill="element.props?.strokeStyle === 'dashed' ? '#1890ff' : '#333'" />
+                      </svg>
+                    </button>
+                    <button 
+                      class="btn-icon" 
+                      :class="{ active: element.props?.strokeStyle === 'dotted' }"
+                      @click="() => handleElementPropChange('strokeStyle', 'dotted')"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="2" y="7.5" width="1.5" height="1.5" :fill="element.props?.strokeStyle === 'dotted' ? '#1890ff' : '#333'" />
+                        <rect x="5.5" y="7.5" width="1.5" height="1.5" :fill="element.props?.strokeStyle === 'dotted' ? '#1890ff' : '#333'" />
+                        <rect x="9" y="7.5" width="1.5" height="1.5" :fill="element.props?.strokeStyle === 'dotted' ? '#1890ff' : '#333'" />
+                        <rect x="12.5" y="7.5" width="1.5" height="1.5" :fill="element.props?.strokeStyle === 'dotted' ? '#1890ff' : '#333'" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div class="input-group">
+                    <input
+                      type="number"
+                      :value="element.props?.strokeWidth || 0"
+                      @input="(e) => handleElementPropChange('strokeWidth', Math.max(0, parseInt(e.target.value) || 0))"
+                      min="0"
+                      max="20"
+                      placeholder="粗细"
+                    >
+                    <span class="unit">px</span>
+                  </div>
                 </div>
-                <select
-                  :value="element.props?.strokeStyle || 'solid'"
-                  @change="(e) => updateElementProp('props', {
-                    ...element.props,
-                    strokeStyle: e.target.value
-                  })"
-                >
-                  <option value="solid">实线</option>
-                  <option value="dashed">虚线</option>
-                  <option value="dotted">点线</option>
-                </select>
                 <div class="color-picker">
                   <input
                     type="color"
-                    :value="element.props?.stroke"
+                    :value="element.props?.stroke || '#096DD9'"
                     @input="(e) => handleElementPropChange('stroke', e.target.value)"
                   >
                   <input 
                     type="text"
-                    :value="element.props?.stroke"
+                    :value="element.props?.stroke || '#096DD9'"
                     @input="(e) => handleElementPropChange('stroke', e.target.value)"
                     placeholder="#096DD9"
                   >
@@ -252,13 +278,7 @@
                   <input
                     type="range"
                     :value="element.props?.radius || 0"
-                    @input="(e) => {
-                      const value = Math.min(50, Math.max(0, parseInt(e.target.value) || 0))
-                      updateElementProp('props', {
-                        ...element.props,
-                        radius: value
-                      })
-                    }"
+                    @input="(e) => handleElementPropChange('radius', Math.min(50, Math.max(0, parseInt(e.target.value) || 0)))"
                     min="0"
                     max="50"
                     step="1"
@@ -269,13 +289,7 @@
                       min="0"
                       max="50"
                       :value="element.props?.radius || 0"
-                      @input="(e) => {
-                        const value = Math.min(50, Math.max(0, parseInt(e.target.value) || 0))
-                        updateElementProp('props', {
-                          ...element.props,
-                          radius: value
-                        })
-                      }"
+                      @input="(e) => handleElementPropChange('radius', Math.min(50, Math.max(0, parseInt(e.target.value) || 0)))"
                     >
                     <span class="unit">px</span>
                   </div>
@@ -303,16 +317,34 @@
                   >
                   <span class="unit">px</span>
                 </div>
-                <select
-                  :value="element.props?.strokeStyle || 'solid'"
-                  @change="(e) => updateElementProp('props', {
-                    ...element.props,
-                    strokeStyle: e.target.value
-                  })"
-                >
-                  <option value="solid">实线</option>
-                  <option value="dashed">虚线</option>
-                </select>
+                <div class="button-group">
+                  <button 
+                    class="btn-icon" 
+                    :class="{ active: element.props?.strokeStyle === 'solid' }"
+                    @click="() => updateElementProp('props', {
+                      ...element.props,
+                      strokeStyle: 'solid'
+                    })"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="2" y="7.5" width="12" height="1.5" :fill="element.props?.strokeStyle === 'solid' ? '#1890ff' : '#333'" />
+                    </svg>
+                  </button>
+                  <button 
+                    class="btn-icon" 
+                    :class="{ active: element.props?.strokeStyle === 'dashed' }"
+                    @click="() => updateElementProp('props', {
+                      ...element.props,
+                      strokeStyle: 'dashed'
+                    })"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="2" y="7.5" width="3" height="1.5" :fill="element.props?.strokeStyle === 'dashed' ? '#1890ff' : '#333'" />
+                      <rect x="6.5" y="7.5" width="3" height="1.5" :fill="element.props?.strokeStyle === 'dashed' ? '#1890ff' : '#333'" />
+                      <rect x="11" y="7.5" width="3" height="1.5" :fill="element.props?.strokeStyle === 'dashed' ? '#1890ff' : '#333'" />
+                    </svg>
+                  </button>
+                </div>
                 <div class="color-picker">
                   <input
                     type="color"
@@ -456,32 +488,35 @@
                 <button 
                   class="btn-icon" 
                   :class="{ active: element.props?.textAlign === 'left' }"
-                  @click="() => {
-                    handleElementPropChange('textAlign', 'left')
-                    console.log('Changed textAlign to left:', element.props)
-                  }"
+                  @click="() => handleElementPropChange('textAlign', 'left')"
                 >
-                  <AlignTextLeftOne theme="outline" size="16" :fill="element.props?.textAlign === 'left' ? '#1890ff' : '#333'" />
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="2" y="4" width="8" height="1.5" :fill="element.props?.textAlign === 'left' ? '#1890ff' : '#333'" />
+                    <rect x="2" y="7.25" width="12" height="1.5" :fill="element.props?.textAlign === 'left' ? '#1890ff' : '#333'" />
+                    <rect x="2" y="10.5" width="8" height="1.5" :fill="element.props?.textAlign === 'left' ? '#1890ff' : '#333'" />
+                  </svg>
                 </button>
                 <button 
                   class="btn-icon" 
                   :class="{ active: element.props?.textAlign === 'center' }"
-                  @click="() => {
-                    handleElementPropChange('textAlign', 'center')
-                    console.log('Changed textAlign to center:', element.props)
-                  }"
+                  @click="() => handleElementPropChange('textAlign', 'center')"
                 >
-                  <AlignTextCenterOne theme="outline" size="16" :fill="element.props?.textAlign === 'center' ? '#1890ff' : '#333'" />
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="4" width="8" height="1.5" :fill="element.props?.textAlign === 'center' ? '#1890ff' : '#333'" />
+                    <rect x="2" y="7.25" width="12" height="1.5" :fill="element.props?.textAlign === 'center' ? '#1890ff' : '#333'" />
+                    <rect x="4" y="10.5" width="8" height="1.5" :fill="element.props?.textAlign === 'center' ? '#1890ff' : '#333'" />
+                  </svg>
                 </button>
                 <button 
                   class="btn-icon" 
                   :class="{ active: element.props?.textAlign === 'right' }"
-                  @click="() => {
-                    handleElementPropChange('textAlign', 'right')
-                    console.log('Changed textAlign to right:', element.props)
-                  }"
+                  @click="() => handleElementPropChange('textAlign', 'right')"
                 >
-                  <AlignTextRightOne theme="outline" size="16" :fill="element.props?.textAlign === 'right' ? '#1890ff' : '#333'" />
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="6" y="4" width="8" height="1.5" :fill="element.props?.textAlign === 'right' ? '#1890ff' : '#333'" />
+                    <rect x="2" y="7.25" width="12" height="1.5" :fill="element.props?.textAlign === 'right' ? '#1890ff' : '#333'" />
+                    <rect x="6" y="10.5" width="8" height="1.5" :fill="element.props?.textAlign === 'right' ? '#1890ff' : '#333'" />
+                  </svg>
                 </button>
               </div>
             </div>
@@ -528,31 +563,31 @@
               <div class="z-index-control">
                 <button 
                   class="btn-stepper"
-                  @click="updateElementProp('zIndex', Math.max(1, (element.zIndex || 1) - 1))"
+                  @click="handleElementPropChange('zIndex', Math.max(1, (element.zIndex || 1) - 1))"
                 >-</button>
                 <input
                   type="number"
                   :value="element.zIndex || 1"
-                  @input="(e) => updateElementProp('zIndex', Math.max(1, parseInt(e.target.value) || 1))"
+                  @input="(e) => handleElementPropChange('zIndex', Math.max(1, parseInt(e.target.value) || 1))"
                   min="1"
                   step="1"
                 >
                 <button 
                   class="btn-stepper"
-                  @click="updateElementProp('zIndex', (element.zIndex || 1) + 1)"
+                  @click="handleElementPropChange('zIndex', (element.zIndex || 1) + 1)"
                 >+</button>
               </div>
               <button 
                 class="btn-arrow"
                 title="置于顶层"
-                @click="updateElementProp('zIndex', 9999)"
+                @click="handleElementPropChange('zIndex', 9999)"
               >
                 <Up theme="filled" size="16" fill="#374151" />
               </button>
               <button 
                 class="btn-arrow"
                 title="置于底层"
-                @click="updateElementProp('zIndex', 1)"
+                @click="handleElementPropChange('zIndex', 1)"
               >
                 <Down theme="filled" size="16" fill="#374151" />
               </button>
@@ -666,9 +701,6 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { 
-  AlignTextLeftOne, 
-  AlignTextCenterOne, 
-  AlignTextRightOne, 
   Delete, 
   Plus, 
   Setting,
@@ -877,35 +909,26 @@ const updateElementProp = (prop, value) => {
   let finalValue = value
 
   if (numericProps.includes(prop)) {
-    // 对于宽度和高度，只保留最小值限制
     if (prop === 'width' || prop === 'height') {
       finalValue = Math.max(1, parseInt(value) || 1)
     } else if (prop === 'rotate') {
-      // 旋转角度限制在 0-360 之间
       finalValue = Math.min(360, Math.max(0, parseInt(value) || 0))
     } else {
-      // 其他数值属性保持大于等于0
       finalValue = Math.max(0, parseInt(value) || 0)
     }
   }
 
-  // 如果是 props 对象中的属性
-  if (prop === 'props') {
-    emit('update', {
-      ...props.element,
-      props: {
-        ...props.element.props,
-        ...value
-      }
-    })
-    return
-  }
-
-  // 更新其他属性
-  emit('update', {
+  // 创建更新后的元素对象
+  const updatedElement = {
     ...props.element,
     [prop]: finalValue
-  })
+  }
+
+  // 触发更新事件
+  emit('update', updatedElement)
+  
+  // 立即触发选中事件，强制更新当前选中的元素
+  emit('element-select', updatedElement)
 }
 
 // 更新画布配置
@@ -986,26 +1009,26 @@ const showRulerSettings = ref(false)
 const handleElementPropChange = (prop, value) => {
   if (!props.element) return
 
-  console.log('Changing prop:', prop, 'to value:', value)  // 添加日志
-
-  const updatedProps = {
-    ...props.element.props,
-    [prop]: value
+  // 创建更新后的元素对象
+  const updatedElement = {
+    ...props.element,
+    props: {
+      ...props.element.props,
+      [prop]: value
+    }
   }
 
-  console.log('Updated props:', updatedProps)  // 添加日志
+  // 如果是 zIndex 属性，直接更新到元素根级别
+  if (prop === 'zIndex') {
+    updatedElement.zIndex = value
+    delete updatedElement.props.zIndex
+  }
 
   // 触发更新事件
-  emit('update', {
-    id: props.element.id,
-    type: props.element.type,
-    x: props.element.x,
-    y: props.element.y,
-    width: props.element.width,
-    height: props.element.height,
-    rotate: props.element.rotate,
-    props: updatedProps
-  })
+  emit('update', updatedElement)
+  
+  // 立即触发选中事件，强制更新当前选中的元素
+  emit('element-select', updatedElement)
 }
 </script>
 
@@ -1065,34 +1088,53 @@ label {
 .input-group {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
-.input-group input[type="number"],
-.input-group input[type="text"],
-.input-group select {
+.input-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   flex: 1;
+  min-width: 0; /* 防止子元素溢出 */
+}
+
+.input-item label {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 0;
+}
+
+.input-item input {
+  width: 100%;
   height: 32px;
-  padding: 0 12px;
+  padding: 0 4px;
   border: 1px solid #e5e7eb;
-  border-radius: 6px;
+  border-radius: 4px;
   font-size: 13px;
   color: #374151;
-  background-color: #fff;
-  transition: all 0.2s;
+  text-align: center;
 }
 
-.input-group input[type="number"]:hover,
-.input-group input[type="text"]:hover,
-.input-group select:hover {
-  border-color: #a5b4fc;
+/* 基础属性中的输入框特殊样式 */
+.panel-section:first-of-type .input-group .input-item input {
+  padding: 0 2px;
+  width: 60px;
 }
 
-.input-group input[type="number"]:focus,
-.input-group input[type="text"]:focus,
-.input-group select:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+.panel-section:first-of-type .input-group {
+  gap: 4px;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+}
+
+.input-item input:hover {
+  border-color: #40a9ff;
+}
+
+.input-item input:focus {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
   outline: none;
 }
 
@@ -1113,6 +1155,16 @@ label {
   background-color: #fff;
 }
 
+.color-picker input[type="color"]:hover {
+  border-color: #40a9ff;
+}
+
+.color-picker input[type="color"]:focus {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+  outline: none;
+}
+
 .color-picker input[type="text"] {
   flex: 1;
   min-width: 120px;
@@ -1124,10 +1176,42 @@ label {
   color: #374151;
 }
 
+.color-picker input[type="text"]:hover {
+  border-color: #40a9ff;
+}
+
+.color-picker input[type="text"]:focus {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+  outline: none;
+}
+
 .border-settings {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
+}
+
+.border-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.border-row .button-group {
+  margin: 0;
+  width: 102px;  /* 34px * 3 */
+}
+
+.border-row .input-group {
+  flex: 1;
+  min-width: 0;
+}
+
+.border-row .input-group input {
+  width: 100%;
+  min-width: 60px;
 }
 
 .button-group {
@@ -1136,30 +1220,19 @@ label {
   background: #f0f0f0;
   padding: 2px;
   border-radius: 6px;
-  margin-top: 4px;
-  width: 108px;  /* 36px * 3 (每个按钮宽度) */
 }
 
 .btn-icon {
+  width: 34px;
+  height: 32px;
+  padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 32px;
-  width: 34px;
-  padding: 0;
   border: none;
   background: white;
   cursor: pointer;
-  color: #666;
   transition: all 0.2s;
-}
-
-.btn-icon:first-child {
-  border-radius: 6px 0 0 6px;
-}
-
-.btn-icon:last-child {
-  border-radius: 0 6px 6px 0;
 }
 
 .btn-icon:hover {
@@ -1350,82 +1423,34 @@ textarea:focus {
 }
 
 .color-picker input[type="color"] {
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.color-picker input[type="text"] {
-  flex: 1;
-  height: 32px;
-  padding: 0 8px;
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
-  font-size: 14px;
-  color: #333;
-}
-
-.border-settings {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.border-settings .input-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.border-settings select {
-  height: 32px;
-  padding: 0 8px;
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
-  background-color: #fff;
-  cursor: pointer;
-}
-
-.border-settings select:hover {
-  border-color: #40a9ff;
-}
-
-.border-settings select:focus {
-  border-color: #1890ff;
-  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
-  outline: none;
-}
-
-.color-picker {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.color-picker input[type="color"] {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   padding: 2px;
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
   cursor: pointer;
+  background-color: #fff;
 }
 
 .color-picker input[type="color"]:hover {
   border-color: #40a9ff;
 }
 
+.color-picker input[type="color"]:focus {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+  outline: none;
+}
+
 .color-picker input[type="text"] {
   flex: 1;
-  height: 32px;
-  padding: 0 8px;
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
-  font-size: 14px;
-  color: #333;
+  min-width: 120px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #374151;
 }
 
 .color-picker input[type="text"]:hover {
@@ -1434,7 +1459,7 @@ textarea:focus {
 
 .color-picker input[type="text"]:focus {
   border-color: #1890ff;
-  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
   outline: none;
 }
 
@@ -1445,7 +1470,7 @@ textarea:focus {
 }
 
 .input-group input[type="number"] {
-  width: 60px;
+  width: 70px;
   height: 32px;
   padding: 0 8px;
   border: 1px solid #d9d9d9;
@@ -1473,35 +1498,67 @@ textarea:focus {
 .radius-control {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  height: 32px;
 }
 
 .radius-control input[type="range"] {
   flex: 1;
   height: 4px;
+  -webkit-appearance: none;
   background: #e5e7eb;
   border-radius: 2px;
   outline: none;
-  -webkit-appearance: none;
 }
 
 .radius-control input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 16px;
   height: 16px;
-  background: #fff;
-  border: 2px solid #4f46e5;
+  background: white;
+  border: 2px solid #1890ff;
+  border-radius: 50%;
+  cursor: pointer;
+  margin-top: 0px;
+}
+
+.radius-control input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: white;
+  border: 2px solid #1890ff;
   border-radius: 50%;
   cursor: pointer;
 }
 
-.radius-control .input-group {
-  width: 80px;
-  flex-shrink: 0;
+.radius-control input[type="range"]::-ms-thumb {
+  width: 16px;
+  height: 16px;
+  background: white;
+  border: 2px solid #1890ff;
+  border-radius: 50%;
+  cursor: pointer;
 }
 
-.radius-control .input-group input[type="number"] {
-  width: 100%;
+.radius-control input[type="number"] {
+  width: 70px;
+  text-align: center;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.radius-control input[type="number"]:hover {
+  border-color: #40a9ff;
+}
+
+.radius-control input[type="number"]:focus {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+  outline: none;
 }
 
 .z-index-group {
@@ -1599,51 +1656,49 @@ textarea:focus {
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 32px;
 }
 
 .rotate-control input[type="range"] {
   flex: 1;
-  width: 100%;
   height: 4px;
+  -webkit-appearance: none;
   background: #e5e7eb;
   border-radius: 2px;
   outline: none;
-  -webkit-appearance: none;
-  margin: 0;
-  padding: 0;
-  cursor: pointer;
-  position: relative;
-  top: 2px;
 }
 
 .rotate-control input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 16px;
   height: 16px;
-  background: #fff;
-  border: 2px solid #4f46e5;
+  background: white;
+  border: 2px solid #1890ff;
   border-radius: 50%;
   cursor: pointer;
-  position: relative;
-  top: 0px;
+  margin-top: 0px;
 }
 
-.rotate-control input[type="range"]::-webkit-slider-thumb:hover {
-  transform: scale(1.1);
+.rotate-control input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: white;
+  border: 2px solid #1890ff;
+  border-radius: 50%;
+  cursor: pointer;
 }
 
-.rotate-control .input-group {
-  width: 80px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  
+.rotate-control input[type="range"]::-ms-thumb {
+  width: 16px;
+  height: 16px;
+  background: white;
+  border: 2px solid #1890ff;
+  border-radius: 50%;
+  cursor: pointer;
 }
 
-.rotate-control .input-group input {
-  width: 50px;
-  text-align: right;
+.rotate-control input[type="number"] {
+  width: 70px;
+  text-align: center;
 }
 
 .color-settings {
@@ -1932,7 +1987,7 @@ textarea:focus {
   border: 2px solid #1890ff;
   border-radius: 50%;
   cursor: pointer;
-  margin-top: 0px; /* (16px - 4px) / 2 */
+  margin-top: 0px;
 }
 
 .opacity-control input[type="range"]::-moz-range-thumb {
@@ -1954,8 +2009,18 @@ textarea:focus {
 }
 
 .opacity-control input[type="number"] {
-  width: 60px;
+  width: 70px;
   text-align: center;
+}
+
+.opacity-control input[type="number"]:hover {
+  border-color: #40a9ff;
+}
+
+.opacity-control input[type="number"]:focus {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+  outline: none;
 }
 
 .switch-item {

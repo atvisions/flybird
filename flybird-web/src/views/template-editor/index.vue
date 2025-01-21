@@ -78,6 +78,7 @@
         :current-canvas-id="currentCanvasId"
         :canvas-config="getCurrentCanvas()?.config"
         @update="handleElementUpdate"
+        @element-select="handleElementSelect"
         @add-canvas="addCanvas"
         @delete-canvas="removeCanvas"
         @switch-canvas="switchCanvas"

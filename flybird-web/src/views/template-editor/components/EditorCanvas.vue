@@ -60,9 +60,9 @@
             :snapCenter="true"
             :snapThreshold="10"
             :elementGuidelines="getElementGuidelines()"
-            :snapDistFormat="v => `${v}px`"
-            :isDisplaySnapDigit="true"
-            :snapDigit="0"
+            :isDisplaySnapDigit="false"
+            :isDisplayInnerSnapDigit="false"
+            :isDisplayGridGuidelines="false"
             :bounds="{
               left: 0,
               top: 0,
@@ -71,7 +71,7 @@
             }"
             :verticalGuidelines="[0, canvasConfig.width / 2, canvasConfig.width]"
             :horizontalGuidelines="[0, canvasConfig.height / 2, canvasConfig.height]"
-            :snapGap="true"
+            :snapGap="false"
             :elementSnapDirections="{
               center: true,
               middle: true
@@ -85,6 +85,9 @@
             :renderMode="'transform'"
             :stopPropagation="true"
             :preventDefault="true"
+            :useAccuratePosition="true"
+            :useMutationObserver="false"
+            :zoom="1"
             @dragStart="handleDragStart"
             @drag="handleDrag"
             @dragEnd="handleDragEnd"
@@ -102,7 +105,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import VueMoveable from 'vue3-moveable'
 import { useHistory } from '../composables/useHistory'
 import GuideLine from './GuideLine.vue'
@@ -165,6 +168,9 @@ const currentElement = ref(null)
 const elementsList = ref([])
 const isKeepingRatio = ref(false)
 const isOperating = ref(false)  // 添加操作状态标记
+
+// 添加 moveableRef 的声明
+const moveableRef = ref(null)
 
 // 计算属性
 const contentStyle = computed(() => ({
@@ -322,7 +328,7 @@ const handleDrag = ({ beforeTranslate }) => {
     y: Math.round(boundedY)
   }
   
-  // 直接更新 DOM 样式，不触发 Vue 更新
+  // 直接更新 DOM 样式
   const element = document.querySelector(`[data-id='${updatedElement.id}']`)
   if (element) {
     element.style.transform = `translate(${updatedElement.x}px, ${updatedElement.y}px) rotate(${updatedElement.rotate || 0}deg)`
@@ -335,6 +341,13 @@ const handleDrag = ({ beforeTranslate }) => {
 const handleDragEnd = () => {
   if (!currentElement.value) return
   isOperating.value = false
+  
+  // 更新 DOM 样式
+  const element = document.querySelector(`[data-id='${currentElement.value.id}']`)
+  if (element) {
+    element.style.transform = `translate(${currentElement.value.x}px, ${currentElement.value.y}px) rotate(${currentElement.value.rotate || 0}deg)`
+  }
+  
   updateElement(currentElement.value)
   emit('element-select', currentElement.value)
   pushState(elementsList.value)
@@ -347,24 +360,11 @@ const handleResizeStart = () => {
   currentElement.value = { ...props.selectedElement }
 }
 
-// 优化更新逻辑
-const updateElement = (updatedElement) => {
-  const index = elementsList.value.findIndex(el => el.id === updatedElement.id)
-  if (index !== -1) {
-    elementsList.value[index] = updatedElement
-    // 只在拖拽或旋转结束时触发更新事件
-    if (!isOperating.value) {
-      emit('elements-change', elementsList.value)
-    }
-  }
-}
-
 // 处理缩放
 const handleResize = ({ width, height, drag }) => {
   if (!currentElement.value) return
   isOperating.value = true
   
-  // 获取当前位置
   const [x, y] = drag?.beforeTranslate || [currentElement.value.x, currentElement.value.y]
   
   // 限制宽度和高度不超出画布
@@ -400,6 +400,15 @@ const handleResize = ({ width, height, drag }) => {
 const handleResizeEnd = () => {
   if (!currentElement.value) return
   isOperating.value = false
+  
+  // 更新 DOM 样式
+  const element = document.querySelector(`[data-id='${currentElement.value.id}']`)
+  if (element) {
+    element.style.width = `${currentElement.value.width}px`
+    element.style.height = `${currentElement.value.height}px`
+    element.style.transform = `translate(${currentElement.value.x}px, ${currentElement.value.y}px) rotate(${currentElement.value.rotate || 0}deg)`
+  }
+  
   updateElement(currentElement.value)
   emit('element-select', currentElement.value)
   pushState(elementsList.value)
@@ -637,8 +646,6 @@ const getSnapTargets = () => {
 
 // 处理元素更新
 const handleElementUpdate = (element, payload) => {
-  console.log('Updating element:', element.id, 'with payload:', payload)  // 添加日志
-  
   const updatedElement = {
     ...element,
     props: {
@@ -647,19 +654,39 @@ const handleElementUpdate = (element, payload) => {
     }
   }
   
-  console.log('Updated element:', updatedElement)  // 添加日志
+  // 先更新当前选中元素
+  if (props.selectedElement?.id === element.id) {
+    emit('element-select', updatedElement)
+  }
   
   // 更新元素列表
   const updatedElements = elementsList.value.map(el => 
     el.id === element.id ? updatedElement : el
   )
-  
-  // 更新状态
   elementsList.value = updatedElements
   
-  // 触发更新事件
+  // 触发元素列表更新
   emit('elements-change', updatedElements)
-  emit('element-select', updatedElement)
+  
+  // 保存到历史记录
+  pushState(updatedElements)
+  
+  // 强制更新 DOM
+  nextTick(() => {
+    const element = document.querySelector(`[data-id='${updatedElement.id}']`)
+    if (element) {
+      // 更新所有可能的样式属性
+      Object.entries(updatedElement.props).forEach(([key, value]) => {
+        if (key === 'opacity') {
+          element.style.opacity = value
+        } else if (key === 'fill') {
+          element.style.fill = value
+        } else if (key === 'stroke') {
+          element.style.stroke = value
+        }
+      })
+    }
+  })
 }
 
 // 简化旋转处理函数
@@ -678,21 +705,49 @@ const handleRotate = ({ rotate }) => {
     rotate: Math.round(rotate % 360)
   }
   
-  // 直接更新 DOM 样式，不触发 Vue 更新
+  // 直接更新 DOM 样式
   const element = document.querySelector(`[data-id='${updatedElement.id}']`)
   if (element) {
     element.style.transform = `translate(${updatedElement.x}px, ${updatedElement.y}px) rotate(${updatedElement.rotate}deg)`
   }
   
   currentElement.value = updatedElement
+  
+  // 更新元素列表
+  const index = elementsList.value.findIndex(el => el.id === updatedElement.id)
+  if (index !== -1) {
+    elementsList.value[index] = updatedElement
+    // 触发更新事件
+    emit('elements-change', [...elementsList.value])
+  }
+  
+  // 更新选中元素
+  emit('element-select', updatedElement)
 }
 
 // 处理旋转结束
 const handleRotateEnd = () => {
   if (!currentElement.value) return
   isOperating.value = false
-  updateElement(currentElement.value)
+  
+  // 更新 DOM 样式
+  const element = document.querySelector(`[data-id='${currentElement.value.id}']`)
+  if (element) {
+    element.style.transform = `translate(${currentElement.value.x}px, ${currentElement.value.y}px) rotate(${currentElement.value.rotate}deg)`
+  }
+  
+  // 更新元素列表
+  const index = elementsList.value.findIndex(el => el.id === currentElement.value.id)
+  if (index !== -1) {
+    elementsList.value[index] = currentElement.value
+    // 触发更新事件
+    emit('elements-change', [...elementsList.value])
+  }
+  
+  // 更新选中元素
   emit('element-select', currentElement.value)
+  
+  // 保存到历史记录
   pushState(elementsList.value)
   currentElement.value = null
 }
@@ -706,6 +761,25 @@ const getElementGuidelines = () => {
       className: 'guideline',
       centerRect: true
     }))
+}
+
+// 修改 updateElement 函数
+const updateElement = (updatedElement) => {
+  const index = elementsList.value.findIndex(el => el.id === updatedElement.id)
+  if (index !== -1) {
+    elementsList.value[index] = updatedElement
+    
+    // 如果是当前选中的元素，立即更新选中状态
+    if (props.selectedElement?.id === updatedElement.id) {
+      emit('element-select', null)  // 先取消选中
+      nextTick(() => {
+        emit('element-select', updatedElement)  // 再重新选中
+      })
+    }
+    
+    // 触发更新事件
+    emit('elements-change', [...elementsList.value])
+  }
 }
 
 // 导出方法和状态给父组件
@@ -835,15 +909,10 @@ defineExpose({
 }
 
 :deep(.moveable-gap) {
-  background-color: #ff4d4f !important;
-  opacity: 1 !important;
+  display: none !important;
 }
 
 :deep(.moveable-gap-text) {
-  background-color: #ff4d4f !important;
-  color: white !important;
-  font-size: 12px !important;
-  padding: 2px 4px !important;
-  border-radius: 2px !important;
+  display: none !important;
 }
 </style>
