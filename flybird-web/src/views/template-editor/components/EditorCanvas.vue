@@ -25,34 +25,43 @@
           ></div>
           
           <div class="elements-container">
-            <component
+            <div
               v-for="element in elements"
               :key="element.id"
-              :is="components[element.type]"
-              :id="element.id"
-              class="canvas-element"
-              :class="{ 'element-selected': element.id === selectedElement?.id }"
-              :style="getElementStyle(element)"
+              class="element-wrapper"
               :data-id="element.id"
-              v-bind="element.props"
-              :width="element.width"
-              :height="element.height"
-              @click.stop.prevent="handleElementSelect(element)"
-              @update="(payload) => handleElementUpdate(element, payload)"
+              :style="getElementStyle(element)"
             >
-            </component>
-            <!-- 删除按钮 -->
-            <div 
-              v-if="selectedElement"
-              class="element-delete-btn"
-              :style="{
-                position: 'absolute',
-                top: `${selectedElement.y - 10}px`,
-                left: `${selectedElement.x + selectedElement.width - 10}px`
-              }"
-              @click.stop="handleElementDelete(selectedElement)"
-              @mousedown.stop
-            >×</div>
+              <component
+                :is="components[element.type]"
+                :id="element.id"
+                class="canvas-element"
+                :class="{ 'element-selected': element.id === selectedElement?.id }"
+                v-bind="element.props"
+                :width="element.width"
+                :height="element.height"
+                @click.stop.prevent="handleElementSelect(element)"
+                @update="(payload) => handleElementUpdate(element, payload)"
+                :style="{
+                  width: '100%',
+                  height: '100%'
+                }"
+              />
+              <div 
+                v-if="element.id === selectedElement?.id"
+                class="element-delete-btn"
+                :style="{
+                  position: 'absolute',
+                  top: '-20px',
+                  right: '-30px',
+                  transform: 'translate(0, 0)',
+                  transformOrigin: 'center',
+                  zIndex: 999999
+                }"
+                @click.stop="handleElementDelete(element)"
+                @mousedown.stop
+              >×</div>
+            </div>
           </div>
           <vue-moveable
             v-if="selectedElement"
@@ -109,6 +118,7 @@
             @rotateStart="handleRotateStart"
             @rotate="handleRotate"
             @rotateEnd="handleRotateEnd"
+            @delete="handleElementDelete(selectedElement)"
           />
         </div>
       </div>
@@ -267,11 +277,11 @@ const getElementStyle = (element) => ({
   width: `${element.width}px`,
   height: `${element.height}px`,
   transform: `translate(${element.x}px, ${element.y}px) rotate(${element.rotate || 0}deg)`,
-  transformOrigin: '50% 50%',
+  transformOrigin: 'center',
   zIndex: element.zIndex || 1,
-  backfaceVisibility: 'hidden',
-  perspective: 1000,
-  willChange: 'transform'
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center'
 })
 
 // 监听 props 变化
@@ -682,21 +692,6 @@ const handleKeyDown = (e) => {
       updateElement(updatedElement)
     }
   }
-  
-  // 处理删除键
-  if ((e.key === 'Delete' || e.key === 'Backspace') && props.selectedElement) {
-    // 过滤掉被删除的元素
-    const updatedElements = elementsList.value.filter(el => el.id !== props.selectedElement.id)
-    
-    // 更新元素列表
-    elementsList.value = updatedElements
-    
-    // 触发更新事件
-    emit('elements-change', updatedElements)
-    
-    // 清除选中状态
-    emit('element-select', null)
-  }
 
   // 撤销快捷键 (Cmd/Ctrl + Z)
   if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
@@ -874,6 +869,13 @@ const handleRotate = ({ rotate }) => {
   const element = document.querySelector(`[data-id='${updatedElement.id}']`)
   if (element) {
     element.style.transform = `translate(${updatedElement.x}px, ${updatedElement.y}px) rotate(${updatedElement.rotate}deg)`
+  }
+  
+  // 直接更新删除按钮的样式
+  const deleteBtn = document.querySelector('.element-delete-btn')
+  if (deleteBtn) {
+    const angle = updatedElement.rotate || 0
+    deleteBtn.style.transform = `translate(0, 0) rotate(${angle}deg)`
   }
   
   currentElement.value = updatedElement
@@ -1136,8 +1138,22 @@ defineExpose({
   transform: translate(var(--x), var(--y)) rotate(var(--rotate, 0deg));
 }
 
+.element-wrapper {
+  position: absolute;
+  transform-origin: center;
+  will-change: transform;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.canvas-element {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
 .element-delete-btn {
-  pointer-events: auto !important;
   position: absolute;
   width: 20px;
   height: 20px;
@@ -1150,8 +1166,8 @@ defineExpose({
   color: white;
   font-size: 16px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  z-index: 1000;
-  transition: all 0.2s;
+  z-index: 999999;
+  pointer-events: auto;
 }
 
 .element-delete-btn:hover {
