@@ -189,18 +189,50 @@
           <template v-if="['rectangle', 'circle', 'triangle', 'star'].includes(element.type)">
             <div class="form-group">
               <label>填充颜色</label>
-              <div class="color-picker">
-                <input 
-                  type="color" 
-                  :value="element.props?.fill || '#1890FF'"
-                  @input="(e) => handleElementPropChange('fill', e.target.value)"
-                >
-                <input 
-                  type="text"
-                  :value="element.props?.fill || '#1890FF'"
-                  @input="(e) => handleElementPropChange('fill', e.target.value)"
-                  placeholder="#1890FF"
-                >
+              <div class="color-settings">
+                <div class="color-picker">
+                  <input 
+                    type="color" 
+                    :value="element.props?.fill || '#1890FF'"
+                    @input="(e) => handleElementPropChange('fill', e.target.value)"
+                  >
+                  <input 
+                    type="text"
+                    :value="element.props?.fill || '#1890FF'"
+                    @input="(e) => handleElementPropChange('fill', e.target.value)"
+                    placeholder="#1890FF"
+                  >
+                  <button 
+                    class="btn-save-color"
+                    @click="addColorVar(element.props?.fill)"
+                    title="保存到颜色库"
+                  >
+                    <Plus theme="outline" size="14" />
+                  </button>
+                </div>
+                
+                <!-- 颜色库 -->
+                <div v-if="colorVars.length > 0" class="color-blocks">
+                  <div 
+                    v-for="(color, index) in colorVars" 
+                    :key="index"
+                    class="color-block"
+                  >
+                    <div 
+                      class="color-preview"
+                      :style="{ backgroundColor: color }"
+                      @click="handleElementPropChange('fill', color)"
+                      :title="color"
+                    ></div>
+                    <button 
+                      class="btn-delete-color"
+                      @click="removeColorVar(index)"
+                      title="删除颜色"
+                    >
+                      <Delete theme="outline" size="10" />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -254,7 +286,7 @@
                     <span class="unit">px</span>
                   </div>
                 </div>
-                <div class="color-picker">
+                <div class="border-settings .color-picker">
                   <input
                     type="color"
                     :value="element.props?.stroke || '#096DD9'"
@@ -369,29 +401,31 @@
 
             <div class="form-group">
               <label>线条端点</label>
-              <div class="input-group">
-                <select
-                  :value="element.props?.lineCap || 'butt'"
-                  @change="(e) => updateElementProp('props', {
-                    ...element.props,
-                    lineCap: e.target.value
-                  })"
-                >
-                  <option value="butt">方形</option>
-                  <option value="round">圆形</option>
-                  <option value="square">延伸方形</option>
-                </select>
-                <select
-                  :value="element.props?.lineJoin || 'miter'"
-                  @change="(e) => updateElementProp('props', {
-                    ...element.props,
-                    lineJoin: e.target.value
-                  })"
-                >
-                  <option value="miter">尖角</option>
-                  <option value="round">圆角</option>
-                  <option value="bevel">斜角</option>
-                </select>
+              <div class="line-cap-settings">
+                <div class="select-group">
+                  <select
+                    :value="element.props?.lineCap || 'butt'"
+                    @change="(e) => updateElementProp('props', {
+                      ...element.props,
+                      lineCap: e.target.value
+                    })"
+                  >
+                    <option value="butt">方形</option>
+                    <option value="round">圆形</option>
+                    <option value="square">延伸方形</option>
+                  </select>
+                  <select
+                    :value="element.props?.lineJoin || 'miter'"
+                    @change="(e) => updateElementProp('props', {
+                      ...element.props,
+                      lineJoin: e.target.value
+                    })"
+                  >
+                    <option value="miter">尖角</option>
+                    <option value="round">圆角</option>
+                    <option value="bevel">斜角</option>
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -964,37 +998,24 @@ const applyToAllCanvas = () => {
 // 控制网格设置的显示/隐藏
 const showGridSettings = ref(false)
 
-// 颜色变量列表 - 只存储颜色值
-const colorVars = ref([])
+// 颜色变量列表 - 使用 localStorage 持久化存储
+const colorVars = ref(JSON.parse(localStorage.getItem('colorVars') || '[]'))
 
 // 添加颜色变量
 const addColorVar = (color) => {
   if (!color) return
   if (!colorVars.value.includes(color)) {
     colorVars.value.push(color)
+    // 保存到 localStorage
+    localStorage.setItem('colorVars', JSON.stringify(colorVars.value))
   }
-}
-
-// 计算文字颜色（根据背景色自动调整）
-const getContrastColor = (backgroundColor) => {
-  // 移除可能的空格和#号
-  const hex = backgroundColor.replace(/\s/g, '').replace('#', '')
-  
-  // 转换为RGB
-  const r = parseInt(hex.substring(0, 2), 16)
-  const g = parseInt(hex.substring(2, 4), 16)
-  const b = parseInt(hex.substring(4, 6), 16)
-  
-  // 计算亮度
-  const brightness = (r * 299 + g * 587 + b * 114) / 1000
-  
-  // 根据亮度返回黑色或白色
-  return brightness > 128 ? '#333333' : '#ffffff'
 }
 
 // 删除颜色变量
 const removeColorVar = (index) => {
   colorVars.value.splice(index, 1)
+  // 保存到 localStorage
+  localStorage.setItem('colorVars', JSON.stringify(colorVars.value))
 }
 
 // 监听画布ID变化，重置网格设置面板
@@ -1060,7 +1081,6 @@ h3 {
   font-size: 16px;
   font-weight: 600;
   color: #1f2937;
-  margin-bottom: 8px;
 }
 
 h4 {
@@ -1189,29 +1209,55 @@ label {
 .border-settings {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
+  padding: 8px;
+  background: #fafafa;
+  border-radius: 6px;
 }
 
 .border-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 80px;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   width: 100%;
 }
 
 .border-row .button-group {
   margin: 0;
-  width: 102px;  /* 34px * 3 */
+  width: auto;
+  flex-shrink: 0;
+  background: #fff;
 }
 
 .border-row .input-group {
-  flex: 1;
-  min-width: 0;
+  width: 80px;
+  flex-shrink: 0;
 }
 
 .border-row .input-group input {
   width: 100%;
-  min-width: 60px;
+  text-align: center;
+}
+
+/* 修改颜色选择器在边框设置中的样式 */
+.border-settings .color-picker {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px;
+  width: 100%;
+  padding: 8px;
+  background: #fff;
+  border-radius: 4px;
+}
+
+.border-settings .color-picker input[type="color"] {
+  width: 32px;
+  height: 32px;
+}
+
+.border-settings .color-picker input[type="text"] {
+  min-width: 0;
 }
 
 .button-group {
@@ -1707,12 +1753,6 @@ textarea:focus {
   gap: 8px;
 }
 
-.color-picker {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .btn-save-color {
   display: inline-flex;
   align-items: center;
@@ -2055,5 +2095,43 @@ textarea:focus {
 :deep(.switch-component label) {
   min-width: 44px;
   min-height: 22px;
+}
+
+.line-cap-settings {
+  padding: 8px;
+  background: #fafafa;
+  border-radius: 6px;
+}
+
+.select-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.select-group select {
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  background-color: #fff;
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.select-group select:hover {
+  border-color: #40a9ff;
+}
+
+.select-group select:focus {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+  outline: none;
+}
+
+.select-group select option {
+  padding: 8px;
 }
 </style> 
