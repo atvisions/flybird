@@ -60,9 +60,28 @@
             :snapCenter="true"
             :snapThreshold="10"
             :elementGuidelines="getElementGuidelines()"
-            :isDisplaySnapDigit="false"
-            :isDisplayInnerSnapDigit="false"
-            :isDisplayGridGuidelines="false"
+            :isDisplaySnapDigit="true"
+            :isDisplayInnerSnapDigit="true"
+            :snapDigit="0"
+            :snapGap="true"
+            :snapGridWidth="props.canvasConfig.gridSize"
+            :snapGridHeight="props.canvasConfig.gridSize"
+            :elementSnapDirections="{
+              top: true,
+              right: true,
+              bottom: true,
+              left: true,
+              center: true,
+              middle: true
+            }"
+            :snapDirections="{
+              top: true,
+              right: true,
+              bottom: true,
+              left: true,
+              center: true,
+              middle: true
+            }"
             :bounds="{
               left: 0,
               top: 0,
@@ -71,17 +90,6 @@
             }"
             :verticalGuidelines="[0, canvasConfig.width / 2, canvasConfig.width]"
             :horizontalGuidelines="[0, canvasConfig.height / 2, canvasConfig.height]"
-            :snapGap="false"
-            :elementSnapDirections="{
-              center: true,
-              middle: true
-            }"
-            :snapDirections="{
-              center: true,
-              middle: true
-            }"
-            :snapGridWidth="0"
-            :snapGridHeight="0"
             :renderMode="'transform'"
             :stopPropagation="true"
             :preventDefault="true"
@@ -406,7 +414,7 @@ const handleResizeEnd = () => {
   if (element) {
     element.style.width = `${currentElement.value.width}px`
     element.style.height = `${currentElement.value.height}px`
-    element.style.transform = `translate(${currentElement.value.x}px, ${currentElement.value.y}px) rotate(${currentElement.value.rotate || 0}deg)`
+    element.style.transform = `translate(${currentElement.value.x}px, ${currentElement.value.y}px) rotate(${currentElement.value.rotate}deg)`
   }
   
   updateElement(currentElement.value)
@@ -759,7 +767,18 @@ const getElementGuidelines = () => {
     .map(el => ({
       element: `[data-id='${el.id}']`,
       className: 'guideline',
-      centerRect: true
+      centerRect: true,
+      horizontal: true,
+      vertical: true,
+      gap: 0,
+      bounds: {
+        left: el.x,
+        top: el.y,
+        right: el.x + el.width,
+        bottom: el.y + el.height,
+        center: el.x + el.width / 2,
+        middle: el.y + el.height / 2
+      }
     }))
 }
 
