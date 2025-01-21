@@ -18,24 +18,6 @@
       </div>
     </div>
 
-    <!-- 线框风格图标组 -->
-    <div class="icon-group">
-      <div class="icon-title">线框风格图标</div>
-      <div class="icon-list">
-        <div class="icon-item" 
-          v-for="icon in outlineIcons" 
-          :key="icon.type" 
-          @click="handleIconClick(icon)"
-          :title="icon.label"
-          draggable="true"
-          @dragstart="handleDragStart($event, icon)"
-          @dragend="handleDragEnd"
-        >
-          <component :is="icon.component" :theme="themes.outline" :size="20" />
-        </div>
-      </div>
-    </div>
-
     <!-- 多彩风格图标组 -->
     <div class="icon-group">
       <div class="icon-title">多彩风格图标</div>
@@ -112,13 +94,7 @@
 
 <script setup>
 import { defineEmits, h } from 'vue'
-// Icon Park 其他风格图标
-import {
-  UserBusiness, PhoneIncoming, MailPackage, LocalPin, DegreeHat, BuildingOne, Trophy, Certificate, ImageFiles, EditTwo,
-  People, PhoneIncomingOne, EmailPush, BookOne, Workbench, LightMember, PictureOne, EditOne
-} from '@icon-park/vue-next'
-
-// Tabler 简约风格图标
+// 移除 Icon Park 导入
 import {
   UserCircle,
   Phone,
@@ -182,7 +158,6 @@ const emit = defineEmits(['select-icon'])
 // 图标主题类型
 const themes = {
   filled: 'filled',
-  outline: 'outline',
   colorful: 'multi-color',
   handpainted: 'hand-painted'
 }
@@ -199,20 +174,6 @@ const filledIcons = [
   { type: 'certificate-filled', component: RibbonSharp, label: '证书' },
   { type: 'portfolio-filled', component: ImagesSharp, label: '作品' },
   { type: 'edit-filled', component: CreateSharp, label: '编辑' }
-]
-
-// 线框风格图标
-const outlineIcons = [
-  { type: 'user-outline', component: UserBusiness, label: '用户' },
-  { type: 'phone-outline', component: PhoneIncoming, label: '电话' },
-  { type: 'email-outline', component: MailPackage, label: '邮箱' },
-  { type: 'address-outline', component: LocalPin, label: '地址' },
-  { type: 'education-outline', component: DegreeHat, label: '教育' },
-  { type: 'work-outline', component: BuildingOne, label: '工作' },
-  { type: 'skill-outline', component: Trophy, label: '技能' },
-  { type: 'certificate-outline', component: Certificate, label: '证书' },
-  { type: 'portfolio-outline', component: ImageFiles, label: '作品' },
-  { type: 'edit-outline', component: EditTwo, label: '编辑' }
 ]
 
 // 多彩风格图标（使用 Iconify）
@@ -303,28 +264,32 @@ const handleDragStart = (event, icon) => {
   event.dataTransfer.effectAllowed = 'copy'
   event.dataTransfer.dropEffect = 'copy'
   
-  // 根据不同类型的图标构建不同的数据
-  let iconData = {
-    type: 'icon',
-    data: {
+  // 构建组件数据
+  const componentData = {
+    type: 'icon',  // 元素类型为 icon
+    props: {
       iconType: icon.type,
-      component: icon.component.name
+      component: icon.component.name,
+      size: 20,
+      fill: '#1890ff',
+      stroke: '#096dd9',
+      strokeWidth: 2,
+      opacity: 1
     }
   }
 
   // 根据图标类型添加特定属性
-  if (icon.theme) {
-    iconData.data.theme = icon.theme
+  if (icon.type.includes('outline')) {
+    componentData.props.theme = themes.outline
+  } else if (icon.theme) {
+    componentData.props.theme = icon.theme
   }
   
   if (icon.icon) {
-    iconData.data.icon = icon.icon
+    componentData.props.icon = icon.icon
   }
 
-  // 设置默认大小
-  iconData.data.size = 20
-
-  event.dataTransfer.setData('application/json', JSON.stringify(iconData))
+  event.dataTransfer.setData('component', JSON.stringify(componentData))
   event.target.classList.add('dragging')
 }
 

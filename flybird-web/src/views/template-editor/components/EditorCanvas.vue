@@ -127,6 +127,7 @@ import Arrow from './shapes/Arrow.vue'
 import Star from './shapes/Star.vue'
 import Text from './shapes/Text.vue'
 import Title from './shapes/Title.vue'
+import Icon from './shapes/Icon.vue'
 
 // 注册组件
 const components = {
@@ -137,7 +138,8 @@ const components = {
   arrow: Arrow,
   star: Star,
   text: Text,
-  title: Title
+  title: Title,
+  icon: Icon
 }
 
 const props = defineProps({
@@ -449,58 +451,14 @@ const handleDrop = (e) => {
     radius: 0
   }
   
-  // 根据组件类型设置不同的默认尺寸和属性
-  switch (componentData.type) {
-    case 'title':
-      defaultWidth = 100
-      defaultHeight = 30
-      break
-    case 'text':
-      defaultWidth = 200
-      defaultHeight = 60
-      break
-    case 'triangle':
-      defaultWidth = 100
-      defaultHeight = 100
-      defaultProps = {
-        ...defaultProps,
-        fill: '#1890ff',
-        stroke: '#096dd9',
-        strokeWidth: 2
-      }
-      break
-    case 'arrow':
-      defaultWidth = 200
-      defaultHeight = 40
-      defaultProps = {
-        ...defaultProps,
-        stroke: '#096dd9',
-        strokeWidth: 2,
-        startArrow: 'none', // none, arrow, dot, diamond
-        endArrow: 'arrow',  // none, arrow, dot, diamond
-        startArrowSize: 10,
-        endArrowSize: 10,
-        lineCap: 'butt',   // butt, round, square
-        lineJoin: 'miter'  // miter, round, bevel
-      }
-      break
-    case 'line':
-      defaultWidth = 200
-      defaultHeight = 2
-      defaultProps = {
-        ...defaultProps,
-        stroke: '#096dd9',
-        strokeWidth: 2,
-        startArrow: 'none',
-        endArrow: 'none',
-        startArrowSize: 10,
-        endArrowSize: 10,
-        lineCap: 'butt',
-        lineJoin: 'miter'
-      }
-      break
-    default:
-      break
+  // 为图标类型设置特殊的默认值
+  if (componentData.type === 'icon') {
+    defaultWidth = 40
+    defaultHeight = 40
+    defaultProps = {
+      ...defaultProps,
+      ...componentData.props  // 使用图标面板传递的属性
+    }
   }
   
   const newElement = {
@@ -524,7 +482,6 @@ const handleDrop = (e) => {
   
   emit('elements-change', [...props.elements, newElement])
   emit('element-select', newElement)
-  // 保存到历史记录
   pushState([...props.elements, newElement])
 }
 

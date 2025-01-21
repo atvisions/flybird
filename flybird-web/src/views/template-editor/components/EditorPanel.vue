@@ -286,18 +286,50 @@
                     <span class="unit">px</span>
                   </div>
                 </div>
-                <div class="border-settings .color-picker">
-                  <input
-                    type="color"
-                    :value="element.props?.stroke || '#096DD9'"
-                    @input="(e) => handleElementPropChange('stroke', e.target.value)"
-                  >
-                  <input 
-                    type="text"
-                    :value="element.props?.stroke || '#096DD9'"
-                    @input="(e) => handleElementPropChange('stroke', e.target.value)"
-                    placeholder="#096DD9"
-                  >
+                <div class="border-color">
+                  <div class="color-picker">
+                    <input
+                      type="color"
+                      :value="element.props?.stroke || '#096DD9'"
+                      @input="(e) => handleElementPropChange('stroke', e.target.value)"
+                    >
+                    <input 
+                      type="text"
+                      :value="element.props?.stroke || '#096DD9'"
+                      @input="(e) => handleElementPropChange('stroke', e.target.value)"
+                      placeholder="#096DD9"
+                    >
+                    <button 
+                      class="btn-save-color"
+                      @click="addColorVar(element.props?.stroke)"
+                      title="保存到颜色库"
+                    >
+                      <Plus theme="outline" size="14" />
+                    </button>
+                  </div>
+                  
+                  <!-- 颜色库 -->
+                  <div v-if="colorVars.length > 0" class="color-blocks">
+                    <div 
+                      v-for="(color, index) in colorVars" 
+                      :key="index"
+                      class="color-block"
+                    >
+                      <div 
+                        class="color-preview"
+                        :style="{ backgroundColor: color }"
+                        @click="handleElementPropChange('stroke', color)"
+                        :title="color"
+                      ></div>
+                      <button 
+                        class="btn-delete-color"
+                        @click="removeColorVar(index)"
+                        title="删除颜色"
+                      >
+                        <Delete theme="outline" size="10" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -585,6 +617,172 @@
                   max="3"
                   step="0.1"
                 >
+              </div>
+            </div>
+          </template>
+
+          <!-- 图标样式设置 -->
+          <template v-if="element?.type === 'icon'">
+            <div class="form-group">
+              <label>图标颜色</label>
+              <div class="color-settings">
+                <div class="color-picker">
+                  <input 
+                    type="color" 
+                    :value="element.props?.fill || '#1890FF'"
+                    @input="(e) => handleElementPropChange('fill', e.target.value)"
+                  >
+                  <input 
+                    type="text"
+                    :value="element.props?.fill || '#1890FF'"
+                    @input="(e) => handleElementPropChange('fill', e.target.value)"
+                    placeholder="#1890FF"
+                  >
+                  <button 
+                    class="btn-save-color"
+                    @click="addColorVar(element.props?.fill)"
+                    title="保存到颜色库"
+                  >
+                    <Plus theme="outline" size="14" />
+                  </button>
+                </div>
+                
+                <!-- 颜色库 -->
+                <div v-if="colorVars.length > 0" class="color-blocks">
+                  <div 
+                    v-for="(color, index) in colorVars" 
+                    :key="index"
+                    class="color-block"
+                  >
+                    <div 
+                      class="color-preview"
+                      :style="{ backgroundColor: color }"
+                      @click="handleElementPropChange('fill', color)"
+                      :title="color"
+                    ></div>
+                    <button 
+                      class="btn-delete-color"
+                      @click="removeColorVar(index)"
+                      title="删除颜色"
+                    >
+                      <Delete theme="outline" size="10" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>边框</label>
+              <div class="border-settings">
+                <div class="border-row">
+                  <div class="input-group">
+                    <input
+                      type="number"
+                      :value="element.props?.strokeWidth || 0"
+                      @input="(e) => handleElementPropChange('strokeWidth', Math.max(0, parseInt(e.target.value) || 0))"
+                      min="0"
+                      max="20"
+                      placeholder="粗细"
+                    >
+                    <span class="unit">px</span>
+                  </div>
+                </div>
+                <div class="border-color">
+                  <div class="color-picker">
+                    <input
+                      type="color"
+                      :value="element.props?.stroke || '#096DD9'"
+                      @input="(e) => handleElementPropChange('stroke', e.target.value)"
+                    >
+                    <input 
+                      type="text"
+                      :value="element.props?.stroke || '#096DD9'"
+                      @input="(e) => handleElementPropChange('stroke', e.target.value)"
+                      placeholder="#096DD9"
+                    >
+                    <button 
+                      class="btn-save-color"
+                      @click="addColorVar(element.props?.stroke)"
+                      title="保存到颜色库"
+                    >
+                      <Plus theme="outline" size="14" />
+                    </button>
+                  </div>
+                  
+                  <!-- 颜色库 -->
+                  <div v-if="colorVars.length > 0" class="color-blocks">
+                    <div 
+                      v-for="(color, index) in colorVars" 
+                      :key="index"
+                      class="color-block"
+                    >
+                      <div 
+                        class="color-preview"
+                        :style="{ backgroundColor: color }"
+                        @click="handleElementPropChange('stroke', color)"
+                        :title="color"
+                      ></div>
+                      <button 
+                        class="btn-delete-color"
+                        @click="removeColorVar(index)"
+                        title="删除颜色"
+                      >
+                        <Delete theme="outline" size="10" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>阴影</label>
+              <div class="shadow-settings">
+                <div class="shadow-row">
+                  <div class="input-group">
+                    <div class="input-item">
+                      <label>X偏移</label>
+                      <input
+                        type="number"
+                        :value="element.props?.shadowOffsetX || 0"
+                        @input="(e) => handleElementPropChange('shadowOffsetX', parseInt(e.target.value) || 0)"
+                        placeholder="X偏移"
+                      >
+                    </div>
+                    <div class="input-item">
+                      <label>Y偏移</label>
+                      <input
+                        type="number"
+                        :value="element.props?.shadowOffsetY || 0"
+                        @input="(e) => handleElementPropChange('shadowOffsetY', parseInt(e.target.value) || 0)"
+                        placeholder="Y偏移"
+                      >
+                    </div>
+                  </div>
+                </div>
+                <div class="shadow-row">
+                  <div class="input-group">
+                    <div class="input-item">
+                      <label>模糊</label>
+                      <input
+                        type="number"
+                        :value="element.props?.shadowBlur || 0"
+                        @input="(e) => handleElementPropChange('shadowBlur', Math.max(0, parseInt(e.target.value) || 0))"
+                        min="0"
+                        placeholder="模糊"
+                      >
+                    </div>
+                    <div class="input-item">
+                      <label>颜色</label>
+                      <input
+                        type="color"
+                        :value="element.props?.shadowColor || 'rgba(0, 0, 0, 0.3)'"
+                        @input="(e) => handleElementPropChange('shadowColor', e.target.value)"
+                      >
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </template>
@@ -1210,24 +1408,26 @@ label {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 8px;
+  padding: 12px;
   background: #fafafa;
   border-radius: 6px;
 }
 
 .border-row {
-  display: grid;
-  grid-template-columns: auto 80px;
+  display: flex;
   align-items: center;
   gap: 12px;
   width: 100%;
 }
 
 .border-row .button-group {
+  flex: 1;
   margin: 0;
-  width: auto;
-  flex-shrink: 0;
   background: #fff;
+  padding: 2px;
+  border-radius: 6px;
+  display: flex;
+  gap: 1px;
 }
 
 .border-row .input-group {
@@ -1240,24 +1440,24 @@ label {
   text-align: center;
 }
 
-/* 修改颜色选择器在边框设置中的样式 */
-.border-settings .color-picker {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 8px;
-  width: 100%;
-  padding: 8px;
+.border-color {
   background: #fff;
+  padding: 8px;
   border-radius: 4px;
 }
 
-.border-settings .color-picker input[type="color"] {
-  width: 32px;
-  height: 32px;
+.border-color .color-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
 }
 
-.border-settings .color-picker input[type="text"] {
-  min-width: 0;
+.border-color .color-blocks {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .button-group {
@@ -2133,5 +2333,51 @@ textarea:focus {
 
 .select-group select option {
   padding: 8px;
+}
+
+.shadow-settings {
+  padding: 8px;
+  background: #fafafa;
+  border-radius: 6px;
+}
+
+.shadow-row {
+  margin-bottom: 8px;
+}
+
+.shadow-row:last-child {
+  margin-bottom: 0;
+}
+
+.shadow-row .input-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.shadow-row .input-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.shadow-row .input-item label {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 0;
+}
+
+.shadow-row .input-item input {
+  width: 100%;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.shadow-row .input-item input[type="color"] {
+  padding: 2px 4px;
 }
 </style> 
