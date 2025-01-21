@@ -47,6 +47,10 @@
         </div>
       </template>
 
+      <template v-else-if="activeTab === 'icons'">
+        <IconPanel @select-icon="handleIconSelect" />
+      </template>
+
       <template v-else-if="activeTab === 'templates'">
         <div class="templates-panel">
           <!-- TODO: 实现模板面板 -->
@@ -62,6 +66,7 @@ import { computed } from 'vue'
 import { useTabs } from '../composables/useTabs'
 import { useComponents } from '../composables/useComponents'
 import * as Icons from '@icon-park/vue-next'
+import IconPanel from './icons/IconPanel.vue'
 
 const { activeTab, tabs, switchTab } = useTabs()
 const { components, handleDragStart } = useComponents()
@@ -73,6 +78,10 @@ const getIconComponent = (iconName) => {
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join('')
   return Icons[componentName] || Icons.Help
+}
+
+const handleIconSelect = (iconData) => {
+  handleDragStart(new CustomEvent('dragstart'), iconData)
 }
 </script>
 

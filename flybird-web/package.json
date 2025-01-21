@@ -8,10 +8,18 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@ant-design/icons-vue": "^7.0.1",
+    "@element-plus/icons-vue": "^2.3.1",
     "@headlessui/vue": "^1.7.23",
     "@heroicons/vue": "^2.2.0",
     "@icon-park/vue-next": "^1.4.2",
+    "@iconify/vue": "^4.3.0",
     "@mdi/font": "^7.4.47",
+    "@vicons/antd": "^0.13.0",
+    "@vicons/carbon": "^0.13.0",
+    "@vicons/fluent": "^0.13.0",
+    "@vicons/ionicons5": "^0.13.0",
+    "@vicons/tabler": "^0.13.0",
     "@wangeditor/editor": "^5.1.23",
     "@wangeditor/editor-for-vue": "^5.1.12",
     "ant-design-vue": "^4.2.6",

@@ -5,7 +5,7 @@ export function useTabs() {
   
   const tabs = [
     { key: 'components', label: '组件' },
-    { key: 'layers', label: '图层' },
+    { key: 'icons', label: '图标' },
     { key: 'templates', label: '模板' }
   ]
   
