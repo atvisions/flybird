@@ -103,6 +103,7 @@
                   min="12"
                   max="72"
                   step="1"
+                  :disabled="false"
                 >
                 <span class="unit">px</span>
               </div>
@@ -110,12 +111,13 @@
 
             <!-- 文本对齐 -->
             <div class="form-group">
-              <label>对齐方式</label>
+              <label>水平对齐</label>
               <div class="button-group">
                 <button 
                   class="btn-icon" 
                   :class="{ active: element.props?.textAlign === 'left' }"
                   @click="() => handleElementPropChange('textAlign', 'left')"
+                  title="左对齐"
                 >
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect x="2" y="4" width="8" height="1.5" :fill="element.props?.textAlign === 'left' ? '#1890ff' : '#333'" />
@@ -127,6 +129,7 @@
                   class="btn-icon" 
                   :class="{ active: element.props?.textAlign === 'center' }"
                   @click="() => handleElementPropChange('textAlign', 'center')"
+                  title="居中对齐"
                 >
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect x="4" y="4" width="8" height="1.5" :fill="element.props?.textAlign === 'center' ? '#1890ff' : '#333'" />
@@ -138,6 +141,7 @@
                   class="btn-icon" 
                   :class="{ active: element.props?.textAlign === 'right' }"
                   @click="() => handleElementPropChange('textAlign', 'right')"
+                  title="右对齐"
                 >
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect x="6" y="4" width="8" height="1.5" :fill="element.props?.textAlign === 'right' ? '#1890ff' : '#333'" />
@@ -148,22 +152,65 @@
               </div>
             </div>
 
+            <!-- 垂直对齐 -->
+            <div class="form-group">
+              <label>垂直对齐</label>
+              <div class="button-group">
+                <button 
+                  class="btn-icon" 
+                  :class="{ active: element.props?.verticalAlign === 'top' }"
+                  @click="() => handleElementPropChange('verticalAlign', 'top')"
+                  title="顶部对齐"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="2" y="2" width="12" height="1.5" :fill="element.props?.verticalAlign === 'top' ? '#1890ff' : '#333'" />
+                    <rect x="4" y="5" width="8" height="1.5" :fill="element.props?.verticalAlign === 'top' ? '#1890ff' : '#333'" />
+                    <rect x="4" y="8" width="8" height="1.5" :fill="element.props?.verticalAlign === 'top' ? '#1890ff' : '#333'" />
+                  </svg>
+                </button>
+                <button 
+                  class="btn-icon" 
+                  :class="{ active: element.props?.verticalAlign === 'middle' }"
+                  @click="() => handleElementPropChange('verticalAlign', 'middle')"
+                  title="垂直居中"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="4" width="8" height="1.5" :fill="element.props?.verticalAlign === 'middle' ? '#1890ff' : '#333'" />
+                    <rect x="2" y="7.25" width="12" height="1.5" :fill="element.props?.verticalAlign === 'middle' ? '#1890ff' : '#333'" />
+                    <rect x="4" y="10.5" width="8" height="1.5" :fill="element.props?.verticalAlign === 'middle' ? '#1890ff' : '#333'" />
+                  </svg>
+                </button>
+                <button 
+                  class="btn-icon" 
+                  :class="{ active: element.props?.verticalAlign === 'bottom' }"
+                  @click="() => handleElementPropChange('verticalAlign', 'bottom')"
+                  title="底部对齐"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="7" width="8" height="1.5" :fill="element.props?.verticalAlign === 'bottom' ? '#1890ff' : '#333'" />
+                    <rect x="4" y="10" width="8" height="1.5" :fill="element.props?.verticalAlign === 'bottom' ? '#1890ff' : '#333'" />
+                    <rect x="2" y="13" width="12" height="1.5" :fill="element.props?.verticalAlign === 'bottom' ? '#1890ff' : '#333'" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
             <!-- 字体颜色 -->
             <div class="form-group">
               <label>字体颜色</label>
-              <div class="color-picker">
-                <input 
-                  type="color" 
-                  :value="element.props?.color"
-                  @input="(e) => handleElementPropChange('color', e.target.value)"
-                >
-                <input 
-                  type="text"
-                  :value="element.props?.color"
-                  @input="(e) => handleElementPropChange('color', e.target.value)"
-                  placeholder="#000000"
-                >
-              </div>
+              <ColorPicker
+                :model-value="element.props?.color"
+                @update:model-value="(color) => handleElementPropChange('color', color)"
+              />
+            </div>
+
+            <!-- 填充颜色 -->
+            <div class="form-group">
+              <label>填充颜色</label>
+              <ColorPicker
+                :model-value="element.props?.fill"
+                @update:model-value="(color) => handleElementPropChange('fill', color)"
+              />
             </div>
 
             <!-- 行高 -->
@@ -189,62 +236,22 @@
           <template v-if="['rectangle', 'circle', 'triangle', 'star'].includes(element.type)">
             <div class="form-group">
               <label>填充颜色</label>
-              <div class="color-settings">
-                <div class="color-picker">
-                  <input 
-                    type="color" 
-                    :value="element.props?.fill || '#1890FF'"
-                    @input="(e) => handleElementPropChange('fill', e.target.value)"
-                  >
-                  <input 
-                    type="text"
-                    :value="element.props?.fill || '#1890FF'"
-                    @input="(e) => handleElementPropChange('fill', e.target.value)"
-                    placeholder="#1890FF"
-                  >
-                  <button 
-                    class="btn-save-color"
-                    @click="addColorVar(element.props?.fill)"
-                    title="保存到颜色库"
-                  >
-                    <Plus theme="outline" size="14" />
-                  </button>
-                </div>
-                
-                <!-- 颜色库 -->
-                <div v-if="colorVars.length > 0" class="color-blocks">
-                  <div 
-                    v-for="(color, index) in colorVars" 
-                    :key="index"
-                    class="color-block"
-                  >
-                    <div 
-                      class="color-preview"
-                      :style="{ backgroundColor: color }"
-                      @click="handleElementPropChange('fill', color)"
-                      :title="color"
-                    ></div>
-                    <button 
-                      class="btn-delete-color"
-                      @click="removeColorVar(index)"
-                      title="删除颜色"
-                    >
-                      <Delete theme="outline" size="10" />
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <ColorPicker
+                :model-value="element.props?.fill"
+                @update:model-value="(color) => handleElementPropChange('fill', color)"
+              />
             </div>
 
             <div class="form-group">
               <label>边框</label>
               <div class="border-settings">
-                <div class="border-row">
-                  <div class="button-group">
+                <div class="border-style-wrapper">
+                  <div class="border-style-group">
                     <button 
                       class="btn-icon" 
                       :class="{ active: element.props?.strokeStyle === 'solid' }"
                       @click="() => handleElementPropChange('strokeStyle', 'solid')"
+                      title="实线"
                     >
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <rect x="2" y="7.5" width="12" height="1.5" :fill="element.props?.strokeStyle === 'solid' ? '#1890ff' : '#333'" />
@@ -254,6 +261,7 @@
                       class="btn-icon" 
                       :class="{ active: element.props?.strokeStyle === 'dashed' }"
                       @click="() => handleElementPropChange('strokeStyle', 'dashed')"
+                      title="虚线"
                     >
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <rect x="2" y="7.5" width="3" height="1.5" :fill="element.props?.strokeStyle === 'dashed' ? '#1890ff' : '#333'" />
@@ -265,6 +273,7 @@
                       class="btn-icon" 
                       :class="{ active: element.props?.strokeStyle === 'dotted' }"
                       @click="() => handleElementPropChange('strokeStyle', 'dotted')"
+                      title="点线"
                     >
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <rect x="2" y="7.5" width="1.5" height="1.5" :fill="element.props?.strokeStyle === 'dotted' ? '#1890ff' : '#333'" />
@@ -274,62 +283,21 @@
                       </svg>
                     </button>
                   </div>
-                  <div class="input-group">
-                    <input
-                      type="number"
-                      :value="element.props?.strokeWidth || 0"
-                      @input="(e) => handleElementPropChange('strokeWidth', Math.max(0, parseInt(e.target.value) || 0))"
-                      min="0"
-                      max="20"
-                      placeholder="粗细"
-                    >
-                    <span class="unit">px</span>
-                  </div>
+                  <input
+                    type="number"
+                    :value="element.props?.strokeWidth || 0"
+                    @input="(e) => handleElementPropChange('strokeWidth', Math.max(0, parseInt(e.target.value) || 0))"
+                    min="0"
+                    max="20"
+                    placeholder="线宽"
+                  >
                 </div>
                 <div class="border-color">
-                  <div class="color-picker">
-                    <input
-                      type="color"
-                      :value="element.props?.stroke || '#096DD9'"
-                      @input="(e) => handleElementPropChange('stroke', e.target.value)"
-                    >
-                    <input 
-                      type="text"
-                      :value="element.props?.stroke || '#096DD9'"
-                      @input="(e) => handleElementPropChange('stroke', e.target.value)"
-                      placeholder="#096DD9"
-                    >
-                    <button 
-                      class="btn-save-color"
-                      @click="addColorVar(element.props?.stroke)"
-                      title="保存到颜色库"
-                    >
-                      <Plus theme="outline" size="14" />
-                    </button>
-                  </div>
-                  
-                  <!-- 颜色库 -->
-                  <div v-if="colorVars.length > 0" class="color-blocks">
-                    <div 
-                      v-for="(color, index) in colorVars" 
-                      :key="index"
-                      class="color-block"
-                    >
-                      <div 
-                        class="color-preview"
-                        :style="{ backgroundColor: color }"
-                        @click="handleElementPropChange('stroke', color)"
-                        :title="color"
-                      ></div>
-                      <button 
-                        class="btn-delete-color"
-                        @click="removeColorVar(index)"
-                        title="删除颜色"
-                      >
-                        <Delete theme="outline" size="10" />
-                      </button>
-                    </div>
-                  </div>
+                  <label>边框颜色</label>
+                  <ColorPicker
+                    :model-value="element.props?.stroke"
+                    @update:model-value="(color) => handleElementPropChange('stroke', color)"
+                  />
                 </div>
               </div>
             </div>
@@ -409,24 +377,12 @@
                     </svg>
                   </button>
                 </div>
-                <div class="color-picker">
-                  <input
-                    type="color"
-                    :value="element.props?.stroke || '#096dd9'"
-                    @input="(e) => updateElementProp('props', {
-                      ...element.props,
-                      stroke: e.target.value
-                    })"
-                  >
-                  <input 
-                    type="text"
-                    :value="element.props?.stroke || '#096dd9'"
-                    @input="(e) => updateElementProp('props', {
-                      ...element.props,
-                      stroke: e.target.value
-                    })"
-                    placeholder="#096dd9"
-                  >
+                <div class="border-color">
+                  <label>边框颜色</label>
+                  <ColorPicker
+                    :model-value="element.props.stroke"
+                    @update:model-value="(color) => handleElementPropChange('stroke', color)"
+                  />
                 </div>
               </div>
             </div>
@@ -519,9 +475,9 @@
           </template>
 
           <!-- 文本属性 -->
-          <template v-if="element?.type === 'text' || element?.type === 'title'">
+          <template v-if="element?.type === 'text' || element?.type === 'title' || element?.type === 'resume-field'">
             <!-- 文本内容 -->
-            <div class="form-group">
+            <div class="form-group" v-if="element?.type !== 'resume-field'">
               <label>文本内容</label>
               <textarea
                 :value="element.props?.content"
@@ -531,78 +487,142 @@
               ></textarea>
             </div>
             
-            <!-- 字体大小 -->
+            <!-- 字体设置 -->
             <div class="form-group">
-              <label>字体大小</label>
-              <div class="input-group">
-                <input 
-                  type="number" 
-                  :value="element.props?.fontSize"
-                  @input="(e) => handleElementPropChange('fontSize', Number(e.target.value))"
-                  min="12"
-                  max="72"
-                  step="1"
-                >
-                <span class="unit">px</span>
-              </div>
-            </div>
-
-            <!-- 文本对齐 -->
-            <div class="form-group">
-              <label>对齐方式</label>
-              <div class="button-group">
-                <button 
-                  class="btn-icon" 
-                  :class="{ active: element.props?.textAlign === 'left' }"
-                  @click="() => handleElementPropChange('textAlign', 'left')"
-                >
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="2" y="4" width="8" height="1.5" :fill="element.props?.textAlign === 'left' ? '#1890ff' : '#333'" />
-                    <rect x="2" y="7.25" width="12" height="1.5" :fill="element.props?.textAlign === 'left' ? '#1890ff' : '#333'" />
-                    <rect x="2" y="10.5" width="8" height="1.5" :fill="element.props?.textAlign === 'left' ? '#1890ff' : '#333'" />
-                  </svg>
-                </button>
-                <button 
-                  class="btn-icon" 
-                  :class="{ active: element.props?.textAlign === 'center' }"
-                  @click="() => handleElementPropChange('textAlign', 'center')"
-                >
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="4" y="4" width="8" height="1.5" :fill="element.props?.textAlign === 'center' ? '#1890ff' : '#333'" />
-                    <rect x="2" y="7.25" width="12" height="1.5" :fill="element.props?.textAlign === 'center' ? '#1890ff' : '#333'" />
-                    <rect x="4" y="10.5" width="8" height="1.5" :fill="element.props?.textAlign === 'center' ? '#1890ff' : '#333'" />
-                  </svg>
-                </button>
-                <button 
-                  class="btn-icon" 
-                  :class="{ active: element.props?.textAlign === 'right' }"
-                  @click="() => handleElementPropChange('textAlign', 'right')"
-                >
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="6" y="4" width="8" height="1.5" :fill="element.props?.textAlign === 'right' ? '#1890ff' : '#333'" />
-                    <rect x="2" y="7.25" width="12" height="1.5" :fill="element.props?.textAlign === 'right' ? '#1890ff' : '#333'" />
-                    <rect x="6" y="10.5" width="8" height="1.5" :fill="element.props?.textAlign === 'right' ? '#1890ff' : '#333'" />
-                  </svg>
-                </button>
+              <div class="font-settings">
+                <div class="font-row">
+                  <select
+                    :value="element.props?.fontFamily"
+                    @change="(e) => handleElementPropChange('fontFamily', e.target.value)"
+                    class="font-select"
+                  >
+                    <option value="Arial">Arial</option>
+                    <option value="Helvetica">Helvetica</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Microsoft YaHei">微软雅黑</option>
+                    <option value="SimSun">宋体</option>
+                    <option value="SimHei">黑体</option>
+                    <option value="KaiTi">楷体</option>
+                  </select>
+                  <div class="font-size">
+                    <input 
+                      type="number" 
+                      :value="element.props?.fontSize"
+                      @input="(e) => handleElementPropChange('fontSize', Number(e.target.value))"
+                      min="12"
+                      max="72"
+                      step="1"
+                    >
+                  </div>
+                </div>
+                <div class="font-style-row">
+                  <div class="button-group">
+                    <button 
+                      class="btn-icon" 
+                      :class="{ active: element.props?.fontWeight === 'bold' }"
+                      @click="() => handleElementPropChange('fontWeight', element.props?.fontWeight === 'bold' ? 'normal' : 'bold')"
+                      title="粗体"
+                    >
+                      <strong>B</strong>
+                    </button>
+                    <button 
+                      class="btn-icon" 
+                      :class="{ active: element.props?.fontStyle === 'italic' }"
+                      @click="() => handleElementPropChange('fontStyle', element.props?.fontStyle === 'italic' ? 'normal' : 'italic')"
+                      title="斜体"
+                    >
+                      <em>I</em>
+                    </button>
+                  </div>
+                  <!-- 水平对齐 -->
+                  <div class="button-group">
+                    <button 
+                      class="btn-icon" 
+                      :class="{ active: element.props?.textAlign === 'left' }"
+                      @click="() => handleElementPropChange('textAlign', 'left')"
+                      title="左对齐"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="2" y="4" width="8" height="1.5" :fill="element.props?.textAlign === 'left' ? '#1890ff' : '#333'" />
+                        <rect x="2" y="7.25" width="12" height="1.5" :fill="element.props?.textAlign === 'left' ? '#1890ff' : '#333'" />
+                        <rect x="2" y="10.5" width="8" height="1.5" :fill="element.props?.textAlign === 'left' ? '#1890ff' : '#333'" />
+                      </svg>
+                    </button>
+                    <button 
+                      class="btn-icon" 
+                      :class="{ active: element.props?.textAlign === 'center' }"
+                      @click="() => handleElementPropChange('textAlign', 'center')"
+                      title="居中对齐"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="4" y="4" width="8" height="1.5" :fill="element.props?.textAlign === 'center' ? '#1890ff' : '#333'" />
+                        <rect x="2" y="7.25" width="12" height="1.5" :fill="element.props?.textAlign === 'center' ? '#1890ff' : '#333'" />
+                        <rect x="4" y="10.5" width="8" height="1.5" :fill="element.props?.textAlign === 'center' ? '#1890ff' : '#333'" />
+                      </svg>
+                    </button>
+                    <button 
+                      class="btn-icon" 
+                      :class="{ active: element.props?.textAlign === 'right' }"
+                      @click="() => handleElementPropChange('textAlign', 'right')"
+                      title="右对齐"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="6" y="4" width="8" height="1.5" :fill="element.props?.textAlign === 'right' ? '#1890ff' : '#333'" />
+                        <rect x="2" y="7.25" width="12" height="1.5" :fill="element.props?.textAlign === 'right' ? '#1890ff' : '#333'" />
+                        <rect x="6" y="10.5" width="8" height="1.5" :fill="element.props?.textAlign === 'right' ? '#1890ff' : '#333'" />
+                      </svg>
+                    </button>
+                  </div>
+                  <!-- 垂直对齐 -->
+                  <div class="button-group">
+                    <button 
+                      class="btn-icon" 
+                      :class="{ active: element.props?.verticalAlign === 'top' }"
+                      @click="() => handleElementPropChange('verticalAlign', 'top')"
+                      title="顶部对齐"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="2" y="2" width="12" height="1.5" :fill="element.props?.verticalAlign === 'top' ? '#1890ff' : '#333'" />
+                        <rect x="4" y="5" width="8" height="1.5" :fill="element.props?.verticalAlign === 'top' ? '#1890ff' : '#333'" />
+                        <rect x="4" y="8" width="8" height="1.5" :fill="element.props?.verticalAlign === 'top' ? '#1890ff' : '#333'" />
+                      </svg>
+                    </button>
+                    <button 
+                      class="btn-icon" 
+                      :class="{ active: element.props?.verticalAlign === 'middle' }"
+                      @click="() => handleElementPropChange('verticalAlign', 'middle')"
+                      title="垂直居中"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="4" y="4" width="8" height="1.5" :fill="element.props?.verticalAlign === 'middle' ? '#1890ff' : '#333'" />
+                        <rect x="2" y="7.25" width="12" height="1.5" :fill="element.props?.verticalAlign === 'middle' ? '#1890ff' : '#333'" />
+                        <rect x="4" y="10.5" width="8" height="1.5" :fill="element.props?.verticalAlign === 'middle' ? '#1890ff' : '#333'" />
+                      </svg>
+                    </button>
+                    <button 
+                      class="btn-icon" 
+                      :class="{ active: element.props?.verticalAlign === 'bottom' }"
+                      @click="() => handleElementPropChange('verticalAlign', 'bottom')"
+                      title="底部对齐"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="4" y="7" width="8" height="1.5" :fill="element.props?.verticalAlign === 'bottom' ? '#1890ff' : '#333'" />
+                        <rect x="4" y="10" width="8" height="1.5" :fill="element.props?.verticalAlign === 'bottom' ? '#1890ff' : '#333'" />
+                        <rect x="2" y="13" width="12" height="1.5" :fill="element.props?.verticalAlign === 'bottom' ? '#1890ff' : '#333'" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
             <!-- 字体颜色 -->
             <div class="form-group">
               <label>字体颜色</label>
-              <div class="color-picker">
-                <input 
-                  type="color" 
-                  :value="element.props?.color"
-                  @input="(e) => handleElementPropChange('color', e.target.value)"
-                >
-                <input 
-                  type="text"
-                  :value="element.props?.color"
-                  @input="(e) => handleElementPropChange('color', e.target.value)"
-                  placeholder="#000000"
-                >
-              </div>
+              <ColorPicker
+                :model-value="element.props?.color"
+                @update:model-value="(color) => handleElementPropChange('color', color)"
+              />
             </div>
 
             <!-- 行高 -->
@@ -625,163 +645,135 @@
           <template v-if="element?.type === 'icon'">
             <div class="form-group">
               <label>图标颜色</label>
-              <div class="color-settings">
-                <div class="color-picker">
-                  <input 
-                    type="color" 
-                    :value="element.props?.fill || '#1890FF'"
-                    @input="(e) => handleElementPropChange('fill', e.target.value)"
-                  >
-                  <input 
-                    type="text"
-                    :value="element.props?.fill || '#1890FF'"
-                    @input="(e) => handleElementPropChange('fill', e.target.value)"
-                    placeholder="#1890FF"
-                  >
-                  <button 
-                    class="btn-save-color"
-                    @click="addColorVar(element.props?.fill)"
-                    title="保存到颜色库"
-                  >
-                    <Plus theme="outline" size="14" />
-                  </button>
-                </div>
-                
-                <!-- 颜色库 -->
-                <div v-if="colorVars.length > 0" class="color-blocks">
-                  <div 
-                    v-for="(color, index) in colorVars" 
-                    :key="index"
-                    class="color-block"
-                  >
-                    <div 
-                      class="color-preview"
-                      :style="{ backgroundColor: color }"
-                      @click="handleElementPropChange('fill', color)"
-                      :title="color"
-                    ></div>
-                    <button 
-                      class="btn-delete-color"
-                      @click="removeColorVar(index)"
-                      title="删除颜色"
-                    >
-                      <Delete theme="outline" size="10" />
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <ColorPicker
+                :model-value="element.props?.fill"
+                @update:model-value="(color) => handleElementPropChange('fill', color)"
+              />
             </div>
 
             <div class="form-group">
               <label>边框</label>
               <div class="border-settings">
-                <div class="border-row">
-                  <div class="input-group">
-                    <input
-                      type="number"
-                      :value="element.props?.strokeWidth || 0"
-                      @input="(e) => handleElementPropChange('strokeWidth', Math.max(0, parseInt(e.target.value) || 0))"
-                      min="0"
-                      max="20"
-                      placeholder="粗细"
-                    >
-                    <span class="unit">px</span>
-                  </div>
-                </div>
-                <div class="border-color">
-                  <div class="color-picker">
-                    <input
-                      type="color"
-                      :value="element.props?.stroke || '#096DD9'"
-                      @input="(e) => handleElementPropChange('stroke', e.target.value)"
-                    >
-                    <input 
-                      type="text"
-                      :value="element.props?.stroke || '#096DD9'"
-                      @input="(e) => handleElementPropChange('stroke', e.target.value)"
-                      placeholder="#096DD9"
-                    >
+                <div class="border-style-wrapper">
+                  <div class="border-style-group">
                     <button 
-                      class="btn-save-color"
-                      @click="addColorVar(element.props?.stroke)"
-                      title="保存到颜色库"
+                      class="btn-icon" 
+                      :class="{ active: element.props?.strokeStyle === 'solid' }"
+                      @click="() => handleElementPropChange('strokeStyle', 'solid')"
+                      title="实线"
                     >
-                      <Plus theme="outline" size="14" />
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="2" y="7.5" width="12" height="1.5" :fill="element.props?.strokeStyle === 'solid' ? '#1890ff' : '#333'" />
+                      </svg>
+                    </button>
+                    <button 
+                      class="btn-icon" 
+                      :class="{ active: element.props?.strokeStyle === 'dashed' }"
+                      @click="() => handleElementPropChange('strokeStyle', 'dashed')"
+                      title="虚线"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="2" y="7.5" width="3" height="1.5" :fill="element.props?.strokeStyle === 'dashed' ? '#1890ff' : '#333'" />
+                        <rect x="6.5" y="7.5" width="3" height="1.5" :fill="element.props?.strokeStyle === 'dashed' ? '#1890ff' : '#333'" />
+                        <rect x="11" y="7.5" width="3" height="1.5" :fill="element.props?.strokeStyle === 'dashed' ? '#1890ff' : '#333'" />
+                      </svg>
+                    </button>
+                    <button 
+                      class="btn-icon" 
+                      :class="{ active: element.props?.strokeStyle === 'dotted' }"
+                      @click="() => handleElementPropChange('strokeStyle', 'dotted')"
+                      title="点线"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="2" y="7.5" width="1.5" height="1.5" :fill="element.props?.strokeStyle === 'dotted' ? '#1890ff' : '#333'" />
+                        <rect x="5.5" y="7.5" width="1.5" height="1.5" :fill="element.props?.strokeStyle === 'dotted' ? '#1890ff' : '#333'" />
+                        <rect x="9" y="7.5" width="1.5" height="1.5" :fill="element.props?.strokeStyle === 'dotted' ? '#1890ff' : '#333'" />
+                        <rect x="12.5" y="7.5" width="1.5" height="1.5" :fill="element.props?.strokeStyle === 'dotted' ? '#1890ff' : '#333'" />
+                      </svg>
                     </button>
                   </div>
-                  
-                  <!-- 颜色库 -->
-                  <div v-if="colorVars.length > 0" class="color-blocks">
-                    <div 
-                      v-for="(color, index) in colorVars" 
-                      :key="index"
-                      class="color-block"
-                    >
-                      <div 
-                        class="color-preview"
-                        :style="{ backgroundColor: color }"
-                        @click="handleElementPropChange('stroke', color)"
-                        :title="color"
-                      ></div>
-                      <button 
-                        class="btn-delete-color"
-                        @click="removeColorVar(index)"
-                        title="删除颜色"
-                      >
-                        <Delete theme="outline" size="10" />
-                      </button>
-                    </div>
-                  </div>
+                  <input
+                    type="number"
+                    :value="element.props?.strokeWidth || 0"
+                    @input="(e) => handleElementPropChange('strokeWidth', Math.max(0, parseInt(e.target.value) || 0))"
+                    min="0"
+                    max="20"
+                    placeholder="线宽"
+                  >
+                </div>
+                <div class="border-color">
+                  <label>边框颜色</label>
+                  <ColorPicker
+                    :model-value="element.props?.stroke"
+                    @update:model-value="(color) => handleElementPropChange('stroke', color)"
+                  />
                 </div>
               </div>
             </div>
+          </template>
 
+          <!-- 头像样式设置 -->
+          <template v-if="element?.type === 'avatar'">
             <div class="form-group">
-              <label>阴影</label>
-              <div class="shadow-settings">
-                <div class="shadow-row">
-                  <div class="input-group">
-                    <div class="input-item">
-                      <label>X偏移</label>
-                      <input
-                        type="number"
-                        :value="element.props?.shadowOffsetX || 0"
-                        @input="(e) => handleElementPropChange('shadowOffsetX', parseInt(e.target.value) || 0)"
-                        placeholder="X偏移"
+              <div class="avatar-settings">
+                <div class="avatar-row">
+                  <div class="form-item">
+                    <label>头像索引</label>
+                    <div class="input-group">
+                      <input 
+                        type="number" 
+                        :value="element.props?.avatarIndex || 1"
+                        @input="(e) => handleElementPropChange('avatarIndex', Math.min(10, Math.max(1, parseInt(e.target.value) || 1)))"
+                        min="1"
+                        max="10"
+                        step="1"
                       >
                     </div>
-                    <div class="input-item">
-                      <label>Y偏移</label>
-                      <input
-                        type="number"
-                        :value="element.props?.shadowOffsetY || 0"
-                        @input="(e) => handleElementPropChange('shadowOffsetY', parseInt(e.target.value) || 0)"
-                        placeholder="Y偏移"
+                  </div>
+                  <div class="form-item">
+                    <label>边框宽度</label>
+                    <div class="input-group">
+                      <input 
+                        type="number" 
+                        :value="element.props?.borderWidth || 0"
+                        @input="(e) => handleElementPropChange('borderWidth', Math.max(0, parseInt(e.target.value) || 0))"
+                        min="0"
+                        max="10"
+                        step="1"
                       >
+                      <span class="unit">px</span>
                     </div>
                   </div>
                 </div>
-                <div class="shadow-row">
-                  <div class="input-group">
-                    <div class="input-item">
-                      <label>模糊</label>
-                      <input
-                        type="number"
-                        :value="element.props?.shadowBlur || 0"
-                        @input="(e) => handleElementPropChange('shadowBlur', Math.max(0, parseInt(e.target.value) || 0))"
+                <div class="form-item">
+                  <label>圆角度</label>
+                  <div class="radius-control">
+                    <input
+                      type="range"
+                      :value="element.props?.borderRadius || 50"
+                      @input="(e) => handleElementPropChange('borderRadius', Math.min(50, Math.max(0, parseInt(e.target.value) || 0)))"
+                      min="0"
+                      max="50"
+                      step="1"
+                    >
+                    <div class="input-group">
+                      <input 
+                        type="number" 
                         min="0"
-                        placeholder="模糊"
+                        max="50"
+                        :value="element.props?.borderRadius || 50"
+                        @input="(e) => handleElementPropChange('borderRadius', Math.min(50, Math.max(0, parseInt(e.target.value) || 0)))"
                       >
-                    </div>
-                    <div class="input-item">
-                      <label>颜色</label>
-                      <input
-                        type="color"
-                        :value="element.props?.shadowColor || 'rgba(0, 0, 0, 0.3)'"
-                        @input="(e) => handleElementPropChange('shadowColor', e.target.value)"
-                      >
+                      <span class="unit">%</span>
                     </div>
                   </div>
+                </div>
+                <div class="form-item">
+                  <label>边框颜色</label>
+                  <ColorPicker
+                    :model-value="element.props?.borderColor"
+                    @update:model-value="(color) => handleElementPropChange('borderColor', color)"
+                  />
                 </div>
               </div>
             </div>
@@ -882,19 +874,10 @@
                 </button>
               </div>
             </div>
-            <div class="color-picker">
-              <input 
-                type="color" 
-                :value="getCurrentCanvas()?.config?.backgroundColor || '#ffffff'"
-                @input="updateBackgroundColor($event.target.value)"
-              >
-              <input 
-                type="text"
-                :value="getCurrentCanvas()?.config?.backgroundColor || '#ffffff'"
-                @input="updateBackgroundColor($event.target.value)"
-                placeholder="#FFFFFF"
-              >
-            </div>
+            <ColorPicker
+              :model-value="getCurrentCanvas()?.config?.backgroundColor || '#ffffff'"
+              @update:model-value="updateBackgroundColor"
+            />
           </div>
         </div>
 
@@ -940,6 +923,7 @@ import {
   Down
 } from '@icon-park/vue-next'
 import Switch from './Switch.vue'
+import ColorPicker from './ColorPicker.vue'
 
 const props = defineProps({
   element: {
@@ -1249,6 +1233,14 @@ const handleElementPropChange = (prop, value) => {
   // 立即触发选中事件，强制更新当前选中的元素
   emit('element-select', updatedElement)
 }
+
+const isContentDisabled = computed(() => {
+  return props.element?.type === 'resume-field';
+});
+
+const isStyleDisabled = computed(() => {
+  return false; // 样式属性永远不禁用
+});
 </script>
 
 <style scoped>
@@ -1405,72 +1397,48 @@ label {
 }
 
 .border-settings {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 12px;
-  background: #fafafa;
-  border-radius: 6px;
+  width: 100%;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px;
 }
 
-.border-row {
-  display: flex;
+.border-style-wrapper {
+  display: inline-flex !important;
   align-items: center;
-  gap: 12px;
-  width: 100%;
-}
-
-.border-row .button-group {
-  flex: 1;
-  margin: 0;
-  background: #fff;
-  padding: 2px;
+  justify-content: space-between;
+  gap: 8px;
+  background: #f5f5f5;
+  padding: 2px 2px 2px 2px;
   border-radius: 6px;
+  width: 100% !important;
+}
+
+.border-style-group {
   display: flex;
-  gap: 1px;
+  gap: 2px;
 }
 
-.border-row .input-group {
-  width: 80px;
-  flex-shrink: 0;
-}
-
-.border-row .input-group input {
-  width: 100%;
+.border-style-wrapper input {
+  width: 50px;
+  height: 28px;
+  padding: 0 4px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #374151;
   text-align: center;
+  background: white;
 }
 
 .border-color {
-  background: #fff;
-  padding: 8px;
-  border-radius: 4px;
-}
-
-.border-color .color-picker {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   width: 100%;
-}
-
-.border-color .color-blocks {
-  margin-top: 8px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.button-group {
-  display: flex;
-  gap: 1px;
-  background: #f0f0f0;
-  padding: 2px;
-  border-radius: 6px;
+  margin-top: 4px;
 }
 
 .btn-icon {
-  width: 34px;
-  height: 32px;
+  width: 32px;
+  height: 28px;
   padding: 0;
   display: inline-flex;
   align-items: center;
@@ -1479,17 +1447,17 @@ label {
   background: white;
   cursor: pointer;
   transition: all 0.2s;
+  border-radius: 4px;
 }
 
 .btn-icon:hover {
-  color: #1890ff;
-  background-color: #f5f5f5;
+  background-color: #f3f4f6;
 }
 
 .btn-icon.active {
   color: #1890ff;
   background-color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .btn-icon.active :deep(svg) {
@@ -2379,5 +2347,175 @@ textarea:focus {
 
 .shadow-row .input-item input[type="color"] {
   padding: 2px 4px;
+}
+
+.disabled {
+  background-color: #f5f5f5 !important;
+  cursor: not-allowed !important;
+  color: #999 !important;
+  border-color: #d9d9d9 !important;
+}
+
+.disabled:hover {
+  border-color: #d9d9d9 !important;
+}
+
+.btn-icon.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+input[type="color"].disabled {
+  opacity: 0.6;
+}
+
+.color-picker input[type="text"].disabled {
+  background-color: #f5f5f5;
+}
+
+textarea.disabled:hover {
+  border-color: #e5e7eb;
+}
+
+.font-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.font-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.font-select {
+  flex: 1;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  background-color: #fff;
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.font-size {
+  width: 60px;
+  flex-shrink: 0;
+}
+
+.font-size input {
+  width: 100%;
+  height: 32px;
+  padding: 0 4px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #374151;
+  text-align: center;
+  background: white;
+}
+
+.font-size input:hover {
+  border-color: #40a9ff;
+}
+
+.font-size input:focus {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+  outline: none;
+}
+
+.font-style-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.font-style-row .button-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.font-style-row .button-group button {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-radius: 4px;
+}
+
+.font-style-row .button-group button:hover {
+  background-color: #f3f4f6;
+}
+
+.font-style-row .button-group button.active {
+  color: #1890ff;
+  background-color: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.font-style-row .button-group button.active :deep(svg) {
+  fill: #1890ff !important;
+}
+
+.avatar-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.avatar-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.form-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.form-item label {
+  font-size: 13px;
+  color: #4b5563;
+}
+
+.form-item .input-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.form-item input[type="number"] {
+  width: 100%;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #374151;
+  background: white;
+}
+
+.form-item input[type="number"]:hover {
+  border-color: #40a9ff;
+}
+
+.form-item input[type="number"]:focus {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+  outline: none;
 }
 </style> 

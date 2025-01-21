@@ -60,17 +60,31 @@
 
       <!-- 简历组件面板 -->
       <div v-else-if="activeTab === 'resume'" class="resume-panel">
-        <div v-for="component in resumeComponents" :key="component.key" class="resume-category">
+        <div v-for="category in resumeComponents" :key="category.key" class="resume-category">
+          <div class="category-title">{{ category.label }}</div>
           <div class="resume-component-item"
             draggable="true"
-            @dragstart="handleDragStart($event, component)"
+            @dragstart="handleDragStart($event, {
+              type: 'resume-group',
+              key: category.key,
+              label: category.label,
+              dataKey: category.dataKey,
+              fields: category.fields,
+              isArray: category.isArray || false,
+              props: {
+                background: '#fff',
+                padding: '20px',
+                borderRadius: '8px',
+                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+              }
+            })"
           >
             <div class="component-icon">
-              <component :is="getResumeComponentIcon(component.key)" />
+              <component :is="getResumeComponentIcon(category.key)" />
             </div>
             <div class="component-info">
-              <div class="component-name">{{ component.label }}</div>
-              <div class="component-desc">{{ getComponentDescription(component) }}</div>
+              <div class="component-name">{{ category.label }}</div>
+              <div class="component-desc">{{ getComponentDescription(category) }}</div>
             </div>
           </div>
         </div>
@@ -103,21 +117,17 @@ const handleIconSelect = (iconData) => {
   handleDragStart(new CustomEvent('dragstart'), iconData)
 }
 
-// 统一的拖拽处理函数
-const handleDragStart = (event, item) => {
+// 处理拖拽开始
+const handleDragStart = (e, item) => {
   let dragData = null
   
   if (item.type === 'icon') {
+    // 处理图标组件
     dragData = {
       type: 'icon',
-      ...item
+      props: item.props
     }
-  } else if (item.type === 'component') {
-    dragData = {
-      type: 'component',
-      ...item
-    }
-  } else if (item.type === 'group') {
+  } else if (item.type === 'resume-group') {
     // 处理简历组件组
     dragData = {
       type: 'resume-group',
@@ -127,33 +137,42 @@ const handleDragStart = (event, item) => {
       fields: item.fields,
       isArray: item.isArray || false,
       props: {
-        ...item.props,
         background: '#fff',
         padding: '20px',
         borderRadius: '8px',
         boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
       }
     }
+  } else {
+    // 处理基础组件
+    dragData = {
+      type: item.type,
+      props: item.defaultProps || {}
+    }
   }
-
-  if (dragData) {
-    event.dataTransfer.setData('application/json', JSON.stringify(dragData))
+  
+  // 根据不同类型设置不同的数据格式
+  if (dragData.type === 'resume-group') {
+    e.dataTransfer.setData('application/json', JSON.stringify(dragData))
+  } else {
+    e.dataTransfer.setData('component', JSON.stringify(dragData))
   }
+  
+  e.dataTransfer.effectAllowed = 'copy'
 }
 
+// 获取字段图标
 const getFieldIcon = (type) => {
   const iconMap = {
-    text: Icons.Text,
-    richText: Icons.Editor,
     name: Icons.User,
     phone: Icons.Phone,
-    email: Icons.Mail,
+    email: Icons.Email,
     location: Icons.Location,
     personal_summary: Icons.Notes,
     company: Icons.Building,
     position: Icons.IdCard,
-    duration: Icons.Time,
-    description: Icons.Editor,
+    duration: Icons.Calendar,
+    description: Icons.Doc,
     school: Icons.School,
     major: Icons.Book,
     degree: Icons.Certificate,
@@ -373,65 +392,67 @@ const getComponentDescription = (component) => {
 }
 
 .resume-panel {
-  padding: 4px 8px;
+  overflow-y: auto;
 }
 
 .resume-category {
-  margin-bottom: 12px;
+  margin-bottom: 20px;
 }
 
-.resume-category:last-child {
-  margin-bottom: 0;
+.category-title {
+  font-size: 13px;
+  color: #999;
+  margin-bottom: 12px;
+  padding-left: 4px;
 }
 
 .resume-component-item {
-  height: 72px;
+  display: flex;
+  align-items: center;
+  padding: 16px 12px;
   background: #fff;
   border: 1px solid rgba(0, 0, 0, 0.04);
   border-radius: 12px;
-  display: flex;
-  align-items: center;
-  padding: 16px;
   cursor: move;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  user-select: none;
+  transition: all 0.2s;
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.02),
+    0 1px 3px rgba(0, 0, 0, 0.02);
   position: relative;
   overflow: hidden;
 }
 
-.resume-component-item::after {
+.resume-component-item::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, transparent 0%, rgba(24, 144, 255, 0.02) 100%);
-  opacity: 0;
-  transition: opacity 0.3s;
+  background: linear-gradient(to bottom, #fff, rgba(255, 255, 255, 0.95));
+  z-index: 0;
 }
 
 .resume-component-item:hover {
-  border-color: rgba(24, 144, 255, 0.1);
-  transform: translateY(-2px);
+  border-color: rgba(24, 144, 255, 0.2);
+  background: #fff;
+  transform: translateY(-1px);
   box-shadow: 
-    0 8px 24px rgba(24, 144, 255, 0.06),
-    0 2px 8px rgba(24, 144, 255, 0.04);
-}
-
-.resume-component-item:hover::after {
-  opacity: 1;
+    0 4px 16px rgba(24, 144, 255, 0.08),
+    0 1px 4px rgba(24, 144, 255, 0.04);
 }
 
 .component-icon {
   width: 40px;
   height: 40px;
-  font-size: 20px;
-  color: #1890ff;
-  background: rgba(24, 144, 255, 0.04);
-  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 16px;
-  transition: all 0.3s;
+  color: #1890ff;
+  margin-right: 12px;
+  font-size: 22px;
+  background: rgba(24, 144, 255, 0.04);
+  border-radius: 10px;
+  position: relative;
+  z-index: 1;
+  transition: all 0.2s;
 }
 
 .resume-component-item:hover .component-icon {
@@ -440,21 +461,24 @@ const getComponentDescription = (component) => {
 }
 
 .component-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
   flex: 1;
+  min-width: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .component-name {
   font-size: 14px;
+  font-weight: 500;
   color: #333;
-  font-weight: 600;
+  margin-bottom: 4px;
 }
 
 .component-desc {
   font-size: 12px;
   color: #999;
-  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style> 

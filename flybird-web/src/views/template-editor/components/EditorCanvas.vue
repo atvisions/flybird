@@ -39,7 +39,20 @@
               :height="element.height"
               @click.stop.prevent="handleElementSelect(element)"
               @update="(payload) => handleElementUpdate(element, payload)"
-            />
+            >
+            </component>
+            <!-- 删除按钮 -->
+            <div 
+              v-if="selectedElement"
+              class="element-delete-btn"
+              :style="{
+                position: 'absolute',
+                top: `${selectedElement.y - 10}px`,
+                left: `${selectedElement.x + selectedElement.width - 10}px`
+              }"
+              @click.stop="handleElementDelete(selectedElement)"
+              @mousedown.stop
+            >×</div>
           </div>
           <vue-moveable
             v-if="selectedElement"
@@ -49,23 +62,18 @@
             :resizable="true"
             :rotatable="true"
             :scalable="true"
-            :origin="true"
+            :origin="false"
+            :hideDefaultLines="true"
+            :hideRotationControls="false"
+            :hideDefaultControls="true"
             :keepRatio="isKeepingRatio"
-            :throttleDrag="0"
-            :throttleRotate="0"
-            :throttleResize="0"
             :renderDirections="['nw', 'n', 'ne', 'w', 'e', 'sw', 's', 'se']"
             :transformOrigin="'50% 50%'"
             :snappable="true"
             :snapCenter="true"
-            :snapThreshold="10"
-            :elementGuidelines="getElementGuidelines()"
-            :isDisplaySnapDigit="true"
-            :isDisplayInnerSnapDigit="true"
-            :snapDigit="0"
-            :snapGap="true"
-            :snapGridWidth="props.canvasConfig.gridSize"
-            :snapGridHeight="props.canvasConfig.gridSize"
+            :snapThreshold="5"
+            :verticalGuidelines="[0, canvasConfig.width / 2, canvasConfig.width]"
+            :horizontalGuidelines="[0, canvasConfig.height / 2, canvasConfig.height]"
             :elementSnapDirections="{
               top: true,
               right: true,
@@ -82,20 +90,16 @@
               center: true,
               middle: true
             }"
+            :snapGap="true"
+            :isDisplaySnapDigit="true"
+            :elementGuidelines="getElementGuidelines()"
             :bounds="{
               left: 0,
               top: 0,
               right: canvasConfig.width,
               bottom: canvasConfig.height
             }"
-            :verticalGuidelines="[0, canvasConfig.width / 2, canvasConfig.width]"
-            :horizontalGuidelines="[0, canvasConfig.height / 2, canvasConfig.height]"
             :renderMode="'transform'"
-            :stopPropagation="true"
-            :preventDefault="true"
-            :useAccuratePosition="true"
-            :useMutationObserver="false"
-            :zoom="1"
             @dragStart="handleDragStart"
             @drag="handleDrag"
             @dragEnd="handleDragEnd"
@@ -113,7 +117,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick, h } from 'vue'
 import VueMoveable from 'vue3-moveable'
 import { useHistory } from '../composables/useHistory'
 import GuideLine from './GuideLine.vue'
@@ -128,6 +132,8 @@ import Star from './shapes/Star.vue'
 import Text from './shapes/Text.vue'
 import Title from './shapes/Title.vue'
 import Icon from './shapes/Icon.vue'
+import Avatar from './shapes/Avatar.vue'
+import ResumeField from './shapes/ResumeField.vue'
 
 // 注册组件
 const components = {
@@ -139,7 +145,9 @@ const components = {
   star: Star,
   text: Text,
   title: Title,
-  icon: Icon
+  icon: Icon,
+  avatar: Avatar,
+  'resume-field': ResumeField
 }
 
 const props = defineProps({
@@ -167,7 +175,8 @@ const props = defineProps({
 
 const emit = defineEmits([
   'element-select',
-  'elements-change'
+  'elements-change',
+  'element-add'
 ])
 
 // 历史记录管理
@@ -430,59 +439,180 @@ const handleDrop = (e) => {
   e.preventDefault()
   e.stopPropagation()
   
-  const data = e.dataTransfer.getData('component')
-  if (!data) return
-  
-  const componentData = JSON.parse(data)
-  
   const canvasRect = e.currentTarget.getBoundingClientRect()
   const x = (e.clientX - canvasRect.left) / props.scale
   const y = (e.clientY - canvasRect.top) / props.scale
-  
-  // 根据组件类型设置不同的默认宽高
-  let defaultWidth = 100
-  let defaultHeight = 100
-  let defaultProps = {
-    fill: '#1890ff',
-    stroke: '#096dd9',
-    strokeWidth: 2,
-    strokeStyle: 'solid',
-    opacity: 1,
-    radius: 0
-  }
-  
-  // 为图标类型设置特殊的默认值
-  if (componentData.type === 'icon') {
-    defaultWidth = 40
-    defaultHeight = 40
-    defaultProps = {
-      ...defaultProps,
-      ...componentData.props  // 使用图标面板传递的属性
+
+  // 处理基础组件
+  const componentData = e.dataTransfer.getData('component')
+  if (componentData) {
+    try {
+      const parsedData = JSON.parse(componentData)
+      
+      // 根据组件类型设置不同的默认宽高和属性
+      let defaultWidth = 100
+      let defaultHeight = 100
+      let defaultProps = {
+        fill: '#1890ff',
+        stroke: '#096dd9',
+        strokeWidth: 2,
+        strokeStyle: 'solid',
+        opacity: 1,
+        radius: 0
+      }
+
+      // 根据不同组件类型设置特定属性
+      switch (parsedData.type) {
+        case 'rectangle':
+        case 'circle':
+        case 'triangle':
+        case 'star':
+          defaultWidth = 100
+          defaultHeight = 100
+          break
+        case 'icon':
+          defaultWidth = 40
+          defaultHeight = 40
+          defaultProps = {
+            ...defaultProps,
+            ...parsedData.props
+          }
+          break
+        case 'text':
+        case 'title':
+          defaultWidth = 200
+          defaultHeight = 40
+          defaultProps = {
+            content: parsedData.props?.content || '双击编辑文本',
+            fontSize: parsedData.type === 'title' ? 24 : 14,
+            lineHeight: 1.5,
+            color: '#333333',
+            textAlign: 'left'
+          }
+          break
+        case 'resume-field':
+          defaultWidth = 200
+          defaultHeight = 40
+          defaultProps = {
+            ...parsedData.props,
+            fontSize: 14,
+            lineHeight: 1.5,
+            color: '#333333',
+            textAlign: 'left'
+          }
+          break
+      }
+      
+      // 创建新元素
+      const newElement = {
+        id: Date.now(),
+        type: parsedData.type,
+        x,
+        y,
+        width: defaultWidth,
+        height: defaultHeight,
+        rotate: 0,
+        props: defaultProps
+      }
+      
+      // 添加到元素列表
+      elementsList.value.push(newElement)
+      emit('element-add', newElement)
+      pushState(elementsList.value)
+      return
+    } catch (error) {
+      console.error('Failed to parse component data:', error)
     }
   }
-  
-  const newElement = {
-    id: Date.now(),
-    type: componentData.type,
-    x,
-    y,
-    width: defaultWidth,
-    height: defaultHeight,
-    rotate: 0,
-    props: {
-      ...defaultProps,
-      ...componentData.props
-    },
-    style: {
-      cursor: 'pointer',
-      userSelect: 'none',
-      touchAction: 'none'
+
+  // 处理档案字段
+  const jsonData = e.dataTransfer.getData('application/json')
+  if (jsonData) {
+    try {
+      const resumeData = JSON.parse(jsonData)
+      if (resumeData.type === 'resume-group') {
+        const newElements = []
+        let currentY = y
+
+        // 如果是基本信息组件
+        if (resumeData.key === 'basicInfo') {
+          // 头像
+          newElements.push({
+            id: Date.now(),
+            type: 'avatar',
+            x,
+            y: currentY,
+            width: 100,
+            height: 100,
+            props: {
+              content: '{{avatar}}',
+              opacity: 1
+            }
+          })
+          currentY += 120
+
+          // 文本字段列表
+          const textFields = [
+            { key: 'name', label: '姓名' },
+            { key: 'gender', label: '性别' },
+            { key: 'age', label: '年龄' },
+            { key: 'phone', label: '手机号' },
+            { key: 'email', label: '邮箱' },
+            { key: 'tel', label: '电话' },
+            { key: 'location', label: '所在地' }
+          ]
+
+          // 创建文本字段
+          textFields.forEach(field => {
+            newElements.push({
+              id: Date.now() + Math.random(),
+              type: 'text',
+              x,
+              y: currentY,
+              width: 200,
+              height: 24,
+              props: {
+                content: `{{ ${field.label} }}`,
+                dataField: field.key,
+                fontSize: 14,
+                lineHeight: 1.5,
+                color: '#333333',
+                readonly: true,
+                isDataField: true
+              }
+            })
+            currentY += 30
+          })
+
+          // 个人简介(富文本)
+          newElements.push({
+            id: Date.now() + Math.random(),
+            type: 'text',
+            x,
+            y: currentY,
+            width: 400,
+            height: 80,
+            props: {
+              content: '{{ 个人简介 }}',
+              dataField: 'summary',
+              fontSize: 14,
+              lineHeight: 1.6,
+              color: '#666666',
+              readonly: true,
+              isDataField: true
+            }
+          })
+
+          // 添加所有元素到画布
+          const updatedElements = [...props.elements, ...newElements]
+          emit('elements-change', updatedElements)
+          pushState(updatedElements)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to parse resume data:', error)
     }
   }
-  
-  emit('elements-change', [...props.elements, newElement])
-  emit('element-select', newElement)
-  pushState([...props.elements, newElement])
 }
 
 // 处理撤销
@@ -509,6 +639,48 @@ const handleRedo = () => {
 const handleKeyDown = (e) => {
   if (e.key === 'Shift') {
     isKeepingRatio.value = true
+  }
+  
+  // 如果有选中的元素，处理方向键移动
+  if (props.selectedElement && !e.metaKey && !e.ctrlKey && !e.altKey) {
+    const step = e.shiftKey ? 10 : 1 // 按住 Shift 时移动 10px，否则移动 1px
+    let updatedElement = null
+
+    switch (e.key) {
+      case 'ArrowUp':
+        e.preventDefault()
+        updatedElement = {
+          ...props.selectedElement,
+          y: Math.max(0, props.selectedElement.y - step)
+        }
+        break
+      case 'ArrowDown':
+        e.preventDefault()
+        updatedElement = {
+          ...props.selectedElement,
+          y: Math.min(props.canvasConfig.height - props.selectedElement.height, props.selectedElement.y + step)
+        }
+        break
+      case 'ArrowLeft':
+        e.preventDefault()
+        updatedElement = {
+          ...props.selectedElement,
+          x: Math.max(0, props.selectedElement.x - step)
+        }
+        break
+      case 'ArrowRight':
+        e.preventDefault()
+        updatedElement = {
+          ...props.selectedElement,
+          x: Math.min(props.canvasConfig.width - props.selectedElement.width, props.selectedElement.x + step)
+        }
+        break
+    }
+
+    if (updatedElement) {
+      // 更新元素位置
+      updateElement(updatedElement)
+    }
   }
   
   // 处理删除键
@@ -638,18 +810,46 @@ const handleElementUpdate = (element, payload) => {
   
   // 强制更新 DOM
   nextTick(() => {
-    const element = document.querySelector(`[data-id='${updatedElement.id}']`)
-    if (element) {
+    const domElement = document.querySelector(`[data-id='${updatedElement.id}']`)
+    if (domElement) {
       // 更新所有可能的样式属性
-      Object.entries(updatedElement.props).forEach(([key, value]) => {
-        if (key === 'opacity') {
-          element.style.opacity = value
-        } else if (key === 'fill') {
-          element.style.fill = value
-        } else if (key === 'stroke') {
-          element.style.stroke = value
+      const {
+        fontFamily,
+        fontSize,
+        fontWeight,
+        fontStyle,
+        textAlign,
+        verticalAlign,
+        color,
+        lineHeight,
+        opacity,
+        content
+      } = updatedElement.props
+
+      // 更新文本内容
+      if (content !== undefined) {
+        const textContent = domElement.querySelector('.text-content')
+        if (textContent) {
+          textContent.textContent = content
+          // 将样式应用到 text-content 元素上
+          Object.assign(textContent.style, {
+            fontFamily: fontFamily || 'Arial',
+            fontSize: fontSize ? `${fontSize}px` : '14px',
+            fontWeight: fontWeight || 'normal',
+            fontStyle: fontStyle || 'normal',
+            textAlign: textAlign || 'left',
+            verticalAlign: verticalAlign || 'top',
+            color: color || '#333333',
+            lineHeight: lineHeight || '1.5',
+            opacity: opacity || '1'
+          })
         }
-      })
+      }
+
+      // 强制重新渲染
+      domElement.style.display = 'none'
+      domElement.offsetHeight // 触发重排
+      domElement.style.display = 'flex'
     }
   })
 }
@@ -758,12 +958,32 @@ const updateElement = (updatedElement) => {
   }
 }
 
+// 处理元素删除
+const handleElementDelete = (element) => {
+  if (!element) return
+  
+  // 过滤掉被删除的元素
+  const updatedElements = elementsList.value.filter(el => el.id !== element.id)
+  
+  // 更新元素列表
+  elementsList.value = updatedElements
+  
+  // 触发更新事件
+  emit('elements-change', updatedElements)
+  
+  // 清除选中状态
+  emit('element-select', null)
+  
+  // 保存到历史记录
+  pushState(updatedElements)
+}
+
 // 导出方法和状态给父组件
 defineExpose({
   handleUndo,
   handleRedo,
-  canUndo,
-  canRedo
+  canUndo: computed(() => canUndo.value),
+  canRedo: computed(() => canRedo.value)
 })
 </script>
 
@@ -828,67 +1048,119 @@ defineExpose({
 }
 
 .element-selected {
-  outline: 1px solid #1890ff;
+  outline: 2px solid #ff4d4f !important;
 }
 
 :deep(.moveable-control-box) {
-  --moveable-color: #1890ff;
+  --moveable-color: #ff4d4f;
   z-index: 100;
-  pointer-events: none !important;
+  pointer-events: auto !important;
 }
 
 :deep(.moveable-control) {
+  width: 8px !important;
+  height: 8px !important;
+  margin-left: -4px !important;
+  margin-top: -4px !important;
+  border: 1px solid #fff !important;
+  background-color: #ff4d4f !important;
+  border-radius: 50% !important;
   pointer-events: auto !important;
+}
+
+:deep(.moveable-nw) {
+  cursor: nw-resize !important;
+}
+
+:deep(.moveable-n) {
+  cursor: n-resize !important;
+}
+
+:deep(.moveable-ne) {
+  cursor: ne-resize !important;
+}
+
+:deep(.moveable-w) {
+  cursor: w-resize !important;
+}
+
+:deep(.moveable-e) {
+  cursor: e-resize !important;
+}
+
+:deep(.moveable-sw) {
+  cursor: sw-resize !important;
+}
+
+:deep(.moveable-s) {
+  cursor: s-resize !important;
+}
+
+:deep(.moveable-se) {
+  cursor: se-resize !important;
+}
+
+:deep(.moveable-rotation-control) {
+  border-radius: 50% !important;
   background-color: #fff !important;
-  border: 2px solid #1890ff !important;
-  width: 12px !important;
-  height: 12px !important;
-  margin-left: -6px !important;
-  margin-top: -6px !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  border: 2px solid #ff4d4f !important;
+  width: 16px !important;
+  height: 16px !important;
+  margin-left: -8px !important;
+  margin-top: -8px !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+}
+
+:deep(.moveable-origin) {
+  display: none !important;
 }
 
 :deep(.moveable-line) {
-  background-color: #ff4d4f !important;
-  opacity: 1 !important;
-  height: 2px !important;
-  box-shadow: 0 0 4px rgba(255, 77, 79, 0.5) !important;
+  background: #ff4d4f !important;
+  opacity: 0.5;
+  display: block !important;
 }
 
-:deep(.moveable-line.moveable-vertical) {
-  width: 2px !important;
+:deep(.moveable-direction) {
+  pointer-events: auto !important;
+  display: block !important;
 }
 
-:deep(.moveable-line.moveable-horizontal) {
-  height: 2px !important;
+.canvas-element-wrapper {
+  position: absolute;
+  width: auto;
+  height: auto;
+  top: 0;
+  left: 0;
+  transform: translate(var(--x), var(--y)) rotate(var(--rotate, 0deg));
 }
 
-:deep(.moveable-guideline) {
-  background-color: #ff4d4f !important;
-  opacity: 1 !important;
-  z-index: 100;
-  position: absolute !important;
+.element-delete-btn {
+  pointer-events: auto !important;
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: #ff4d4f;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  font-size: 16px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  z-index: 1000;
+  transition: all 0.2s;
 }
 
-:deep(.moveable-guideline.moveable-vertical) {
-  width: 2px !important;
-  height: 100vh !important;
-  top: 0 !important;
-  transform: translateX(-50%) !important;
+.element-delete-btn:hover {
+  background: #ff7875;
+  transform: scale(1.1);
 }
 
-:deep(.moveable-guideline.moveable-horizontal) {
-  height: 2px !important;
-  width: 100vw !important;
-  left: 0 !important;
-  transform: translateY(-50%) !important;
-}
-
-:deep(.moveable-gap) {
-  display: none !important;
-}
-
-:deep(.moveable-gap-text) {
-  display: none !important;
+.element-delete-btn:active {
+  background: #ff4d4f;
+  transform: scale(1);
 }
 </style>

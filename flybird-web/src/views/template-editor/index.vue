@@ -2,8 +2,8 @@
   <div class="template-editor">
     <!-- 顶部工具栏 -->
     <EditorToolbar
-      :can-undo="canvasRef?.canUndo()"
-      :can-redo="canvasRef?.canRedo()"
+      :can-undo="canvasRef?.canUndo"
+      :can-redo="canvasRef?.canRedo"
       @clear="handleClear"
       @save="handleSave"
       @undo="handleUndo"

@@ -13,9 +13,9 @@ export function useComponents() {
           defaultProps: {
             width: 100,
             height: 100,
-            fill: '#f5f5f5',
-            stroke: '#d9d9d9',
-            strokeWidth: 1,
+            fill: '#1890ff',
+            stroke: '#1890ff',
+            strokeWidth: 0,
             opacity: 1
           }
         },
@@ -26,9 +26,9 @@ export function useComponents() {
           defaultProps: {
             width: 100,
             height: 100,
-            fill: '#f5f5f5',
-            stroke: '#d9d9d9',
-            strokeWidth: 1,
+            fill: '#1890ff',
+            stroke: '#1890ff',
+            strokeWidth: 0,
             opacity: 1
           }
         },
@@ -39,9 +39,9 @@ export function useComponents() {
           defaultProps: {
             width: 100,
             height: 100,
-            fill: '#f5f5f5',
-            stroke: '#d9d9d9',
-            strokeWidth: 1,
+            fill: '#1890ff',
+            stroke: '#1890ff',
+            strokeWidth: 0,
             opacity: 1
           }
         },
@@ -51,8 +51,8 @@ export function useComponents() {
           icon: 'minus',
           defaultProps: {
             width: 100,
-            height: 4,
-            stroke: '#d9d9d9',
+            height: 2,
+            stroke: '#1890ff',
             strokeWidth: 2,
             opacity: 1
           }
@@ -63,8 +63,8 @@ export function useComponents() {
           icon: 'arrow-right',
           defaultProps: {
             width: 100,
-            height: 4,
-            stroke: '#d9d9d9',
+            height: 2,
+            stroke: '#1890ff',
             strokeWidth: 2,
             opacity: 1
           }
@@ -76,9 +76,9 @@ export function useComponents() {
           defaultProps: {
             width: 100,
             height: 100,
-            fill: '#f5f5f5',
-            stroke: '#d9d9d9',
-            strokeWidth: 1,
+            fill: '#1890ff',
+            stroke: '#1890ff',
+            strokeWidth: 0,
             opacity: 1,
             points: 5
           }
@@ -97,7 +97,7 @@ export function useComponents() {
             width: 200,
             height: 40,
             content: '标题',
-            color: '#595959',
+            color: '#1890ff',
             fontSize: 24,
             fontFamily: 'Arial',
             fontWeight: 'bold',
@@ -117,7 +117,7 @@ export function useComponents() {
             width: 200,
             height: 80,
             content: '请输入文本',
-            color: '#8c8c8c',
+            color: '#1890ff',
             fontSize: 14,
             fontFamily: 'Arial',
             fontWeight: 'normal',

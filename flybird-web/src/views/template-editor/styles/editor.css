@@ -62,5 +62,32 @@
   justify-content: center;
   align-items: center;
   border-top: 1px solid #f0f0f0;
+}
+
+/* 字体声明 */
+@font-face {
+  font-family: 'Microsoft YaHei';
+  src: local('Microsoft YaHei');
+}
+
+@font-face {
+  font-family: 'SimSun';
+  src: local('SimSun');
+}
+
+@font-face {
+  font-family: 'SimHei';
+  src: local('SimHei');
+}
+
+@font-face {
+  font-family: 'KaiTi';
+  src: local('KaiTi');
+}
+
+/* 字体回退方案 */
+:root {
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Microsoft YaHei', 'SimHei', 'Arial', sans-serif;
+  --font-serif: 'Times New Roman', 'SimSun', 'KaiTi', serif;
 } 
 
