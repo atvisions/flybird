@@ -7,7 +7,6 @@
         <div class="icon-item" 
           v-for="icon in filledIcons" 
           :key="icon.type" 
-          @click="handleIconClick(icon)"
           :title="icon.label"
           draggable="true"
           @dragstart="handleDragStart($event, icon)"
@@ -25,7 +24,6 @@
         <div class="icon-item" 
           v-for="icon in colorfulIcons" 
           :key="icon.type" 
-          @click="handleIconClick(icon)"
           :title="icon.label"
           draggable="true"
           @dragstart="handleDragStart($event, icon)"
@@ -43,7 +41,6 @@
         <div class="icon-item" 
           v-for="icon in roundIcons" 
           :key="icon.type" 
-          @click="handleIconClick(icon)"
           :title="icon.label"
           draggable="true"
           @dragstart="handleDragStart($event, icon)"
@@ -61,7 +58,6 @@
         <div class="icon-item" 
           v-for="icon in simpleIcons" 
           :key="icon.type" 
-          @click="handleIconClick(icon)"
           :title="icon.label"
           draggable="true"
           @dragstart="handleDragStart($event, icon)"
@@ -79,7 +75,6 @@
         <div class="icon-item" 
           v-for="icon in handpaintedIcons" 
           :key="icon.type" 
-          @click="handleIconClick(icon)"
           :title="icon.label"
           draggable="true"
           @dragstart="handleDragStart($event, icon)"
@@ -231,17 +226,6 @@ const handpaintedIcons = [
   { type: 'portfolio-fun', component: Icon, icon: 'line-md:image-twotone', label: '作品' },
   { type: 'edit-fun', component: Icon, icon: 'line-md:edit-twotone', label: '编辑' }
 ]
-
-const handleIconClick = (icon) => {
-  emit('select-icon', {
-    type: icon.type,
-    component: icon.component.name,
-    props: {
-      theme: icon.theme,
-      size: 20
-    }
-  })
-}
 
 // 添加 svg-icon 组件
 const SvgIcon = {

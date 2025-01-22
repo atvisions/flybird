@@ -269,7 +269,8 @@ const props = defineProps({
 const emit = defineEmits([
   'element-select',
   'elements-change',
-  'element-add'
+  'element-add',
+  'selected-elements-change'
 ])
 
 // 历史记录管理
@@ -422,19 +423,25 @@ const handleElementSelect = (element, event) => {
       // 添加新元素到选中组
       selectedElements.value.push(element)
       emit('element-select', null)
+      emit('selected-elements-change', selectedElements.value)
     } else {
       // 从选中组中移除元素
       selectedElements.value.splice(index, 1)
       if (selectedElements.value.length === 1) {
         emit('element-select', selectedElements.value[0])
+        emit('selected-elements-change', [])
       } else if (selectedElements.value.length === 0) {
         emit('element-select', null)
+        emit('selected-elements-change', [])
+      } else {
+        emit('selected-elements-change', selectedElements.value)
       }
     }
   } else {
     // 普通点选模式
     selectedElements.value = []
     emit('element-select', element)
+    emit('selected-elements-change', [])
   }
 }
 
@@ -447,6 +454,7 @@ const handleCanvasClick = (e) => {
   }
   selectedElements.value = []
   emit('element-select', null)
+  emit('selected-elements-change', [])
 }
 
 // 处理拖拽开始
@@ -1098,15 +1106,29 @@ const updateElement = (updatedElement) => {
   if (index !== -1) {
     elementsList.value[index] = updatedElement
     
-    // 如果是当前选中的元素，立即更新选中状态
     if (props.selectedElement?.id === updatedElement.id) {
-      emit('element-select', null)  // 先取消选中
+      emit('element-select', updatedElement)
+    }
+    
+    const multiSelectIndex = selectedElements.value.findIndex(el => el.id === updatedElement.id)
+    if (multiSelectIndex !== -1) {
+      selectedElements.value[multiSelectIndex] = updatedElement
+      emit('selected-elements-change', [...selectedElements.value])
+      
       nextTick(() => {
-        emit('element-select', updatedElement)  // 再重新选中
+        if (multiMoveableRef.value) {
+          multiMoveableRef.value.updateRect()
+          multiMoveableRef.value.updateTarget()
+          selectedElements.value.forEach(element => {
+            const domElement = document.querySelector(`[data-id='${element.id}']`)
+            if (domElement) {
+              domElement.style.transform = `translate(${element.x}px, ${element.y}px) rotate(${element.rotate || 0}deg)`
+            }
+          })
+        }
       })
     }
     
-    // 触发更新事件
     emit('elements-change', [...elementsList.value])
   }
 }

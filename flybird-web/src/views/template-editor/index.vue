@@ -4,10 +4,12 @@
     <EditorToolbar
       :can-undo="canvasRef?.canUndo"
       :can-redo="canvasRef?.canRedo"
+      :scale="scale"
       @clear="handleClear"
       @save="handleSave"
       @undo="handleUndo"
       @redo="handleRedo"
+      @scale-change="handleScaleChange"
     />
 
     <!-- 主要内容区域 -->
@@ -26,11 +28,14 @@
             :current-canvas-id="currentCanvasId"
             :canvas-config="getCurrentCanvas()?.config"
             :selected-element="selectedElement"
+            :selected-elements="selectedElements"
             @element-select="handleElementSelect"
             @elements-change="updateCanvasElements"
             @switch-canvas="switchCanvas"
             @add-canvas="addCanvas"
             @delete-canvas="removeCanvas"
+            @element-add="handleElementAdd"
+            @selected-elements-change="handleSelectedElementsChange"
           />
         </div>
         <div class="editor-footer">
@@ -77,6 +82,7 @@
         :canvas-list="templateData.canvases"
         :current-canvas-id="currentCanvasId"
         :canvas-config="getCurrentCanvas()?.config"
+        :selected-elements="selectedElements"
         @update="handleElementUpdate"
         @element-select="handleElementSelect"
         @add-canvas="addCanvas"
@@ -91,6 +97,9 @@
         @align-top="handleAlignTop"
         @align-vertical-center="handleAlignVerticalCenter"
         @align-bottom="handleAlignBottom"
+        @align-elements="handleAlignElements"
+        @distribute-elements="handleDistributeElements"
+        @spacing-change="handleSpacingChange"
       />
     </div>
   </div>
@@ -254,6 +263,343 @@ const handleAlignVerticalCenter = () => {
 
 const handleAlignBottom = () => {
   canvasRef.value?.alignBottom()
+}
+
+// 添加多选状态
+const selectedElements = ref([])
+
+// 添加多选状态处理函数
+const handleSelectedElementsChange = (elements) => {
+  // 获取画布中最新的元素位置信息
+  const canvas = getCurrentCanvas()
+  if (!canvas) {
+    selectedElements.value = elements
+    return
+  }
+  
+  // 根据传入的elements id获取画布中最新的元素信息
+  const updatedElements = elements.map(el => {
+    const latest = canvas.elements.find(canvasEl => canvasEl.id === el.id)
+    return latest || el
+  })
+  
+  selectedElements.value = updatedElements
+}
+
+// 对齐元素处理函数
+const handleAlignElements = ({ elements, direction }) => {
+  if (!elements || elements.length < 2) return
+  
+  // 获取画布中最新的元素位置信息
+  const canvas = getCurrentCanvas()
+  if (!canvas) return
+  
+  // 根据传入的elements id获取画布中最新的元素信息
+  const elementsToAlign = elements.map(el => {
+    const latest = canvas.elements.find(canvasEl => canvasEl.id === el.id)
+    return latest || el
+  })
+  
+  // 计算对齐位置
+  let alignValue
+  switch (direction) {
+    case 'left': {
+      alignValue = Math.min(...elementsToAlign.map(el => el.x))
+      const newElements = [...canvas.elements]
+      elementsToAlign.forEach(element => {
+        const index = newElements.findIndex(el => el.id === element.id)
+        if (index !== -1) {
+          newElements[index] = {
+            ...newElements[index],
+            x: alignValue
+          }
+        }
+      })
+      updateCanvasElements(newElements)
+      // 更新选中元素状态
+      handleSelectedElementsChange(elementsToAlign.map(el => ({
+        ...el,
+        x: alignValue
+      })))
+      break
+    }
+    case 'center': {
+      const leftmost = Math.min(...elementsToAlign.map(el => el.x))
+      const rightmost = Math.max(...elementsToAlign.map(el => el.x + el.width))
+      const centerX = leftmost + (rightmost - leftmost) / 2
+      const newElements = [...canvas.elements]
+      const updatedElements = []
+      elementsToAlign.forEach(element => {
+        const index = newElements.findIndex(el => el.id === element.id)
+        if (index !== -1) {
+          const newX = Math.round(centerX - element.width / 2)
+          newElements[index] = {
+            ...newElements[index],
+            x: newX
+          }
+          updatedElements.push({
+            ...element,
+            x: newX
+          })
+        }
+      })
+      updateCanvasElements(newElements)
+      // 更新选中元素状态
+      handleSelectedElementsChange(updatedElements)
+      break
+    }
+    case 'right': {
+      const rightmost = Math.max(...elementsToAlign.map(el => el.x + el.width))
+      const newElements = [...canvas.elements]
+      const updatedElements = []
+      elementsToAlign.forEach(element => {
+        const index = newElements.findIndex(el => el.id === element.id)
+        if (index !== -1) {
+          const newX = Math.round(rightmost - element.width)
+          newElements[index] = {
+            ...newElements[index],
+            x: newX
+          }
+          updatedElements.push({
+            ...element,
+            x: newX
+          })
+        }
+      })
+      updateCanvasElements(newElements)
+      // 更新选中元素状态
+      handleSelectedElementsChange(updatedElements)
+      break
+    }
+    case 'top': {
+      alignValue = Math.min(...elementsToAlign.map(el => el.y))
+      const newElements = [...canvas.elements]
+      const updatedElements = []
+      elementsToAlign.forEach(element => {
+        const index = newElements.findIndex(el => el.id === element.id)
+        if (index !== -1) {
+          newElements[index] = {
+            ...newElements[index],
+            y: alignValue
+          }
+          updatedElements.push({
+            ...element,
+            y: alignValue
+          })
+        }
+      })
+      updateCanvasElements(newElements)
+      // 更新选中元素状态
+      handleSelectedElementsChange(updatedElements)
+      break
+    }
+    case 'middle': {
+      const topmost = Math.min(...elementsToAlign.map(el => el.y))
+      const bottommost = Math.max(...elementsToAlign.map(el => el.y + el.height))
+      const centerY = topmost + (bottommost - topmost) / 2
+      const newElements = [...canvas.elements]
+      const updatedElements = []
+      elementsToAlign.forEach(element => {
+        const index = newElements.findIndex(el => el.id === element.id)
+        if (index !== -1) {
+          const newY = Math.round(centerY - element.height / 2)
+          newElements[index] = {
+            ...newElements[index],
+            y: newY
+          }
+          updatedElements.push({
+            ...element,
+            y: newY
+          })
+        }
+      })
+      updateCanvasElements(newElements)
+      // 更新选中元素状态
+      handleSelectedElementsChange(updatedElements)
+      break
+    }
+    case 'bottom': {
+      const bottommost = Math.max(...elementsToAlign.map(el => el.y + el.height))
+      const newElements = [...canvas.elements]
+      const updatedElements = []
+      elementsToAlign.forEach(element => {
+        const index = newElements.findIndex(el => el.id === element.id)
+        if (index !== -1) {
+          const newY = Math.round(bottommost - element.height)
+          newElements[index] = {
+            ...newElements[index],
+            y: newY
+          }
+          updatedElements.push({
+            ...element,
+            y: newY
+          })
+        }
+      })
+      updateCanvasElements(newElements)
+      // 更新选中元素状态
+      handleSelectedElementsChange(updatedElements)
+      break
+    }
+  }
+}
+
+// 分布元素处理函数
+const handleDistributeElements = ({ elements, direction }) => {
+  if (elements.length < 3) return
+  
+  // 获取画布中最新的元素位置信息
+  const canvas = getCurrentCanvas()
+  if (!canvas) return
+  
+  // 根据传入的elements id获取画布中最新的元素信息
+  const latestElements = elements.map(el => {
+    const latest = canvas.elements.find(canvasEl => canvasEl.id === el.id)
+    return latest || el
+  })
+  
+  const sortedElements = [...latestElements]
+  const newElements = [...canvas.elements]
+  const updatedElements = []
+  
+  if (direction === 'horizontal') {
+    // 水平分布时，保持y值不变
+    sortedElements.sort((a, b) => a.x - b.x)
+    const firstElement = sortedElements[0]
+    const lastElement = sortedElements[sortedElements.length - 1]
+    
+    // 计算总的水平空间（从第一个元素的左边到最后一个元素的右边）
+    const totalSpace = (lastElement.x + lastElement.width) - firstElement.x
+    // 计算所有元素的总宽度
+    const totalWidth = sortedElements.reduce((sum, el) => sum + el.width, 0)
+    // 计算需要分配的间隙总量
+    const totalGap = totalSpace - totalWidth
+    // 计算每个间隙的大小
+    const gap = totalGap / (sortedElements.length - 1)
+    
+    let currentX = firstElement.x
+    sortedElements.forEach((element, index) => {
+      if (index === 0) {
+        currentX += element.width
+        updatedElements.push(element)
+        return
+      }
+      if (index === sortedElements.length - 1) {
+        updatedElements.push(element)
+        return
+      }
+      
+      const newX = Math.round(currentX + gap)
+      const elementIndex = newElements.findIndex(el => el.id === element.id)
+      if (elementIndex !== -1) {
+        newElements[elementIndex] = {
+          ...newElements[elementIndex],
+          x: newX
+        }
+        updatedElements.push({
+          ...element,
+          x: newX
+        })
+      }
+      currentX = newX + element.width
+    })
+    updateCanvasElements(newElements)
+    // 更新选中元素状态
+    handleSelectedElementsChange(updatedElements)
+  } else {
+    // 垂直分布时，保持x值不变
+    sortedElements.sort((a, b) => a.y - b.y)
+    const firstElement = sortedElements[0]
+    const lastElement = sortedElements[sortedElements.length - 1]
+    
+    // 计算总的垂直空间（从第一个元素的顶部到最后一个元素的底部）
+    const totalSpace = (lastElement.y + lastElement.height) - firstElement.y
+    // 计算所有元素的总高度
+    const totalHeight = sortedElements.reduce((sum, el) => sum + el.height, 0)
+    // 计算需要分配的间隙总量
+    const totalGap = totalSpace - totalHeight
+    // 计算每个间隙的大小
+    const gap = totalGap / (sortedElements.length - 1)
+    
+    let currentY = firstElement.y
+    sortedElements.forEach((element, index) => {
+      if (index === 0) {
+        currentY += element.height
+        updatedElements.push(element)
+        return
+      }
+      if (index === sortedElements.length - 1) {
+        updatedElements.push(element)
+        return
+      }
+      
+      const newY = Math.round(currentY + gap)
+      const elementIndex = newElements.findIndex(el => el.id === element.id)
+      if (elementIndex !== -1) {
+        newElements[elementIndex] = {
+          ...newElements[elementIndex],
+          y: newY
+        }
+        updatedElements.push({
+          ...element,
+          y: newY
+        })
+      }
+      currentY = newY + element.height
+    })
+    updateCanvasElements(newElements)
+    // 更新选中元素状态
+    handleSelectedElementsChange(updatedElements)
+  }
+}
+
+// 间距调整处理函数
+const handleSpacingChange = ({ elements, spacing }) => {
+  if (elements.length < 2) return
+  
+  const sortedElements = [...elements]
+  
+  // 默认按水平方向调整间距
+  sortedElements.sort((a, b) => a.x - b.x)
+  
+  sortedElements.forEach((element, index) => {
+    if (index === 0) return
+    
+    updateElement({
+      ...element,
+      x: Math.round(sortedElements[index - 1].x + sortedElements[index - 1].width + spacing)
+    })
+  })
+}
+
+// 更新单个元素
+const updateElement = (updatedElement) => {
+  const canvas = getCurrentCanvas()
+  if (!canvas) return
+
+  const elementIndex = canvas.elements.findIndex(el => el.id === updatedElement.id)
+  if (elementIndex === -1) return
+
+  // 获取当前画布中的最新元素状态
+  const currentElement = canvas.elements[elementIndex]
+  
+  // 创建新的元素，只更新传入的属性
+  const newElement = {
+    ...currentElement  // 保留所有当前状态
+  }
+
+  // 只更新传入的属性
+  Object.keys(updatedElement).forEach(key => {
+    if (key !== 'id') {
+      newElement[key] = updatedElement[key]
+    }
+  })
+
+  const newElements = [...canvas.elements]
+  newElements[elementIndex] = newElement
+  
+  // 更新画布元素
+  updateCanvasElements(newElements)
 }
 </script>
 
