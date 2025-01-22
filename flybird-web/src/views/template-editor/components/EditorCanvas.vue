@@ -31,6 +31,12 @@
               class="element-wrapper"
               :data-id="element.id"
               :style="getElementStyle(element)"
+              draggable="true"
+              @mouseenter="handleElementHover(element)"
+              @mouseleave="handleElementLeave(element)"
+              @dragstart="handleElementDragStart($event, element)"
+              @drag="handleElementDrag($event, element)"
+              @dragend="handleElementDragEnd($event, element)"
             >
               <component
                 :is="components[element.type]"
@@ -38,7 +44,8 @@
                 class="canvas-element"
                 :class="{ 
                   'element-selected': element.id === selectedElement?.id && !selectedElements.length,
-                  'element-multi-selected': selectedElements.includes(element)
+                  'element-multi-selected': selectedElements.includes(element),
+                  'element-hover': hoveredElement?.id === element.id
                 }"
                 v-bind="element.props"
                 :width="element.width"
@@ -290,6 +297,10 @@ const selectedElements = ref([])
 
 // 添加多选 Moveable 的引用
 const multiMoveableRef = ref(null)
+
+// 添加悬停元素状态
+const hoveredElement = ref(null)
+const dragStartPosition = ref(null)
 
 // 计算属性
 const contentStyle = computed(() => ({
@@ -1526,6 +1537,70 @@ defineExpose({
   canUndo,
   canRedo
 })
+
+// 处理元素悬停
+const handleElementHover = (element) => {
+  hoveredElement.value = element
+}
+
+// 处理元素离开
+const handleElementLeave = (element) => {
+  hoveredElement.value = null
+}
+
+// 处理元素拖动开始
+const handleElementDragStart = (event, element) => {
+  dragStartPosition.value = {
+    x: event.clientX,
+    y: event.clientY,
+    elementX: element.x,
+    elementY: element.y
+  }
+  event.dataTransfer.effectAllowed = 'move'
+}
+
+// 处理元素拖动
+const handleElementDrag = (event, element) => {
+  if (!dragStartPosition.value || !event.clientX || !event.clientY) return
+  
+  const dx = event.clientX - dragStartPosition.value.x
+  const dy = event.clientY - dragStartPosition.value.y
+  
+  const newX = Math.max(0, Math.min(props.canvasConfig.width - element.width, dragStartPosition.value.elementX + dx))
+  const newY = Math.max(0, Math.min(props.canvasConfig.height - element.height, dragStartPosition.value.elementY + dy))
+  
+  const updatedElement = {
+    ...element,
+    x: Math.round(newX),
+    y: Math.round(newY)
+  }
+  
+  // 直接更新 DOM 样式
+  const domElement = document.querySelector(`[data-id='${element.id}']`)
+  if (domElement) {
+    domElement.style.transform = `translate(${updatedElement.x}px, ${updatedElement.y}px) rotate(${element.rotate || 0}deg)`
+  }
+}
+
+// 处理元素拖动结束
+const handleElementDragEnd = (event, element) => {
+  if (!dragStartPosition.value) return
+  
+  const dx = event.clientX - dragStartPosition.value.x
+  const dy = event.clientY - dragStartPosition.value.y
+  
+  const newX = Math.max(0, Math.min(props.canvasConfig.width - element.width, dragStartPosition.value.elementX + dx))
+  const newY = Math.max(0, Math.min(props.canvasConfig.height - element.height, dragStartPosition.value.elementY + dy))
+  
+  const updatedElement = {
+    ...element,
+    x: Math.round(newX),
+    y: Math.round(newY)
+  }
+  
+  updateElement(updatedElement)
+  dragStartPosition.value = null
+}
 </script>
 
 <style scoped>
@@ -1760,5 +1835,39 @@ defineExpose({
 .group-delete-btn:active {
   background: #ff4d4f !important;
   transform: scale(1) !important;
+}
+
+.element-hover {
+  outline: 1px dashed #1890ff !important;
+  cursor: move;
+}
+
+.element-wrapper {
+  position: absolute;
+  transform-origin: center;
+  will-change: transform;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.element-wrapper:hover {
+  cursor: move;
+}
+
+.canvas-element {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  pointer-events: auto;
+}
+
+.element-selected {
+  outline: 2px solid #ff4d4f !important;
+}
+
+.element-multi-selected {
+  outline: none !important;
 }
 </style>
