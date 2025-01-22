@@ -31,12 +31,8 @@
               class="element-wrapper"
               :data-id="element.id"
               :style="getElementStyle(element)"
-              draggable="true"
-              @mouseenter="handleElementHover(element)"
-              @mouseleave="handleElementLeave(element)"
-              @dragstart="handleElementDragStart($event, element)"
-              @drag="handleElementDrag($event, element)"
-              @dragend="handleElementDragEnd($event, element)"
+              @click.stop.prevent="handleElementSelect(element, $event)"
+              @mousedown.stop="handleElementDragStart($event, element)"
             >
               <component
                 :is="components[element.type]"
@@ -44,13 +40,11 @@
                 class="canvas-element"
                 :class="{ 
                   'element-selected': element.id === selectedElement?.id && !selectedElements.length,
-                  'element-multi-selected': selectedElements.includes(element),
-                  'element-hover': hoveredElement?.id === element.id
+                  'element-multi-selected': selectedElements.includes(element)
                 }"
                 v-bind="element.props"
                 :width="element.width"
                 :height="element.height"
-                @click.stop.prevent="handleElementSelect(element, $event)"
                 @update="(payload) => handleElementUpdate(element, payload)"
                 :style="{
                   width: '100%',
@@ -298,9 +292,10 @@ const selectedElements = ref([])
 // 添加多选 Moveable 的引用
 const multiMoveableRef = ref(null)
 
-// 添加悬停元素状态
-const hoveredElement = ref(null)
-const dragStartPosition = ref(null)
+// 修改拖拽相关的状态和方法
+const isDragging = ref(false)
+const dragStartPos = ref(null)
+const dragElement = ref(null)
 
 // 计算属性
 const contentStyle = computed(() => ({
@@ -1522,6 +1517,81 @@ const alignBottom = () => {
   pushState([...elementsList.value])
 }
 
+// 处理元素拖拽开始
+const handleElementDragStart = (event, element) => {
+  // 如果元素已经被选中，不启用拖拽
+  if (element.id === props.selectedElement?.id || selectedElements.value.includes(element)) {
+    return
+  }
+  
+  isDragging.value = true
+  dragElement.value = element
+  dragStartPos.value = {
+    x: event.clientX,
+    y: event.clientY,
+    elementX: element.x,
+    elementY: element.y
+  }
+
+  // 添加全局事件监听
+  window.addEventListener('mousemove', handleMouseMove)
+  window.addEventListener('mouseup', handleMouseUp)
+}
+
+// 处理鼠标移动
+const handleMouseMove = (event) => {
+  if (!isDragging.value || !dragStartPos.value || !dragElement.value) return
+  
+  const dx = event.clientX - dragStartPos.value.x
+  const dy = event.clientY - dragStartPos.value.y
+  
+  const newX = Math.max(0, Math.min(props.canvasConfig.width - dragElement.value.width, 
+    dragStartPos.value.elementX + dx / props.scale))
+  const newY = Math.max(0, Math.min(props.canvasConfig.height - dragElement.value.height, 
+    dragStartPos.value.elementY + dy / props.scale))
+  
+  // 直接更新 DOM 样式
+  const domElement = document.querySelector(`[data-id='${dragElement.value.id}']`)
+  if (domElement) {
+    domElement.style.transform = `translate(${newX}px, ${newY}px) rotate(${dragElement.value.rotate || 0}deg)`
+  }
+}
+
+// 处理鼠标松开
+const handleMouseUp = (event) => {
+  if (!isDragging.value || !dragStartPos.value || !dragElement.value) return
+  
+  const dx = event.clientX - dragStartPos.value.x
+  const dy = event.clientY - dragStartPos.value.y
+  
+  const newX = Math.max(0, Math.min(props.canvasConfig.width - dragElement.value.width, 
+    dragStartPos.value.elementX + dx / props.scale))
+  const newY = Math.max(0, Math.min(props.canvasConfig.height - dragElement.value.height, 
+    dragStartPos.value.elementY + dy / props.scale))
+  
+  const updatedElement = {
+    ...dragElement.value,
+    x: Math.round(newX),
+    y: Math.round(newY)
+  }
+  
+  updateElement(updatedElement)
+  pushState([...elementsList.value])
+  
+  // 清理状态和事件监听
+  isDragging.value = false
+  dragStartPos.value = null
+  dragElement.value = null
+  window.removeEventListener('mousemove', handleMouseMove)
+  window.removeEventListener('mouseup', handleMouseUp)
+}
+
+// 组件卸载时清理事件监听
+onUnmounted(() => {
+  window.removeEventListener('mousemove', handleMouseMove)
+  window.removeEventListener('mouseup', handleMouseUp)
+})
+
 // 暴露对齐方法
 defineExpose({
   alignHorizontalToCanvas,
@@ -1537,70 +1607,6 @@ defineExpose({
   canUndo,
   canRedo
 })
-
-// 处理元素悬停
-const handleElementHover = (element) => {
-  hoveredElement.value = element
-}
-
-// 处理元素离开
-const handleElementLeave = (element) => {
-  hoveredElement.value = null
-}
-
-// 处理元素拖动开始
-const handleElementDragStart = (event, element) => {
-  dragStartPosition.value = {
-    x: event.clientX,
-    y: event.clientY,
-    elementX: element.x,
-    elementY: element.y
-  }
-  event.dataTransfer.effectAllowed = 'move'
-}
-
-// 处理元素拖动
-const handleElementDrag = (event, element) => {
-  if (!dragStartPosition.value || !event.clientX || !event.clientY) return
-  
-  const dx = event.clientX - dragStartPosition.value.x
-  const dy = event.clientY - dragStartPosition.value.y
-  
-  const newX = Math.max(0, Math.min(props.canvasConfig.width - element.width, dragStartPosition.value.elementX + dx))
-  const newY = Math.max(0, Math.min(props.canvasConfig.height - element.height, dragStartPosition.value.elementY + dy))
-  
-  const updatedElement = {
-    ...element,
-    x: Math.round(newX),
-    y: Math.round(newY)
-  }
-  
-  // 直接更新 DOM 样式
-  const domElement = document.querySelector(`[data-id='${element.id}']`)
-  if (domElement) {
-    domElement.style.transform = `translate(${updatedElement.x}px, ${updatedElement.y}px) rotate(${element.rotate || 0}deg)`
-  }
-}
-
-// 处理元素拖动结束
-const handleElementDragEnd = (event, element) => {
-  if (!dragStartPosition.value) return
-  
-  const dx = event.clientX - dragStartPosition.value.x
-  const dy = event.clientY - dragStartPosition.value.y
-  
-  const newX = Math.max(0, Math.min(props.canvasConfig.width - element.width, dragStartPosition.value.elementX + dx))
-  const newY = Math.max(0, Math.min(props.canvasConfig.height - element.height, dragStartPosition.value.elementY + dy))
-  
-  const updatedElement = {
-    ...element,
-    x: Math.round(newX),
-    y: Math.round(newY)
-  }
-  
-  updateElement(updatedElement)
-  dragStartPosition.value = null
-}
 </script>
 
 <style scoped>
@@ -1763,12 +1769,15 @@ const handleElementDragEnd = (event, element) => {
   display: flex;
   align-items: center;
   justify-content: center;
+  user-select: none;
+  cursor: move;  /* 添加移动光标 */
 }
 
 .canvas-element {
   width: 100%;
   height: 100%;
   position: relative;
+  pointer-events: auto;
 }
 
 .element-delete-btn {
@@ -1835,39 +1844,5 @@ const handleElementDragEnd = (event, element) => {
 .group-delete-btn:active {
   background: #ff4d4f !important;
   transform: scale(1) !important;
-}
-
-.element-hover {
-  outline: 1px dashed #1890ff !important;
-  cursor: move;
-}
-
-.element-wrapper {
-  position: absolute;
-  transform-origin: center;
-  will-change: transform;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  user-select: none;
-}
-
-.element-wrapper:hover {
-  cursor: move;
-}
-
-.canvas-element {
-  width: 100%;
-  height: 100%;
-  position: relative;
-  pointer-events: auto;
-}
-
-.element-selected {
-  outline: 2px solid #ff4d4f !important;
-}
-
-.element-multi-selected {
-  outline: none !important;
 }
 </style>
