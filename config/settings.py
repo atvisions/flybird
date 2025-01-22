@@ -89,7 +89,7 @@ LOCAL_APPS = [
     'articles.apps.ArticlesConfig',
     'qa.apps.QaConfig',
     'membership.apps.MembershipConfig',
-    'resume',
+    'template_editor.apps.TemplateEditorConfig', 
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS + ['django_celery_beat']

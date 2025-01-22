@@ -2,185 +2,102 @@ export const resumeComponents = [
   {
     key: 'basicInfo',
     label: '基本信息',
-    type: 'group',
-    dataKey: 'basicInfo',
-    fields: {
-      name: { type: 'text', label: '姓名' },
-      avatar: { type: 'image', label: '头像' },
-      gender: { type: 'select', label: '性别' },
-      birth: { type: 'date', label: '出生日期' },
-      phone: { type: 'text', label: '手机号码' },
-      email: { type: 'text', label: '电子邮箱' },
-      location: { type: 'text', label: '所在地' },
-      summary: { type: 'richText', label: '个人简介' }
-    },
-    props: {
-      width: 600,
-      height: 280
-    }
+    fields: [
+      { label: '姓名', dataPath: 'basic_info.name', width: 200 },
+      { label: '性别', dataPath: 'basic_info.gender', width: 100 },
+      { label: '出生日期', dataPath: 'basic_info.birth_date', width: 200 },
+      { label: '电话', dataPath: 'basic_info.phone', width: 200 },
+      { label: '邮箱', dataPath: 'basic_info.email', width: 200 },
+      { label: '所在城市', dataPath: 'basic_info.location', width: 200 },
+      { label: '个人简介', dataPath: 'basic_info.personal_summary', width: 400, type: 'textarea', height: 100 }
+    ]
   },
   {
     key: 'jobIntention',
     label: '求职意向',
-    type: 'group',
-    dataKey: 'jobIntention',
-    fields: {
-      jobType: { type: 'select', label: '工作类型' },
-      jobStatus: { type: 'select', label: '求职状态' },
-      expectedSalary: { type: 'text', label: '期望薪资' },
-      expectedCity: { type: 'text', label: '期望城市' },
-      industries: { type: 'tags', label: '期望行业' }
-    },
-    props: {
-      width: 600,
-      height: 200
-    }
-  },
-  {
-    key: 'education',
-    label: '教育经历',
-    type: 'group',
-    dataKey: 'education',
-    isArray: true,
-    fields: {
-      school: { type: 'text', label: '学校名称' },
-      major: { type: 'text', label: '专业' },
-      degree: { type: 'select', label: '学历' },
-      duration: { type: 'dateRange', label: '起止时间' }
-    },
-    props: {
-      width: 600,
-      height: 240
-    }
+    fields: [
+      { label: '工作类型', dataPath: 'job_intention.job_type', width: 200 },
+      { label: '求职状态', dataPath: 'job_intention.job_status', width: 200 },
+      { label: '期望薪资', dataPath: 'job_intention.expected_salary', width: 200 },
+      { label: '期望城市', dataPath: 'job_intention.expected_city', width: 200 },
+      { label: '期望行业', dataPath: 'job_intention.industries', width: 400 }
+    ]
   },
   {
     key: 'workExperience',
     label: '工作经历',
-    type: 'group',
-    dataKey: 'workExperience',
-    isArray: true,
-    fields: {
-      company: { type: 'text', label: '公司名称' },
-      position: { type: 'text', label: '职位' },
-      duration: { type: 'dateRange', label: '起止时间' },
-      description: { type: 'richText', label: '工作内容' }
-    },
-    props: {
-      width: 600,
-      height: 320
-    }
+    fields: [
+      { label: '公司名称', dataPath: 'work_experience.company', width: 300 },
+      { label: '职位名称', dataPath: 'work_experience.position', width: 200 },
+      { label: '所在部门', dataPath: 'work_experience.department', width: 200 },
+      { label: '开始时间', dataPath: 'work_experience.start_date', width: 200 },
+      { label: '结束时间', dataPath: 'work_experience.end_date', width: 200 },
+      { label: '工作描述', dataPath: 'work_experience.description', width: 400, type: 'textarea', height: 100 },
+      { label: '工作成就', dataPath: 'work_experience.achievements', width: 400, type: 'textarea', height: 100 }
+    ]
+  },
+  {
+    key: 'education',
+    label: '教育经历',
+    fields: [
+      { label: '学校名称', dataPath: 'education.school', width: 300 },
+      { label: '专业', dataPath: 'education.major', width: 200 },
+      { label: '学历', dataPath: 'education.degree', width: 200 },
+      { label: '入学时间', dataPath: 'education.start_date', width: 200 },
+      { label: '毕业时间', dataPath: 'education.end_date', width: 200 },
+      { label: '在校经历', dataPath: 'education.description', width: 400, type: 'textarea', height: 100 }
+    ]
+  },
+  {
+    key: 'project',
+    label: '项目经历',
+    fields: [
+      { label: '项目名称', dataPath: 'project.name', width: 300 },
+      { label: '担任角色', dataPath: 'project.role', width: 200 },
+      { label: '开始时间', dataPath: 'project.start_date', width: 200 },
+      { label: '结束时间', dataPath: 'project.end_date', width: 200 },
+      { label: '项目描述', dataPath: 'project.description', width: 400, type: 'textarea', height: 100 },
+      { label: '项目成就', dataPath: 'project.achievement', width: 400, type: 'textarea', height: 100 }
+    ]
   },
   {
     key: 'skills',
-    label: '专业技能',
-    type: 'group',
-    dataKey: 'skills',
-    isArray: true,
-    fields: {
-      name: { type: 'text', label: '技能名称' },
-      level: { type: 'select', label: '熟练程度' },
-      description: { type: 'text', label: '技能描述' }
-    },
-    props: {
-      width: 600,
-      height: 200
-    }
+    label: '技能特长',
+    fields: [
+      { label: '技能名称', dataPath: 'skill.name', width: 200 },
+      { label: '掌握程度', dataPath: 'skill.level', width: 200 },
+      { label: '技能描述', dataPath: 'skill.description', width: 400, type: 'textarea', height: 100 }
+    ]
   },
   {
     key: 'languages',
     label: '语言能力',
-    type: 'section',
-    dataKey: 'languages',
-    isArray: true,
     fields: [
-      { key: 'language', label: '语言', type: 'text' },
-      { key: 'level', label: '水平', type: 'text' },
-      { key: 'certificates', label: '相关证书', type: 'text' }
-    ],
-    defaultStyle: {
-      width: 600,
-      padding: 20,
-      background: '#fff',
-      borderRadius: 8
-    }
-  },
-  {
-    key: 'social',
-    label: '社交主页',
-    type: 'section',
-    dataKey: 'social',
-    isArray: true,
-    fields: [
-      { key: 'platform', label: '平台', type: 'text' },
-      { key: 'url', label: '链接', type: 'text' },
-      { key: 'description', label: '描述', type: 'text' }
-    ],
-    defaultStyle: {
-      width: 600,
-      padding: 20,
-      background: '#fff',
-      borderRadius: 8
-    }
+      { label: '语言名称', dataPath: 'language.name', width: 200 },
+      { label: '掌握程度', dataPath: 'language.proficiency', width: 200 },
+      { label: '语言证书', dataPath: 'language.certification', width: 200 },
+      { label: '证书分数', dataPath: 'language.score', width: 200 }
+    ]
   },
   {
     key: 'certificates',
-    label: '证书奖项',
-    type: 'section',
-    dataKey: 'certificates',
-    isArray: true,
+    label: '证书',
     fields: [
-      { key: 'name', label: '证书名称', type: 'text' },
-      { key: 'issuing_authority', label: '发证机构', type: 'text' },
-      { key: 'issue_date', label: '获得时间', type: 'text' },
-      { key: 'description', label: '描述', type: 'richText' }
-    ],
-    defaultStyle: {
-      width: 600,
-      padding: 20,
-      background: '#fff',
-      borderRadius: 8
-    }
+      { label: '证书名称', dataPath: 'certificate.name', width: 300 },
+      { label: '发证机构', dataPath: 'certificate.issuing_authority', width: 200 },
+      { label: '发证日期', dataPath: 'certificate.issue_date', width: 200 },
+      { label: '证书编号', dataPath: 'certificate.credential_id', width: 200 },
+      { label: '证书描述', dataPath: 'certificate.description', width: 400, type: 'textarea', height: 100 }
+    ]
   },
   {
-    key: 'projects',
-    label: '项目经历',
-    type: 'section',
-    dataKey: 'projects',
-    isArray: true,
+    key: 'social',
+    label: '社交账号',
     fields: [
-      { key: 'name', label: '项目名称', type: 'text' },
-      { key: 'role', label: '担任角色', type: 'text' },
-      { key: 'start_date', label: '开始时间', type: 'text' },
-      { key: 'end_date', label: '结束时间', type: 'text' },
-      { key: 'description', label: '项目描述', type: 'richText' },
-      { key: 'achievements', label: '主要成就', type: 'richText' },
-      { key: 'technologies', label: '相关技术', type: 'text' }
-    ],
-    defaultStyle: {
-      width: 600,
-      padding: 20,
-      background: '#fff',
-      borderRadius: 8
-    }
-  },
-  {
-    key: 'portfolio',
-    label: '作品展示',
-    type: 'section',
-    dataKey: 'portfolio',
-    isArray: true,
-    fields: [
-      { key: 'title', label: '作品标题', type: 'text' },
-      { key: 'cover', label: '封面图片', type: 'image' },
-      { key: 'description', label: '作品描述', type: 'richText' },
-      { key: 'url', label: '相关链接', type: 'text' }
-    ],
-    defaultStyle: {
-      width: 600,
-      padding: 20,
-      background: '#fff',
-      borderRadius: 8
-    }
+      { label: '平台名称', dataPath: 'social_link.platform', width: 200 },
+      { label: '主页链接', dataPath: 'social_link.url', width: 300 },
+      { label: '账号描述', dataPath: 'social_link.description', width: 400 }
+    ]
   }
 ]
 

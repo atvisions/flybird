@@ -40,37 +40,22 @@
         </div>
       </template>
 
-      <template v-else-if="activeTab === 'layers'">
-        <div class="layers-panel">
-          <!-- TODO: 实现图层面板 -->
-          图层面板开发中...
-        </div>
-      </template>
+  
 
       <template v-else-if="activeTab === 'icons'">
         <IconPanel @select-icon="handleIconSelect" />
       </template>
 
-      <template v-else-if="activeTab === 'templates'">
-        <div class="templates-panel">
-          <!-- TODO: 实现模板面板 -->
-          模板面板开发中...
-        </div>
-      </template>
-
       <!-- 简历组件面板 -->
       <div v-else-if="activeTab === 'resume'" class="resume-panel">
-        <div v-for="category in resumeComponents" :key="category.key" class="resume-category">
-          <div class="category-title">{{ category.label }}</div>
+        <div v-for="group in resumeComponents" :key="group.key" class="resume-category">
+          <div class="category-title">{{ group.label }}</div>
           <div class="resume-component-item"
             draggable="true"
             @dragstart="handleDragStart($event, {
-              type: 'resume-group',
-              key: category.key,
-              label: category.label,
-              dataKey: category.dataKey,
-              fields: category.fields,
-              isArray: category.isArray || false,
+              type: 'resume-field',
+              component: group.key,
+              label: group.label,
               props: {
                 background: '#fff',
                 padding: '20px',
@@ -80,29 +65,98 @@
             })"
           >
             <div class="component-icon">
-              <component :is="getResumeComponentIcon(category.key)" />
+              <component :is="getResumeComponentIcon(group.key)" />
             </div>
             <div class="component-info">
-              <div class="component-name">{{ category.label }}</div>
-              <div class="component-desc">{{ getComponentDescription(category) }}</div>
+              <div class="component-name">{{ group.label }}</div>
+              <div class="component-desc">{{ getComponentDescription(group) }}</div>
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- 模板列表 -->
+      <div v-else-if="activeTab === 'templates'" class="template-panel">
+        <!-- 分类选择 -->
+        <div class="category-select">
+          <select v-model="selectedCategory" class="select-input">
+            <option value="">全部分类</option>
+            <option v-for="category in categories" :key="category.id" :value="category.id">
+              {{ category.name }}
+            </option>
+          </select>
+          <div class="filter-options">
+            <label class="filter-label">
+              <input type="checkbox" v-model="onlyMyTemplates"> 只看我的
+            </label>
+          </div>
+        </div>
+
+        <!-- 模板列表 -->
+        <div class="template-list">
+          <div v-if="loading" class="loading-state">
+            加载中...
+          </div>
+          <template v-else>
+            <div v-if="templates.length === 0" class="empty-state">
+              暂无模板
+            </div>
+            <div v-else class="template-grid">
+              <div
+                v-for="template in templates"
+                :key="template.id"
+                class="template-item"
+              >
+                <div class="template-preview" @click="handleTemplateSelect(template)">
+                  <img v-if="template.thumbnail" :src="template.thumbnail" :alt="template.name">
+                  <div v-else class="no-thumbnail">暂无预览图</div>
+                </div>
+                <div class="template-info">
+                  <div class="template-name">{{ template.name }}</div>
+                  <div class="template-meta">
+                    <span>{{ template.pages?.length || 1 }}页</span>
+                    <div class="template-actions">
+                      <button v-if="isTemplateEditable(template)" class="action-btn edit" @click="handleEditTemplate(template)">编辑</button>
+                      <button class="action-btn use" @click="handleUseTemplate(template)">使用</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- 其他面板内容 -->
+      <div v-else-if="activeTab === 'element'" class="element-panel">
+        <!-- 保持原有的元素面板内容 -->
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { useTabs } from '../composables/useTabs'
 import { useComponents } from '../composables/useComponents'
 import * as Icons from '@icon-park/vue-next'
 import IconPanel from './icons/IconPanel.vue'
 import { resumeComponents } from '../config/resume-components'
+import { categoryApi, templateApi } from '../api'
+import { showToast } from '@/components/ToastMessage'
+import { useUserStore } from '@/stores/user'
 
 const { activeTab, tabs, switchTab } = useTabs()
 const { components } = useComponents()
+
+const loading = ref(false)
+const categories = ref([])
+const templates = ref([])
+const selectedCategory = ref('')
+const onlyMyTemplates = ref(false)
+const userStore = useUserStore()
+
+const emit = defineEmits(['edit-template', 'use-template'])
 
 // 获取图标组件
 const getIconComponent = (iconName) => {
@@ -113,35 +167,57 @@ const getIconComponent = (iconName) => {
   return Icons[componentName] || Icons.Help
 }
 
+// 处理图标选择
 const handleIconSelect = (iconData) => {
-  handleDragStart(new CustomEvent('dragstart'), iconData)
+  // 创建一个模拟的拖拽事件
+  const e = new DragEvent('dragstart', {
+    bubbles: true,
+    cancelable: true
+  })
+  
+  // 设置拖拽数据
+  const dragData = {
+    type: 'icon',
+    props: {
+      name: iconData.name,
+      size: 24,
+      color: '#333333'
+    }
+  }
+  
+  // 创建一个新的 DataTransfer 对象
+  const dataTransfer = new DataTransfer()
+  dataTransfer.setData('text/plain', JSON.stringify(dragData))
+  Object.defineProperty(e, 'dataTransfer', {
+    value: dataTransfer,
+    writable: false
+  })
+  
+  handleDragStart(e, dragData)
 }
 
 // 处理拖拽开始
 const handleDragStart = (e, item) => {
   let dragData = null
   
-  if (item.type === 'icon') {
+  if (item.type === 'resume-field') {
+    // 处理简历字段组件
+    dragData = {
+      type: item.component === 'basicInfo' ? 'basic-info' : 'resume-field',
+      component: item.component,
+      label: item.label,
+      props: {
+        ...item.props,
+        isPreview: false,
+        dataPath: item.component
+      }
+    }
+    console.log('拖拽数据:', dragData)
+  } else if (item.type === 'icon') {
     // 处理图标组件
     dragData = {
       type: 'icon',
       props: item.props
-    }
-  } else if (item.type === 'resume-group') {
-    // 处理简历组件组
-    dragData = {
-      type: 'resume-group',
-      key: item.key,
-      label: item.label,
-      dataKey: item.dataKey,
-      fields: item.fields,
-      isArray: item.isArray || false,
-      props: {
-        background: '#fff',
-        padding: '20px',
-        borderRadius: '8px',
-        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-      }
     }
   } else {
     // 处理基础组件
@@ -151,13 +227,7 @@ const handleDragStart = (e, item) => {
     }
   }
   
-  // 根据不同类型设置不同的数据格式
-  if (dragData.type === 'resume-group') {
-    e.dataTransfer.setData('application/json', JSON.stringify(dragData))
-  } else {
-    e.dataTransfer.setData('component', JSON.stringify(dragData))
-  }
-  
+  e.dataTransfer.setData('text/plain', JSON.stringify(dragData))
   e.dataTransfer.effectAllowed = 'copy'
 }
 
@@ -188,12 +258,13 @@ const getResumeComponentIcon = (key) => {
     basicInfo: Icons.User,
     jobIntention: Icons.Target,
     education: Icons.School,
-    workExperience: Icons.Building,
+    workExperience: Icons.Office,
     skills: Icons.Star,
     languages: Icons.Language,
     certificates: Icons.Certificate,
     projects: Icons.Folder,
-    portfolio: Icons.Gallery
+    portfolio: Icons.Pic,
+    social: Icons.Link
   }
   return iconMap[key] || Icons.Help
 }
@@ -209,10 +280,139 @@ const getComponentDescription = (component) => {
     languages: '语言能力水平',
     certificates: '获得的证书和奖项',
     projects: '参与的项目经历',
-    portfolio: '作品集展示'
+    portfolio: '作品集展示',
+    social: '社交账号链接'
   }
   return descriptions[component.key] || '简历组件'
 }
+
+// 获取分类列表
+const loadCategories = async () => {
+  try {
+    const res = await categoryApi.getList()
+    categories.value = Array.isArray(res) ? res : []
+  } catch (error) {
+    console.error('获取分类列表失败:', error)
+    showToast('获取分类列表失败', 'error')
+  }
+}
+
+// 获取模板列表
+const loadTemplates = async () => {
+  loading.value = true
+  try {
+    const params = {}
+    if (selectedCategory.value) {
+      params.category = selectedCategory.value
+    }
+    if (onlyMyTemplates.value) {
+      params.creator = userStore.userId
+    }
+    console.log('开始加载模板列表，参数:', params)
+    const res = await templateApi.getList(params)
+    console.log('获取到的模板数据:', res)
+    
+    if (res.data?.results) {
+      templates.value = res.data.results
+    } else if (Array.isArray(res.data)) {
+      templates.value = res.data
+    } else if (Array.isArray(res)) {
+      templates.value = res
+    } else {
+      templates.value = []
+      console.warn('模板数据格式不正确:', res)
+    }
+    
+    console.log('处理后的模板列表:', templates.value)
+  } catch (error) {
+    console.error('获取模板列表失败:', error)
+    showToast('获取模板列表失败', 'error')
+    templates.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+// 选择模板
+const handleTemplateSelect = (template) => {
+  // TODO: 实现模板选择逻辑
+  console.log('选择模板:', template)
+}
+
+// 判断模板是否可编辑
+const isTemplateEditable = (template) => {
+  return template.creator === userStore.userId
+}
+
+// 编辑模板
+const handleEditTemplate = async (template) => {
+  if (!isTemplateEditable(template)) {
+    showToast('您没有权限编辑此模板', 'error')
+    return
+  }
+
+  try {
+    // 获取模板详细数据
+    const res = await templateApi.getDetail(template.id)
+    if (!res.data) {
+      throw new Error('获取模板数据失败')
+    }
+
+    const templateData = res.data
+    console.log('获取到的模板数据:', templateData)
+
+    // 发出事件通知父组件更新画板数据
+    emit('edit-template', templateData)
+  } catch (error) {
+    console.error('加载模板数据失败:', error)
+    showToast('加载模板数据失败', 'error')
+  }
+}
+
+// 使用模板
+const handleUseTemplate = async (template) => {
+  try {
+    // 获取模板详细数据
+    const res = await templateApi.getDetail(template.id)
+    if (!res.data) {
+      throw new Error('获取模板数据失败')
+    }
+
+    const templateData = {
+      ...res.data,
+      id: null, // 清除模板ID，表示这是一个新实例
+      name: `${res.data.name} 的副本`,
+      creator: null // 清除创建者信息
+    }
+
+    // 发出事件通知父组件更新画板数据
+    emit('use-template', templateData)
+  } catch (error) {
+    console.error('加载模板数据失败:', error)
+    showToast('加载模板数据失败', 'error')
+  }
+}
+
+// 监听筛选条件变化
+watch([selectedCategory, onlyMyTemplates], () => {
+  console.log('筛选条件变更:', { 
+    category: selectedCategory.value, 
+    onlyMine: onlyMyTemplates.value 
+  })
+  loadTemplates()
+})
+
+// 组件挂载时加载数据
+onMounted(() => {
+  console.log('组件挂载，开始加载数据')
+  loadCategories()
+  loadTemplates()
+})
+
+// 导出需要的方法和数据
+defineExpose({
+  loadTemplates
+})
 </script>
 
 <style scoped>
@@ -392,7 +592,7 @@ const getComponentDescription = (component) => {
 }
 
 .resume-panel {
-  overflow-y: auto;
+  padding: 16px;
 }
 
 .resume-category {
@@ -400,71 +600,43 @@ const getComponentDescription = (component) => {
 }
 
 .category-title {
-  font-size: 13px;
-  color: #999;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
   margin-bottom: 12px;
-  padding-left: 4px;
 }
 
 .resume-component-item {
   display: flex;
   align-items: center;
-  padding: 16px 12px;
+  gap: 12px;
+  padding: 12px;
   background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  border-radius: 12px;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
   cursor: move;
-  transition: all 0.2s;
-  box-shadow: 
-    0 1px 2px rgba(0, 0, 0, 0.02),
-    0 1px 3px rgba(0, 0, 0, 0.02);
-  position: relative;
-  overflow: hidden;
-}
-
-.resume-component-item::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to bottom, #fff, rgba(255, 255, 255, 0.95));
-  z-index: 0;
+  transition: all 0.3s;
 }
 
 .resume-component-item:hover {
-  border-color: rgba(24, 144, 255, 0.2);
-  background: #fff;
-  transform: translateY(-1px);
-  box-shadow: 
-    0 4px 16px rgba(24, 144, 255, 0.08),
-    0 1px 4px rgba(24, 144, 255, 0.04);
+  border-color: #1890ff;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.15);
 }
 
 .component-icon {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #1890ff;
-  margin-right: 12px;
-  font-size: 22px;
-  background: rgba(24, 144, 255, 0.04);
-  border-radius: 10px;
-  position: relative;
-  z-index: 1;
-  transition: all 0.2s;
-}
-
-.resume-component-item:hover .component-icon {
-  transform: scale(1.05);
-  background: rgba(24, 144, 255, 0.08);
+  background: #f5f5f5;
+  border-radius: 6px;
+  color: #666;
 }
 
 .component-info {
   flex: 1;
   min-width: 0;
-  position: relative;
-  z-index: 1;
 }
 
 .component-name {
@@ -476,9 +648,132 @@ const getComponentDescription = (component) => {
 
 .component-desc {
   font-size: 12px;
-  color: #999;
+  color: #666;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.template-panel {
+  margin-top: 16px;
+}
+
+.category-select {
+  margin-bottom: 16px;
+}
+
+.select-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  outline: none;
+}
+
+.template-list {
+  margin-bottom: 16px;
+}
+
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.template-item {
+  cursor: pointer;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  overflow: hidden;
+  transition: all 0.3s;
+}
+
+.template-item:hover {
+  border-color: #1890ff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+}
+
+.template-preview {
+  aspect-ratio: 1;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.no-thumbnail {
+  color: #999;
+  font-size: 12px;
+}
+
+.template-info {
+  padding: 8px;
+}
+
+.template-name {
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.template-meta {
+  font-size: 12px;
+  color: #999;
+}
+
+.loading-state,
+.empty-state {
+  text-align: center;
+  padding: 32px;
+  color: #999;
+}
+
+.filter-options {
+  margin-top: 8px;
+}
+
+.filter-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #666;
+  cursor: pointer;
+}
+
+.template-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.action-btn {
+  padding: 4px 8px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.action-btn.edit {
+  background-color: #e6f7ff;
+  color: #1890ff;
+}
+
+.action-btn.edit:hover {
+  background-color: #bae7ff;
+}
+
+.action-btn.use {
+  background-color: #f6ffed;
+  color: #52c41a;
+}
+
+.action-btn.use:hover {
+  background-color: #d9f7be;
 }
 </style> 

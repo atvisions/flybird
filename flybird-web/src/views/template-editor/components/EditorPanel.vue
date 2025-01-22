@@ -966,7 +966,7 @@
             <h4>画布管理</h4>
             <div class="canvas-list">
               <div 
-                v-for="canvas in canvasList" 
+                v-for="(canvas, index) in canvasList" 
                 :key="canvas.id"
                 class="canvas-item"
                 :class="{ active: currentCanvasId === canvas.id }"
@@ -975,11 +975,11 @@
                 <div class="canvas-preview" :style="{ backgroundColor: canvas.config.backgroundColor }">
                   <div class="canvas-overlay"></div>
                 </div>
-                <div class="canvas-index">{{ canvas.id }}</div>
+                <div class="canvas-index">{{ index + 1 }}</div>
                 <button 
-                  v-if="canvas.id !== 1"
+                  v-if="canvasList.length > 1"
                   class="btn-icon" 
-                  @click.stop="$emit('delete-canvas', canvas.id)"
+                  @click.stop="handleDeleteCanvas(canvas.id)"
                 >
                   <Delete theme="outline" size="12" />
                 </button>
@@ -987,7 +987,7 @@
               <button 
                 v-if="canvasList.length < 5"
                 class="btn-add" 
-                @click="$emit('add-canvas')"
+                @click="handleAddCanvas"
               >
                 <Plus theme="outline" size="14" />
               </button>
@@ -1072,6 +1072,7 @@ import {
 } from '@icon-park/vue-next'
 import Switch from './Switch.vue'
 import ColorPicker from './ColorPicker.vue'
+import { showToast } from '@/utils/toast'
 
 const props = defineProps({
   element: {
@@ -1089,6 +1090,10 @@ const props = defineProps({
   selectedElements: {
     type: Array,
     default: () => []
+  },
+  isEditable: {
+    type: Boolean,
+    default: true
   }
 })
 
@@ -1313,10 +1318,12 @@ const updateElementProp = (prop, value) => {
 // 更新画布配置
 const handleConfigChange = (key, value) => {
   const currentCanvas = getCurrentCanvas()
-  if (currentCanvas?.config) {
+  if (currentCanvas?.page_data?.config) {
     const newConfig = { [key]: value }
-    console.log('更新画布配置:', key, value) // 添加日志
-    emit('update-canvas-config', newConfig)
+    emit('update-canvas-config', {
+      canvasId: currentCanvas.id,
+      config: newConfig
+    })
   }
 }
 
@@ -1328,15 +1335,16 @@ const updateBackgroundColor = (color) => {
 // 应用到所有画布
 const applyToAllCanvas = () => {
   const currentCanvas = getCurrentCanvas()
-  if (currentCanvas?.config) {
+  if (currentCanvas?.page_data?.config) {
     const config = {
-      backgroundColor: currentCanvas.config.backgroundColor,
-      showGrid: currentCanvas.config.showGrid,
-      gridSize: currentCanvas.config.gridSize,
-      gridColor: currentCanvas.config.gridColor
+      backgroundColor: currentCanvas.page_data.config.backgroundColor,
+      showGrid: currentCanvas.page_data.config.showGrid,
+      showGuideLine: currentCanvas.page_data.config.showGuideLine
     }
-    console.log('应用到所有画布:', config) // 添加日志
-    emit('update-canvas-config', config, true)
+    emit('update-canvas-config', {
+      config,
+      applyToAll: true
+    })
   }
 }
 
@@ -1432,6 +1440,51 @@ const handleSpacingChange = () => {
   emit('spacing-change', {
     elements: props.selectedElements,
     spacing: spacing.value
+  })
+}
+
+// 添加画布
+const handleAddCanvas = () => {
+  if (!props.isEditable) return  // 添加编辑权限检查
+  
+  if (props.canvasList.length >= 5) {
+    showToast('最多只能添加5个画布', 'warning')
+    return
+  }
+  
+  // 创建新画布的默认配置
+  const newCanvas = {
+    id: Date.now(), // 使用时间戳作为唯一ID
+    page_data: {
+      config: {
+        width: 794,
+        height: 1123,
+        showGuideLine: true,
+        backgroundColor: '#ffffff',
+        showGrid: false
+      },
+      elements: []
+    },
+    page_index: props.canvasList.length // 使用当前画布列表长度作为索引
+  }
+  
+  // 触发添加画布事件
+  emit('add-canvas', newCanvas)
+}
+
+// 删除画布
+const handleDeleteCanvas = (canvasId) => {
+  if (!props.isEditable) return  // 添加编辑权限检查
+  
+  if (props.canvasList.length <= 1) {
+    showToast('至少保留一个画布', 'warning')
+    return
+  }
+  
+  // 触发删除画布事件，同时更新其他画布的索引
+  emit('delete-canvas', { 
+    canvasId,
+    updateIndexes: true // 标记需要更新其他画布的索引
   })
 }
 </script>

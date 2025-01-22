@@ -50,6 +50,7 @@
                   width: '100%',
                   height: '100%'
                 }"
+                @update:value="(value) => handleElementValueUpdate(element, value)"
               />
               <div 
                 v-if="element.id === selectedElement?.id && !selectedElements.length"
@@ -215,6 +216,7 @@ import { ref, computed, watch, onMounted, onUnmounted, nextTick, h } from 'vue'
 import VueMoveable from 'vue3-moveable'
 import { useHistory } from '../composables/useHistory'
 import GuideLine from './GuideLine.vue'
+import { resumeComponents } from '../config/resume-components'
 
 // 导入基础组件
 import Rectangle from './shapes/Rectangle.vue'
@@ -581,7 +583,12 @@ const handleResizeEnd = () => {
   currentElement.value = null
 }
 
-// 处理元素拖放
+// 添加 generateId 函数
+const generateId = () => {
+  return Date.now() + Math.random().toString(36).substr(2, 9)
+}
+
+// 修改 handleDrop 方法
 const handleDrop = (e) => {
   e.preventDefault()
   e.stopPropagation()
@@ -590,175 +597,103 @@ const handleDrop = (e) => {
   const x = (e.clientX - canvasRect.left) / props.scale
   const y = (e.clientY - canvasRect.top) / props.scale
 
-  // 处理基础组件
-  const componentData = e.dataTransfer.getData('component')
-  if (componentData) {
-    try {
-      const parsedData = JSON.parse(componentData)
-      
-      // 根据组件类型设置不同的默认宽高和属性
-      let defaultWidth = 100
-      let defaultHeight = 100
-      let defaultProps = {
-        fill: '#1890ff',
-        stroke: '#096dd9',
-        strokeWidth: 2,
-        strokeStyle: 'solid',
-        opacity: 1,
-        radius: 0
-      }
+  const componentData = e.dataTransfer.getData('text/plain')
+  if (!componentData) {
+    console.log('没有获取到组件数据')
+    return
+  }
 
-      // 根据不同组件类型设置特定属性
-      switch (parsedData.type) {
-        case 'rectangle':
-        case 'circle':
-        case 'triangle':
-        case 'star':
-          defaultWidth = 100
-          defaultHeight = 100
-          break
-        case 'icon':
-          defaultWidth = 40
-          defaultHeight = 40
-          defaultProps = {
-            ...defaultProps,
-            ...parsedData.props
-          }
-          break
-        case 'text':
-        case 'title':
-          defaultWidth = 200
-          defaultHeight = 40
-          defaultProps = {
-            content: parsedData.props?.content || '双击编辑文本',
-            fontSize: parsedData.type === 'title' ? 24 : 14,
-            lineHeight: 1.5,
-            color: '#333333',
-            textAlign: 'left'
-          }
-          break
-        case 'resume-field':
-          defaultWidth = 200
-          defaultHeight = 40
-          defaultProps = {
-            ...parsedData.props,
+  try {
+    const parsedData = JSON.parse(componentData)
+    console.log('解析的拖放数据:', parsedData)
+
+    if (parsedData.type === 'basic-info') {
+      // 从 resumeComponents 中获取基本信息字段配置
+      const basicInfoConfig = resumeComponents.find(group => group.key === 'basicInfo')
+      if (!basicInfoConfig) return
+
+      let currentY = y
+      basicInfoConfig.fields.forEach((field, index) => {
+        const element = {
+          id: generateId(),
+          type: 'resume-field',
+          x: x,
+          y: currentY,
+          width: field.width || 200,
+          height: field.type === 'textarea' ? (field.height || 100) : 30,
+          rotate: 0,
+          props: {
+            label: field.label,
+            dataPath: `basic_info.${field.key}`,
+            type: field.type || 'text',
+            value: '',
             fontSize: 14,
-            lineHeight: 1.5,
             color: '#333333',
-            textAlign: 'left'
+            labelWidth: 70,
+            labelColor: '#666666',
+            isPreview: false
           }
-          break
+        }
+
+        elementsList.value.push(element)
+        currentY += element.height + 10
+      })
+
+      // 选中第一个元素
+      if (elementsList.value.length > 0) {
+        emit('element-select', elementsList.value[elementsList.value.length - basicInfoConfig.fields.length])
       }
-      
-      // 创建新元素
+    } else {
+      // 处理其他类型的组件
       const newElement = {
-        id: Date.now(),
+        id: generateId(),
         type: parsedData.type,
         x,
         y,
-        width: defaultWidth,
-        height: defaultHeight,
+        width: 100,
+        height: 100,
         rotate: 0,
-        props: defaultProps
+        props: parsedData.props || {}
       }
-      
-      // 添加到元素列表
+
+      // 根据类型调整默认尺寸
+      if (parsedData.type === 'icon') {
+        newElement.width = 40
+        newElement.height = 40
+      } else if (parsedData.type === 'text' || parsedData.type === 'title') {
+        newElement.width = 200
+        newElement.height = 40
+      }
+
       elementsList.value.push(newElement)
-      emit('element-add', newElement)
-      pushState(elementsList.value)
-      return
-    } catch (error) {
-      console.error('Failed to parse component data:', error)
+      emit('element-select', newElement)
+    }
+
+    emit('elements-change', elementsList.value)
+    pushState(elementsList.value)
+  } catch (error) {
+    console.error('拖放错误:', error)
+    console.error('原始数据:', componentData)
+  }
+}
+
+// 添加处理元素值更新的方法
+const handleElementValueUpdate = (element, value) => {
+  if (!element) return
+  
+  const updatedElement = {
+    ...element,
+    props: {
+      ...element.props,
+      value
     }
   }
-
-  // 处理档案字段
-  const jsonData = e.dataTransfer.getData('application/json')
-  if (jsonData) {
-    try {
-      const resumeData = JSON.parse(jsonData)
-      if (resumeData.type === 'resume-group') {
-        const newElements = []
-        let currentY = y
-
-        // 如果是基本信息组件
-        if (resumeData.key === 'basicInfo') {
-          // 头像
-          newElements.push({
-            id: Date.now(),
-            type: 'avatar',
-            x,
-            y: currentY,
-            width: 100,
-            height: 100,
-            props: {
-              content: '{{avatar}}',
-              opacity: 1
-            }
-          })
-          currentY += 120
-
-          // 文本字段列表
-          const textFields = [
-            { key: 'name', label: '姓名' },
-            { key: 'gender', label: '性别' },
-            { key: 'age', label: '年龄' },
-            { key: 'phone', label: '手机号' },
-            { key: 'email', label: '邮箱' },
-            { key: 'tel', label: '电话' },
-            { key: 'location', label: '所在地' }
-          ]
-
-          // 创建文本字段
-          textFields.forEach(field => {
-            newElements.push({
-              id: Date.now() + Math.random(),
-              type: 'text',
-              x,
-              y: currentY,
-              width: 200,
-              height: 24,
-              props: {
-                content: `{{ ${field.label} }}`,
-                dataField: field.key,
-                fontSize: 14,
-                lineHeight: 1.5,
-                color: '#333333',
-                readonly: true,
-                isDataField: true
-              }
-            })
-            currentY += 30
-          })
-
-          // 个人简介(富文本)
-          newElements.push({
-            id: Date.now() + Math.random(),
-            type: 'text',
-            x,
-            y: currentY,
-            width: 400,
-            height: 80,
-            props: {
-              content: '{{ 个人简介 }}',
-              dataField: 'summary',
-              fontSize: 14,
-              lineHeight: 1.6,
-              color: '#666666',
-              readonly: true,
-              isDataField: true
-            }
-          })
-
-          // 添加所有元素到画布
-          const updatedElements = [...props.elements, ...newElements]
-          emit('elements-change', updatedElements)
-          pushState(updatedElements)
-        }
-      }
-    } catch (error) {
-      console.error('Failed to parse resume data:', error)
-    }
+  
+  // 更新元素列表
+  const index = elementsList.value.findIndex(el => el.id === element.id)
+  if (index !== -1) {
+    elementsList.value[index] = updatedElement
+    emit('elements-change', elementsList.value)
   }
 }
 

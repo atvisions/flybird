@@ -1,44 +1,24 @@
 <template>
   <div class="editor-toolbar">
     <div class="toolbar-left">
-      <!-- 左侧预留空间 -->
-    </div>
-    <div class="toolbar-center">
-      <div class="tooltip-container">
-        <button 
-          class="icon-button" 
-          :disabled="!canUndo"
-          @click="handleUndo"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 14L4 9l5-5"/>
-            <path d="M4 9h12c4 0 6 2 6 6v1"/>
-          </svg>
-          <span class="tooltip">撤销 (Ctrl+Z)</span>
-        </button>
-      </div>
-      <div class="tooltip-container">
-        <button 
-          class="icon-button" 
-          :disabled="!canRedo"
-          @click="handleRedo"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M15 14l5-5-5-5"/>
-            <path d="M20 9H8c-4 0-6 2-6 6v1"/>
-          </svg>
-          <span class="tooltip">重做 (Ctrl+Y)</span>
-        </button>
-      </div>
+      <button class="toolbar-btn" @click="$emit('undo')" :disabled="!canUndo">
+        <Undo theme="outline" :size="16" />
+        <span>撤销</span>
+      </button>
+      <button class="toolbar-btn" @click="$emit('redo')" :disabled="!canRedo">
+        <Redo theme="outline" :size="16" />
+        <span>重做</span>
+      </button>
+      <button class="toolbar-btn" @click="$emit('clear')">
+        <Clear theme="outline" :size="16" />
+        <span>清空</span>
+      </button>
     </div>
     <div class="toolbar-right">
-      <div class="tooltip-container">
-        <button class="btn btn-primary" @click="handleSave">
-          <Save theme="outline" size="16" />
-          <span>保存</span>
-          <span class="tooltip">保存 (Ctrl+S)</span>
-        </button>
-      </div>
+      <button class="toolbar-btn primary" @click="$emit('save')">
+        <Save theme="outline" :size="16" />
+        <span>{{ buttonText }}</span>
+      </button>
       
       <!-- 添加用户头像和下拉菜单 -->
       <div class="relative" ref="dropdownRef">
@@ -133,6 +113,12 @@
       </div>
     </div>
   </div>
+
+  <!-- 添加保存模板弹窗 -->
+  <SaveTemplateDialog
+    v-model:visible="showSaveDialog"
+    @save="handleSaveTemplate"
+  />
 </template>
 
 <script setup>
@@ -141,7 +127,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAccountStore } from '@/stores/account'
 import defaultAvatar from '@/assets/images/default-avatar.png'
-import { Undo, Redo, Save } from '@icon-park/vue-next'
+import { Undo, Redo, Clear, Save, Delete, Back, Next } from '@icon-park/vue-next'
 import { 
   UserIcon, 
   DocumentTextIcon, 
@@ -151,6 +137,7 @@ import {
 } from '@heroicons/vue/24/outline'
 import { showToast } from '@/components/ToastMessage'
 import config from '@/config'
+import SaveTemplateDialog from './SaveTemplateDialog.vue'
 
 const props = defineProps({
   canUndo: {
@@ -160,10 +147,18 @@ const props = defineProps({
   canRedo: {
     type: Boolean,
     default: false
+  },
+  scale: {
+    type: Number,
+    default: 1
+  },
+  buttonText: {
+    type: String,
+    default: '创建模板'
   }
 })
 
-const emit = defineEmits(['save', 'undo', 'redo'])
+const emit = defineEmits(['clear', 'save', 'undo', 'redo', 'scale-change'])
 const router = useRouter()
 const authStore = useAuthStore()
 const accountStore = useAccountStore()
@@ -223,17 +218,18 @@ const handleLogout = async () => {
   }
 }
 
-// 删除 handleClear 函数，保留其他处理函数
+// 添加保存模板弹窗的显示状态
+const showSaveDialog = ref(false)
+
+// 修改保存处理函数
 const handleSave = () => {
-  emit('save')
+  showSaveDialog.value = true
 }
 
-const handleUndo = () => {
-  emit('undo')
-}
-
-const handleRedo = () => {
-  emit('redo')
+// 添加保存模板的处理函数
+const handleSaveTemplate = (templateData) => {
+  emit('save', templateData)
+  showSaveDialog.value = false
 }
 
 // 使用 ref 来存储事件监听器，以便在组件卸载时正确移除
@@ -273,12 +269,6 @@ onUnmounted(() => {
   flex: 1;
 }
 
-.toolbar-center {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .toolbar-right {
   flex: 1;
   display: flex;
@@ -287,39 +277,7 @@ onUnmounted(() => {
   justify-content: flex-end;
 }
 
-.icon-button {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  color: #666;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.icon-button svg {
-  stroke: currentColor;
-}
-
-.icon-button:hover:not(:disabled) {
-  color: #1890ff;
-  background-color: rgba(24, 144, 255, 0.1);
-}
-
-.icon-button:disabled {
-  cursor: not-allowed;
-  color: #d9d9d9;
-}
-
-.icon-button:disabled svg {
-  stroke: #d9d9d9 !important;
-}
-
-.toolbar-button {
+.toolbar-btn {
   height: 32px;
   padding: 0 12px;
   border: 1px solid #d9d9d9;
@@ -333,12 +291,12 @@ onUnmounted(() => {
   transition: all 0.3s;
 }
 
-.toolbar-button:hover:not(:disabled) {
+.toolbar-btn:hover:not(:disabled) {
   color: #1890ff;
   border-color: #1890ff;
 }
 
-.toolbar-button:disabled {
+.toolbar-btn:disabled {
   cursor: not-allowed;
   color: #d9d9d9;
   background: #f5f5f5;
@@ -443,5 +401,10 @@ button:focus {
 .icon-button:disabled + .tooltip,
 .btn:disabled + .tooltip {
   display: none;
+}
+
+.btn-text {
+  margin-left: 4px;
+  font-size: 14px;
 }
 </style> 

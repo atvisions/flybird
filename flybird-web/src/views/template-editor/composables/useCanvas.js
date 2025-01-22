@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useCanvasConfig } from './useCanvasConfig'
 
 // 画布配置
@@ -18,26 +18,29 @@ const DEFAULT_CANVAS_CONFIG = {
 }
 
 export function useCanvas() {
-  // 模板数据
+  // 初始化模板数据
   const templateData = ref({
-    canvases: [
-      {
-        id: 1,
-        elements: [],
-        config: { ...DEFAULT_CANVAS_CONFIG }
+    canvases: [{
+      id: 0,
+      elements: [],
+      config: {
+        width: 794,
+        height: 1123,
+        backgroundColor: '#ffffff',
+        showGrid: false,
+        showGuideLine: true
       }
-    ]
+    }]
   })
 
   // 当前画布ID
-  const currentCanvasId = ref(1)
-  
-  // 当前选中的元素
-  const selectedElement = ref(null)
+  const currentCanvasId = ref(0)
 
   // 获取当前画布
   const getCurrentCanvas = () => {
-    return templateData.value.canvases.find(canvas => canvas.id === currentCanvasId.value)
+    const canvas = templateData.value.canvases.find(canvas => canvas.id === currentCanvasId.value)
+    // 如果找不到当前画布，返回第一个画布
+    return canvas || templateData.value.canvases[0]
   }
 
   // 更新画布元素
@@ -49,45 +52,38 @@ export function useCanvas() {
   }
 
   // 更新画布配置
-  const updateCanvasConfig = (config, applyToAll = false) => {
-    if (applyToAll) {
-      // 更新所有画布的配置
-      templateData.value.canvases.forEach(canvas => {
-        canvas.config = {
-          ...canvas.config,
-          ...config
-        }
-      })
-    } else {
-      // 只更新当前画布的配置
-      const canvas = getCurrentCanvas()
-      if (canvas) {
-        canvas.config = {
-          ...canvas.config,
-          ...config
-        }
+  const updateCanvasConfig = (config) => {
+    const canvas = getCurrentCanvas()
+    if (canvas) {
+      canvas.config = {
+        ...canvas.config,
+        ...config
       }
+      console.log('Canvas config changed:', canvas.config)
     }
   }
 
   // 添加新画布
   const addCanvas = () => {
-    const newId = templateData.value.canvases.length + 1
+    const newId = templateData.value.canvases.length
     templateData.value.canvases.push({
       id: newId,
       elements: [],
-      config: { ...DEFAULT_CANVAS_CONFIG }
+      config: {
+        ...DEFAULT_CANVAS_CONFIG
+      }
     })
-    currentCanvasId.value = newId
+    return newId
   }
 
   // 删除画布
   const removeCanvas = (id) => {
     const index = templateData.value.canvases.findIndex(canvas => canvas.id === id)
-    if (index !== -1) {
+    if (index !== -1 && templateData.value.canvases.length > 1) {
       templateData.value.canvases.splice(index, 1)
-      if (currentCanvasId.value === id) {
-        currentCanvasId.value = templateData.value.canvases[0]?.id || 1
+      // 如果删除的是当前画布，切换到前一个画布
+      if (id === currentCanvasId.value) {
+        currentCanvasId.value = templateData.value.canvases[Math.max(0, index - 1)].id
       }
     }
   }
@@ -99,18 +95,22 @@ export function useCanvas() {
     }
   }
 
-  // 处理元素选中
+  // 选中的元素
+  const selectedElement = ref(null)
+
+  // 选中元素处理
   const handleElementSelect = (element) => {
     selectedElement.value = element
   }
 
-  // 处理元素更新
+  // 更新元素
   const handleElementUpdate = (element) => {
     const canvas = getCurrentCanvas()
-    if (canvas) {
-      canvas.elements = canvas.elements.map(el => 
-        el.id === element.id ? element : el
-      )
+    if (!canvas) return
+
+    const index = canvas.elements.findIndex(el => el.id === element.id)
+    if (index !== -1) {
+      canvas.elements[index] = element
     }
   }
 
@@ -119,29 +119,45 @@ export function useCanvas() {
     const canvas = getCurrentCanvas()
     if (canvas) {
       canvas.elements = []
-      selectedElement.value = null
     }
   }
 
-  // 保存模板
-  const handleSave = () => {
-    console.log('保存模板:', templateData.value)
+  // 更新画布数据
+  const updateCanvasData = (canvases) => {
+    if (!canvases || canvases.length === 0) {
+      // 如果没有提供画布数据，创建一个默认画布
+      templateData.value.canvases = [{
+        id: 0,
+        elements: [],
+        config: {
+          width: 794,
+          height: 1123,
+          backgroundColor: '#ffffff',
+          showGrid: false,
+          showGuideLine: true
+        }
+      }]
+    } else {
+      templateData.value.canvases = canvases
+    }
+    // 重置当前画布ID为0
+    currentCanvasId.value = 0
   }
 
   return {
     templateData,
     currentCanvasId,
-    selectedElement,
-    A4_CONFIG,
     getCurrentCanvas,
     updateCanvasElements,
     updateCanvasConfig,
     addCanvas,
     removeCanvas,
     switchCanvas,
+    selectedElement,
     handleElementSelect,
     handleElementUpdate,
     handleClear,
-    handleSave
+    updateCanvasData,
+    A4_CONFIG
   }
 } 

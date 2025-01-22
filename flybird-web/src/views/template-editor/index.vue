@@ -5,6 +5,7 @@
       :can-undo="canUndo"
       :can-redo="canRedo"
       :scale="scale"
+      :button-text="saveButtonText"
       @clear="handleClear"
       @save="handleSave"
       @undo="handleUndo"
@@ -15,7 +16,11 @@
     <!-- 主要内容区域 -->
     <div class="editor-content">
       <!-- 左侧面板 -->
-      <EditorSidebar />
+      <EditorSidebar 
+        ref="sidebarRef"
+        @edit-template="handleEditTemplate"
+        @use-template="handleUseTemplate"
+      />
 
       <!-- 中间画布区域 -->
       <div class="editor-main">
@@ -104,24 +109,50 @@
         @spacing-change="handleSpacingChange"
       />
     </div>
+
+    <!-- 保存模板对话框 -->
+    <SaveTemplateDialog
+      v-if="showSaveDialog"
+      :visible="showSaveDialog"
+      :default-data="defaultTemplateData"
+      :is-edit="!!currentTemplateId"
+      @update:visible="showSaveDialog = $event"
+      @save="handleSaveTemplate"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, computed } from 'vue'
 import { Minus, Plus, FullScreen, OffScreen } from '@icon-park/vue-next'
 import EditorCanvas from './components/EditorCanvas.vue'
 import EditorToolbar from './components/EditorToolbar.vue'
 import EditorSidebar from './components/EditorSidebar.vue'
 import EditorPanel from './components/EditorPanel.vue'
+import SaveTemplateDialog from './components/SaveTemplateDialog.vue'
+import { templateApi } from './api'
+import { showToast } from '@/components/ToastMessage'
 
 // 导入组合式函数
 import { useZoom } from './composables/useZoom'
 import { useCanvas } from './composables/useCanvas'
 import { useCanvasConfig } from './composables/useCanvasConfig'
+import { useTabs } from './composables/useTabs'
+
+// 导入 profile store
+import { useProfileStore } from '@/stores/profile'
+
+// 获取默认画布配置
+const { canvasConfig: DEFAULT_CANVAS_CONFIG } = useCanvasConfig()
+
+// 使用useTabs
+const { switchTab } = useTabs()
 
 // 画布引用
 const canvasRef = ref(null)
+
+// 添加 sidebarRef
+const sidebarRef = ref(null)
 
 // 使用组合式函数
 const { scale, MIN_SCALE, MAX_SCALE, SCALE_STEP, handleZoomIn, handleZoomOut, handleZoomChange } = useZoom()
@@ -134,12 +165,12 @@ const {
   getCurrentCanvas,
   updateCanvasElements,
   updateCanvasConfig,
+  updateCanvasData,
   A4_CONFIG,
   selectedElement,
   handleElementSelect,
   handleElementUpdate,
-  handleClear,
-  handleSave
+  handleClear
 } = useCanvas()
 
 const { canvasConfig } = useCanvasConfig()
@@ -607,6 +638,283 @@ const updateElement = (updatedElement) => {
 // 添加撤销重做状态
 const canUndo = ref(false)
 const canRedo = ref(false)
+
+// 保存相关状态和方法
+const showSaveDialog = ref(false)
+
+const getCurrentElements = () => {
+  const currentCanvas = getCurrentCanvas()
+  return currentCanvas?.elements || []
+}
+
+const getCurrentConfig = () => {
+  const currentCanvas = getCurrentCanvas()
+  return currentCanvas?.config || {
+    width: 794,
+    height: 1123,
+    showGuideLine: true
+  }
+}
+
+// 添加 currentTemplateId ref
+const currentTemplateId = ref(null)
+
+// 修改 handleEditTemplate 方法
+const handleEditTemplate = async (templateData) => {
+  currentTemplateId.value = templateData.id
+  console.log('开始编辑模板:', templateData)
+  
+  try {
+    // 构造新的画布数据
+    const canvases = templateData.pages.map((page, index) => ({
+      id: index,
+      elements: page.page_data.elements || [],
+      config: {
+        width: DEFAULT_CANVAS_CONFIG.width,
+        height: DEFAULT_CANVAS_CONFIG.height,
+        backgroundColor: '#ffffff',
+        showGrid: false,
+        showGuideLine: true,
+        ...(page.page_data.config || {})
+      }
+    }))
+
+    // 更新画布数据
+    updateCanvasData(canvases)
+
+    // 设置当前画板为第一个
+    currentCanvasId.value = 0
+
+    // 保存模板的基本信息
+    defaultTemplateData.value = {
+      name: templateData.name || '',
+      description: templateData.description || '',
+      category: templateData.category || '',
+      keywords: Array.isArray(templateData.keywords) ? templateData.keywords.join(',') : '',
+      is_public: templateData.is_public ?? true
+    }
+
+    console.log('设置的默认模板数据:', defaultTemplateData.value)
+    console.log('更新后的画布数据:', canvases)
+  } catch (error) {
+    console.error('编辑模板失败:', error)
+    showToast('加载模板数据失败', 'error')
+  }
+}
+
+// 修改工具栏按钮的文本
+const saveButtonText = computed(() => {
+  return currentTemplateId.value ? '保存模板' : '创建模板'
+})
+
+const handleSave = () => {
+  showSaveDialog.value = true
+}
+
+// 添加模板ID
+const defaultTemplateData = ref({
+  name: '',
+  description: '',
+  category: '',
+  keywords: '',
+  is_public: true
+})
+
+const handleSaveTemplate = async (formData) => {
+  try {
+    // 获取所有画布数据
+    const canvasList = templateData.value?.canvases
+    if (!canvasList || canvasList.length === 0) {
+      throw new Error('无法获取画布数据')
+    }
+
+    // 构造所有页面数据
+    const pages = canvasList.map((canvas, index) => ({
+      page_index: index,
+      page_data: {
+        elements: canvas.elements || [],
+        config: {
+          width: canvas.config?.width || 794,
+          height: canvas.config?.height || 1123,
+          showGuideLine: canvas.config?.showGuideLine !== false,
+          backgroundColor: canvas.config?.backgroundColor || '#ffffff',
+          showGrid: canvas.config?.showGrid || false
+        }
+      }
+    }))
+
+    // 构造完整的模板数据
+    const saveData = {
+      ...formData,
+      pages
+    }
+
+    console.log('提交的模板数据:', JSON.stringify(saveData, null, 2))
+
+    // 根据是否有模板ID决定是创建还是更新
+    const res = currentTemplateId.value
+      ? await templateApi.update(currentTemplateId.value, saveData)
+      : await templateApi.create(saveData)
+      
+    console.log('API响应:', res)
+    
+    if (res.status === 201 || res.status === 200) {
+      showToast('保存成功', 'success')
+      showSaveDialog.value = false
+      // 刷新模板列表
+      if (sidebarRef.value) {
+        sidebarRef.value.loadTemplates()
+      }
+    } else {
+      throw new Error(res.data?.message || res.data?.detail || '保存失败')
+    }
+  } catch (error) {
+    console.error('保存模板失败:', error)
+    
+    // 处理验证错误
+    if (error.response?.status === 400) {
+      const errorData = error.response.data
+      if (errorData.name && Array.isArray(errorData.name)) {
+        showToast(`保存失败: ${errorData.name[0]}`, 'error')
+      } else if (typeof errorData === 'object') {
+        // 如果是对象，获取第一个错误信息
+        const firstError = Object.values(errorData)[0]
+        if (Array.isArray(firstError)) {
+          showToast(`保存失败: ${firstError[0]}`, 'error')
+        } else {
+          showToast(`保存失败: ${JSON.stringify(errorData)}`, 'error')
+        }
+      } else {
+        showToast('保存失败: 请检查输入数据', 'error')
+      }
+    } else {
+      // 处理其他错误
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.detail || 
+                          error.message || 
+                          '保存失败'
+      showToast(`保存失败: ${errorMessage}`, 'error')
+    }
+    // 保存失败时不关闭对话框，让用户可以修改数据重试
+  }
+}
+
+// 处理使用模板
+const handleUseTemplate = async (templateData) => {
+  try {
+    // 获取用户档案数据
+    const profileStore = useProfileStore()
+    if (!profileStore.profileData) {
+      await profileStore.loadProfileData()
+    }
+
+    // 将 Proxy 对象转换为普通对象
+    const profileData = JSON.parse(JSON.stringify(profileStore.profileData))
+    console.log('转换后的用户档案数据:', profileData)
+
+    // 构造新的画布数据
+    const canvases = templateData.pages.map((page, index) => {
+      // 处理每个元素，替换档案数据
+      const elements = page.page_data.elements.map(element => {
+        // 如果是简历字段组件，需要处理数据绑定
+        if (element.type === 'resume-field') {
+          const { dataPath } = element.props
+          if (dataPath) {
+            try {
+              // 从档案数据中获取对应的值
+              const pathParts = dataPath.split('.')
+              let value = profileData
+              
+              // 遍历路径获取嵌套值
+              for (const part of pathParts) {
+                if (value && typeof value === 'object' && part in value) {
+                  value = value[part]
+                } else {
+                  console.warn(`找不到数据路径: ${dataPath}`)
+                  value = ''
+                  break
+                }
+              }
+
+              // 确保值是字符串类型
+              value = value?.toString() || ''
+              console.log(`设置字段 ${dataPath} 的值:`, value)
+
+              // 更新元素的值
+              return {
+                ...element,
+                props: {
+                  ...element.props,
+                  value: value
+                }
+              }
+            } catch (error) {
+              console.error(`处理数据路径 ${dataPath} 时出错:`, error)
+              return element
+            }
+          }
+        }
+        return element
+      })
+
+      return {
+        id: index,
+        elements,
+        config: {
+          width: DEFAULT_CANVAS_CONFIG.width,
+          height: DEFAULT_CANVAS_CONFIG.height,
+          backgroundColor: '#ffffff',
+          showGrid: false,
+          showGuideLine: true,
+          ...(page.page_data.config || {})
+        }
+      }
+    })
+
+    // 更新画布数据
+    updateCanvasData(canvases)
+
+    // 设置当前画板为第一个
+    currentCanvasId.value = 0
+
+    // 清除当前模板ID，表示这是一个新实例
+    currentTemplateId.value = null
+
+    // 设置默认的模板数据
+    defaultTemplateData.value = {
+      name: `${templateData.name} 的副本`,
+      description: templateData.description || '',
+      category: templateData.category || '',
+      keywords: Array.isArray(templateData.keywords) ? templateData.keywords.join(',') : '',
+      is_public: templateData.is_public ?? true
+    }
+
+    console.log('使用模板，更新后的画布数据:', canvases)
+  } catch (error) {
+    console.error('使用模板失败:', error)
+    showToast('加载模板数据失败', 'error')
+  }
+}
+
+// 处理缩放变化
+const handleScaleChange = (newScale) => {
+  scale.value = newScale
+}
+
+// 处理元素添加
+const handleElementAdd = (element) => {
+  if (!element) return
+  
+  // 更新元素列表
+  const updatedElements = [...templateData.value.canvases[currentCanvasId.value - 1].page_data.elements, element]
+  templateData.value.canvases[currentCanvasId.value - 1].page_data.elements = updatedElements
+  
+  // 触发更新事件
+  emit('elements-change', updatedElements)
+  
+  // 保存到历史记录
+  pushState(updatedElements)
+}
 </script>
 
 <style>

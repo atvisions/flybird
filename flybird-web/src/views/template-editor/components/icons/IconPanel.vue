@@ -243,7 +243,7 @@ const SvgIcon = {
   }
 }
 
-// 在 script setup 中添加拖拽事件处理函数
+// 在 script setup 中修改拖拽事件处理函数
 const handleDragStart = (event, icon) => {
   event.dataTransfer.effectAllowed = 'copy'
   event.dataTransfer.dropEffect = 'copy'
@@ -254,6 +254,7 @@ const handleDragStart = (event, icon) => {
     props: {
       iconType: icon.type,
       component: icon.component.name,
+      icon: icon.icon, // 添加 icon 属性
       size: 20,
       fill: '#1890ff',
       stroke: '#096dd9',
@@ -268,12 +269,8 @@ const handleDragStart = (event, icon) => {
   } else if (icon.theme) {
     componentData.props.theme = icon.theme
   }
-  
-  if (icon.icon) {
-    componentData.props.icon = icon.icon
-  }
 
-  event.dataTransfer.setData('component', JSON.stringify(componentData))
+  event.dataTransfer.setData('text/plain', JSON.stringify(componentData))
   event.target.classList.add('dragging')
 }
 
