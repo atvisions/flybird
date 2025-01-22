@@ -273,7 +273,7 @@ const handleDragStart = (event, icon) => {
       size: 20,
       fill: '#1890ff',
       stroke: '#096dd9',
-      strokeWidth: 2,
+      strokeWidth: 0,
       opacity: 1
     }
   }

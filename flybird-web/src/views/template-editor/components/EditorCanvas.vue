@@ -36,11 +36,14 @@
                 :is="components[element.type]"
                 :id="element.id"
                 class="canvas-element"
-                :class="{ 'element-selected': element.id === selectedElement?.id }"
+                :class="{ 
+                  'element-selected': element.id === selectedElement?.id && !selectedElements.length,
+                  'element-multi-selected': selectedElements.includes(element)
+                }"
                 v-bind="element.props"
                 :width="element.width"
                 :height="element.height"
-                @click.stop.prevent="handleElementSelect(element)"
+                @click.stop.prevent="handleElementSelect(element, $event)"
                 @update="(payload) => handleElementUpdate(element, payload)"
                 :style="{
                   width: '100%',
@@ -48,7 +51,7 @@
                 }"
               />
               <div 
-                v-if="element.id === selectedElement?.id"
+                v-if="element.id === selectedElement?.id && !selectedElements.length"
                 class="element-delete-btn"
                 :style="{
                   position: 'absolute',
@@ -64,7 +67,7 @@
             </div>
           </div>
           <vue-moveable
-            v-if="selectedElement"
+            v-if="selectedElement && !selectedElements.length"
             ref="moveableRef"
             :target="`[data-id='${selectedElement.id}']`"
             :draggable="true"
@@ -120,6 +123,86 @@
             @rotateEnd="handleRotateEnd"
             @delete="handleElementDelete(selectedElement)"
           />
+          <vue-moveable
+            v-if="selectedElements.length > 0"
+            ref="multiMoveableRef"
+            class="group-moveable"
+            :target="selectedElements.map(el => `[data-id='${el.id}']`)"
+            :draggable="true"
+            :resizable="true"
+            :rotatable="true"
+            :scalable="true"
+            :origin="false"
+            :hideDefaultLines="false"
+            :hideRotationControls="false"
+            :hideDefaultControls="false"
+            :keepRatio="isKeepingRatio"
+            :renderDirections="['nw', 'n', 'ne', 'w', 'e', 'sw', 's', 'se']"
+            :transformOrigin="'50% 50%'"
+            :snappable="true"
+            :snapCenter="true"
+            :snapThreshold="5"
+            :verticalGuidelines="[0, canvasConfig.width / 2, canvasConfig.width]"
+            :horizontalGuidelines="[0, canvasConfig.height / 2, canvasConfig.height]"
+            :elementSnapDirections="{
+              top: true,
+              right: true,
+              bottom: true,
+              left: true,
+              center: true,
+              middle: true
+            }"
+            :snapDirections="{
+              top: true,
+              right: true,
+              bottom: true,
+              left: true,
+              center: true,
+              middle: true
+            }"
+            :snapGap="true"
+            :isDisplaySnapDigit="true"
+            :elementGuidelines="getElementGuidelines()"
+            :bounds="{
+              left: 0,
+              top: 0,
+              right: canvasConfig.width,
+              bottom: canvasConfig.height
+            }"
+            :renderMode="'transform'"
+            @dragGroupStart="handleGroupDragStart"
+            @dragGroup="handleGroupDrag"
+            @dragGroupEnd="handleGroupDragEnd"
+            @resizeGroupStart="handleGroupResizeStart"
+            @resizeGroup="handleGroupResize"
+            @resizeGroupEnd="handleGroupResizeEnd"
+            @rotateGroupStart="handleGroupRotateStart"
+            @rotateGroup="handleGroupRotate"
+            @rotateGroupEnd="handleGroupRotateEnd"
+          >
+            <div 
+              class="group-delete-btn"
+              :style="{
+                position: 'absolute',
+                top: '-20px',
+                right: '-30px',
+                width: '20px',
+                height: '20px',
+                background: '#ff4d4f',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: 'white',
+                fontSize: '16px',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                zIndex: 999999
+              }"
+              @click.stop="handleGroupDelete"
+              @mousedown.stop
+            >×</div>
+          </vue-moveable>
         </div>
       </div>
     </div>
@@ -200,6 +283,12 @@ const isOperating = ref(false)  // 添加操作状态标记
 
 // 添加 moveableRef 的声明
 const moveableRef = ref(null)
+
+// 添加多选状态
+const selectedElements = ref([])
+
+// 添加多选 Moveable 的引用
+const multiMoveableRef = ref(null)
 
 // 计算属性
 const contentStyle = computed(() => ({
@@ -320,17 +409,43 @@ watch(() => props.canvasConfig, (newConfig) => {
   })
 }, { immediate: true, deep: true })
 
-// 处理元素选中
-const handleElementSelect = (element) => {
-  emit('element-select', element)
+// 修改元素选中处理函数
+const handleElementSelect = (element, event) => {
+  if (event.shiftKey) {
+    // Shift 点选模式
+    const index = selectedElements.value.findIndex(el => el.id === element.id)
+    if (index === -1) {
+      // 如果当前有单选的元素，先将其添加到选中组
+      if (props.selectedElement && props.selectedElement.id !== element.id) {
+        selectedElements.value = [props.selectedElement]
+      }
+      // 添加新元素到选中组
+      selectedElements.value.push(element)
+      emit('element-select', null)
+    } else {
+      // 从选中组中移除元素
+      selectedElements.value.splice(index, 1)
+      if (selectedElements.value.length === 1) {
+        emit('element-select', selectedElements.value[0])
+      } else if (selectedElements.value.length === 0) {
+        emit('element-select', null)
+      }
+    }
+  } else {
+    // 普通点选模式
+    selectedElements.value = []
+    emit('element-select', element)
+  }
 }
 
-// 处理画布点击
+// 修改画布点击处理函数
 const handleCanvasClick = (e) => {
   if (e.target.closest('.moveable-control-box') || 
-      e.target.closest('.canvas-element')) {
+      e.target.closest('.canvas-element') ||
+      e.target.closest('.group-delete-btn')) {
     return
   }
+  selectedElements.value = []
   emit('element-select', null)
 }
 
@@ -647,49 +762,85 @@ const handleRedo = () => {
 
 // 处理键盘快捷键
 const handleKeyDown = (e) => {
+  // 如果正在输入文本，不处理快捷键
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+    return
+  }
+
   if (e.key === 'Shift') {
     isKeepingRatio.value = true
   }
   
+  // 处理删除键
+  if (e.key === 'Delete' || e.key === 'Backspace') {
+    // 如果有多选组，删除所有选中的元素
+    if (selectedElements.value.length > 0) {
+      handleGroupDelete()
+      return
+    }
+    // 如果是单选，删除当前选中的元素
+    if (props.selectedElement) {
+      handleElementDelete(props.selectedElement)
+      return
+    }
+  }
+  
   // 如果有选中的元素，处理方向键移动
-  if (props.selectedElement && !e.metaKey && !e.ctrlKey && !e.altKey) {
+  if ((props.selectedElement || selectedElements.value.length > 0) && !e.metaKey && !e.ctrlKey && !e.altKey) {
     const step = e.shiftKey ? 10 : 1 // 按住 Shift 时移动 10px，否则移动 1px
-    let updatedElement = null
+    let elements = selectedElements.value.length > 0 ? selectedElements.value : [props.selectedElement]
+    let updated = false
 
     switch (e.key) {
       case 'ArrowUp':
         e.preventDefault()
-        updatedElement = {
-          ...props.selectedElement,
-          y: Math.max(0, props.selectedElement.y - step)
-        }
+        elements.forEach(element => {
+          const updatedElement = {
+            ...element,
+            y: Math.max(0, element.y - step)
+          }
+          updateElement(updatedElement)
+        })
+        updated = true
         break
       case 'ArrowDown':
         e.preventDefault()
-        updatedElement = {
-          ...props.selectedElement,
-          y: Math.min(props.canvasConfig.height - props.selectedElement.height, props.selectedElement.y + step)
-        }
+        elements.forEach(element => {
+          const updatedElement = {
+            ...element,
+            y: Math.min(props.canvasConfig.height - element.height, element.y + step)
+          }
+          updateElement(updatedElement)
+        })
+        updated = true
         break
       case 'ArrowLeft':
         e.preventDefault()
-        updatedElement = {
-          ...props.selectedElement,
-          x: Math.max(0, props.selectedElement.x - step)
-        }
+        elements.forEach(element => {
+          const updatedElement = {
+            ...element,
+            x: Math.max(0, element.x - step)
+          }
+          updateElement(updatedElement)
+        })
+        updated = true
         break
       case 'ArrowRight':
         e.preventDefault()
-        updatedElement = {
-          ...props.selectedElement,
-          x: Math.min(props.canvasConfig.width - props.selectedElement.width, props.selectedElement.x + step)
-        }
+        elements.forEach(element => {
+          const updatedElement = {
+            ...element,
+            x: Math.min(props.canvasConfig.width - element.width, element.x + step)
+          }
+          updateElement(updatedElement)
+        })
+        updated = true
         break
     }
 
-    if (updatedElement) {
-      // 更新元素位置
-      updateElement(updatedElement)
+    if (updated) {
+      emit('elements-change', [...elementsList.value])
+      pushState([...elementsList.value])
     }
   }
 
@@ -980,6 +1131,193 @@ const handleElementDelete = (element) => {
   pushState(updatedElements)
 }
 
+// 添加组删除方法
+const handleGroupDelete = () => {
+  if (selectedElements.value.length === 0) return
+  
+  // 获取所有选中元素的 ID
+  const selectedIds = new Set(selectedElements.value.map(el => el.id))
+  
+  // 过滤掉被删除的元素
+  const updatedElements = elementsList.value.filter(el => !selectedIds.has(el.id))
+  
+  // 更新元素列表
+  elementsList.value = updatedElements
+  
+  // 清空选中状态
+  selectedElements.value = []
+  emit('element-select', null)
+  
+  // 触发更新事件
+  emit('elements-change', updatedElements)
+  
+  // 保存到历史记录
+  pushState(updatedElements)
+}
+
+// 处理组拖拽
+const handleGroupDragStart = ({ events }) => {
+  events.forEach((ev, i) => {
+    const element = selectedElements.value[i]
+    if (!element) return
+    element._dragStart = {
+      x: element.x,
+      y: element.y
+    }
+  })
+  isOperating.value = true
+}
+
+const handleGroupDrag = ({ events }) => {
+  events.forEach((ev, i) => {
+    const element = selectedElements.value[i]
+    if (!element || !element._dragStart) return
+
+    const [x, y] = ev.beforeTranslate
+
+    // 确保不超出画布边界
+    const boundedX = Math.max(0, Math.min(x, props.canvasConfig.width - element.width))
+    const boundedY = Math.max(0, Math.min(y, props.canvasConfig.height - element.height))
+
+    const updatedElement = {
+      ...element,
+      x: Math.round(boundedX),
+      y: Math.round(boundedY)
+    }
+
+    // 更新元素位置
+    const index = elementsList.value.findIndex(el => el.id === element.id)
+    if (index !== -1) {
+      elementsList.value[index] = updatedElement
+      selectedElements.value[i] = updatedElement
+
+      // 直接更新 DOM 样式
+      const domElement = document.querySelector(`[data-id='${element.id}']`)
+      if (domElement) {
+        domElement.style.transform = `translate(${boundedX}px, ${boundedY}px) rotate(${element.rotate || 0}deg)`
+      }
+    }
+  })
+
+  // 触发更新事件
+  emit('elements-change', [...elementsList.value])
+}
+
+const handleGroupDragEnd = () => {
+  selectedElements.value.forEach(element => {
+    delete element._dragStart
+  })
+  isOperating.value = false
+  pushState([...elementsList.value])
+}
+
+// 处理组缩放
+const handleGroupResizeStart = ({ events }) => {
+  events.forEach((ev, i) => {
+    const element = selectedElements.value[i]
+    if (!element) return
+    element._resizeStart = {
+      width: element.width,
+      height: element.height,
+      x: element.x,
+      y: element.y
+    }
+  })
+  isOperating.value = true
+}
+
+const handleGroupResize = ({ events }) => {
+  events.forEach((ev, i) => {
+    const element = selectedElements.value[i]
+    if (!element || !element._resizeStart) return
+
+    const { width, height } = ev
+    const [x, y] = ev.drag.beforeTranslate
+
+    const updatedElement = {
+      ...element,
+      width: Math.round(width),
+      height: Math.round(height),
+      x: Math.round(element._resizeStart.x + x),
+      y: Math.round(element._resizeStart.y + y)
+    }
+
+    // 更新元素尺寸和位置
+    const index = elementsList.value.findIndex(el => el.id === element.id)
+    if (index !== -1) {
+      elementsList.value[index] = updatedElement
+      selectedElements.value[i] = updatedElement
+
+      // 直接更新 DOM 样式
+      const domElement = document.querySelector(`[data-id='${element.id}']`)
+      if (domElement) {
+        domElement.style.width = `${updatedElement.width}px`
+        domElement.style.height = `${updatedElement.height}px`
+        domElement.style.transform = `translate(${updatedElement.x}px, ${updatedElement.y}px) rotate(${element.rotate || 0}deg)`
+      }
+    }
+  })
+
+  // 触发更新事件
+  emit('elements-change', [...elementsList.value])
+}
+
+const handleGroupResizeEnd = () => {
+  selectedElements.value.forEach(element => {
+    delete element._resizeStart
+  })
+  isOperating.value = false
+  pushState([...elementsList.value])
+}
+
+// 处理组旋转
+const handleGroupRotateStart = ({ events }) => {
+  events.forEach((ev, i) => {
+    const element = selectedElements.value[i]
+    if (!element) return
+    element._rotateStart = element.rotate || 0
+  })
+  isOperating.value = true
+}
+
+const handleGroupRotate = ({ events }) => {
+  events.forEach((ev, i) => {
+    const element = selectedElements.value[i]
+    if (!element || element._rotateStart === undefined) return
+
+    const rotate = (element._rotateStart + ev.rotate) % 360
+
+    const updatedElement = {
+      ...element,
+      rotate: Math.round(rotate)
+    }
+
+    // 更新元素旋转角度
+    const index = elementsList.value.findIndex(el => el.id === element.id)
+    if (index !== -1) {
+      elementsList.value[index] = updatedElement
+      selectedElements.value[i] = updatedElement
+
+      // 直接更新 DOM 样式
+      const domElement = document.querySelector(`[data-id='${element.id}']`)
+      if (domElement) {
+        domElement.style.transform = `translate(${element.x}px, ${element.y}px) rotate(${updatedElement.rotate}deg)`
+      }
+    }
+  })
+
+  // 触发更新事件
+  emit('elements-change', [...elementsList.value])
+}
+
+const handleGroupRotateEnd = () => {
+  selectedElements.value.forEach(element => {
+    delete element._rotateStart
+  })
+  isOperating.value = false
+  pushState([...elementsList.value])
+}
+
 // 导出方法和状态给父组件
 defineExpose({
   handleUndo,
@@ -1051,6 +1389,10 @@ defineExpose({
 
 .element-selected {
   outline: 2px solid #ff4d4f !important;
+}
+
+.element-multi-selected {
+  outline: none !important;
 }
 
 :deep(.moveable-control-box) {
@@ -1178,5 +1520,44 @@ defineExpose({
 .element-delete-btn:active {
   background: #ff4d4f;
   transform: scale(1);
+}
+
+:deep(.group-moveable .moveable-control-box) {
+  --moveable-color: #1890ff;
+  border: 1px solid #1890ff !important;
+}
+
+:deep(.group-moveable .moveable-line) {
+  background: #1890ff !important;
+  opacity: 0.5;
+  height: 1px !important;
+}
+
+:deep(.group-moveable .moveable-control) {
+  width: 8px !important;
+  height: 8px !important;
+  margin-left: -4px !important;
+  margin-top: -4px !important;
+  border: 1px solid #fff !important;
+  background-color: #1890ff !important;
+  border-radius: 50% !important;
+}
+
+:deep(.group-moveable .moveable-rotation-control) {
+  border-color: #1890ff !important;
+}
+
+.group-delete-btn {
+  pointer-events: auto !important;
+}
+
+.group-delete-btn:hover {
+  background: #ff7875 !important;
+  transform: scale(1.1) !important;
+}
+
+.group-delete-btn:active {
+  background: #ff4d4f !important;
+  transform: scale(1) !important;
 }
 </style>
