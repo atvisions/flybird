@@ -83,6 +83,14 @@
         @delete-canvas="removeCanvas"
         @switch-canvas="switchCanvas"
         @update-canvas-config="updateCanvasConfig"
+        @align-horizontal-to-canvas="handleAlignHorizontalToCanvas"
+        @align-vertical-to-canvas="handleAlignVerticalToCanvas"
+        @align-left="handleAlignLeft"
+        @align-horizontal-center="handleAlignHorizontalCenter"
+        @align-right="handleAlignRight"
+        @align-top="handleAlignTop"
+        @align-vertical-center="handleAlignVerticalCenter"
+        @align-bottom="handleAlignBottom"
       />
     </div>
   </div>
@@ -213,6 +221,39 @@ const handleUndo = () => {
 // 处理重做
 const handleRedo = () => {
   canvasRef.value?.handleRedo()
+}
+
+// 添加对齐方法
+const handleAlignHorizontalToCanvas = () => {
+  canvasRef.value?.alignHorizontalToCanvas()
+}
+
+const handleAlignVerticalToCanvas = () => {
+  canvasRef.value?.alignVerticalToCanvas()
+}
+
+const handleAlignLeft = () => {
+  canvasRef.value?.alignLeft()
+}
+
+const handleAlignHorizontalCenter = () => {
+  canvasRef.value?.alignHorizontalCenter()
+}
+
+const handleAlignRight = () => {
+  canvasRef.value?.alignRight()
+}
+
+const handleAlignTop = () => {
+  canvasRef.value?.alignTop()
+}
+
+const handleAlignVerticalCenter = () => {
+  canvasRef.value?.alignVerticalCenter()
+}
+
+const handleAlignBottom = () => {
+  canvasRef.value?.alignBottom()
 }
 </script>
 

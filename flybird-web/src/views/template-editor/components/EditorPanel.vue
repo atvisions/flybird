@@ -230,6 +230,91 @@
           </template>
         </div>
 
+        <!-- 添加对齐操作区域 -->
+        <div class="panel-section">
+          <h4>对齐方式</h4>
+          <div class="form-group">
+            <div class="align-controls">
+              <!-- 画布对齐 -->
+              <div class="align-group">
+                <label>画布对齐</label>
+                <div class="button-group">
+                  <button 
+                    class="btn-icon" 
+                    title="水平居中到画布"
+                    @click="$emit('align-horizontal-to-canvas')"
+                  >
+                    <AlignTextCenter theme="outline" size="16" fill="#374151" />
+                  </button>
+                  <button 
+                    class="btn-icon" 
+                    title="垂直居中到画布"
+                    @click="$emit('align-vertical-to-canvas')"
+                  >
+                    <AlignTextMiddle theme="outline" size="16" fill="#374151" />
+                  </button>
+                </div>
+              </div>
+              
+              <!-- 水平对齐 -->
+              <div class="align-group">
+                <label>水平对齐</label>
+                <div class="button-group">
+                  <button 
+                    class="btn-icon" 
+                    title="左对齐"
+                    @click="$emit('align-left')"
+                  >
+                    <AlignLeft theme="outline" size="16" fill="#374151" />
+                  </button>
+                  <button 
+                    class="btn-icon" 
+                    title="水平居中"
+                    @click="$emit('align-horizontal-center')"
+                  >
+                    <AlignTextCenter theme="outline" size="16" fill="#374151" />
+                  </button>
+                  <button 
+                    class="btn-icon" 
+                    title="右对齐"
+                    @click="$emit('align-right')"
+                  >
+                    <AlignRight theme="outline" size="16" fill="#374151" />
+                  </button>
+                </div>
+              </div>
+              
+              <!-- 垂直对齐 -->
+              <div class="align-group">
+                <label>垂直对齐</label>
+                <div class="button-group">
+                  <button 
+                    class="btn-icon" 
+                    title="顶部对齐"
+                    @click="$emit('align-top')"
+                  >
+                    <AlignTop theme="outline" size="16" fill="#374151" />
+                  </button>
+                  <button 
+                    class="btn-icon" 
+                    title="垂直居中"
+                    @click="$emit('align-vertical-center')"
+                  >
+                    <AlignTextMiddle theme="outline" size="16" fill="#374151" />
+                  </button>
+                  <button 
+                    class="btn-icon" 
+                    title="底部对齐"
+                    @click="$emit('align-bottom')"
+                  >
+                    <AlignBottom theme="outline" size="16" fill="#374151" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="panel-section">
           <h4>样式</h4>
           <!-- 形状通用样式设置 -->
@@ -920,7 +1005,15 @@ import {
   Plus, 
   Setting,
   Up,
-  Down
+  Down,
+  AlignHorizontalCenter,
+  AlignVerticalCenter,
+  AlignLeft,
+  AlignRight,
+  AlignTop,
+  AlignBottom,
+  AlignTextCenter,
+  AlignTextMiddle
 } from '@icon-park/vue-next'
 import Switch from './Switch.vue'
 import ColorPicker from './ColorPicker.vue'
@@ -945,7 +1038,15 @@ const emit = defineEmits([
   'add-canvas',
   'delete-canvas',
   'switch-canvas',
-  'update-canvas-config'
+  'update-canvas-config',
+  'align-horizontal-to-canvas',
+  'align-vertical-to-canvas',
+  'align-left',
+  'align-horizontal-center',
+  'align-right',
+  'align-top',
+  'align-vertical-center',
+  'align-bottom'
 ])
 
 // 获取当前画布
@@ -1241,6 +1342,11 @@ const isContentDisabled = computed(() => {
 const isStyleDisabled = computed(() => {
   return false; // 样式属性永远不禁用
 });
+
+// 对齐操作
+const alignElement = (alignment) => {
+  emit('align', alignment)
+}
 </script>
 
 <style scoped>
@@ -2517,5 +2623,57 @@ textarea.disabled:hover {
   border-color: #1890ff;
   box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
   outline: none;
+}
+
+/* 添加对齐控制样式 */
+.align-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 6px;
+}
+
+.align-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.align-group label {
+  font-size: 13px;
+  color: #4b5563;
+  margin-bottom: 0;
+}
+
+.align-group .button-group {
+  display: flex;
+  gap: 8px;
+  background: #f5f5f5;
+  padding: 4px;
+  border-radius: 6px;
+}
+
+.align-group .button-group .btn-icon {
+  flex: 1;
+  height: 32px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.align-group .button-group .btn-icon:hover {
+  border-color: #1890ff;
+  background: #f0f5ff;
+}
+
+.align-group .button-group .btn-icon:hover :deep(svg) {
+  fill: #1890ff;
+}
+
+.align-group .button-group .btn-icon:active {
+  background: #e6f4ff;
 }
 </style> 

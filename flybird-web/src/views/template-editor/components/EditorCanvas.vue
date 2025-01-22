@@ -1318,12 +1318,191 @@ const handleGroupRotateEnd = () => {
   pushState([...elementsList.value])
 }
 
-// 导出方法和状态给父组件
+// 添加对齐和分布方法
+// 水平分布到画布
+const alignHorizontalToCanvas = () => {
+  const elements = selectedElements.value.length > 0 ? selectedElements.value : [props.selectedElement]
+  if (!elements || elements.length === 0) return
+
+  elements.forEach(element => {
+    const updatedElement = {
+      ...element,
+      x: (props.canvasConfig.width - element.width) / 2
+    }
+    updateElement(updatedElement)
+  })
+
+  emit('elements-change', [...elementsList.value])
+  pushState([...elementsList.value])
+}
+
+// 垂直分布到画布
+const alignVerticalToCanvas = () => {
+  const elements = selectedElements.value.length > 0 ? selectedElements.value : [props.selectedElement]
+  if (!elements || elements.length === 0) return
+
+  elements.forEach(element => {
+    const updatedElement = {
+      ...element,
+      y: (props.canvasConfig.height - element.height) / 2
+    }
+    updateElement(updatedElement)
+  })
+
+  emit('elements-change', [...elementsList.value])
+  pushState([...elementsList.value])
+}
+
+// 左对齐
+const alignLeft = () => {
+  const elements = selectedElements.value.length > 0 ? selectedElements.value : [props.selectedElement]
+  if (!elements || elements.length === 0) return
+
+  const leftMost = 0  // 对齐到画布左边缘
+  elements.forEach(element => {
+    const updatedElement = {
+      ...element,
+      x: leftMost
+    }
+    updateElement(updatedElement)
+  })
+
+  emit('elements-change', [...elementsList.value])
+  pushState([...elementsList.value])
+}
+
+// 水平居中对齐
+const alignHorizontalCenter = () => {
+  const elements = selectedElements.value.length > 0 ? selectedElements.value : [props.selectedElement]
+  if (!elements || elements.length === 0) return
+
+  // 如果只有一个元素，则相对于画布居中
+  if (elements.length === 1) {
+    const element = elements[0]
+    const updatedElement = {
+      ...element,
+      x: (props.canvasConfig.width - element.width) / 2
+    }
+    updateElement(updatedElement)
+  } else {
+    // 多个元素，则相对于选中组的边界框居中
+    const leftMost = Math.min(...elements.map(el => el.x))
+    const rightMost = Math.max(...elements.map(el => el.x + el.width))
+    const groupWidth = rightMost - leftMost
+    const groupCenter = leftMost + groupWidth / 2
+
+    elements.forEach(element => {
+      const updatedElement = {
+        ...element,
+        x: groupCenter - element.width / 2
+      }
+      updateElement(updatedElement)
+    })
+  }
+
+  emit('elements-change', [...elementsList.value])
+  pushState([...elementsList.value])
+}
+
+// 右对齐
+const alignRight = () => {
+  const elements = selectedElements.value.length > 0 ? selectedElements.value : [props.selectedElement]
+  if (!elements || elements.length === 0) return
+
+  elements.forEach(element => {
+    const updatedElement = {
+      ...element,
+      x: props.canvasConfig.width - element.width  // 对齐到画布右边缘
+    }
+    updateElement(updatedElement)
+  })
+
+  emit('elements-change', [...elementsList.value])
+  pushState([...elementsList.value])
+}
+
+// 顶部对齐
+const alignTop = () => {
+  const elements = selectedElements.value.length > 0 ? selectedElements.value : [props.selectedElement]
+  if (!elements || elements.length === 0) return
+
+  const topMost = 0  // 对齐到画布顶部
+  elements.forEach(element => {
+    const updatedElement = {
+      ...element,
+      y: topMost
+    }
+    updateElement(updatedElement)
+  })
+
+  emit('elements-change', [...elementsList.value])
+  pushState([...elementsList.value])
+}
+
+// 垂直居中对齐
+const alignVerticalCenter = () => {
+  const elements = selectedElements.value.length > 0 ? selectedElements.value : [props.selectedElement]
+  if (!elements || elements.length === 0) return
+
+  // 如果只有一个元素，则相对于画布居中
+  if (elements.length === 1) {
+    const element = elements[0]
+    const updatedElement = {
+      ...element,
+      y: (props.canvasConfig.height - element.height) / 2
+    }
+    updateElement(updatedElement)
+  } else {
+    // 多个元素，则相对于选中组的边界框居中
+    const topMost = Math.min(...elements.map(el => el.y))
+    const bottomMost = Math.max(...elements.map(el => el.y + el.height))
+    const groupHeight = bottomMost - topMost
+    const groupCenter = topMost + groupHeight / 2
+
+    elements.forEach(element => {
+      const updatedElement = {
+        ...element,
+        y: groupCenter - element.height / 2
+      }
+      updateElement(updatedElement)
+    })
+  }
+
+  emit('elements-change', [...elementsList.value])
+  pushState([...elementsList.value])
+}
+
+// 底部对齐
+const alignBottom = () => {
+  const elements = selectedElements.value.length > 0 ? selectedElements.value : [props.selectedElement]
+  if (!elements || elements.length === 0) return
+
+  elements.forEach(element => {
+    const updatedElement = {
+      ...element,
+      y: props.canvasConfig.height - element.height  // 对齐到画布底部
+    }
+    updateElement(updatedElement)
+  })
+
+  emit('elements-change', [...elementsList.value])
+  pushState([...elementsList.value])
+}
+
+// 暴露对齐方法
 defineExpose({
+  alignHorizontalToCanvas,
+  alignVerticalToCanvas,
+  alignLeft,
+  alignHorizontalCenter,
+  alignRight,
+  alignTop,
+  alignVerticalCenter,
+  alignBottom,
   handleUndo,
   handleRedo,
-  canUndo: computed(() => canUndo.value),
-  canRedo: computed(() => canRedo.value)
+  canUndo,
+  canRedo
 })
 </script>
 
