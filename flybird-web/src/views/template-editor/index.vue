@@ -2,8 +2,8 @@
   <div class="template-editor">
     <!-- 顶部工具栏 -->
     <EditorToolbar
-      :can-undo="canvasRef?.canUndo"
-      :can-redo="canvasRef?.canRedo"
+      :can-undo="canUndo"
+      :can-redo="canRedo"
       :scale="scale"
       @clear="handleClear"
       @save="handleSave"
@@ -36,6 +36,8 @@
             @delete-canvas="removeCanvas"
             @element-add="handleElementAdd"
             @selected-elements-change="handleSelectedElementsChange"
+            @update:canUndo="canUndo = $event"
+            @update:canRedo="canRedo = $event"
           />
         </div>
         <div class="editor-footer">
@@ -601,6 +603,10 @@ const updateElement = (updatedElement) => {
   // 更新画布元素
   updateCanvasElements(newElements)
 }
+
+// 添加撤销重做状态
+const canUndo = ref(false)
+const canRedo = ref(false)
 </script>
 
 <style>

@@ -271,11 +271,19 @@ const emit = defineEmits([
   'element-select',
   'elements-change',
   'element-add',
-  'selected-elements-change'
+  'selected-elements-change',
+  'update:canUndo',
+  'update:canRedo'
 ])
 
 // 历史记录管理
 const { pushState, undo, redo, canUndo, canRedo } = useHistory()
+
+// 监听状态变化并通知父组件
+watch([canUndo, canRedo], ([newCanUndo, newCanRedo]) => {
+  emit('update:canUndo', newCanUndo)
+  emit('update:canRedo', newCanRedo)
+})
 
 // 本地状态
 const currentElement = ref(null)
