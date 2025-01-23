@@ -27,8 +27,10 @@ export function useCanvas() {
         width: 794,
         height: 1123,
         backgroundColor: '#ffffff',
-        showGrid: false,
-        showGuideLine: true
+        showGrid: true,
+        showGuideLine: true,
+        gridSize: 10,
+        gridColor: 'rgba(0, 0, 0, 0.15)'
       }
     }]
   })
@@ -147,8 +149,10 @@ export function useCanvas() {
           width: 794,
           height: 1123,
           backgroundColor: '#ffffff',
-          showGrid: false,
-          showGuideLine: true
+          showGrid: true,
+          showGuideLine: true,
+          gridSize: 10,
+          gridColor: 'rgba(0, 0, 0, 0.15)'
         }
       }]
     } else {

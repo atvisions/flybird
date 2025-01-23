@@ -1470,7 +1470,9 @@ const handleAddCanvas = () => {
       height: 1123,
       showGuideLine: true,
       backgroundColor: '#ffffff',
-      showGrid: false
+      showGrid: true,
+      gridSize: 10,
+      gridColor: 'rgba(0, 0, 0, 0.15)'
     },
     elements: [],
     page_index: newIndex
