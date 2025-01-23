@@ -972,13 +972,13 @@
                 :class="{ active: currentCanvasId === canvas.id }"
                 @click="$emit('switch-canvas', canvas.id)"
               >
-                <div class="canvas-preview" :style="{ backgroundColor: canvas.config.backgroundColor }">
+                <div class="canvas-preview" :style="{ backgroundColor: canvas.config?.backgroundColor || '#ffffff' }">
                   <div class="canvas-overlay"></div>
                 </div>
                 <div class="canvas-index">{{ index + 1 }}</div>
                 <button 
-                  v-if="canvasList.length > 1"
-                  class="btn-icon" 
+                  v-if="canvasList.length > 1 && index > 0"
+                  class="btn-delete" 
                   @click.stop="handleDeleteCanvas(canvas.id)"
                 >
                   <Delete theme="outline" size="12" />
@@ -1452,20 +1452,25 @@ const handleAddCanvas = () => {
     return
   }
   
+  // 找到最小的未使用的索引
+  const usedIndexes = props.canvasList.map(canvas => canvas.page_index)
+  let newIndex = 0
+  while (usedIndexes.includes(newIndex)) {
+    newIndex++
+  }
+  
   // 创建新画布的默认配置
   const newCanvas = {
-    id: Date.now(), // 使用时间戳作为唯一ID
-    page_data: {
-      config: {
-        width: 794,
-        height: 1123,
-        showGuideLine: true,
-        backgroundColor: '#ffffff',
-        showGrid: false
-      },
-      elements: []
+    id: Date.now(),
+    config: {
+      width: 794,
+      height: 1123,
+      showGuideLine: true,
+      backgroundColor: '#ffffff',
+      showGrid: false
     },
-    page_index: props.canvasList.length // 使用当前画布列表长度作为索引
+    elements: [],
+    page_index: newIndex
   }
   
   // 触发添加画布事件
@@ -1481,11 +1486,8 @@ const handleDeleteCanvas = (canvasId) => {
     return
   }
   
-  // 触发删除画布事件，同时更新其他画布的索引
-  emit('delete-canvas', { 
-    canvasId,
-    updateIndexes: true // 标记需要更新其他画布的索引
-  })
+  // 触发删除画布事件
+  emit('delete-canvas', canvasId)
 }
 </script>
 
@@ -1762,7 +1764,6 @@ textarea:focus {
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
-  overflow: hidden;
   box-shadow: 
     0 1px 2px rgba(0, 0, 0, 0.04),
     0 2px 4px rgba(0, 0, 0, 0.02);
@@ -1791,7 +1792,6 @@ textarea:focus {
   justify-content: center;
   border-radius: 5px;
   transition: all 0.3s;
-  overflow: hidden;
 }
 
 .canvas-overlay {
@@ -2907,5 +2907,41 @@ textarea.disabled:hover {
   height: 16px;
   fill: #4b5563;
   transition: all 0.2s;
+}
+
+.btn-delete {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: #fff;
+  color: #999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+.canvas-item:hover .btn-delete {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.btn-delete:hover {
+  background: #ff4d4f;
+  color: #fff;
+}
+
+.btn-delete:active {
+  transform: scale(0.9);
 }
 </style> 

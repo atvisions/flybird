@@ -126,6 +126,15 @@
                       </button>
 
                       <button 
+                        v-if="template.creator === accountStore.userInfo?.id"
+                        class="action-btn danger"
+                        @click="handleDeleteTemplate(template)"
+                      >
+                        <Delete theme="outline" :size="16" />
+                        <span>删除</span>
+                      </button>
+
+                      <button 
                         class="action-btn primary"
                         @click="handleUseTemplate(template)"
                       >
@@ -168,7 +177,8 @@ import { templateApi } from '@/api/template'
 import { showToast } from '@/components/ToastMessage'
 import { useAccountStore } from '@/stores/account'
 import { useRouter } from 'vue-router'
-import { Edit, Plus } from '@icon-park/vue-next'
+import { Edit, Plus, Delete } from '@icon-park/vue-next'
+import { ElMessageBox } from 'element-plus'
 
 const { activeTab, tabs, switchTab } = useTabs()
 const { components } = useComponents()
@@ -533,6 +543,36 @@ const handleCreateTemplate = () => {
   
   // 直接发出编辑事件，不需要调用 handleEditTemplate
   emit('edit-template', newTemplate)
+}
+
+// 添加删除模板方法
+const handleDeleteTemplate = async (template) => {
+  try {
+    // 显示确认对话框
+    await ElMessageBox.confirm(
+      '确定要删除该模板吗？此操作不可恢复',
+      '删除确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    
+    // 调用删除 API
+    await templateApi.delete(template.id)
+    
+    // 从列表中移除该模板
+    templates.value = templates.value.filter(t => t.id !== template.id)
+    
+    // 显示成功提示
+    showToast('删除成功', 'success')
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除模板失败:', error)
+      showToast('删除失败', 'error')
+    }
+  }
 }
 
 // 监听筛选条件变化
@@ -917,6 +957,18 @@ defineExpose({
 
 .action-btn.use:hover {
   background-color: #d9f7be;
+}
+
+.action-btn.danger {
+  color: #f56c6c;
+}
+
+.action-btn.danger:hover {
+  background-color: #fef0f0;
+}
+
+.action-btn.danger:active {
+  background-color: #fde2e2;
 }
 
 .create-template-btn-container {

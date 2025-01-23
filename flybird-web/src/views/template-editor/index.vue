@@ -48,8 +48,6 @@
               :selected-elements="selectedElements"
               @element-select="handleElementSelect"
               @elements-change="updateCanvasElements"
-              @switch-canvas="switchCanvas"
-              @add-canvas="addCanvas"
               @delete-canvas="removeCanvas"
               @element-add="handleElementAdd"
               @selected-elements-change="handleSelectedElementsChange"
@@ -104,9 +102,9 @@
           :selected-elements="selectedElements"
           @update="handleElementUpdate"
           @element-select="handleElementSelect"
-          @add-canvas="addCanvas"
+          @add-canvas="handleAddCanvas"
           @delete-canvas="removeCanvas"
-          @switch-canvas="switchCanvas"
+          @switch-canvas="handleSwitchCanvas"
           @update-canvas-config="updateCanvasConfig"
           @align-horizontal-to-canvas="handleAlignHorizontalToCanvas"
           @align-vertical-to-canvas="handleAlignVerticalToCanvas"
@@ -888,6 +886,8 @@ const handleSave = async ({ mode, action, data, callback }) => {
 // 处理使用模板
 const handleUseTemplate = async (templateData) => {
   try {
+    isLoading.value = true  // 在开始加载时显示 LoadingScreen
+    
     // 获取用户档案数据
     const profileStore = useProfileStore()
     if (!profileStore.profileData) {
@@ -897,6 +897,24 @@ const handleUseTemplate = async (templateData) => {
     // 将 Proxy 对象转换为普通对象
     const profileData = JSON.parse(JSON.stringify(profileStore.profileData))
     console.log('转换后的用户档案数据:', profileData)
+
+    // 预加载样式
+    await new Promise(resolve => {
+      const styleSheets = Array.from(document.styleSheets)
+      const promises = styleSheets.map(sheet => {
+        if (sheet.href) {
+          return new Promise((resolve) => {
+            const link = document.createElement('link')
+            link.rel = 'stylesheet'
+            link.href = sheet.href
+            link.onload = resolve
+            document.head.appendChild(link)
+          })
+        }
+        return Promise.resolve()
+      })
+      Promise.all(promises).then(resolve)
+    })
 
     // 构造新的画布数据
     const canvases = templateData.pages.map((page, index) => {
@@ -957,6 +975,9 @@ const handleUseTemplate = async (templateData) => {
       }
     })
 
+    // 等待下一个渲染周期，确保 DOM 更新完成
+    await nextTick()
+
     // 更新画布数据
     updateCanvasData(canvases)
 
@@ -976,9 +997,15 @@ const handleUseTemplate = async (templateData) => {
     }
 
     console.log('使用模板，更新后的画布数据:', canvases)
+
+    // 给样式加载一个短暂的延迟，确保所有样式都已应用
+    await new Promise(resolve => setTimeout(resolve, 100))
+    
+    isLoading.value = false  // 所有数据和样式都准备好后再隐藏 LoadingScreen
   } catch (error) {
     console.error('使用模板失败:', error)
     showToast('加载模板数据失败', 'error')
+    isLoading.value = false
   }
 }
 
@@ -1044,9 +1071,54 @@ const handleTemplateUpdate = (updatedTemplate) => {
     status: updatedTemplate.status
   }
 }
+
+// 添加画布
+const handleAddCanvas = (newCanvas) => {
+  // 添加新画布
+  templateData.value.canvases.push(newCanvas)
+  // 立即切换到新画布
+  currentCanvasId.value = newCanvas.id
+}
+
+// 切换画布
+const handleSwitchCanvas = (canvasId) => {
+  currentCanvasId.value = canvasId
+}
 </script>
 
 <style>
+/* 添加全局过渡效果 */
+.template-editor {
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.template-editor.loading {
+  opacity: 0;
+}
+
+/* 为画布元素添加过渡效果 */
+.canvas-container {
+  opacity: 1;
+  transition: all 0.3s ease-in-out;
+}
+
+.canvas-container.loading {
+  opacity: 0;
+}
+
+/* 为元素添加过渡效果 */
+.canvas-element {
+  transition: all 0.2s ease-in-out;
+}
+
+/* 确保所有样式在加载时都有过渡效果 */
+.editor-content * {
+  transition: background-color 0.2s ease-in-out,
+              border-color 0.2s ease-in-out,
+              box-shadow 0.2s ease-in-out;
+}
+
 @import './styles/editor.css';
 @import './styles/drag.css';
 </style>
