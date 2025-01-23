@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Category, Template
 from .serializers import CategorySerializer, TemplateSerializer
-from .permissions import IsAdminUserOrReadOnly
+from .permissions import IsAdminUserOrReadOnly, CanModifyTemplate
 
 class CategoryViewSet(viewsets.ModelViewSet):
     """
@@ -26,18 +26,40 @@ class TemplateViewSet(viewsets.ModelViewSet):
     """
     queryset = Template.objects.all()
     serializer_class = TemplateSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CanModifyTemplate]
 
     def perform_create(self, serializer):
         """创建时自动设置创建者"""
         serializer.save(creator=self.request.user)
 
     def get_queryset(self):
-        """根据用户权限返回不同的查询集"""
+        """根据用户权限和查询参数返回不同的查询集"""
         user = self.request.user
-        if user.is_staff:
-            return Template.objects.all()
-        return Template.objects.filter(is_public=True) | Template.objects.filter(creator=user)
+        queryset = Template.objects.all()
+
+        # 基础权限过滤
+        if not user.is_staff:
+            queryset = queryset.filter(is_public=True) | queryset.filter(creator=user)
+
+        # 获取查询参数
+        status = self.request.query_params.get('status')
+        is_public = self.request.query_params.get('is_public')
+        is_recommended = self.request.query_params.get('is_recommended')
+        category = self.request.query_params.get('category')
+
+        # 应用过滤条件
+        if status is not None:
+            queryset = queryset.filter(status=status)
+        if is_public is not None:
+            is_public = is_public.lower() == 'true'
+            queryset = queryset.filter(is_public=is_public)
+        if is_recommended is not None:
+            is_recommended = is_recommended.lower() == 'true'
+            queryset = queryset.filter(is_recommended=is_recommended)
+        if category:
+            queryset = queryset.filter(category=category)
+
+        return queryset
 
     @action(detail=True, methods=['post'])
     def add_page(self, request, pk=None):
@@ -134,6 +156,27 @@ class TemplateViewSet(viewsets.ModelViewSet):
             template.likes += 1
             template.save()
             return Response({'message': '点赞成功', 'is_liked': True})
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def toggle_recommend(self, request, pk=None):
+        """切换模板的推荐状态"""
+        template = self.get_object()
+        
+        # 只有管理员可以设置推荐状态
+        if not request.user.is_staff:
+            return Response({
+                'status': 'error',
+                'message': '只有管理员可以设置推荐状态'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        template.is_recommended = not template.is_recommended
+        template.save()
+        
+        return Response({
+            'status': 'success',
+            'is_recommended': template.is_recommended,
+            'message': '已设为推荐' if template.is_recommended else '已取消推荐'
+        })
 
     def retrieve(self, request, *args, **kwargs):
         """获取模板详情时增加浏览次数"""

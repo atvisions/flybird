@@ -1,137 +1,153 @@
 <template>
   <div class="template-editor">
-    <!-- 顶部工具栏 -->
-    <EditorToolbar
-      :can-undo="canUndo"
-      :can-redo="canRedo"
-      :scale="scale"
-      :button-text="saveButtonText"
-      @clear="handleClear"
-      @save="handleSave"
-      @undo="handleUndo"
-      @redo="handleRedo"
-      @scale-change="handleScaleChange"
+    <!-- 加载页面 -->
+    <LoadingScreen
+      v-if="isLoading"
+      :template-id="templateId"
+      :mode="currentTemplateId ? 'edit' : 'use'"
+      @load-complete="handleLoadComplete"
     />
 
-    <!-- 主要内容区域 -->
-    <div class="editor-content">
-      <!-- 左侧面板 -->
-      <EditorSidebar 
-        ref="sidebarRef"
-        @edit-template="handleEditTemplate"
-        @use-template="handleUseTemplate"
+    <!-- 编辑器内容 -->
+    <template v-else>
+      <!-- 顶部工具栏 -->
+      <EditorToolbar
+        :can-undo="canUndo"
+        :can-redo="canRedo"
+        :scale="scale"
+        :button-text="saveButtonText"
+        :current-template="currentTemplateData"
+        @clear="handleClear"
+        @save="handleSave"
+        @undo="handleUndo"
+        @redo="handleRedo"
+        @scale-change="handleScaleChange"
+        @update:template="handleTemplateUpdate"
       />
 
-      <!-- 中间画布区域 -->
-      <div class="editor-main">
-        <div class="canvas-container">
-          <EditorCanvas
-            ref="canvasRef"
-            :scale="scale"
-            :elements="getCurrentCanvas()?.elements || []"
-            :canvas-list="templateData.canvases"
-            :current-canvas-id="currentCanvasId"
-            :canvas-config="getCurrentCanvas()?.config"
-            :selected-element="selectedElement"
-            :selected-elements="selectedElements"
-            @element-select="handleElementSelect"
-            @elements-change="updateCanvasElements"
-            @switch-canvas="switchCanvas"
-            @add-canvas="addCanvas"
-            @delete-canvas="removeCanvas"
-            @element-add="handleElementAdd"
-            @selected-elements-change="handleSelectedElementsChange"
-            @update:canUndo="canUndo = $event"
-            @update:canRedo="canRedo = $event"
-          />
-        </div>
-        <div class="editor-footer">
-          <span class="canvas-pages">Page {{ currentCanvasId }}/{{ templateData.canvases.length }}</span>
-          <div class="footer-content">
-            <div class="zoom-control">
-              <button class="zoom-btn" @click="handleZoomOut" :disabled="scale <= MIN_SCALE">
-                <Minus theme="outline" :size="16" />
-              </button>
-              <div class="zoom-slider">
-                <div class="zoom-track" @mousedown="handleTrackClick">
-                  <div class="zoom-progress" :style="{ width: `${((scale - MIN_SCALE) / (MAX_SCALE - MIN_SCALE)) * 100}%` }"></div>
-                  <div class="zoom-ticks">
-                    <div class="zoom-tick" style="left: 0%"></div>
-                    <div class="zoom-tick" style="left: 25%"></div>
-                    <div class="zoom-tick zoom-tick-100" style="left: 50%"></div>
-                    <div class="zoom-tick" style="left: 75%"></div>
-                    <div class="zoom-tick" style="left: 100%"></div>
-                  </div>
-                  <div 
-                    class="zoom-handle" 
-                    :style="{ left: `${((scale - MIN_SCALE) / (MAX_SCALE - MIN_SCALE)) * 100}%` }"
-                    @mousedown.stop="startDrag"
-                  >
-                    <div class="zoom-tooltip">{{ Math.round(scale * 100) }}%</div>
+      <!-- 主要内容区域 -->
+      <div class="editor-content">
+        <!-- 左侧面板 -->
+        <EditorSidebar 
+          ref="sidebarRef"
+          @edit-template="handleEditTemplate"
+          @use-template="handleUseTemplate"
+        />
+
+        <!-- 中间画布区域 -->
+        <div class="editor-main">
+          <div class="canvas-container">
+            <EditorCanvas
+              ref="canvasRef"
+              :scale="scale"
+              :elements="getCurrentCanvas()?.elements || []"
+              :canvas-list="templateData.canvases"
+              :current-canvas-id="currentCanvasId"
+              :canvas-config="getCurrentCanvas()?.config"
+              :selected-element="selectedElement"
+              :selected-elements="selectedElements"
+              @element-select="handleElementSelect"
+              @elements-change="updateCanvasElements"
+              @switch-canvas="switchCanvas"
+              @add-canvas="addCanvas"
+              @delete-canvas="removeCanvas"
+              @element-add="handleElementAdd"
+              @selected-elements-change="handleSelectedElementsChange"
+              @update:canUndo="canUndo = $event"
+              @update:canRedo="canRedo = $event"
+            />
+          </div>
+          <div class="editor-footer">
+            <span class="canvas-pages">Page {{ currentCanvasId }}/{{ templateData.canvases.length }}</span>
+            <div class="footer-content">
+              <div class="zoom-control">
+                <button class="zoom-btn" @click="handleZoomOut" :disabled="scale <= MIN_SCALE">
+                  <Minus theme="outline" :size="16" />
+                </button>
+                <div class="zoom-slider">
+                  <div class="zoom-track" @mousedown="handleTrackClick">
+                    <div class="zoom-progress" :style="{ width: `${((scale - MIN_SCALE) / (MAX_SCALE - MIN_SCALE)) * 100}%` }"></div>
+                    <div class="zoom-ticks">
+                      <div class="zoom-tick" style="left: 0%"></div>
+                      <div class="zoom-tick" style="left: 25%"></div>
+                      <div class="zoom-tick zoom-tick-100" style="left: 50%"></div>
+                      <div class="zoom-tick" style="left: 75%"></div>
+                      <div class="zoom-tick" style="left: 100%"></div>
+                    </div>
+                    <div 
+                      class="zoom-handle" 
+                      :style="{ left: `${((scale - MIN_SCALE) / (MAX_SCALE - MIN_SCALE)) * 100}%` }"
+                      @mousedown.stop="startDrag"
+                    >
+                      <div class="zoom-tooltip">{{ Math.round(scale * 100) }}%</div>
+                    </div>
                   </div>
                 </div>
+                <button class="zoom-btn" @click="handleZoomIn" :disabled="scale >= MAX_SCALE">
+                  <Plus theme="outline" :size="16" />
+                </button>
               </div>
-              <button class="zoom-btn" @click="handleZoomIn" :disabled="scale >= MAX_SCALE">
-                <Plus theme="outline" :size="16" />
+              <button class="fullscreen-btn" @click="toggleFullscreen" :title="isFullscreen ? '退出全屏' : '全屏'">
+                <FullScreen v-if="!isFullscreen" theme="outline" :size="18" />
+                <OffScreen v-else theme="outline" :size="18" />
               </button>
             </div>
-            <button class="fullscreen-btn" @click="toggleFullscreen" :title="isFullscreen ? '退出全屏' : '全屏'">
-              <FullScreen v-if="!isFullscreen" theme="outline" :size="18" />
-              <OffScreen v-else theme="outline" :size="18" />
-            </button>
           </div>
         </div>
+
+        <!-- 右侧属性面板 -->
+        <EditorPanel
+          :element="selectedElement"
+          :canvas-list="templateData.canvases"
+          :current-canvas-id="currentCanvasId"
+          :canvas-config="getCurrentCanvas()?.config"
+          :selected-elements="selectedElements"
+          @update="handleElementUpdate"
+          @element-select="handleElementSelect"
+          @add-canvas="addCanvas"
+          @delete-canvas="removeCanvas"
+          @switch-canvas="switchCanvas"
+          @update-canvas-config="updateCanvasConfig"
+          @align-horizontal-to-canvas="handleAlignHorizontalToCanvas"
+          @align-vertical-to-canvas="handleAlignVerticalToCanvas"
+          @align-left="handleAlignLeft"
+          @align-horizontal-center="handleAlignHorizontalCenter"
+          @align-right="handleAlignRight"
+          @align-top="handleAlignTop"
+          @align-vertical-center="handleAlignVerticalCenter"
+          @align-bottom="handleAlignBottom"
+          @align-elements="handleAlignElements"
+          @distribute-elements="handleDistributeElements"
+          @spacing-change="handleSpacingChange"
+        />
       </div>
 
-      <!-- 右侧属性面板 -->
-      <EditorPanel
-        :element="selectedElement"
-        :canvas-list="templateData.canvases"
-        :current-canvas-id="currentCanvasId"
-        :canvas-config="getCurrentCanvas()?.config"
-        :selected-elements="selectedElements"
-        @update="handleElementUpdate"
-        @element-select="handleElementSelect"
-        @add-canvas="addCanvas"
-        @delete-canvas="removeCanvas"
-        @switch-canvas="switchCanvas"
-        @update-canvas-config="updateCanvasConfig"
-        @align-horizontal-to-canvas="handleAlignHorizontalToCanvas"
-        @align-vertical-to-canvas="handleAlignVerticalToCanvas"
-        @align-left="handleAlignLeft"
-        @align-horizontal-center="handleAlignHorizontalCenter"
-        @align-right="handleAlignRight"
-        @align-top="handleAlignTop"
-        @align-vertical-center="handleAlignVerticalCenter"
-        @align-bottom="handleAlignBottom"
-        @align-elements="handleAlignElements"
-        @distribute-elements="handleDistributeElements"
-        @spacing-change="handleSpacingChange"
+      <!-- 保存模板对话框 -->
+      <SaveTemplateDialog
+        v-if="showSaveDialog"
+        :visible="showSaveDialog"
+        :default-data="defaultTemplateData"
+        :is-edit="!!currentTemplateId"
+        @update:visible="showSaveDialog = $event"
+        @save="handleSaveTemplate"
       />
-    </div>
-
-    <!-- 保存模板对话框 -->
-    <SaveTemplateDialog
-      v-if="showSaveDialog"
-      :visible="showSaveDialog"
-      :default-data="defaultTemplateData"
-      :is-edit="!!currentTemplateId"
-      @update:visible="showSaveDialog = $event"
-      @save="handleSaveTemplate"
-    />
+    </template>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, nextTick, computed } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, computed, watch } from 'vue'
 import { Minus, Plus, FullScreen, OffScreen } from '@icon-park/vue-next'
+import { ElMessage } from 'element-plus'
 import EditorCanvas from './components/EditorCanvas.vue'
 import EditorToolbar from './components/EditorToolbar.vue'
 import EditorSidebar from './components/EditorSidebar.vue'
 import EditorPanel from './components/EditorPanel.vue'
 import SaveTemplateDialog from './components/SaveTemplateDialog.vue'
+import LoadingScreen from '@/components/common/LoadingScreen.vue'
 import { templateApi } from '@/api/template'
 import { showToast } from '@/components/ToastMessage'
+import { useRoute, useRouter } from 'vue-router'
 
 // 导入组合式函数
 import { useZoom } from './composables/useZoom'
@@ -174,6 +190,57 @@ const {
 } = useCanvas()
 
 const { canvasConfig } = useCanvasConfig()
+
+// 添加路由实例
+const route = useRoute()
+const router = useRouter()
+
+// 添加默认模板数据
+const defaultTemplateData = ref({
+  name: '',
+  description: '',
+  category: '',
+  keywords: '',
+  is_public: true,
+  status: 0
+})
+
+// 添加加载状态
+const isLoading = ref(true)
+const templateId = computed(() => route.params.templateId || route.params.id)
+
+// 处理加载完成
+const handleLoadComplete = ({ success, templateData, error }) => {
+  if (success && templateData) {
+    handleEditTemplate(templateData)
+  } else {
+    showToast(error || '加载失败', 'error')
+    router.push('/resume/templates')
+  }
+  isLoading.value = false
+}
+
+// 监听路由参数变化
+watch(templateId, async (newId) => {
+  if (newId) {
+    isLoading.value = true
+    try {
+      const res = await templateApi.getDetail(newId)
+      if (res?.data) {
+        handleEditTemplate(res.data)
+      } else {
+        showToast('获取模板详情失败', 'error')
+        router.push('/resume/templates')
+      }
+    } catch (error) {
+      console.error('获取模板详情失败:', error)
+      showToast('获取模板详情失败', 'error')
+      router.push('/resume/templates')
+    } finally {
+      isLoading.value = false
+    }
+  }
+}, { immediate: true })
 
 const handleTrackClick = (e) => {
   if (e.target.classList.contains('zoom-handle')) return
@@ -668,7 +735,40 @@ const handleEditTemplate = async (templateData) => {
     // 构造新的画布数据
     const canvases = templateData.pages.map((page, index) => ({
       id: index,
-      elements: page.page_data.elements || [],
+      elements: page.page_data.elements.map(element => {
+        // 先提取基本属性
+        const baseElement = {
+          id: element.id || `element-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          type: element.type || 'text',
+          x: element.position?.x || 0,
+          y: element.position?.y || 0,
+          width: element.width || 100,
+          height: element.height || 100,
+          content: element.content || '',
+          style: element.style || {},
+          props: element.props || {},
+          // 添加可拖拽相关的属性
+          draggable: true,
+          resizable: true,
+          rotatable: true,
+          lockAspectRatio: false,
+          selected: false,
+          zIndex: element.zIndex || 1,
+          // 添加变换相关的属性
+          transform: element.transform || {
+            rotate: 0,
+            scaleX: 1,
+            scaleY: 1
+          }
+        }
+
+        // 根据元素类型添加特定属性
+        if (element.type === 'text') {
+          baseElement.editable = true
+        }
+
+        return baseElement
+      }),
       config: {
         width: DEFAULT_CANVAS_CONFIG.width,
         height: DEFAULT_CANVAS_CONFIG.height,
@@ -707,95 +807,81 @@ const saveButtonText = computed(() => {
   return currentTemplateId.value ? '保存模板' : '创建模板'
 })
 
-const handleSave = () => {
-  showSaveDialog.value = true
-}
-
-// 添加模板ID
-const defaultTemplateData = ref({
-  name: '',
-  description: '',
-  category: '',
-  keywords: '',
-  is_public: true
-})
-
-const handleSaveTemplate = async (formData) => {
+const handleSave = async ({ mode, action, data, callback }) => {
   try {
-    // 获取所有画布数据
-    const canvasList = templateData.value?.canvases
-    if (!canvasList || canvasList.length === 0) {
-      throw new Error('无法获取画布数据')
-    }
-
-    // 构造所有页面数据
-    const pages = canvasList.map((canvas, index) => ({
-      page_index: index,
-      page_data: {
-        elements: canvas.elements || [],
-        config: {
-          width: canvas.config?.width || 794,
-          height: canvas.config?.height || 1123,
-          showGuideLine: canvas.config?.showGuideLine !== false,
-          backgroundColor: canvas.config?.backgroundColor || '#ffffff',
-          showGrid: canvas.config?.showGrid || false
+    // 获取所有页面数据
+    const pages = templateData.value.canvases.map((canvas, index) => {
+      console.log(`处理画布 ${index}:`, canvas)
+      return {
+        page_index: index,
+        page_data: {
+          elements: canvas.elements.map(element => ({
+            type: element.type || 'text',
+            position: {
+              x: element.x || 0,
+              y: element.y || 0
+            },
+            style: element.style || {},
+            content: element.content || '',
+            props: element.props || {},
+            width: element.width || 100,
+            height: element.height || 100
+          })),
+          config: {
+            width: canvas.config?.width || 794,
+            height: canvas.config?.height || 1123,
+            backgroundColor: canvas.config?.backgroundColor || '#ffffff',
+            showGrid: canvas.config?.showGrid || false,
+            showGuideLine: canvas.config?.showGuideLine !== false,
+            scale: canvas.config?.scale || 1
+          }
         }
       }
-    }))
+    })
 
-    // 构造完整的模板数据
-    const saveData = {
-      ...formData,
-      pages
+    // 准备提交的模板数据
+    const submitData = {
+      name: data.name,
+      category: data.category,
+      description: data.description || '',
+      is_public: data.is_public ?? true,
+      keywords: data.keywords ? (Array.isArray(data.keywords) ? data.keywords : data.keywords.split(',').map(k => k.trim())) : [],
+      status: action === 'draft' ? 0 : 2,  // 0: 草稿, 2: 待审核
+      pages: pages  // 直接提交 pages 数组，不需要包装在 content 对象中
     }
 
-    console.log('提交的模板数据:', JSON.stringify(saveData, null, 2))
+    console.log('准备提交的模板数据:', submitData)
 
-    // 根据是否有模板ID决定是创建还是更新
-    const res = currentTemplateId.value
-      ? await templateApi.update(currentTemplateId.value, saveData)
-      : await templateApi.create(saveData)
-      
-    console.log('API响应:', res)
-    
-    if (res.status === 201 || res.status === 200) {
-      showToast('保存成功', 'success')
-      showSaveDialog.value = false
-      // 刷新模板列表
-      if (sidebarRef.value) {
-        sidebarRef.value.loadTemplates()
-      }
+    let res
+    if (currentTemplateId.value) {
+      console.log('更新模板:', currentTemplateId.value)
+      // 获取当前画布元素
+      const canvasWrapper = document.querySelector('.canvas-wrapper')
+      // 等待下一个渲染周期，确保画布内容已更新
+      await nextTick()
+      res = await templateApi.update(currentTemplateId.value, submitData, canvasWrapper)
     } else {
-      throw new Error(res.data?.message || res.data?.detail || '保存失败')
+      console.log('创建新模板')
+      // 获取当前画布元素
+      const canvasWrapper = document.querySelector('.canvas-wrapper')
+      // 等待下一个渲染周期，确保画布内容已更新
+      await nextTick()
+      res = await templateApi.create(submitData, canvasWrapper)
     }
+
+    if (callback) {
+      callback(true)
+    }
+
+    showToast(action === 'draft' ? '保存草稿成功' : '提交审核成功', 'success')
+    return res
   } catch (error) {
     console.error('保存模板失败:', error)
-    
-    // 处理验证错误
-    if (error.response?.status === 400) {
-      const errorData = error.response.data
-      if (errorData.name && Array.isArray(errorData.name)) {
-        showToast(`保存失败: ${errorData.name[0]}`, 'error')
-      } else if (typeof errorData === 'object') {
-        // 如果是对象，获取第一个错误信息
-        const firstError = Object.values(errorData)[0]
-        if (Array.isArray(firstError)) {
-          showToast(`保存失败: ${firstError[0]}`, 'error')
-        } else {
-          showToast(`保存失败: ${JSON.stringify(errorData)}`, 'error')
-        }
-      } else {
-        showToast('保存失败: 请检查输入数据', 'error')
-      }
-    } else {
-      // 处理其他错误
-      const errorMessage = error.response?.data?.message || 
-                          error.response?.data?.detail || 
-                          error.message || 
-                          '保存失败'
-      showToast(`保存失败: ${errorMessage}`, 'error')
+    if (callback) {
+      callback(false)
     }
-    // 保存失败时不关闭对话框，让用户可以修改数据重试
+    showToast(error.response?.data?.message || error.message || '保存失败', 'error')
+    throw error
   }
 }
 
@@ -914,6 +1000,49 @@ const handleElementAdd = (element) => {
   
   // 保存到历史记录
   pushState(updatedElements)
+}
+
+// 计算当前模板数据
+const currentTemplateData = computed(() => {
+  const currentCanvas = getCurrentCanvas()
+  if (!currentCanvas) return null
+
+  return {
+    id: currentTemplateId.value,
+    name: defaultTemplateData.value.name,
+    category: defaultTemplateData.value.category,
+    description: defaultTemplateData.value.description,
+    is_public: defaultTemplateData.value.is_public,
+    keywords: defaultTemplateData.value.keywords ? defaultTemplateData.value.keywords.split(',').filter(Boolean) : [],
+    status: defaultTemplateData.value.status || 0,
+    pages: templateData.value.canvases.map((canvas, index) => ({
+      page_index: index,
+      page_data: {
+        elements: canvas.elements || [],
+        config: {
+          width: canvas.config?.width || 794,
+          height: canvas.config?.height || 1123,
+          showGuideLine: canvas.config?.showGuideLine !== false,
+          backgroundColor: canvas.config?.backgroundColor || '#ffffff',
+          showGrid: canvas.config?.showGrid || false
+        }
+      }
+    }))
+  }
+})
+
+// 添加模板更新处理函数
+const handleTemplateUpdate = (updatedTemplate) => {
+  console.log('更新模板数据:', updatedTemplate)
+  // 更新默认模板数据
+  defaultTemplateData.value = {
+    name: updatedTemplate.name,
+    description: updatedTemplate.description,
+    category: updatedTemplate.category,
+    keywords: Array.isArray(updatedTemplate.keywords) ? updatedTemplate.keywords.join(',') : '',
+    is_public: updatedTemplate.is_public,
+    status: updatedTemplate.status
+  }
 }
 </script>
 

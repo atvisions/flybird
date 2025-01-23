@@ -39,6 +39,7 @@ class Template(models.Model):
                                on_delete=models.CASCADE)
     is_public = models.BooleanField(_('是否公开'), default=False)
     status = models.SmallIntegerField(_('状态'), choices=STATUS_CHOICES, default=0)
+    is_recommended = models.BooleanField(_('是否推荐'), default=False, help_text=_('设置为推荐模板'))
     
     # 画布数据 - 使用 JSONField 存储多页画布数据
     pages = models.JSONField(_('画布页面'), default=list, help_text=_('存储多个画布页面的数据'))

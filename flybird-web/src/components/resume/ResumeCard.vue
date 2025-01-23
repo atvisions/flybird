@@ -1,5 +1,12 @@
 <template>
   <div class="group relative bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-gray-200 hover:shadow-lg transition-all duration-300">
+    <!-- 推荐标记 -->
+    <div v-if="template.is_recommended" 
+      class="absolute top-3 right-3 z-10 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-xs px-2 py-1 rounded-full font-medium flex items-center">
+      <SparklesIcon class="w-3 h-3 mr-1" />
+      飞鸟推荐
+    </div>
+
     <!-- 操作按钮遮罩层 -->
     <div class="absolute inset-0 bg-black/60 invisible group-hover:visible flex items-center justify-center transition-all duration-300 z-20">
       <button 
@@ -95,7 +102,8 @@ import {
   EyeIcon, 
   HeartIcon as HeartOutlineIcon,
   PlusIcon,
-  CrownIcon
+  CrownIcon,
+  SparklesIcon
 } from '@heroicons/vue/24/outline'
 import { HeartIcon as HeartSolidIcon } from '@heroicons/vue/24/solid'
 import { useRouter } from 'vue-router'
@@ -108,10 +116,25 @@ const handleUseTemplate = (template) => {
   router.push(`/editor/resume/new/${template.id}`)
 }
 
-defineProps({
+const props = defineProps({
   template: {
     type: Object,
-    required: true
+    required: true,
+    default: () => ({
+      id: '',
+      name: '',
+      description: '',
+      thumbnail: '',
+      category: '',
+      creator_name: '',
+      creator_avatar: '',
+      creator_is_vip: false,
+      creator_position: '',
+      useCount: 0,
+      viewCount: 0,
+      isPro: false,
+      is_recommended: false
+    })
   }
 })
 </script> 

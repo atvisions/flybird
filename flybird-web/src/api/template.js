@@ -1,4 +1,88 @@
 import request from '@/utils/request'
+import html2canvas from 'html2canvas'
+
+// 生成缩略图的辅助函数
+async function generateThumbnail(canvasElement) {
+  try {
+    // A4 纸的宽高比 1:1.414 (794:1123)
+    const A4_RATIO = 1.414
+    
+    // 获取原始画布的尺寸
+    const originalWidth = canvasElement.offsetWidth
+    const originalHeight = canvasElement.offsetHeight
+
+    // 设置缩略图的宽度
+    const THUMB_WIDTH = 300
+    // 根据 A4 比例计算高度
+    const THUMB_HEIGHT = Math.round(THUMB_WIDTH * A4_RATIO)
+
+    // 计算缩放比例
+    const scaleX = THUMB_WIDTH / originalWidth
+    const scaleY = THUMB_HEIGHT / originalHeight
+    const scale = Math.min(scaleX, scaleY)
+
+    // 配置 html2canvas
+    const canvas = await html2canvas(canvasElement, {
+      width: originalWidth,
+      height: originalHeight,
+      backgroundColor: '#ffffff',
+      logging: false,
+      useCORS: true,
+      allowTaint: true,
+      scale: 2, // 使用2倍缩放以获得更清晰的图像
+      // 确保正确渲染字体
+      onclone: (clonedDoc) => {
+        // 等待字体加载完成
+        const promises = [];
+        clonedDoc.fonts.forEach((font) => {
+          if (!font.loaded) {
+            promises.push(font.load());
+          }
+        });
+
+        // 在克隆的文档中找到目标元素
+        const clonedElement = clonedDoc.querySelector('.canvas-wrapper');
+        if (clonedElement) {
+          // 确保只显示画布内容
+          clonedElement.style.overflow = 'hidden';
+          clonedElement.style.backgroundColor = '#ffffff';
+          // 移除所有工具栏和辅助元素
+          const toolbars = clonedElement.querySelectorAll('.toolbar, .ruler, .guide-line');
+          toolbars.forEach(toolbar => toolbar.remove());
+        }
+
+        return Promise.all(promises);
+      }
+    })
+
+    // 创建一个新的 canvas 用于缩放
+    const scaledCanvas = document.createElement('canvas')
+    scaledCanvas.width = THUMB_WIDTH
+    scaledCanvas.height = THUMB_HEIGHT
+    const ctx = scaledCanvas.getContext('2d')
+
+    // 设置白色背景
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, THUMB_WIDTH, THUMB_HEIGHT)
+
+    // 在中心绘制并缩放原始画布
+    const scaledWidth = originalWidth * scale
+    const scaledHeight = originalHeight * scale
+    const x = (THUMB_WIDTH - scaledWidth) / 2
+    const y = (THUMB_HEIGHT - scaledHeight) / 2
+    ctx.drawImage(canvas, x, y, scaledWidth, scaledHeight)
+
+    // 将 canvas 转换为 Blob
+    return new Promise((resolve) => {
+      scaledCanvas.toBlob((blob) => {
+        resolve(blob)
+      }, 'image/jpeg', 0.9) // 使用 JPEG 格式，90% 质量
+    })
+  } catch (error) {
+    console.error('生成缩略图失败:', error)
+    throw error
+  }
+}
 
 // 导出统一的API对象
 export const templateApi = {
@@ -52,9 +136,13 @@ export const templateApi = {
   },
 
   // 创建模板
-  async create(data) {
+  async create(data, canvasElement) {
     try {
       console.log('开始创建模板，数据:', data)
+      
+      // 生成缩略图
+      const thumbnail = await generateThumbnail(canvasElement)
+      
       // 构造API期望的数据结构
       const apiData = {
         name: data.name,
@@ -62,27 +150,9 @@ export const templateApi = {
         description: data.description || '',
         is_public: data.is_public || false,
         is_pro: data.is_pro || false,
-        content: {
-          pages: data.content.pages.map(page => ({
-            page_data: {
-              elements: page.page_data.elements.map(element => ({
-                type: element.type || 'text',
-                position: element.position || { x: 0, y: 0 },
-                style: element.style || {},
-                content: element.content || '',
-                props: element.props || {}
-              })),
-              config: {
-                width: page.page_data.config?.width || 794,
-                height: page.page_data.config?.height || 1123,
-                backgroundColor: page.page_data.config?.backgroundColor || '#ffffff',
-                showGrid: page.page_data.config?.showGrid || false,
-                showGuideLine: page.page_data.config?.showGuideLine || true,
-                scale: page.page_data.config?.scale || 1
-              }
-            }
-          }))
-        }
+        status: data.status,
+        keywords: data.keywords,
+        pages: data.pages
       }
 
       const formData = new FormData()
@@ -93,14 +163,20 @@ export const templateApi = {
       formData.append('description', apiData.description)
       formData.append('is_public', apiData.is_public)
       formData.append('is_pro', apiData.is_pro)
-      
-      // 添加缩略图
-      if (data.thumbnail) {
-        formData.append('thumbnail', data.thumbnail)
+      if (typeof apiData.status === 'number') {
+        formData.append('status', apiData.status)
       }
       
-      // 添加内容数据
-      formData.append('content', JSON.stringify(apiData.content))
+      // 添加关键词
+      if (Array.isArray(apiData.keywords)) {
+        formData.append('keywords', JSON.stringify(apiData.keywords))
+      }
+      
+      // 添加缩略图
+      formData.append('thumbnail', thumbnail, 'thumbnail.jpg')
+      
+      // 添加页面数据
+      formData.append('pages', JSON.stringify(apiData.pages))
 
       const response = await request({
         url: '/api/v1/template-editor/templates/',
@@ -119,9 +195,13 @@ export const templateApi = {
   },
 
   // 更新模板
-  async update(id, data) {
+  async update(id, data, canvasElement) {
     try {
       console.log('开始更新模板，ID:', id, '数据:', data)
+      
+      // 生成缩略图
+      const thumbnail = await generateThumbnail(canvasElement)
+      
       // 构造API期望的数据结构
       const apiData = {
         name: data.name,
@@ -129,27 +209,9 @@ export const templateApi = {
         description: data.description || '',
         is_public: data.is_public,
         is_pro: data.is_pro,
-        content: {
-          pages: data.content.pages.map(page => ({
-            page_data: {
-              elements: page.page_data.elements.map(element => ({
-                type: element.type || 'text',
-                position: element.position || { x: 0, y: 0 },
-                style: element.style || {},
-                content: element.content || '',
-                props: element.props || {}
-              })),
-              config: {
-                width: page.page_data.config?.width || 794,
-                height: page.page_data.config?.height || 1123,
-                backgroundColor: page.page_data.config?.backgroundColor || '#ffffff',
-                showGrid: page.page_data.config?.showGrid || false,
-                showGuideLine: page.page_data.config?.showGuideLine || true,
-                scale: page.page_data.config?.scale || 1
-              }
-            }
-          }))
-        }
+        status: data.status,
+        keywords: data.keywords,
+        pages: data.pages
       }
 
       const formData = new FormData()
@@ -160,14 +222,18 @@ export const templateApi = {
       if (apiData.description) formData.append('description', apiData.description)
       if (typeof apiData.is_public === 'boolean') formData.append('is_public', apiData.is_public)
       if (typeof apiData.is_pro === 'boolean') formData.append('is_pro', apiData.is_pro)
+      if (typeof apiData.status === 'number') formData.append('status', apiData.status)
       
-      // 添加缩略图
-      if (data.thumbnail) {
-        formData.append('thumbnail', data.thumbnail)
+      // 添加关键词
+      if (Array.isArray(apiData.keywords)) {
+        formData.append('keywords', JSON.stringify(apiData.keywords))
       }
       
-      // 添加内容数据
-      formData.append('content', JSON.stringify(apiData.content))
+      // 添加缩略图
+      formData.append('thumbnail', thumbnail, 'thumbnail.jpg')
+      
+      // 添加页面数据
+      formData.append('pages', JSON.stringify(apiData.pages))
 
       const response = await request({
         url: `/api/v1/template-editor/templates/${id}/`,

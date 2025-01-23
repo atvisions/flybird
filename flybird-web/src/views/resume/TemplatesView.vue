@@ -127,7 +127,11 @@ const loading = ref(false)
 const loadTemplates = async () => {
   loading.value = true
   try {
-    const params = {}
+    const params = {
+      status: 1, // 1: 已发布
+      is_public: true // 只显示公开的模板
+    }
+    
     if (currentMainCategory.value !== 'all') {
       params.category = currentMainCategory.value
     }
@@ -202,7 +206,10 @@ const loadTemplates = async () => {
 
 // 过滤模板列表
 const filteredTemplates = computed(() => {
-  let result = [...templates.value]
+  // 首先过滤出已发布且公开的模板
+  let result = templates.value.filter(template => 
+    template.status === 1 && template.is_public === true
+  )
   
   // 应用分类过滤
   if (currentMainCategory.value !== 'all') {
@@ -213,6 +220,10 @@ const filteredTemplates = computed(() => {
   switch (currentSort.value) {
     case 'newest':
       result.sort((a, b) => new Date(b.created_at || b.date) - new Date(a.created_at || a.date))  // 按创建时间排序
+      break
+    case 'recommended':
+      result = result.filter(template => template.is_recommended === true)  // 只显示推荐的模板
+      result.sort((a, b) => new Date(b.created_at || b.date) - new Date(a.created_at || a.date))  // 推荐的模板按创建时间排序
       break
     case 'likes':
       result.sort((a, b) => b.likes - a.likes)  // 按点赞数排序
@@ -264,8 +275,20 @@ const handleLike = async (template) => {
 }
 
 // 处理使用模板
-const handleUseTemplate = (template) => {
-  router.push(`/editor/resume/new/${template.id}`)
+const handleUseTemplate = async (template) => {
+  try {
+    // 先获取模板详情
+    const res = await templateApi.getDetail(template.id)
+    if (res?.data) {
+      // 确保有模板数据后再跳转
+      router.push(`/editor/resume/new/${template.id}`)
+    } else {
+      showToast('获取模板详情失败', 'error')
+    }
+  } catch (error) {
+    console.error('获取模板详情失败:', error)
+    showToast('获取模板详情失败', 'error')
+  }
 }
 
 // 定义菜单组

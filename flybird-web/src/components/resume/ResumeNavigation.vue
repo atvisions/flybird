@@ -221,6 +221,7 @@ const showSortMenu = ref(false)
 // 排序选项
 const sortOptions = {
   newest: { label: '最新发布', icon: ClockIcon },
+  recommended: { label: '飞鸟推荐', icon: SparklesIcon },
   likes: { label: '最多点赞', icon: HandThumbUpIcon },
   views: { label: '最多浏览', icon: EyeIcon }
 }

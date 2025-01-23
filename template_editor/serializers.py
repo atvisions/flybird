@@ -31,7 +31,8 @@ class TemplateSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'description', 'thumbnail', 'category',
             'keywords', 'creator', 'is_public', 'status', 'pages',
-            'created_at', 'updated_at', 'views', 'likes', 'is_liked'
+            'created_at', 'updated_at', 'views', 'likes', 'is_liked',
+            'is_recommended'
         ]
         read_only_fields = ['creator', 'views', 'likes', 'is_liked']
 

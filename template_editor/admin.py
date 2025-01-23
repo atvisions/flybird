@@ -14,8 +14,8 @@ class CategoryAdmin(admin.ModelAdmin):
 @admin.register(Template)
 class TemplateAdmin(admin.ModelAdmin):
     list_display = ('name', 'show_thumbnail', 'category', 'creator', 
-                   'status', 'is_public', 'page_count', 'created_at')
-    list_filter = ('category', 'status', 'is_public', 'created_at')
+                   'status', 'is_public', 'is_recommended', 'page_count', 'created_at')
+    list_filter = ('category', 'status', 'is_public', 'is_recommended', 'created_at')
     search_fields = ('name', 'description', 'keywords')
     ordering = ('-created_at',)
     list_per_page = 20
@@ -45,7 +45,7 @@ class TemplateAdmin(admin.ModelAdmin):
             'fields': ('name', 'description', 'thumbnail', 'category', 'keywords')
         }),
         ('状态设置', {
-            'fields': ('status', 'is_public')
+            'fields': ('status', 'is_public', 'is_recommended')
         }),
         ('画布数据', {
             'fields': ('pages',),

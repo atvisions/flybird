@@ -137,12 +137,11 @@
   </div>
 
   <!-- 添加保存模板弹窗 -->
-  <SaveTemplateDialog
-    v-model:visible="showSaveDialog"
+  <EditTemplateDialog
+    v-model="showSaveDialog"
     :mode="saveMode"
-    :type="currentMode.value"
-    :template-data="props.currentTemplate"
-    @save="handleSaveTemplate"
+    :template="currentTemplate"
+    @confirm="handleSaveTemplate"
   />
 </template>
 
@@ -162,7 +161,7 @@ import {
 } from '@heroicons/vue/24/outline'
 import { showToast } from '@/components/ToastMessage'
 import config from '@/config'
-import SaveTemplateDialog from './SaveTemplateDialog.vue'
+import EditTemplateDialog from './EditTemplateDialog.vue'
 import { ElMessage } from 'element-plus'
 
 const props = defineProps({
@@ -180,7 +179,7 @@ const props = defineProps({
   },
   mode: {
     type: String,
-    default: 'create', // 'create' | 'edit' | 'use'
+    default: 'create' // 'create' | 'edit' | 'use'
   },
   resumeId: {
     type: [String, Number],
@@ -192,11 +191,11 @@ const props = defineProps({
   },
   currentTemplate: {
     type: Object,
-    default: () => ({})
+    required: true
   }
 })
 
-const emit = defineEmits(['clear', 'save', 'undo', 'redo', 'scale-change', 'create-resume'])
+const emit = defineEmits(['clear', 'save', 'undo', 'redo', 'scale-change', 'create-resume', 'update:template'])
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
@@ -294,38 +293,68 @@ const handleCreateResume = () => {
 
 // 处理保存草稿
 const handleSaveDraft = () => {
-  if (currentMode.value === 'template') {
-    // 模板编辑模式：显示保存模板弹窗
-    saveMode.value = 'draft'
-    showSaveDialog.value = true
-  } else {
-    // 简历模式：直接触发保存
-    handleSave('draft')
-  }
+  console.log('保存草稿，当前模板数据:', props.currentTemplate)
+  saveMode.value = 'draft'
+  showSaveDialog.value = true
 }
 
 // 处理提交审核
 const handleSubmitReview = () => {
-  if (currentMode.value === 'template') {
-    // 模板编辑模式：显示保存模板弹窗
-    saveMode.value = 'submit'
-    showSaveDialog.value = true
-  } else {
-    // 简历模式：直接触发保存
-    handleSave('submit')
-  }
+  console.log('提交审核，当前模板数据:', props.currentTemplate)
+  saveMode.value = 'submit'
+  showSaveDialog.value = true
 }
 
-// 添加保存模板的处理函数
+// 计算当前模板数据
+const currentTemplate = computed(() => {
+  console.log('计算当前模板数据，props:', props.currentTemplate)
+  if (!props.currentTemplate) return null
+  
+  // 确保返回一个新的对象，避免直接修改 props
+  const template = {
+    id: props.currentTemplate.id,
+    name: props.currentTemplate.name || '',
+    category: props.currentTemplate.category || '',
+    description: props.currentTemplate.description || '',
+    is_public: props.currentTemplate.is_public ?? false,
+    keywords: Array.isArray(props.currentTemplate.keywords) ? props.currentTemplate.keywords : [],
+    status: props.currentTemplate.status || 0,
+    pages: props.currentTemplate.pages || []
+  }
+  console.log('处理后的模板数据:', template)
+  return template
+})
+
+// 处理保存模板
 const handleSaveTemplate = (templateData) => {
+  console.log('保存模板，提交的数据:', templateData)
   const data = {
     ...templateData,
-    status: saveMode.value === 'draft' ? 0 : 2, // 草稿:0, 待审核:2
+    status: saveMode.value === 'draft' ? 0 : 2 // 草稿:0, 待审核:2
   }
   
-  emit('save', { type: currentMode.value, action: saveMode.value, data })
-  showSaveDialog.value = false
-  showToast(saveMode.value === 'draft' ? '保存草稿成功' : '提交审核成功', 'success')
+  emit('save', { 
+    mode: currentMode.value, 
+    action: saveMode.value, 
+    data,
+    callback: (success) => {
+      if (success) {
+        showSaveDialog.value = false
+        ElMessage.success(saveMode.value === 'draft' ? '保存草稿成功' : '提交审核成功')
+        
+        // 通知父组件更新模板数据
+        emit('update:template', {
+          ...props.currentTemplate,
+          status: data.status,
+          name: data.name,
+          category: data.category,
+          description: data.description,
+          is_public: data.is_public,
+          keywords: data.keywords
+        })
+      }
+    }
+  })
 }
 
 // 使用 ref 来存储事件监听器，以便在组件卸载时正确移除

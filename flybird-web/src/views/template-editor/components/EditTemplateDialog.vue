@@ -1,99 +1,270 @@
 <template>
-  <div class="dialog-overlay" v-if="modelValue" @click="handleClose">
-    <div class="dialog-content" @click.stop>
-      <div class="dialog-header">
-        <h3 class="dialog-title">保存模板</h3>
-        <button class="close-button" @click="handleClose">&times;</button>
+  <TransitionRoot appear :show="modelValue" as="template">
+    <Dialog as="div" class="relative z-50" @close="handleClose">
+      <TransitionChild
+        as="template"
+        enter="duration-300 ease-out"
+        enter-from="opacity-0"
+        enter-to="opacity-100"
+        leave="duration-200 ease-in"
+        leave-from="opacity-100"
+        leave-to="opacity-0"
+      >
+        <div class="fixed inset-0 bg-black/25" />
+      </TransitionChild>
+
+      <div class="fixed inset-0 overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-4 text-center">
+          <TransitionChild
+            as="template"
+            enter="duration-300 ease-out"
+            enter-from="opacity-0 scale-95"
+            enter-to="opacity-100 scale-100"
+            leave="duration-200 ease-in"
+            leave-from="opacity-100 scale-100"
+            leave-to="opacity-0 scale-95"
+          >
+            <DialogPanel class="w-full max-w-2xl transform overflow-hidden rounded-xl bg-white text-left align-middle shadow-xl transition-all">
+              <!-- 头部 -->
+              <DialogTitle as="div" class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">
+                  {{ mode === 'draft' ? '保存草稿' : '提交审核' }}
+                </h3>
+                <button
+                  @click="handleClose"
+                  class="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <XMarkIcon class="w-5 h-5 text-gray-400" />
+                </button>
+              </DialogTitle>
+
+              <!-- 表单内容 -->
+              <form @submit.prevent="handleConfirm" class="p-6">
+                <div class="space-y-4">
+                  <!-- 模板名称 -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                      模板名称
+                      <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                      v-model="formData.name"
+                      type="text"
+                      class="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      placeholder="请输入模板名称"
+                      required
+                      maxlength="50"
+                    />
+                  </div>
+
+                  <!-- 分类 -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                      分类
+                      <span class="text-red-500">*</span>
+                    </label>
+                    <Listbox v-model="formData.category">
+                      <div class="relative">
+                        <ListboxButton class="relative w-full cursor-pointer rounded-lg border border-gray-300 bg-white py-2 pl-3 pr-10 text-left focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm">
+                          <span class="block truncate">{{ getCategoryLabel(formData.category) || '请选择分类' }}</span>
+                          <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                            <ChevronUpDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
+                          </span>
+                        </ListboxButton>
+                        <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                          <ListboxOption
+                            v-for="category in categories"
+                            :key="category.id"
+                            :value="category.id"
+                            v-slot="{ active, selected }"
+                          >
+                            <li :class="[
+                              active ? 'bg-blue-500 text-white' : 'text-gray-900',
+                              'relative cursor-pointer select-none py-2 pl-10 pr-4'
+                            ]">
+                              <span :class="[selected ? 'font-medium' : 'font-normal', 'block truncate']">
+                                {{ category.name }}
+                              </span>
+                              <span v-if="selected" :class="[
+                                active ? 'text-white' : 'text-blue-500',
+                                'absolute inset-y-0 left-0 flex items-center pl-3'
+                              ]">
+                                <CheckIcon class="h-5 w-5" aria-hidden="true" />
+                              </span>
+                            </li>
+                          </ListboxOption>
+                        </ListboxOptions>
+                      </div>
+                    </Listbox>
+                  </div>
+
+                  <!-- 描述 -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                      描述
+                      <span class="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      v-model="formData.description"
+                      rows="3"
+                      class="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      placeholder="请输入模板描述（至少10个字符）"
+                      required
+                      maxlength="200"
+                    ></textarea>
+                  </div>
+
+                  <!-- 关键词 -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                      关键词
+                    </label>
+                    <input
+                      v-model="formData.keywords"
+                      type="text"
+                      class="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      placeholder="请输入关键词，多个关键词用逗号分隔"
+                    />
+                  </div>
+
+                  <!-- 是否公开 -->
+                  <div class="flex items-center">
+                    <input
+                      v-model="formData.is_public"
+                      type="checkbox"
+                      class="h-4 w-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
+                    />
+                    <label class="ml-2 text-sm text-gray-700">设为公开模板</label>
+                  </div>
+                </div>
+
+                <!-- 按钮组 -->
+                <div class="mt-6 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    @click="handleClose"
+                    class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  >
+                    取消
+                  </button>
+                  <button
+                    type="submit"
+                    :disabled="loading"
+                    class="rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+                  >
+                    {{ loading ? '保存中...' : (mode === 'draft' ? '保存草稿' : '提交审核') }}
+                  </button>
+                </div>
+              </form>
+            </DialogPanel>
+          </TransitionChild>
+        </div>
       </div>
-      
-      <div class="dialog-body">
-        <div class="form-group">
-          <label>模板名称</label>
-          <input v-model="formData.name" type="text" class="form-input" placeholder="请输入模板名称">
-        </div>
-        
-        <div class="form-group">
-          <label>分类</label>
-          <select v-model="formData.category" class="form-input">
-            <option value="">请选择分类</option>
-            <option v-for="category in categories" :key="category.id" :value="category.id">
-              {{ category.name }}
-            </option>
-          </select>
-        </div>
-        
-        <div class="form-group">
-          <label>描述</label>
-          <textarea v-model="formData.description" class="form-input" rows="3" placeholder="请输入模板描述"></textarea>
-        </div>
-        
-        <div class="form-group">
-          <label class="checkbox-label">
-            <input type="checkbox" v-model="formData.is_public">
-            <span>公开模板</span>
-          </label>
-        </div>
-      </div>
-      
-      <div class="dialog-footer">
-        <button class="btn btn-cancel" @click="handleClose">取消</button>
-        <button class="btn btn-confirm" @click="handleConfirm">保存</button>
-      </div>
-    </div>
-  </div>
+    </Dialog>
+  </TransitionRoot>
 </template>
 
 <script setup>
-import { ref, defineProps, defineEmits, watch } from 'vue'
+import { ref, watch } from 'vue'
+import {
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+  TransitionRoot,
+  TransitionChild,
+  Listbox,
+  ListboxButton,
+  ListboxOptions,
+  ListboxOption
+} from '@headlessui/vue'
+import { 
+  XMarkIcon,
+  ChevronUpDownIcon,
+  CheckIcon 
+} from '@heroicons/vue/24/outline'
 import { categoryApi } from '@/api/category'
+import { ElMessage } from 'element-plus'
 
 const props = defineProps({
-  modelValue: Boolean,
+  modelValue: {
+    type: Boolean,
+    default: false
+  },
+  mode: {
+    type: String,
+    default: 'draft'
+  },
   template: {
     type: Object,
-    default: () => ({})
+    required: true
   }
 })
 
 const emit = defineEmits(['update:modelValue', 'confirm'])
 
+const loading = ref(false)
 const categories = ref([])
+
+// 表单数据
 const formData = ref({
   name: '',
   category: '',
   description: '',
-  is_public: false
+  is_public: false,
+  keywords: ''
 })
+
+// 初始化表单数据
+const initFormData = () => {
+  console.log('初始化表单数据，模板数据:', props.template)
+  const template = props.template || {}
+  formData.value = {
+    name: template.name || '',
+    category: template.category || '',
+    description: template.description || '',
+    is_public: template.is_public ?? false,
+    keywords: Array.isArray(template.keywords) ? template.keywords.join(',') : '',
+    status: template.status || 0
+  }
+  console.log('初始化后的表单数据:', formData.value)
+}
+
+// 监听模板数据变化
+watch(() => props.template, (newVal) => {
+  console.log('模板数据变化:', newVal)
+  if (newVal) {
+    initFormData()
+  }
+}, { immediate: true, deep: true })
+
+// 监听对话框显示状态
+watch(() => props.modelValue, (newVal) => {
+  console.log('对话框显示状态变化:', newVal)
+  if (newVal) {
+    // 当对话框打开时，重新初始化表单数据
+    initFormData()
+  }
+}, { immediate: true })
 
 // 加载分类数据
 const loadCategories = async () => {
   try {
     const res = await categoryApi.getList()
     categories.value = Array.isArray(res) ? res : []
+    console.log('加载的分类数据:', categories.value)
   } catch (error) {
     console.error('获取分类列表失败:', error)
+    ElMessage.error('获取分类列表失败')
   }
 }
 
-// 监听模板数据变化
-watch(() => props.template, (newVal) => {
-  if (newVal) {
-    formData.value = {
-      name: newVal.name || '',
-      category: newVal.category || '',
-      description: newVal.description || '',
-      is_public: newVal.is_public || false
-    }
-  } else {
-    // 如果没有模板数据，重置表单
-    formData.value = {
-      name: '',
-      category: '',
-      description: '',
-      is_public: false
-    }
-  }
-}, { immediate: true, deep: true })
+// 获取分类显示文本
+const getCategoryLabel = (value) => {
+  const category = categories.value.find(cat => cat.id === value)
+  const label = category ? category.name : ''
+  console.log('获取分类标签:', { value, label })
+  return label
+}
 
 // 处理关闭
 const handleClose = () => {
@@ -101,12 +272,34 @@ const handleClose = () => {
 }
 
 // 处理确认
-const handleConfirm = () => {
-  emit('confirm', {
-    ...props.template,
-    ...formData.value
-  })
-  handleClose()
+const handleConfirm = async () => {
+  // 表单验证
+  if (!formData.value.name?.trim()) {
+    ElMessage.warning('请输入模板名称')
+    return
+  }
+  if (!formData.value.category) {
+    ElMessage.warning('请选择分类')
+    return
+  }
+  if (!formData.value.description?.trim()) {
+    ElMessage.warning('请输入模板描述')
+    return
+  }
+  if (formData.value.description.length < 10) {
+    ElMessage.warning('描述至少需要10个字符')
+    return
+  }
+
+  try {
+    loading.value = true
+    emit('confirm', {
+      ...formData.value,
+      keywords: formData.value.keywords ? formData.value.keywords.split(',').filter(Boolean) : []
+    })
+  } finally {
+    loading.value = false
+  }
 }
 
 // 组件挂载时加载分类
@@ -114,101 +307,19 @@ loadCategories()
 </script>
 
 <style scoped>
-.dialog-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+/* 移动端适配 */
+@media (max-width: 640px) {
+  .p-6 {
+    @apply p-4;
+  }
 }
 
-.dialog-content {
-  background: white;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 500px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+/* 禁用状态样式 */
+.disabled\\:opacity-50:disabled {
+  opacity: 0.5;
 }
 
-.dialog-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid #f0f0f0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.dialog-title {
-  margin: 0;
-  font-size: 16px;
-  color: #333;
-}
-
-.close-button {
-  border: none;
-  background: none;
-  font-size: 20px;
-  color: #999;
-  cursor: pointer;
-}
-
-.dialog-body {
-  padding: 20px;
-}
-
-.form-group {
-  margin-bottom: 16px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  color: #333;
-}
-
-.form-input {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-}
-
-.dialog-footer {
-  padding: 16px 20px;
-  border-top: 1px solid #f0f0f0;
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-}
-
-.btn {
-  padding: 8px 16px;
-  border-radius: 4px;
-  border: none;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.btn-cancel {
-  background: #f5f5f5;
-  color: #666;
-}
-
-.btn-confirm {
-  background: #1890ff;
-  color: white;
+.disabled\\:cursor-not-allowed:disabled {
+  cursor: not-allowed;
 }
 </style> 
