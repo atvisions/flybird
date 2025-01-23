@@ -1118,7 +1118,8 @@ const emit = defineEmits([
 
 // 获取当前画布
 const getCurrentCanvas = () => {
-  return props.canvasList.find(canvas => canvas.id === props.currentCanvasId)
+  const canvas = props.canvasList.find(canvas => canvas.id === props.currentCanvasId)
+  return canvas || null
 }
 
 // 渐变相关状态
@@ -1318,11 +1319,13 @@ const updateElementProp = (prop, value) => {
 // 更新画布配置
 const handleConfigChange = (key, value) => {
   const currentCanvas = getCurrentCanvas()
-  if (currentCanvas?.page_data?.config) {
-    const newConfig = { [key]: value }
+  if (currentCanvas) {
+    const config = {}
+    config[key] = value
     emit('update-canvas-config', {
       canvasId: currentCanvas.id,
-      config: newConfig
+      config,
+      applyToAll: false
     })
   }
 }
@@ -1335,14 +1338,14 @@ const updateBackgroundColor = (color) => {
 // 应用到所有画布
 const applyToAllCanvas = () => {
   const currentCanvas = getCurrentCanvas()
-  if (currentCanvas?.page_data?.config) {
-    const config = {
-      backgroundColor: currentCanvas.page_data.config.backgroundColor,
-      showGrid: currentCanvas.page_data.config.showGrid,
-      showGuideLine: currentCanvas.page_data.config.showGuideLine
-    }
+  if (currentCanvas) {
     emit('update-canvas-config', {
-      config,
+      canvasId: currentCanvas.id,
+      config: {
+        backgroundColor: currentCanvas.config?.backgroundColor,
+        showGrid: currentCanvas.config?.showGrid,
+        showGuideLine: currentCanvas.config?.showGuideLine
+      },
       applyToAll: true
     })
   }

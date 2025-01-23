@@ -53,6 +53,7 @@
               @selected-elements-change="handleSelectedElementsChange"
               @update:canUndo="canUndo = $event"
               @update:canRedo="canRedo = $event"
+              @update-canvas-config="updateCanvasConfig"
             />
           </div>
           <div class="editor-footer">
@@ -178,16 +179,14 @@ const {
   switchCanvas, 
   getCurrentCanvas,
   updateCanvasElements,
-  updateCanvasConfig,
   updateCanvasData,
   A4_CONFIG,
   selectedElement,
   handleElementSelect,
   handleElementUpdate,
-  handleClear
+  handleClear,
+  updateCanvasConfig
 } = useCanvas()
-
-const { canvasConfig } = useCanvasConfig()
 
 // 添加路由实例
 const route = useRoute()

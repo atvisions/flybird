@@ -52,14 +52,28 @@ export function useCanvas() {
   }
 
   // 更新画布配置
-  const updateCanvasConfig = (config) => {
-    const canvas = getCurrentCanvas()
-    if (canvas) {
-      canvas.config = {
-        ...canvas.config,
-        ...config
+  const updateCanvasConfig = ({ canvasId, config, applyToAll }) => {
+    if (applyToAll) {
+      // 应用到所有画布
+      templateData.value.canvases = templateData.value.canvases.map(canvas => ({
+        ...canvas,
+        config: {
+          ...canvas.config,
+          ...config
+        }
+      }))
+    } else {
+      // 更新单个画布
+      const canvasIndex = templateData.value.canvases.findIndex(canvas => canvas.id === canvasId)
+      if (canvasIndex !== -1) {
+        templateData.value.canvases[canvasIndex] = {
+          ...templateData.value.canvases[canvasIndex],
+          config: {
+            ...templateData.value.canvases[canvasIndex].config,
+            ...config
+          }
+        }
       }
-      console.log('Canvas config changed:', canvas.config)
     }
   }
 
