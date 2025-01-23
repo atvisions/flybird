@@ -1318,17 +1318,17 @@ const updateElementProp = (prop, value) => {
 
 // 更新画布配置
 const handleConfigChange = (key, value) => {
-  const currentCanvas = getCurrentCanvas()
-  if (currentCanvas) {
-    const config = {}
-    config[key] = value
-    emit('update-canvas-config', {
-      canvasId: currentCanvas.id,
-      config,
-      applyToAll: false
-    })
-  }
-}
+  const currentCanvas = getCurrentCanvas();
+  if (!currentCanvas) return;
+
+  emit('update-canvas-config', {
+    canvasId: currentCanvas.id,
+    config: {
+      ...currentCanvas.config,
+      [key]: value
+    }
+  });
+};
 
 // 更新背景颜色
 const updateBackgroundColor = (color) => {

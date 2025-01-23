@@ -44,12 +44,13 @@ import { ElMessage } from 'element-plus'
 const props = defineProps({
   templateId: {
     type: [String, Number],
-    required: true
+    required: false,
+    default: null
   },
   mode: {
     type: String,
     required: true,
-    validator: (value) => ['edit', 'use'].includes(value)
+    validator: (value) => ['edit', 'use', 'create'].includes(value)
   }
 })
 
@@ -115,13 +116,41 @@ const initialize = async () => {
     // 1. 先加载用户信息
     await loadUserInfo()
     
-    // 2. 再加载模板数据
-    const templateData = await loadTemplateData()
-    
-    // 3. 加载完成,发送数据
-    loadingText.value = '初始化编辑器...'
-    emit('load-complete', { success: true, templateData })
-
+    // 2. 根据模式处理
+    if (props.mode === 'create') {
+      // 创建新模板模式
+      loadingText.value = '初始化编辑器...'
+      emit('load-complete', { 
+        success: true, 
+        templateData: {
+          name: '',
+          description: '',
+          category: '',
+          keywords: [],
+          is_public: true,
+          pages: [{
+            page_index: 0,
+            page_data: {
+              elements: [],
+              config: {
+                width: 794,
+                height: 1123,
+                backgroundColor: '#ffffff',
+                showGrid: true,
+                showGuideLine: true,
+                gridSize: 10,
+                gridColor: 'rgba(0, 0, 0, 0.15)'
+              }
+            }
+          }]
+        }
+      })
+    } else {
+      // 编辑或使用模式
+      const templateData = await loadTemplateData()
+      loadingText.value = '初始化编辑器...'
+      emit('load-complete', { success: true, templateData })
+    }
   } catch (error) {
     console.error('初始化失败:', error)
     error.value = error.message || '加载失败'

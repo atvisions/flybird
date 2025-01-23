@@ -4,7 +4,7 @@
     <LoadingScreen
       v-if="isLoading"
       :template-id="templateId"
-      :mode="currentTemplateId ? 'edit' : 'use'"
+      :mode="route.name === 'template-create' ? 'create' : currentTemplateId ? 'edit' : 'use'"
       @load-complete="handleLoadComplete"
     />
 
@@ -204,21 +204,51 @@ const defaultTemplateData = ref({
 
 // 添加加载状态
 const isLoading = ref(true)
-const templateId = computed(() => route.params.templateId || route.params.id)
+const templateId = computed(() => {
+  if (route.name === 'template-create') {
+    return null
+  }
+  return route.params.templateId || route.params.id
+})
 
 // 处理加载完成
 const handleLoadComplete = ({ success, templateData, error }) => {
   if (success && templateData) {
-    handleEditTemplate(templateData)
+    if (route.name === 'template-create') {
+      // 初始化一个新的空模板，确保网格相关配置正确设置
+      updateCanvasData([{
+        id: 0,
+        elements: [],
+        config: {
+          ...DEFAULT_CANVAS_CONFIG,
+          width: 794,
+          height: 1123,
+          backgroundColor: '#ffffff',
+          showGrid: true,
+          showGuideLine: true,
+          gridSize: 10,
+          gridColor: 'rgba(0, 0, 0, 0.15)'
+        }
+      }])
+      currentCanvasId.value = 0
+    } else {
+      handleEditTemplate(templateData)
+    }
   } else {
     showToast(error || '加载失败', 'error')
-    router.push('/resume/templates')
+    router.push('/templates/resume')
   }
   isLoading.value = false
 }
 
 // 监听路由参数变化
 watch(templateId, async (newId) => {
+  // 如果是创建新模板的路由，不需要加载模板数据
+  if (route.name === 'template-create') {
+    isLoading.value = false
+    return
+  }
+
   if (newId) {
     isLoading.value = true
     try {
@@ -227,12 +257,12 @@ watch(templateId, async (newId) => {
         handleEditTemplate(res.data)
       } else {
         showToast('获取模板详情失败', 'error')
-        router.push('/resume/templates')
+        router.push('/templates/resume')
       }
     } catch (error) {
       console.error('获取模板详情失败:', error)
       showToast('获取模板详情失败', 'error')
-      router.push('/resume/templates')
+      router.push('/templates/resume')
     } finally {
       isLoading.value = false
     }
@@ -790,11 +820,7 @@ const handleEditTemplate = async (templateData) => {
       keywords: Array.isArray(templateData.keywords) ? templateData.keywords.join(',') : '',
       is_public: templateData.is_public ?? true
     }
-
-    console.log('设置的默认模板数据:', defaultTemplateData.value)
-    console.log('更新后的画布数据:', canvases)
   } catch (error) {
-    console.error('编辑模板失败:', error)
     showToast('加载模板数据失败', 'error')
   }
 }
@@ -808,7 +834,6 @@ const handleSave = async ({ mode, action, data, callback }) => {
   try {
     // 获取所有页面数据
     const pages = templateData.value.canvases.map((canvas, index) => {
-      console.log(`处理画布 ${index}:`, canvas)
       return {
         page_index: index,
         page_data: {
@@ -851,14 +876,12 @@ const handleSave = async ({ mode, action, data, callback }) => {
 
     let res
     if (currentTemplateId.value) {
-      console.log('更新模板:', currentTemplateId.value)
       // 获取当前画布元素
       const canvasWrapper = document.querySelector('.canvas-wrapper')
       // 等待下一个渲染周期，确保画布内容已更新
       await nextTick()
       res = await templateApi.update(currentTemplateId.value, submitData, canvasWrapper)
     } else {
-      console.log('创建新模板')
       // 获取当前画布元素
       const canvasWrapper = document.querySelector('.canvas-wrapper')
       // 等待下一个渲染周期，确保画布内容已更新
@@ -895,7 +918,6 @@ const handleUseTemplate = async (templateData) => {
 
     // 将 Proxy 对象转换为普通对象
     const profileData = JSON.parse(JSON.stringify(profileStore.profileData))
-    console.log('转换后的用户档案数据:', profileData)
 
     // 预加载样式
     await new Promise(resolve => {
@@ -941,7 +963,6 @@ const handleUseTemplate = async (templateData) => {
 
               // 确保值是字符串类型
               value = value?.toString() || ''
-              console.log(`设置字段 ${dataPath} 的值:`, value)
 
               // 更新元素的值
               return {
@@ -1046,11 +1067,14 @@ const currentTemplateData = computed(() => {
       page_data: {
         elements: canvas.elements || [],
         config: {
+          ...canvas.config,  // 保留所有原有配置
           width: canvas.config?.width || 794,
           height: canvas.config?.height || 1123,
-          showGuideLine: canvas.config?.showGuideLine !== false,
+          showGuideLine: canvas.config?.showGuideLine ?? true,
           backgroundColor: canvas.config?.backgroundColor || '#ffffff',
-          showGrid: canvas.config?.showGrid || false
+          showGrid: canvas.config?.showGrid ?? true,  // 修改默认值为 true
+          gridSize: canvas.config?.gridSize || 10,
+          gridColor: canvas.config?.gridColor || 'rgba(0, 0, 0, 0.15)'
         }
       }
     }))
