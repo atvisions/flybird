@@ -57,8 +57,10 @@
             />
           </div>
           <div class="editor-footer">
-            <span class="canvas-pages">Page {{ currentCanvasId }}/{{ templateData.canvases.length }}</span>
-            <div class="footer-content">
+            <div class="canvas-pages">
+              第 {{ currentCanvasId + 1 }} 页 / 共 {{ canvasCount }} 页
+            </div>
+            <div class="footer-center">
               <div class="zoom-control">
                 <button class="zoom-btn" @click="handleZoomOut" :disabled="scale <= MIN_SCALE">
                   <Minus theme="outline" :size="16" />
@@ -86,6 +88,11 @@
                   <Plus theme="outline" :size="16" />
                 </button>
               </div>
+            </div>
+            <div class="footer-right">
+              <button class="clear-btn" @click="showClearConfirm = true">
+                <Clear theme="outline" :size="16" />
+              </button>
               <button class="fullscreen-btn" @click="toggleFullscreen" :title="isFullscreen ? '退出全屏' : '全屏'">
                 <FullScreen v-if="!isFullscreen" theme="outline" :size="18" />
                 <OffScreen v-else theme="outline" :size="18" />
@@ -130,13 +137,72 @@
         @update:visible="showSaveDialog = $event"
         @save="handleSaveTemplate"
       />
+
+      <!-- 清除确认弹窗 -->
+      <TransitionRoot appear :show="showClearConfirm" as="template">
+        <Dialog as="div" @close="showClearConfirm = false" class="relative z-50">
+          <TransitionChild
+            as="template"
+            enter="duration-300 ease-out"
+            enter-from="opacity-0"
+            enter-to="opacity-100"
+            leave="duration-200 ease-in"
+            leave-from="opacity-100"
+            leave-to="opacity-0"
+          >
+            <div class="fixed inset-0 bg-black/25" />
+          </TransitionChild>
+
+          <div class="fixed inset-0 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 text-center">
+              <TransitionChild
+                as="template"
+                enter="duration-300 ease-out"
+                enter-from="opacity-0 scale-95"
+                enter-to="opacity-100 scale-100"
+                leave="duration-200 ease-in"
+                leave-from="opacity-100 scale-100"
+                leave-to="opacity-0 scale-95"
+              >
+                <DialogPanel class="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                  <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900">
+                    确认清空画布？
+                  </DialogTitle>
+                  <div class="mt-2">
+                    <p class="text-sm text-gray-500">
+                      此操作将清空当前画布上的所有内容，且不可恢复。是否继续？
+                    </p>
+                  </div>
+
+                  <div class="mt-4 flex justify-end space-x-3">
+                    <button
+                      type="button"
+                      class="inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
+                      @click="showClearConfirm = false"
+                    >
+                      取消
+                    </button>
+                    <button
+                      type="button"
+                      class="inline-flex justify-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 focus:outline-none"
+                      @click="handleConfirmClear"
+                    >
+                      确认清空
+                    </button>
+                  </div>
+                </DialogPanel>
+              </TransitionChild>
+            </div>
+          </div>
+        </Dialog>
+      </TransitionRoot>
     </template>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick, computed, watch } from 'vue'
-import { Minus, Plus, FullScreen, OffScreen } from '@icon-park/vue-next'
+import { Minus, Plus, FullScreen, OffScreen, Clear } from '@icon-park/vue-next'
 import { ElMessage } from 'element-plus'
 import EditorCanvas from './components/EditorCanvas.vue'
 import EditorToolbar from './components/EditorToolbar.vue'
@@ -147,6 +213,7 @@ import LoadingScreen from '@/components/common/LoadingScreen.vue'
 import { templateApi } from '@/api/template'
 import { showToast } from '@/components/ToastMessage'
 import { useRoute, useRouter } from 'vue-router'
+import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
 
 // 导入组合式函数
 import { useZoom } from './composables/useZoom'
@@ -1107,6 +1174,15 @@ const handleAddCanvas = (newCanvas) => {
 const handleSwitchCanvas = (canvasId) => {
   currentCanvasId.value = canvasId
 }
+
+// 清除确认弹窗状态
+const showClearConfirm = ref(false)
+
+// 处理确认清除
+const handleConfirmClear = () => {
+  handleClear()
+  showClearConfirm.value = false
+}
 </script>
 
 <style>
@@ -1147,8 +1223,6 @@ const handleSwitchCanvas = (canvasId) => {
 </style>
 
 <style scoped>
-@import './styles/editor.css';
-
 .editor-footer {
   padding: 8px 24px;
   border-top: 1px solid rgba(0, 0, 0, 0.06);
@@ -1161,32 +1235,27 @@ const handleSwitchCanvas = (canvasId) => {
 .canvas-pages {
   font-size: 13px;
   color: #666;
-  margin-right: auto;
   font-weight: 500;
+  flex: 1;
 }
 
-.footer-content {
+.footer-center {
   flex: 1;
   display: flex;
-  align-items: center;
   justify-content: center;
-  position: relative;
+}
+
+.footer-right {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .zoom-control {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(to bottom, #fafafa, #f5f5f5);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 8px;
-  padding: 4px;
-  box-shadow: 
-    0 1px 2px rgba(0, 0, 0, 0.04),
-    inset 0 1px 1px rgba(255, 255, 255, 0.9);
 }
 
 .zoom-slider {
@@ -1293,7 +1362,7 @@ const handleSwitchCanvas = (canvasId) => {
   background: transparent;
   color: #666;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s;
   border-radius: 6px;
 }
 
@@ -1317,9 +1386,8 @@ const handleSwitchCanvas = (canvasId) => {
   cursor: not-allowed;
 }
 
+.clear-btn,
 .fullscreen-btn {
-  position: absolute;
-  right: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1329,8 +1397,17 @@ const handleSwitchCanvas = (canvasId) => {
   background: transparent;
   color: #666;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 6px;
+}
+
+.clear-btn:hover {
+  color: #ff4d4f;
+  background: rgba(255, 77, 79, 0.1);
+}
+
+.clear-btn:active {
+  background: rgba(255, 77, 79, 0.2);
 }
 
 .fullscreen-btn:hover {

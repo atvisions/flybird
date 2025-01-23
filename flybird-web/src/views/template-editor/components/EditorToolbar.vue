@@ -10,10 +10,6 @@
         <Redo theme="outline" :size="16" />
         <span>重做</span>
       </button>
-      <button class="toolbar-btn" @click="$emit('clear')">
-        <Clear theme="outline" :size="16" />
-        <span>清空</span>
-      </button>
     </div>
 
     <!-- 右侧操作按钮 -->
