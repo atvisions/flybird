@@ -130,7 +130,7 @@ import EditorToolbar from './components/EditorToolbar.vue'
 import EditorSidebar from './components/EditorSidebar.vue'
 import EditorPanel from './components/EditorPanel.vue'
 import SaveTemplateDialog from './components/SaveTemplateDialog.vue'
-import { templateApi } from './api'
+import { templateApi } from '@/api/template'
 import { showToast } from '@/components/ToastMessage'
 
 // 导入组合式函数

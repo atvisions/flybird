@@ -1,6 +1,6 @@
 import request from '@/utils/request'
 
-const resume = {
+const resumeApi = {
   // 获取简历模板列表
   getTemplates() {
     return request.get('/api/v1/resume/templates/')
@@ -21,24 +21,35 @@ const resume = {
     return request.get(`/api/v1/resume/components/?category=${categoryId}`)
   },
 
-  // 创建简历
-  createResume(data) {
+  // 获取简历列表
+  getResumeList() {
     return request({
-      url: '/api/v1/resume/resumes/',
-      method: 'post',
-      data
+      url: '/api/v1/resume/',
+      method: 'get'
     })
   },
 
   // 获取简历详情
   getResumeDetail(id) {
-    return request.get(`/api/v1/resume/resumes/${id}/`)
+    return request({
+      url: `/api/v1/resume/${id}/`,
+      method: 'get'
+    })
+  },
+
+  // 创建简历
+  createResume(data) {
+    return request({
+      url: '/api/v1/resume/',
+      method: 'post',
+      data
+    })
   },
 
   // 更新简历
   updateResume(id, data) {
     return request({
-      url: `/api/v1/resume/resumes/${id}/`,
+      url: `/api/v1/resume/${id}/`,
       method: 'put',
       data
     })
@@ -47,10 +58,10 @@ const resume = {
   // 删除简历
   deleteResume(id) {
     return request({
-      url: `/api/v1/resume/resumes/${id}/`,
+      url: `/api/v1/resume/${id}/`,
       method: 'delete'
     })
   }
 }
 
-export default resume 
+export default resumeApi 

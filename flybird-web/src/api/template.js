@@ -1,146 +1,219 @@
 import request from '@/utils/request'
 
-// 获取模板分类列表
-export function getCategories() {
-  return request({
-    url: '/api/v1/resume/template-categories/',
-    method: 'get'
-  })
-}
-
-// 保存模板
-export function saveTemplate(data) {
-  const formData = new FormData()
-  
-  // 添加基本字段
-  formData.append('name', data.name)
-  formData.append('category', data.category)
-  formData.append('description', data.description)
-  formData.append('is_vip', data.is_vip)
-  
-  // 添加缩略图
-  if (data.thumbnail) {
-    formData.append('thumbnail', data.thumbnail)
-  }
-  
-  // 添加画布内容数据
-  if (data.components) {
-    formData.append('content', JSON.stringify({
-      elements: data.components
-    }))
-  }
-
-  // 打印请求数据
-  console.log('请求数据:', {
-    name: data.name,
-    category: data.category,
-    description: data.description,
-    is_vip: data.is_vip,
-    thumbnail: data.thumbnail,
-    content: JSON.parse(formData.get('content') || '{}')
-  })
-
-  return request({
-    url: '/api/v1/resume/templates/',
-    method: 'post',
-    data: formData,
-    headers: {
-      'Content-Type': 'multipart/form-data'
+// 导出统一的API对象
+export const templateApi = {
+  // 获取模板分类
+  async getCategories() {
+    try {
+      console.log('开始请求模板分类')
+      const response = await request({
+        url: '/api/v1/template-editor/categories/',
+        method: 'get'
+      })
+      console.log('获取模板分类成功:', response)
+      return response
+    } catch (error) {
+      console.error('获取模板分类失败:', error.response || error)
+      throw error
     }
-  }).catch(error => {
-    if (error.response?.data) {
-      const errors = error.response.data
-      const errorMessages = []
-      
-      // 处理字段错误
-      for (const field in errors) {
-        if (Array.isArray(errors[field])) {
-          errorMessages.push(`${field}: ${errors[field].join(', ')}`)
+  },
+
+  // 获取模板列表
+  async getTemplates(params = {}) {
+    try {
+      console.log('开始请求模板列表，参数:', params)
+      const response = await request({
+        url: '/api/v1/template-editor/templates/',
+        method: 'get',
+        params
+      })
+      console.log('获取模板列表成功:', response)
+      return response
+    } catch (error) {
+      console.error('获取模板列表失败:', error.response || error)
+      throw error
+    }
+  },
+
+  // 获取模板详情
+  async getDetail(id) {
+    try {
+      console.log('开始请求模板详情，ID:', id)
+      const response = await request({
+        url: `/api/v1/template-editor/templates/${id}/`,
+        method: 'get'
+      })
+      console.log('获取模板详情成功:', response)
+      return response
+    } catch (error) {
+      console.error('获取模板详情失败:', error.response || error)
+      throw error
+    }
+  },
+
+  // 创建模板
+  async create(data) {
+    try {
+      console.log('开始创建模板，数据:', data)
+      // 构造API期望的数据结构
+      const apiData = {
+        name: data.name,
+        category: data.category,
+        description: data.description || '',
+        is_public: data.is_public || false,
+        is_pro: data.is_pro || false,
+        content: {
+          pages: data.content.pages.map(page => ({
+            page_data: {
+              elements: page.page_data.elements.map(element => ({
+                type: element.type || 'text',
+                position: element.position || { x: 0, y: 0 },
+                style: element.style || {},
+                content: element.content || '',
+                props: element.props || {}
+              })),
+              config: {
+                width: page.page_data.config?.width || 794,
+                height: page.page_data.config?.height || 1123,
+                backgroundColor: page.page_data.config?.backgroundColor || '#ffffff',
+                showGrid: page.page_data.config?.showGrid || false,
+                showGuideLine: page.page_data.config?.showGuideLine || true,
+                scale: page.page_data.config?.scale || 1
+              }
+            }
+          }))
         }
       }
+
+      const formData = new FormData()
       
-      console.error('服务器响应错误:', errors)
-      throw new Error(errorMessages.join('\n') || '保存失败，请检查表单数据')
+      // 添加基本字段
+      formData.append('name', apiData.name)
+      formData.append('category', apiData.category)
+      formData.append('description', apiData.description)
+      formData.append('is_public', apiData.is_public)
+      formData.append('is_pro', apiData.is_pro)
+      
+      // 添加缩略图
+      if (data.thumbnail) {
+        formData.append('thumbnail', data.thumbnail)
+      }
+      
+      // 添加内容数据
+      formData.append('content', JSON.stringify(apiData.content))
+
+      const response = await request({
+        url: '/api/v1/template-editor/templates/',
+        method: 'post',
+        data: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+      console.log('创建模板成功:', response)
+      return response
+    } catch (error) {
+      console.error('创建模板失败:', error.response || error)
+      throw error
     }
-    throw error
-  })
-}
+  },
 
-/**
- * 获取模板列表
- * @param {Object} params 查询参数
- * @param {number} params.page 页码
- * @param {number} params.page_size 每页数量
- * @param {string} params.ordering 排序方式
- */
-export function getTemplates(params = {}) {
-  return request({
-    url: '/api/v1/resume/templates/',
-    method: 'get',
-    params
-  })
-}
+  // 更新模板
+  async update(id, data) {
+    try {
+      console.log('开始更新模板，ID:', id, '数据:', data)
+      // 构造API期望的数据结构
+      const apiData = {
+        name: data.name,
+        category: data.category,
+        description: data.description || '',
+        is_public: data.is_public,
+        is_pro: data.is_pro,
+        content: {
+          pages: data.content.pages.map(page => ({
+            page_data: {
+              elements: page.page_data.elements.map(element => ({
+                type: element.type || 'text',
+                position: element.position || { x: 0, y: 0 },
+                style: element.style || {},
+                content: element.content || '',
+                props: element.props || {}
+              })),
+              config: {
+                width: page.page_data.config?.width || 794,
+                height: page.page_data.config?.height || 1123,
+                backgroundColor: page.page_data.config?.backgroundColor || '#ffffff',
+                showGrid: page.page_data.config?.showGrid || false,
+                showGuideLine: page.page_data.config?.showGuideLine || true,
+                scale: page.page_data.config?.scale || 1
+              }
+            }
+          }))
+        }
+      }
 
-// 获取模板详情
-export function getTemplateDetail(id) {
-  return request({
-    url: `/api/v1/resume/templates/${id}/`,
-    method: 'get'
-  })
-}
+      const formData = new FormData()
+      
+      // 添加基本字段
+      if (apiData.name) formData.append('name', apiData.name)
+      if (apiData.category) formData.append('category', apiData.category)
+      if (apiData.description) formData.append('description', apiData.description)
+      if (typeof apiData.is_public === 'boolean') formData.append('is_public', apiData.is_public)
+      if (typeof apiData.is_pro === 'boolean') formData.append('is_pro', apiData.is_pro)
+      
+      // 添加缩略图
+      if (data.thumbnail) {
+        formData.append('thumbnail', data.thumbnail)
+      }
+      
+      // 添加内容数据
+      formData.append('content', JSON.stringify(apiData.content))
 
-// 更新模板
-export function updateTemplate(id, data) {
-  const formData = new FormData()
-  
-  // 添加基本字段
-  if (data.name) formData.append('name', data.name)
-  if (data.category) formData.append('category', data.category)
-  if (data.description) formData.append('description', data.description)
-  if (typeof data.is_vip === 'boolean') formData.append('is_vip', data.is_vip)
-  
-  // 添加缩略图
-  if (data.thumbnail && data.thumbnail.length > 0) {
-    formData.append('thumbnail', data.thumbnail[0])
-  }
-  
-  // 添加布局数据
-  if (data.layout) {
-    formData.append('layout', JSON.stringify(data.layout))
-  }
-  
-  // 添加组件数据
-  if (data.components) {
-    formData.append('components', JSON.stringify(data.components))
-  }
-  
-  // 添加主题数据
-  if (data.theme) {
-    formData.append('theme', JSON.stringify(data.theme))
-  }
-
-  return request({
-    url: `/api/v1/resume/templates/${id}/`,
-    method: 'patch',
-    data: formData,
-    headers: {
-      'Content-Type': 'multipart/form-data'
+      const response = await request({
+        url: `/api/v1/template-editor/templates/${id}/`,
+        method: 'put',
+        data: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+      console.log('更新模板成功:', response)
+      return response
+    } catch (error) {
+      console.error('更新模板失败:', error.response || error)
+      throw error
     }
-  })
-}
+  },
 
-// 删除模板
-export function deleteTemplate(id) {
-  return request({
-    url: `/api/v1/resume/templates/${id}/`,
-    method: 'delete'
-  })
-}
+  // 删除模板
+  async delete(id) {
+    try {
+      console.log('开始删除模板，ID:', id)
+      const response = await request({
+        url: `/api/v1/template-editor/templates/${id}/`,
+        method: 'delete'
+      })
+      console.log('删除模板成功:', response)
+      return response
+    } catch (error) {
+      console.error('删除模板失败:', error.response || error)
+      throw error
+    }
+  },
 
-// 提交模板审核
-export function submitForReview(id) {
-  return request({
-    url: `/api/v1/resume/templates/${id}/submit_for_review/`,
-    method: 'post'
-  })
+  // 点赞/取消点赞模板
+  async like(id) {
+    try {
+      console.log('开始点赞/取消点赞模板，ID:', id)
+      const response = await request({
+        url: `/api/v1/template-editor/templates/${id}/like/`,
+        method: 'post'
+      })
+      console.log('点赞/取消点赞成功:', response)
+      return response
+    } catch (error) {
+      console.error('点赞/取消点赞失败:', error.response || error)
+      throw error
+    }
+  }
 } 

@@ -89,7 +89,8 @@ LOCAL_APPS = [
     'articles.apps.ArticlesConfig',
     'qa.apps.QaConfig',
     'membership.apps.MembershipConfig',
-    'template_editor.apps.TemplateEditorConfig', 
+    'template_editor.apps.TemplateEditorConfig',
+    'resume.apps.ResumeConfig',  # 添加 resume 应用
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS + ['django_celery_beat']
@@ -445,74 +446,41 @@ CKEDITOR_5_CONFIGS = {
 CKEDITOR_5_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
 CKEDITOR_5_UPLOAD_PATH = "uploads/"
 
-# ----------- 20. 日志配置 -----------
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'level': 'DEBUG',
-        },
+# ----------- 19. 微信配置 -----------
+WECHAT_CONFIG = {
+    'MP': {  # 微信公众号配置
+        'APP_ID': os.getenv('WECHAT_MP_APP_ID'),
+        'APP_SECRET': os.getenv('WECHAT_MP_APP_SECRET'),
+        'TOKEN': os.getenv('WECHAT_MP_TOKEN'),
+        'AES_KEY': os.getenv('WECHAT_MP_AES_KEY'),
     },
-    'root': {
-        'handlers': ['console'],
-        'level': 'DEBUG',
-    },
+    'WEB': {  # 微信网页应用配置
+        'APP_ID': os.getenv('WECHAT_WEB_APP_ID'),
+        'APP_SECRET': os.getenv('WECHAT_WEB_APP_SECRET'),
+    }
 }
 
-# 保日志目录存在
-import os
-if not os.path.exists(BASE_DIR / 'logs'):
-    os.makedirs(BASE_DIR / 'logs')
+# ----------- 20. 前端配置 -----------
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://192.168.3.16:8080')
 
-# ----------- 邮件配置 -----------
-# 使用阿里企业邮箱 SMTP
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # 改为SMTP后端
-EMAIL_HOST = 'smtp.qiye.aliyun.com'  # 阿里企业邮箱SMTP服务器
-EMAIL_PORT = 465  # 使用SSL端口
-EMAIL_USE_SSL = True  # 使用SSL
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'service@popo.work')  # 发件邮箱
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')  # 从环境变量获取密码
-DEFAULT_FROM_EMAIL = 'service@popo.work'  # 默认发件人
-EMAIL_TIMEOUT = 5  # 设置超时时间
-
-# API基础URL(开发环境)
-API_BASE_URL = os.getenv('API_BASE_URL', 'http://192.168.3.16:8000')
-FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://192.168.3.16:8080')  
-# 会员相关URL
+# ----------- 21. 会员相关URL -----------
 MEMBERSHIP_URLS = {
     'renewal': f"{FRONTEND_URL}/membership/renewal",  # 会员续费页面
 }
 
-# 百度文心一言配置
+# ----------- 22. 百度文心一言配置 -----------
 ERNIE_API_KEY = os.getenv('ERNIE_API_KEY')
 ERNIE_SECRET_KEY = os.getenv('ERNIE_SECRET_KEY')
 
-# 会员到期提醒配置
+# ----------- 23. 会员到期提醒配置 -----------
 MEMBERSHIP_EXPIRY_REMINDER = {
     'DAYS_BEFORE': [7, 3, 1],  # 到期前7天、3天、1天提醒
     'TEMPLATE_ID': 'membership_expiry_reminder',  # 邮件模板ID
 }
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'level': 'DEBUG',
-        },
-    },
-    'root': {
-        'handlers': ['console'],
-        'level': 'DEBUG',
-    },
-}
-
-# 允许上传的文件类型
+# ----------- 24. 允许上传的文件类型 -----------
 ALLOWED_UPLOAD_IMAGES = ['image/jpeg', 'image/png', 'image/gif']
 
-# 设置缓存异常处理
+# ----------- 25. 设置缓存异常处理 -----------
 DJANGO_REDIS_IGNORE_EXCEPTIONS = True
 DJANGO_REDIS_LOG_IGNORED_EXCEPTIONS = True

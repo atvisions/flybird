@@ -10,7 +10,8 @@ urlpatterns = [
     path('api/v1/membership/', include('membership.urls')),
     path('ckeditor5/', include('django_ckeditor_5.urls')),
     path('api/v1/users/', include('users.urls')),
-    path('api/v1/template-editor/', include('template_editor.urls')),  # 确保这行存在
+    path('api/v1/template-editor/', include('template_editor.urls')),
+    path('api/v1/resume/', include('resume.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:

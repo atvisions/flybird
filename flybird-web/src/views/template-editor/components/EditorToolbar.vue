@@ -1,5 +1,6 @@
 <template>
   <div class="editor-toolbar">
+    <!-- 左侧基础操作按钮 -->
     <div class="toolbar-left">
       <button class="toolbar-btn" @click="$emit('undo')" :disabled="!canUndo">
         <Undo theme="outline" :size="16" />
@@ -14,13 +15,34 @@
         <span>清空</span>
       </button>
     </div>
+
+    <!-- 右侧操作按钮 -->
     <div class="toolbar-right">
-      <button class="toolbar-btn primary" @click="$emit('save')">
-        <Save theme="outline" :size="16" />
-        <span>{{ buttonText }}</span>
-      </button>
-      
-      <!-- 添加用户头像和下拉菜单 -->
+      <!-- 模板编辑模式 -->
+      <template v-if="showTemplateButtons">
+        <button class="toolbar-btn" @click="handleSaveDraft">
+          <Save theme="outline" :size="16" />
+          <span>保存草稿</span>
+        </button>
+        <button class="toolbar-btn primary" @click="handleSubmitReview">
+          <Save theme="outline" :size="16" />
+          <span>提交审核</span>
+        </button>
+      </template>
+
+      <!-- 简历创建/编辑模式 -->
+      <template v-if="showResumeButtons">
+        <button class="toolbar-btn" @click="handleSaveDraft">
+          <Save theme="outline" :size="16" />
+          <span>保存草稿</span>
+        </button>
+        <button class="toolbar-btn primary" @click="handleSave('publish')">
+          <Save theme="outline" :size="16" />
+          <span>{{ $route.name === 'resume-edit' ? '发布简历' : '创建简历' }}</span>
+        </button>
+      </template>
+
+      <!-- 用户头像和下拉菜单 -->
       <div class="relative" ref="dropdownRef">
         <button 
           @click.stop="toggleDropdown"
@@ -117,17 +139,20 @@
   <!-- 添加保存模板弹窗 -->
   <SaveTemplateDialog
     v-model:visible="showSaveDialog"
+    :mode="saveMode"
+    :type="currentMode.value"
+    :template-data="props.currentTemplate"
     @save="handleSaveTemplate"
   />
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAccountStore } from '@/stores/account'
 import defaultAvatar from '@/assets/images/default-avatar.png'
-import { Undo, Redo, Clear, Save, Delete, Back, Next } from '@icon-park/vue-next'
+import { Undo, Redo, Clear, Save, Delete, Back, Next, Plus, Minus } from '@icon-park/vue-next'
 import { 
   UserIcon, 
   DocumentTextIcon, 
@@ -138,6 +163,7 @@ import {
 import { showToast } from '@/components/ToastMessage'
 import config from '@/config'
 import SaveTemplateDialog from './SaveTemplateDialog.vue'
+import { ElMessage } from 'element-plus'
 
 const props = defineProps({
   canUndo: {
@@ -152,14 +178,27 @@ const props = defineProps({
     type: Number,
     default: 1
   },
+  mode: {
+    type: String,
+    default: 'create', // 'create' | 'edit' | 'use'
+  },
+  resumeId: {
+    type: [String, Number],
+    default: null
+  },
   buttonText: {
     type: String,
-    default: '创建模板'
+    default: '保存模板'
+  },
+  currentTemplate: {
+    type: Object,
+    default: () => ({})
   }
 })
 
-const emit = defineEmits(['clear', 'save', 'undo', 'redo', 'scale-change'])
+const emit = defineEmits(['clear', 'save', 'undo', 'redo', 'scale-change', 'create-resume'])
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 const accountStore = useAccountStore()
 const dropdownRef = ref(null)
@@ -218,18 +257,75 @@ const handleLogout = async () => {
   }
 }
 
-// 添加保存模板弹窗的显示状态
+// 添加保存模板弹窗的显示状态和模式
 const showSaveDialog = ref(false)
+const saveMode = ref('')
 
-// 修改保存处理函数
-const handleSave = () => {
-  showSaveDialog.value = true
+// 根据路由获取当前模式
+const currentMode = computed(() => {
+  const routeName = route.name
+  if (routeName === 'template-edit' || routeName === 'template-create') {
+    return 'template'
+  } else if (routeName === 'resume-create-from-template' || routeName === 'resume-create' || routeName === 'resume-edit') {
+    return 'resume'
+  }
+  return ''
+})
+
+// 是否显示模板相关按钮
+const showTemplateButtons = computed(() => currentMode.value === 'template')
+
+// 是否显示简历相关按钮
+const showResumeButtons = computed(() => currentMode.value === 'resume')
+
+// 处理保存
+const handleSave = (action) => {
+  emit('save', { mode: currentMode.value, action })
+}
+
+// 处理从模板创建简历
+const handleCreateResume = () => {
+  const templateId = route.params.id
+  router.push({
+    name: 'resume-create-from-template',
+    params: { templateId }
+  })
+}
+
+// 处理保存草稿
+const handleSaveDraft = () => {
+  if (currentMode.value === 'template') {
+    // 模板编辑模式：显示保存模板弹窗
+    saveMode.value = 'draft'
+    showSaveDialog.value = true
+  } else {
+    // 简历模式：直接触发保存
+    handleSave('draft')
+  }
+}
+
+// 处理提交审核
+const handleSubmitReview = () => {
+  if (currentMode.value === 'template') {
+    // 模板编辑模式：显示保存模板弹窗
+    saveMode.value = 'submit'
+    showSaveDialog.value = true
+  } else {
+    // 简历模式：直接触发保存
+    handleSave('submit')
+  }
 }
 
 // 添加保存模板的处理函数
 const handleSaveTemplate = (templateData) => {
-  emit('save', templateData)
+  const data = {
+    ...templateData,
+    status: saveMode.value === 'draft' ? 0 : 2, // 草稿:0, 待审核:2
+  }
+  
+  emit('save', { type: currentMode.value, action: saveMode.value, data })
   showSaveDialog.value = false
+  showToast(saveMode.value === 'draft' ? '保存草稿成功' : '提交审核成功', 'success')
 }
 
 // 使用 ref 来存储事件监听器，以便在组件卸载时正确移除
@@ -246,6 +342,35 @@ onUnmounted(() => {
   // 确保在组件卸载时重置状态
   showDropdown.value = false
 })
+
+// 最小和最大缩放比例
+const MIN_SCALE = 0.1
+const MAX_SCALE = 3
+
+// 处理缩放
+const handleZoomIn = () => {
+  if (props.scale < MAX_SCALE) {
+    emit('scale-change', Math.min(props.scale + 0.1, MAX_SCALE))
+  }
+}
+
+const handleZoomOut = () => {
+  if (props.scale > MIN_SCALE) {
+    emit('scale-change', Math.max(props.scale - 0.1, MIN_SCALE))
+  }
+}
+
+// 导航方法
+const goToUserCenter = () => {
+  router.push('/user?tab=home')
+}
+
+const goToMyResumes = () => {
+  router.push('/user?tab=resumes')
+}
+
+// 用户头像
+const userAvatar = computed(() => accountStore.userInfo?.avatar || '')
 </script>
 
 <style scoped>
@@ -406,5 +531,28 @@ button:focus {
 .btn-text {
   margin-left: 4px;
   font-size: 14px;
+}
+
+.toolbar-btn.primary {
+  background-color: #1890ff;
+  color: white;
+  border-color: #1890ff;
+}
+
+.toolbar-btn.primary:hover {
+  background-color: #40a9ff;
+  border-color: #40a9ff;
+}
+
+.scale-control {
+  margin-left: 16px;
+}
+
+.user-menu {
+  margin-left: 16px;
+}
+
+.user-avatar {
+  cursor: pointer;
 }
 </style> 

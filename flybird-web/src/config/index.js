@@ -1,7 +1,7 @@
 // 导出配置
 export default {
-  baseURL: process.env.VUE_APP_API_BASE_URL,
-  apiPrefix: process.env.VUE_APP_API_PREFIX,
-  mediaURL: process.env.VUE_APP_MEDIA_URL,
-  socketURL: process.env.VUE_APP_SOCKET_URL
+  API_URL: process.env.VUE_APP_API_BASE_URL || 'http://192.168.3.16:8000',
+  apiPrefix: process.env.VUE_APP_API_PREFIX || '/api',
+  mediaURL: process.env.VUE_APP_MEDIA_URL || 'http://192.168.3.16:8000/media',
+  socketURL: process.env.VUE_APP_SOCKET_URL || 'ws://192.168.3.16:8000/ws'
 } 

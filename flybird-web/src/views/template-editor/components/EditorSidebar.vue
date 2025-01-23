@@ -116,12 +116,33 @@
                   <div class="template-meta">
                     <span>{{ template.pages?.length || 1 }}页</span>
                     <div class="template-actions">
-                      <button v-if="isTemplateEditable(template)" class="action-btn edit" @click="handleEditTemplate(template)">编辑</button>
-                      <button class="action-btn use" @click="handleUseTemplate(template)">使用</button>
+                      <button 
+                        v-if="template.creator === accountStore.userInfo?.id"
+                        class="action-btn"
+                        @click="handleEditTemplate(template)"
+                      >
+                        <Edit theme="outline" :size="16" />
+                        <span>编辑</span>
+                      </button>
+
+                      <button 
+                        class="action-btn primary"
+                        @click="handleUseTemplate(template)"
+                      >
+                        <Plus theme="outline" :size="16" />
+                        <span>使用</span>
+                      </button>
                     </div>
                   </div>
                 </div>
               </div>
+            </div>
+            <!-- 添加创建模板按钮 -->
+            <div v-if="onlyMyTemplates" class="create-template-btn-container">
+              <button class="create-template-btn" @click="handleCreateTemplate">
+                <span class="plus-icon">+</span>
+                创建新模板
+              </button>
             </div>
           </template>
         </div>
@@ -136,15 +157,18 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted, watch } from 'vue'
+import { computed, ref, onMounted, watch, nextTick } from 'vue'
 import { useTabs } from '../composables/useTabs'
 import { useComponents } from '../composables/useComponents'
 import * as Icons from '@icon-park/vue-next'
 import IconPanel from './icons/IconPanel.vue'
 import { resumeComponents } from '../config/resume-components'
-import { categoryApi, templateApi } from '../api'
+import { categoryApi } from '@/api/category'
+import { templateApi } from '@/api/template'
 import { showToast } from '@/components/ToastMessage'
-import { useUserStore } from '@/stores/user'
+import { useAccountStore } from '@/stores/account'
+import { useRouter } from 'vue-router'
+import { Edit, Plus } from '@icon-park/vue-next'
 
 const { activeTab, tabs, switchTab } = useTabs()
 const { components } = useComponents()
@@ -154,9 +178,10 @@ const categories = ref([])
 const templates = ref([])
 const selectedCategory = ref('')
 const onlyMyTemplates = ref(false)
-const userStore = useUserStore()
+const accountStore = useAccountStore()
+const router = useRouter()
 
-const emit = defineEmits(['edit-template', 'use-template'])
+const emit = defineEmits(['edit-template', 'use-template', 'create-resume'])
 
 // 获取图标组件
 const getIconComponent = (iconName) => {
@@ -305,25 +330,75 @@ const loadTemplates = async () => {
     if (selectedCategory.value) {
       params.category = selectedCategory.value
     }
-    if (onlyMyTemplates.value) {
-      params.creator = userStore.userId
-    }
     console.log('开始加载模板列表，参数:', params)
-    const res = await templateApi.getList(params)
+    const res = await templateApi.getTemplates(params)
     console.log('获取到的模板数据:', res)
     
+    let templateData = []
     if (res.data?.results) {
-      templates.value = res.data.results
+      templateData = res.data.results
     } else if (Array.isArray(res.data)) {
-      templates.value = res.data
+      templateData = res.data
     } else if (Array.isArray(res)) {
-      templates.value = res
-    } else {
-      templates.value = []
-      console.warn('模板数据格式不正确:', res)
+      templateData = res
     }
     
-    console.log('处理后的模板列表:', templates.value)
+    // 在前端进行过滤前，打印用户信息
+    const currentUserId = accountStore.userInfo?.id
+    console.log('当前用户信息:', {
+      userId: currentUserId,
+      userInfo: accountStore.userInfo
+    })
+    
+    // 先按分类过滤
+    if (selectedCategory.value) {
+      templateData = templateData.filter(template => template.category === selectedCategory.value)
+    }
+    
+    // 再按用户和状态过滤
+    if (onlyMyTemplates.value) {
+      // 只看我的：显示所有我创建的模板
+      templateData = templateData.filter(template => {
+        const isMyTemplate = template.creator === currentUserId
+        console.log('模板过滤(只看我的):', {
+          templateId: template.id,
+          templateName: template.name,
+          creator: template.creator,
+          currentUserId,
+          category: template.category,
+          selectedCategory: selectedCategory.value,
+          isMyTemplate
+        })
+        return isMyTemplate
+      })
+    } else {
+      // 不是只看我的：显示已发布的公开模板和我的所有模板
+      templateData = templateData.filter(template => {
+        const isMyTemplate = template.creator === currentUserId
+        const isPublished = template.status === 1
+        console.log('模板过滤:', {
+          templateId: template.id,
+          templateName: template.name,
+          creator: template.creator,
+          currentUserId,
+          category: template.category,
+          selectedCategory: selectedCategory.value,
+          status: template.status,
+          isPublic: template.is_public,
+          isMyTemplate,
+          isPublished,
+          shouldShow: isMyTemplate || (isPublished && template.is_public)
+        })
+        return isMyTemplate || (isPublished && template.is_public)
+      })
+    }
+
+    console.log('过滤后的模板数据:', {
+      total: templateData.length,
+      templates: templateData,
+      selectedCategory: selectedCategory.value
+    })
+    templates.value = templateData
   } catch (error) {
     console.error('获取模板列表失败:', error)
     showToast('获取模板列表失败', 'error')
@@ -341,56 +416,123 @@ const handleTemplateSelect = (template) => {
 
 // 判断模板是否可编辑
 const isTemplateEditable = (template) => {
-  return template.creator === userStore.userId
+  const currentUserId = accountStore.userInfo?.id
+  console.log('模板权限检查:', {
+    templateId: template.id,
+    templateCreator: template.creator,
+    currentUserId: currentUserId,
+    isMatch: template.creator === currentUserId
+  })
+  return template.creator === currentUserId
 }
 
 // 编辑模板
 const handleEditTemplate = async (template) => {
-  if (!isTemplateEditable(template)) {
-    showToast('您没有权限编辑此模板', 'error')
-    return
-  }
-
   try {
-    // 获取模板详细数据
+    // 先获取模板详情
     const res = await templateApi.getDetail(template.id)
-    if (!res.data) {
-      throw new Error('获取模板数据失败')
+    if (res?.data) {  // 确保有 data 属性
+      // 发出编辑事件，传递模板数据
+      emit('edit-template', res.data)
+      
+      // 然后跳转到编辑页面
+      router.push({
+        name: 'template-edit',
+        params: { id: template.id }
+      })
     }
-
-    const templateData = res.data
-    console.log('获取到的模板数据:', templateData)
-
-    // 发出事件通知父组件更新画板数据
-    emit('edit-template', templateData)
   } catch (error) {
-    console.error('加载模板数据失败:', error)
-    showToast('加载模板数据失败', 'error')
+    console.error('获取模板详情失败:', error)
+    showToast('获取模板详情失败', 'error')
   }
 }
 
-// 使用模板
+// 使用模板创建简历
 const handleUseTemplate = async (template) => {
   try {
-    // 获取模板详细数据
+    // 获取模板详情
     const res = await templateApi.getDetail(template.id)
-    if (!res.data) {
-      throw new Error('获取模板数据失败')
-    }
+    if (res?.data) {  // 确保有 data 属性
+      console.log('获取到模板详情:', res.data)  // 使用 res.data
+      
+      // 确保数据格式正确
+      if (!Array.isArray(res.data.pages)) {
+        // 如果没有 pages 数组，构造一个默认的
+        res.data.pages = [{
+          page_index: 0,
+          page_data: {
+            elements: res.data.elements || [],
+            config: {
+              width: 794,
+              height: 1123,
+              backgroundColor: '#ffffff',
+              showGrid: false,
+              showGuideLine: true,
+              ...(res.data.config || {})
+            }
+          }
+        }]
+      }
 
-    const templateData = {
-      ...res.data,
-      id: null, // 清除模板ID，表示这是一个新实例
-      name: `${res.data.name} 的副本`,
-      creator: null // 清除创建者信息
-    }
+      // 触发父组件的 use-template 事件，传递模板数据
+      emit('use-template', res.data)  // 传递 res.data
 
-    // 发出事件通知父组件更新画板数据
-    emit('use-template', templateData)
+      // 等待一段时间确保数据更新完成
+      await new Promise(resolve => setTimeout(resolve, 300))
+      
+      // 最后再跳转路由
+      router.push({
+        name: 'resume-create-from-template',
+        params: { templateId: template.id }
+      })
+    }
   } catch (error) {
-    console.error('加载模板数据失败:', error)
-    showToast('加载模板数据失败', 'error')
+    console.error('获取模板详情失败:', error)
+    showToast('获取模板详情失败', 'error')
   }
+}
+
+// 创建新模板
+const handleCreateTemplate = () => {
+  const currentUserId = accountStore.userInfo?.id
+  console.log('创建模板时的用户信息:', {
+    userId: currentUserId,
+    userInfo: accountStore.userInfo
+  })
+
+  const newTemplate = {
+    id: null,
+    name: '新建模板',
+    creator: currentUserId,
+    category: selectedCategory.value || null,
+    is_public: false,
+    status: 0,  // 新创建的模板默认为草稿状态
+    pages: [{
+      page_index: 0,  // 从0开始
+      page_data: {
+        elements: [],
+        config: {
+          width: 794,
+          height: 1123,
+          backgroundColor: '#ffffff',
+          showGrid: true,
+          showGuideLine: true
+        }
+      }
+    }]
+  }
+  
+  console.log('新创建的模板数据:', newTemplate)
+  console.log('模板数据结构验证:', {
+    hasPages: !!newTemplate.pages,
+    pagesLength: newTemplate.pages?.length,
+    hasPageData: !!newTemplate.pages?.[0]?.page_data,
+    hasElements: !!newTemplate.pages?.[0]?.page_data?.elements,
+    hasConfig: !!newTemplate.pages?.[0]?.page_data?.config
+  })
+  
+  // 直接发出编辑事件，不需要调用 handleEditTemplate
+  emit('edit-template', newTemplate)
 }
 
 // 监听筛选条件变化
@@ -775,5 +917,41 @@ defineExpose({
 
 .action-btn.use:hover {
   background-color: #d9f7be;
+}
+
+.create-template-btn-container {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.create-template-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
+}
+
+.create-template-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+}
+
+.create-template-btn:active {
+  transform: translateY(0);
+}
+
+.plus-icon {
+  font-size: 18px;
+  font-weight: bold;
 }
 </style> 

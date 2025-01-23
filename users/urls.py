@@ -11,4 +11,5 @@ urlpatterns = [
     path('userInfo/', views.UserInfoView.as_view(), name='user-info'),
     path('userInfo/avatar/', views.AvatarUploadView.as_view(), name='avatar'),
     path('userInfo/background/', views.BackgroundUploadView.as_view(), name='background'),
+    path('users/<int:user_id>/', views.UserPublicInfoView.as_view(), name='user-public-info'),
 ]

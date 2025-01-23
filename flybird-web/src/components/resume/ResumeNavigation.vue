@@ -31,11 +31,13 @@
         <div class="flex items-center gap-2 sm:gap-3">
           <template v-if="isAuthenticated">
             <!-- 创建按钮 -->
-            <button class="h-9 px-4 sm:px-5 bg-gradient-to-r from-rose-600 to-rose-700 text-white rounded-full hover:shadow-lg hover:shadow-rose-500/20 transition-all duration-300 text-sm font-medium flex items-center group">
+            <router-link 
+              to="/editor/template/new"
+              class="h-9 px-4 sm:px-5 bg-gradient-to-r from-rose-600 to-rose-700 text-white rounded-full hover:shadow-lg hover:shadow-rose-500/20 transition-all duration-300 text-sm font-medium flex items-center group"
+            >
               <PlusIcon class="w-4 h-4 mr-1.5 sm:mr-2 group-hover:scale-110 transition-transform" />
-              <span class="hidden sm:inline">创建简历</span>
-              
-            </button>
+              <span class="hidden sm:inline">创建模版</span>
+            </router-link>
           </template>
           <template v-else>
             <!-- 登录按钮 -->
@@ -114,7 +116,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { 
@@ -136,6 +138,7 @@ import {
   SparklesIcon,
   UserGroupIcon
 } from '@heroicons/vue/24/outline'
+import { categoryApi } from '@/api/category'
 
 const props = defineProps({
   currentCategory: {
@@ -163,36 +166,53 @@ const mainNavs = [
   { name: '求职信', path: '/templates/cover-letter', icon: DocumentTextIcon },
 ]
 
+// 分类数据
+const categoryList = ref([])
+
+// 获取分类图标
+const getCategoryIcon = (categoryId) => {
+  const iconMap = {
+    'all': HomeIcon,
+    'fresh': AcademicCapIcon,
+    'experienced': BriefcaseIcon,
+    'manager': UserGroupIcon,
+    'creative': SparklesIcon,
+    'international': LanguageIcon,
+    'general': DocumentTextIcon,
+    'academic': AcademicCapIcon
+  }
+  return iconMap[categoryId] || HomeIcon
+}
+
 // 根据当前路由显示不同的分类选项
 const categories = computed(() => {
-  const path = route.path
-  if (path.includes('resume')) {
-    return [
-      { id: 'all', name: '全部', icon: HomeIcon },
-      { id: 'fresh', name: '应届生', icon: AcademicCapIcon },
-      { id: 'experienced', name: '经验型', icon: BriefcaseIcon },
-      { id: 'manager', name: '管理层', icon: UserGroupIcon },
-      { id: 'creative', name: '创意型', icon: SparklesIcon },
-      { id: 'international', name: '国际化', icon: LanguageIcon }
-    ]
-  } else if (path.includes('cover-letter')) {
-    return [
-      { id: 'all', name: '全部', icon: HomeIcon },
-      { id: 'general', name: '通用型', icon: DocumentTextIcon },
-      { id: 'career', name: '职业型', icon: BriefcaseIcon },
-      { id: 'academic', name: '学术型', icon: AcademicCapIcon },
-      { id: 'creative', name: '创意型', icon: SparklesIcon }
-    ]
+  // 添加"全部"选项
+  const allOption = { id: 'all', name: '全部', icon: HomeIcon }
+  
+  // 将后端分类数据转换为所需格式
+  const formattedCategories = categoryList.value.map(category => ({
+    id: category.id,
+    name: category.name,
+    icon: getCategoryIcon(category.id)
+  }))
+  
+  return [allOption, ...formattedCategories]
+})
+
+// 加载分类数据
+const loadCategories = async () => {
+  try {
+    const res = await categoryApi.getList()
+    categoryList.value = Array.isArray(res) ? res : []
+  } catch (error) {
+    console.error('获取分类列表失败:', error)
+    categoryList.value = []
   }
-  // 首页分类
-  return [
-    { id: 'all', name: '全部', icon: HomeIcon },
-    { id: 'fresh', name: '应届生', icon: AcademicCapIcon },
-    { id: 'experienced', name: '经验型', icon: BriefcaseIcon },
-    { id: 'manager', name: '管理层', icon: UserGroupIcon },
-    { id: 'creative', name: '创意型', icon: SparklesIcon },
-    { id: 'international', name: '国际化', icon: LanguageIcon }
-  ]
+}
+
+// 组件挂载时加载分类数据
+onMounted(() => {
+  loadCategories()
 })
 
 // 排序菜单状态
@@ -200,10 +220,9 @@ const showSortMenu = ref(false)
 
 // 排序选项
 const sortOptions = {
-  popular: { label: '最受欢迎', icon: FireIcon },
   newest: { label: '最新发布', icon: ClockIcon },
-  downloads: { label: '最多下载', icon: EyeIcon },
-  likes: { label: '最多点赞', icon: HandThumbUpIcon }
+  likes: { label: '最多点赞', icon: HandThumbUpIcon },
+  views: { label: '最多浏览', icon: EyeIcon }
 }
 
 // 处理排序

@@ -89,13 +89,68 @@ const routes = [
     ]
   },
   {
-    path: '/resume/editor',
-    name: 'template-editor',
+    path: '/editor',
     component: () => import('@/views/template-editor/index.vue'),
     meta: {
-      title: '简历编辑器',
       requiresAuth: true,
       layout: 'blank'
+    },
+    children: [
+      // 模板相关路由
+      {
+        path: 'template/new',
+        name: 'template-create',
+        component: () => import('@/views/template-editor/index.vue'),
+        meta: { 
+          mode: 'template-create',
+          title: '创建模板'
+        }
+      },
+      {
+        path: 'template/:id',
+        name: 'template-edit',
+        component: () => import('@/views/template-editor/index.vue'),
+        meta: { 
+          mode: 'template-edit',
+          title: '编辑模板'
+        }
+      },
+      // 简历相关路由
+      {
+        path: 'resume/new',
+        name: 'resume-create',
+        component: () => import('@/views/template-editor/index.vue'),
+        meta: { 
+          mode: 'resume-create',
+          title: '创建简历'
+        }
+      },
+      {
+        path: 'resume/new/:templateId',
+        name: 'resume-create-from-template',
+        component: () => import('@/views/template-editor/index.vue'),
+        meta: { 
+          mode: 'resume-create',
+          title: '从模板创建简历'
+        }
+      },
+      {
+        path: 'resume/:id',
+        name: 'resume-edit',
+        component: () => import('@/views/template-editor/index.vue'),
+        meta: { 
+          mode: 'resume-edit',
+          title: '编辑简历'
+        }
+      }
+    ],
+    beforeEnter: (to, from, next) => {
+      // 如果直接访问编辑器根路径，重定向到首页
+      if (to.path === '/editor') {
+        next('/')
+        return
+      }
+      next()
     }
   },
   {

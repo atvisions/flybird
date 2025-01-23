@@ -29,10 +29,19 @@ class TemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Template
         fields = [
-            'id', 'name', 'description', 'category', 'keywords',
-            'is_public', 'pages', 'created_at', 'updated_at'
+            'id', 'name', 'description', 'thumbnail', 'category',
+            'keywords', 'creator', 'is_public', 'status', 'pages',
+            'created_at', 'updated_at', 'views', 'likes', 'is_liked'
         ]
-        read_only_fields = ['created_at', 'updated_at']
+        read_only_fields = ['creator', 'views', 'likes', 'is_liked']
+
+    is_liked = serializers.SerializerMethodField()
+
+    def get_is_liked(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return request.user in obj.liked_by.all()
+        return False
 
     def validate_name(self, value):
         """验证模板名称的唯一性"""

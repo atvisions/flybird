@@ -23,8 +23,9 @@ class Template(models.Model):
     """简历模版"""
     STATUS_CHOICES = (
         (0, _('草稿')),
-        (1, _('发布')),
-        (2, _('下架')),
+        (1, _('已发布')),
+        (2, _('待审核')),
+        (3, _('已下架')),
     )
 
     # 基本信息
@@ -45,6 +46,16 @@ class Template(models.Model):
     # 时间信息
     created_at = models.DateTimeField(_('创建时间'), auto_now_add=True)
     updated_at = models.DateTimeField(_('更新时间'), auto_now=True)
+
+    # 统计字段
+    views = models.PositiveIntegerField(default=0, verbose_name='浏览次数')
+    likes = models.PositiveIntegerField(default=0, verbose_name='点赞数')
+    liked_by = models.ManyToManyField(
+        'users.User',
+        related_name='liked_templates',
+        blank=True,
+        verbose_name='点赞用户'
+    )
 
     class Meta:
         verbose_name = _('简历模版')

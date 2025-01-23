@@ -152,6 +152,39 @@ class BackgroundUploadView(APIView):
                 'message': '上传背景图失败'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+class UserPublicInfoView(APIView):
+    """获取指定用户的公开信息"""
+    permission_classes = [AllowAny]
+
+    def get(self, request, user_id):
+        try:
+            user = User.objects.get(id=user_id)
+            # 只返回必要的公开信息
+            data = {
+                'id': user.id,
+                'username': user.username,
+                'avatar': user.avatar.url if user.avatar else None,
+                'position': user.position,
+                'is_vip': user.is_vip,
+                'vip_status': user.vip_status
+            }
+            return Response({
+                'code': 200,
+                'message': '获取成功',
+                'data': data
+            })
+        except User.DoesNotExist:
+            return Response({
+                'code': 404,
+                'message': '用户不存在'
+            }, status=404)
+        except Exception as e:
+            logger.error(f"获取用户信息失败: {str(e)}", exc_info=True)
+            return Response({
+                'code': 500,
+                'message': '获取用户信息失败'
+            }, status=500)
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def list_urls(request):

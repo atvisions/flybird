@@ -115,3 +115,35 @@ class TemplateViewSet(viewsets.ModelViewSet):
             'status': 'success',
             'pages': template.pages
         })
+
+    @action(detail=True, methods=['post'])
+    def like(self, request, pk=None):
+        """点赞/取消点赞模板"""
+        template = self.get_object()
+        user = request.user
+        
+        if user in template.liked_by.all():
+            # 取消点赞
+            template.liked_by.remove(user)
+            template.likes -= 1
+            template.save()
+            return Response({'message': '已取消点赞', 'is_liked': False})
+        else:
+            # 添加点赞
+            template.liked_by.add(user)
+            template.likes += 1
+            template.save()
+            return Response({'message': '点赞成功', 'is_liked': True})
+
+    def retrieve(self, request, *args, **kwargs):
+        """获取模板详情时增加浏览次数"""
+        instance = self.get_object()
+        instance.views += 1
+        instance.save()
+        
+        # 添加当前用户是否点赞的信息
+        serializer = self.get_serializer(instance)
+        data = serializer.data
+        data['is_liked'] = request.user in instance.liked_by.all() if request.user.is_authenticated else False
+        
+        return Response(data)

@@ -90,6 +90,11 @@ export const account = {
       }
     })
   },
+
+  // 获取指定用户的公开信息
+  getUserPublicInfo: (userId) => {
+    return request.get(`/api/v1/users/users/${userId}/`)
+  },
 }
 
 export default account 

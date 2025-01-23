@@ -1,16 +1,16 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
+from django.urls import path
 from . import views
-
-router = DefaultRouter()
-router.register(r'template-categories', views.TemplateCategoryViewSet)
-router.register(r'templates', views.ResumeTemplateViewSet, basename='template')
-router.register(r'resumes', views.ResumeViewSet, basename='resume')
-router.register(r'component-categories', views.ComponentCategoryViewSet)
-router.register(r'components', views.ComponentViewSet)
 
 app_name = 'resume'
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('', views.ResumeViewSet.as_view({
+        'get': 'list',
+        'post': 'create'
+    }), name='resume-list'),
+    path('<int:pk>/', views.ResumeViewSet.as_view({
+        'get': 'retrieve',
+        'put': 'update',
+        'delete': 'destroy'
+    }), name='resume-detail'),
 ] 
