@@ -81,8 +81,8 @@
 
         <!-- 右侧操作区域 -->
         <div class="flex items-center gap-4 flex-shrink-0 ml-4">
-          <!-- 只看我的开关 -->
-          <div class="flex items-center">
+          <!-- 只看我的开关 - 仅在用户登录时显示 -->
+          <div v-if="isAuthenticated" class="flex items-center">
             <span class="text-sm text-gray-600 mr-2">只看我的</span>
             <button
               @click="toggleOnlyMine"

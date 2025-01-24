@@ -185,7 +185,8 @@ const loadTemplates = async (isLoadMore = false) => {
   try {
     const params = {
       page: currentPage.value,
-      page_size: pageSize
+      page_size: pageSize,
+      status: 1  // 1表示已发布状态
     }
     
     // 只看我的模式
@@ -196,10 +197,7 @@ const loadTemplates = async (isLoadMore = false) => {
         return
       }
       params.creator = accountStore.userInfo.id
-    } else {
-      // 非只看我的模式，只显示已发布的公开模板
-      params.status = 1
-      params.is_public = true
+      delete params.status  // 在只看我的模式下，不限制状态
     }
     
     // 根据分类和排序设置参数
@@ -229,11 +227,6 @@ const loadTemplates = async (isLoadMore = false) => {
     } else if (Array.isArray(res)) {
       templateList = res
       hasMore.value = templateList.length === pageSize
-    }
-    
-    // 在"只看我的"模式下，确保只显示当前用户的模板
-    if (onlyMine.value && accountStore.userInfo?.id) {
-      templateList = templateList.filter(template => template.creator === accountStore.userInfo.id)
     }
 
     // 获取所有模板创建者的用户信息
@@ -482,12 +475,27 @@ const menuGroups = ref([
 ])
 
 // 监听分类和只看我的变化重新加载模板
-watch([currentMainCategory, onlyMine], () => {
+watch([currentMainCategory, currentSort], () => {
+  loadTemplates()
+})
+
+// 单独监听只看我的的变化
+watch(onlyMine, (newValue) => {
+  if (newValue && !accountStore.userInfo) {
+    // 如果用户未登录但尝试开启"只看我的"，重置为false
+    onlyMine.value = false
+    ElMessage.warning('请先登录后再使用此功能')
+    return
+  }
   loadTemplates()
 })
 
 // 组件挂载时加载数据
 onMounted(() => {
+  // 确保未登录用户不会开启"只看我的"
+  if (!accountStore.userInfo) {
+    onlyMine.value = false
+  }
   loadCategories()
   loadTemplates()
 })

@@ -11,11 +11,23 @@ from django.db import transaction
 class CategoryViewSet(viewsets.ModelViewSet):
     """
     模版分类视图集
-    只允许管理员创建、修改和删除分类
+    - 查看操作（list, retrieve）：允许所有人
+    - 修改操作（create, update, delete）：只允许管理员
     """
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [IsAuthenticated, IsAdminUserOrReadOnly]
+    
+    def get_permissions(self):
+        """
+        根据不同的操作返回不同的权限
+        - 查看操作：允许所有人
+        - 修改操作：需要管理员权限
+        """
+        if self.action in ['list', 'retrieve']:
+            permission_classes = []
+        else:
+            permission_classes = [IsAuthenticated, IsAdminUserOrReadOnly]
+        return [permission() for permission in permission_classes]
     
     def get_queryset(self):
         """返回按照排序字段排序的分类列表"""
@@ -27,7 +39,18 @@ class TemplateViewSet(viewsets.ModelViewSet):
     """
     queryset = Template.objects.all()
     serializer_class = TemplateSerializer
-    permission_classes = [IsAuthenticated, CanModifyTemplate]
+    
+    def get_permissions(self):
+        """
+        根据不同的操作返回不同的权限
+        - 查看操作（list, retrieve）：允许所有人
+        - 修改操作（create, update, delete等）：需要登录
+        """
+        if self.action in ['list', 'retrieve']:
+            permission_classes = []
+        else:
+            permission_classes = [IsAuthenticated, CanModifyTemplate]
+        return [permission() for permission in permission_classes]
 
     def perform_create(self, serializer):
         """创建时自动设置创建者"""
@@ -38,8 +61,11 @@ class TemplateViewSet(viewsets.ModelViewSet):
         user = self.request.user
         queryset = Template.objects.all()
 
-        # 基础权限过滤
-        if not user.is_staff:
+        # 基础权限过滤：未登录用户只能看到公开的已发布模板
+        if not user.is_authenticated:
+            queryset = queryset.filter(is_public=True, status=1)  # status=1 表示已发布
+        # 非管理员用户只能看到公开的或自己的模板
+        elif not user.is_staff:
             queryset = queryset.filter(is_public=True) | queryset.filter(creator=user)
 
         # 获取查询参数
@@ -47,6 +73,7 @@ class TemplateViewSet(viewsets.ModelViewSet):
         is_public = self.request.query_params.get('is_public')
         is_recommended = self.request.query_params.get('is_recommended')
         category = self.request.query_params.get('category')
+        creator = self.request.query_params.get('creator')
 
         # 应用过滤条件
         if status is not None:
@@ -59,6 +86,8 @@ class TemplateViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(is_recommended=is_recommended)
         if category:
             queryset = queryset.filter(category=category)
+        if creator:
+            queryset = queryset.filter(creator=creator)
 
         return queryset
 
