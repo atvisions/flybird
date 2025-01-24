@@ -1,21 +1,38 @@
 <template>
   <div class="editor-toolbar">
-    <!-- 左侧基础操作按钮 -->
+    <!-- 左侧返回和标题 -->
     <div class="toolbar-left">
-      <button class="toolbar-btn" @click="$emit('undo')" :disabled="!canUndo">
-        <Undo theme="outline" :size="16" />
-        <span>撤销</span>
+      <button class="toolbar-btn back-btn" @click="handleBack">
+        <Back theme="outline" :size="16" />
+        <span>返回</span>
       </button>
-      <button class="toolbar-btn" @click="$emit('redo')" :disabled="!canRedo">
-        <Redo theme="outline" :size="16" />
-        <span>重做</span>
-      </button>
+      <div class="template-title">
+        {{ currentTemplate?.name || '未命名模板' }}
+      </div>
+    </div>
+
+    <!-- 中间撤销重做按钮 -->
+    <div class="toolbar-center">
+      <div class="undo-redo-group">
+        <button class="toolbar-btn" @click="$emit('undo')" :disabled="!canUndo">
+          <Undo theme="outline" :size="16" />
+          <span>撤销</span>
+        </button>
+        <button class="toolbar-btn" @click="$emit('redo')" :disabled="!canRedo">
+          <Redo theme="outline" :size="16" />
+          <span>重做</span>
+        </button>
+      </div>
     </div>
 
     <!-- 右侧操作按钮 -->
     <div class="toolbar-right">
       <!-- 模板编辑模式 -->
       <template v-if="showTemplateButtons">
+        <button class="toolbar-btn" @click="handlePrintPreview">
+          <Printer theme="outline" :size="16" />
+          <span>打印预览</span>
+        </button>
         <button class="toolbar-btn primary" @click="handleSubmitReview">
           <Save theme="outline" :size="16" />
           <span>保存模板</span>
@@ -24,6 +41,10 @@
 
       <!-- 简历创建/编辑模式 -->
       <template v-if="showResumeButtons">
+        <button class="toolbar-btn" @click="handlePrintPreview">
+          <Printer theme="outline" :size="16" />
+          <span>打印预览</span>
+        </button>
         <button class="toolbar-btn primary" @click="handleSave('publish')">
           <Save theme="outline" :size="16" />
           <span>{{ $route.name === 'resume-edit' ? '发布简历' : '创建简历' }}</span>
@@ -139,7 +160,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAccountStore } from '@/stores/account'
 import defaultAvatar from '@/assets/images/default-avatar.png'
-import { Undo, Redo, Clear, Save, Delete, Back, Next, Plus, Minus } from '@icon-park/vue-next'
+import { Undo, Redo, Clear, Save, Delete, Back, Next, Plus, Minus, Printer } from '@icon-park/vue-next'
 import { 
   UserIcon, 
   DocumentTextIcon, 
@@ -183,7 +204,16 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['clear', 'save', 'undo', 'redo', 'scale-change', 'create-resume', 'update:template'])
+const emit = defineEmits([
+  'clear', 
+  'save', 
+  'undo', 
+  'redo', 
+  'scale-change', 
+  'create-resume', 
+  'update:template',
+  'print-preview'  // 添加打印预览事件
+])
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
@@ -402,6 +432,17 @@ const goToMyResumes = () => {
 
 // 用户头像
 const userAvatar = computed(() => accountStore.userInfo?.avatar || '')
+
+// 处理返回
+const handleBack = () => {
+  router.push('/templates/resume')
+}
+
+// 处理打印预览
+const handlePrintPreview = () => {
+  // 触发打印预览事件
+  emit('print-preview')
+}
 </script>
 
 <style scoped>
@@ -409,57 +450,109 @@ const userAvatar = computed(() => accountStore.userInfo?.avatar || '')
 @import '../styles/controls.css';
 
 .editor-toolbar {
-  height: 48px;
-  padding: 0 16px;
-  background-color: #fff;
-  border-bottom: 1px solid #f0f0f0;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  position: relative;
-  z-index: 10;
+  padding: 0 16px;
+  height: 56px;
+  background: #fff;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
 .toolbar-left {
-  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toolbar-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.undo-redo-group {
+  display: flex;
+  gap: 8px;
+  padding: 0 16px;
+  border-left: 1px solid rgba(0, 0, 0, 0.06);
+  border-right: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .toolbar-right {
-  flex: 1;
   display: flex;
   align-items: center;
   gap: 8px;
   justify-content: flex-end;
 }
 
-.toolbar-btn {
-  height: 32px;
-  padding: 0 12px;
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
-  background: #fff;
+.back-btn {
+  color: #666;
+}
+
+.back-btn:hover {
+  color: #1890ff;
+  background: rgba(24, 144, 255, 0.1);
+}
+
+.template-title {
+  font-size: 16px;
+  font-weight: 500;
   color: #333;
-  cursor: pointer;
-  display: flex;
+  margin: 0 16px;
+}
+
+.divider {
+  width: 1px;
+  height: 24px;
+  background: rgba(0, 0, 0, 0.06);
+  margin: 0 8px;
+}
+
+.toolbar-btn {
+  display: inline-flex;
   align-items: center;
-  gap: 4px;
-  transition: all 0.3s;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 36px;
 }
 
 .toolbar-btn:hover:not(:disabled) {
   color: #1890ff;
-  border-color: #1890ff;
+  background: rgba(24, 144, 255, 0.04);
+}
+
+.toolbar-btn:active:not(:disabled) {
+  background: rgba(24, 144, 255, 0.08);
 }
 
 .toolbar-btn:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
-  color: #d9d9d9;
-  background: #f5f5f5;
 }
 
-.iconfont {
-  font-size: 14px;
+.toolbar-btn.primary {
+  background: rgba(24, 144, 255, 0.08);
+  color: #1890ff;
+  border: 1px solid rgba(24, 144, 255, 0.2);
+}
+
+.toolbar-btn.primary:hover:not(:disabled) {
+  background: rgba(24, 144, 255, 0.12);
+  border-color: #1890ff;
+}
+
+.toolbar-btn.primary:active:not(:disabled) {
+  background: rgba(24, 144, 255, 0.16);
 }
 
 /* 添加用户头像和下拉菜单样式 */
@@ -565,14 +658,9 @@ button:focus {
 }
 
 .toolbar-btn.primary {
-  background-color: #1890ff;
-  color: white;
-  border-color: #1890ff;
-}
-
-.toolbar-btn.primary:hover {
-  background-color: #40a9ff;
-  border-color: #40a9ff;
+  background-color: transparent;
+  color: #1890ff;
+  border-color: currentColor;
 }
 
 .scale-control {

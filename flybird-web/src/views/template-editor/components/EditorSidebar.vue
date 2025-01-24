@@ -202,14 +202,6 @@
               </div>
             </div>
           </div>
-
-          <!-- 添加创建模板按钮 -->
-          <div v-if="onlyMyTemplates" class="create-template-btn-container">
-            <button class="create-template-btn" @click="handleCreateTemplate">
-              <span class="plus-icon">+</span>
-              创建新模板
-            </button>
-          </div>
         </div>
       </div>
 
@@ -236,6 +228,65 @@
         >
       </div>
     </el-dialog>
+
+    <!-- 删除确认弹窗 -->
+    <TransitionRoot appear :show="showDeleteConfirm" as="template">
+      <Dialog as="div" @close="showDeleteConfirm = false" class="relative z-50">
+        <TransitionChild
+          as="template"
+          enter="duration-300 ease-out"
+          enter-from="opacity-0"
+          enter-to="opacity-100"
+          leave="duration-200 ease-in"
+          leave-from="opacity-100"
+          leave-to="opacity-0"
+        >
+          <div class="fixed inset-0 bg-black/25" />
+        </TransitionChild>
+
+        <div class="fixed inset-0 overflow-y-auto">
+          <div class="flex min-h-full items-center justify-center p-4 text-center">
+            <TransitionChild
+              as="template"
+              enter="duration-300 ease-out"
+              enter-from="opacity-0 scale-95"
+              enter-to="opacity-100 scale-100"
+              leave="duration-200 ease-in"
+              leave-from="opacity-100 scale-100"
+              leave-to="opacity-0 scale-95"
+            >
+              <DialogPanel class="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900">
+                  确认删除模板？
+                </DialogTitle>
+                <div class="mt-2">
+                  <p class="text-sm text-gray-500">
+                    此操作将永久删除该模板，且不可恢复。是否继续？
+                  </p>
+                </div>
+
+                <div class="mt-4 flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    class="inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
+                    @click="showDeleteConfirm = false"
+                  >
+                    取消
+                  </button>
+                  <button
+                    type="button"
+                    class="inline-flex justify-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 focus:outline-none"
+                    @click="handleConfirmDelete"
+                  >
+                    确认删除
+                  </button>
+                </div>
+              </DialogPanel>
+            </TransitionChild>
+          </div>
+        </div>
+      </Dialog>
+    </TransitionRoot>
   </div>
 </template>
 
@@ -257,6 +308,7 @@ import { account } from '@/api/account'
 import config from '@/config'
 import { useAuthStore } from '@/stores/auth'
 import { ElMessage } from 'element-plus'
+import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
 
 const { activeTab, tabs, switchTab } = useTabs()
 const { components } = useComponents()
@@ -636,39 +688,13 @@ const handleUseTemplate = (template) => {
   router.push(`/editor/use/${template.id}`)
 }
 
-// 处理创建新模板
-const handleCreateTemplate = () => {
-  router.push('/editor/create')
-}
+// 添加临时存储要删除的模板
+const templateToDelete = ref(null)
 
-// 添加删除模板方法
+// 处理删除模板
 const handleDeleteTemplate = async (template) => {
-  try {
-    // 显示确认对话框
-    await ElMessageBox.confirm(
-      '确定要删除该模板吗？此操作不可恢复',
-      '删除确认',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }
-    )
-    
-    // 调用删除 API
-    await templateApi.delete(template.id)
-    
-    // 从列表中移除该模板
-    templates.value = templates.value.filter(t => t.id !== template.id)
-    
-    // 显示成功提示
-    showToast('删除成功', 'success')
-  } catch (error) {
-    if (error !== 'cancel') {
-      console.error('删除模板失败:', error)
-      showToast('删除失败', 'error')
-    }
-  }
+  templateToDelete.value = template
+  showDeleteConfirm.value = true
 }
 
 // 添加预览相关的状态
@@ -772,6 +798,34 @@ const handleLike = async (template) => {
     } else {
       ElMessage.error('点赞失败，请稍后重试')
     }
+  }
+}
+
+// 添加删除确认状态
+const showDeleteConfirm = ref(false)
+
+// 添加删除确认处理函数
+const handleConfirmDelete = async () => {
+  if (!templateToDelete.value) {
+    showDeleteConfirm.value = false
+    return
+  }
+
+  try {
+    // 调用删除 API
+    await templateApi.delete(templateToDelete.value.id)
+    
+    // 从列表中移除该模板
+    templates.value = templates.value.filter(t => t.id !== templateToDelete.value.id)
+    
+    // 显示成功提示
+    ElMessage.success('删除成功')
+  } catch (error) {
+    console.error('删除模板失败:', error)
+    ElMessage.error(error.response?.data?.message || '删除失败，请稍后重试')
+  } finally {
+    showDeleteConfirm.value = false
+    templateToDelete.value = null
   }
 }
 </script>
@@ -1029,7 +1083,7 @@ const handleLike = async (template) => {
   position: sticky;
   top: -10px;
   background: white;
-  z-index: 2000;
+  z-index: 10;
   border-radius: 8px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   margin: -10px -10px 4px -10px;

@@ -23,6 +23,7 @@
         @redo="handleRedo"
         @scale-change="handleScaleChange"
         @update:template="handleTemplateUpdate"
+        @print-preview="handlePrintPreview"
       />
 
       <!-- 主要内容区域 -->
@@ -58,7 +59,7 @@
           </div>
           <div class="editor-footer">
             <div class="canvas-pages">
-              第 {{ currentCanvasId + 1 }} 页 / 共 {{ canvasCount }} 页
+              第 {{ currentCanvasId + 1 }} 页 / 共 {{ templateData.canvases.length }} 页
             </div>
             <div class="footer-center">
               <div class="zoom-control">
@@ -231,7 +232,7 @@ const {
   templateData,
   currentCanvasId, 
   addCanvas, 
-  removeCanvas, 
+  removeCanvas: _removeCanvas,  // 重命名原始的 removeCanvas
   switchCanvas, 
   getCurrentCanvas,
   updateCanvasElements,
@@ -288,6 +289,9 @@ const saveButtonText = computed(() => {
       return '保存'
   }
 })
+
+// 添加画布总数计算属性
+const canvasCount = computed(() => templateData.value.canvases.length)
 
 // 处理加载完成
 const handleLoadComplete = ({ success, templateData, error }) => {
@@ -949,17 +953,48 @@ const handleTemplateUpdate = (updatedTemplate) => {
   }
 }
 
-// 添加画布
-const handleAddCanvas = (newCanvas) => {
-  // 添加新画布
-  templateData.value.canvases.push(newCanvas)
-  // 立即切换到新画布
-  currentCanvasId.value = newCanvas.id
+// 重写画布删除方法
+const removeCanvas = (canvasId) => {
+  const index = templateData.value.canvases.findIndex(canvas => canvas.id === canvasId)
+  if (index === -1) return
+
+  // 删除画布
+  templateData.value.canvases.splice(index, 1)
+
+  // 重新分配所有画布的ID
+  templateData.value.canvases = templateData.value.canvases.map((canvas, idx) => ({
+    ...canvas,
+    id: idx
+  }))
+
+  // 如果删除的是当前画布，切换到前一个画布
+  if (canvasId === currentCanvasId.value) {
+    currentCanvasId.value = Math.max(0, index - 1)
+  } else if (canvasId < currentCanvasId.value) {
+    // 如果删除的画布在当前画布之前，当前画布ID需要减1
+    currentCanvasId.value--
+  }
 }
 
-// 切换画布
+// 修改添加画布的方法
+const handleAddCanvas = (newCanvas) => {
+  // 使用当前画布数量作为新画布的ID
+  const newCanvasId = templateData.value.canvases.length
+  const canvas = {
+    ...newCanvas,
+    id: newCanvasId
+  }
+  // 添加新画布
+  templateData.value.canvases.push(canvas)
+  // 立即切换到新画布
+  currentCanvasId.value = newCanvasId
+}
+
+// 修改切换画布的方法
 const handleSwitchCanvas = (canvasId) => {
-  currentCanvasId.value = canvasId
+  if (canvasId >= 0 && canvasId < templateData.value.canvases.length) {
+    currentCanvasId.value = canvasId
+  }
 }
 
 // 清除确认弹窗状态
@@ -1026,6 +1061,12 @@ const handleSave = async ({ mode, action, data, callback }) => {
       res = await templateApi.update(templateId.value, submitData, canvasWrapper)
     } else {
       res = await templateApi.create(submitData, canvasWrapper)
+      // 如果创建成功，更新templateId并修改路由
+      if (res?.data?.id) {
+        templateId.value = res.data.id
+        // 使用replace而不是push，这样用户点击返回时不会回到创建页面
+        router.replace(`/editor/edit/${res.data.id}`)
+      }
     }
 
     if (callback) {
@@ -1042,6 +1083,167 @@ const handleSave = async ({ mode, action, data, callback }) => {
     showToast(error.response?.data?.message || error.message || '保存失败', 'error')
     throw error
   }
+}
+
+// 处理打印预览
+const handlePrintPreview = () => {
+  // 创建一个新窗口用于打印预览
+  const printWindow = window.open('', '_blank')
+  if (!printWindow) {
+    ElMessage.error('打印预览窗口被浏览器拦截，请允许弹出窗口后重试')
+    return
+  }
+
+  // 获取当前模板的所有页面内容
+  const canvasWrappers = document.querySelectorAll('.canvas-wrapper')
+  if (!canvasWrappers.length) {
+    ElMessage.error('未找到画布内容')
+    printWindow.close()
+    return
+  }
+
+  // 获取所有页面的HTML内容
+  const pages = Array.from(canvasWrappers).map((wrapper, index) => {
+    // 克隆节点以避免修改原始内容
+    const clonedWrapper = wrapper.cloneNode(true)
+    
+    // 移除不需要打印的元素
+    const elementsToRemove = clonedWrapper.querySelectorAll('.element-controls, .element-resize-handle, .element-rotate-handle')
+    elementsToRemove.forEach(el => el.remove())
+
+    return `
+      <div class="print-page">
+        <div class="page-content">
+          ${clonedWrapper.innerHTML}
+        </div>
+      </div>
+    `
+  }).join('')
+
+  // 构建打印预览页面的HTML
+  const printContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>打印预览 - ${currentTemplateData.value?.name || '未命名模板'}</title>
+      <style>
+        @media print {
+          @page {
+            size: A4;
+            margin: 0;
+          }
+          body {
+            margin: 0;
+          }
+          .print-page {
+            margin: 0 !important;
+            box-shadow: none !important;
+          }
+          .no-print {
+            display: none !important;
+          }
+        }
+        
+        body {
+          margin: 0;
+          background: #f0f2f5;
+          min-height: 100vh;
+        }
+        
+        .print-header {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          z-index: 1000;
+          height: 48px;
+          background: white;
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 0 24px;
+        }
+        
+        .header-title {
+          font-size: 16px;
+          color: #333;
+          margin: 0;
+          font-weight: 500;
+        }
+        
+        .print-btn {
+          background: #1890ff;
+          color: white;
+          border: none;
+          padding: 6px 16px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 14px;
+          transition: all 0.2s;
+        }
+        
+        .print-btn:hover {
+          background: #40a9ff;
+        }
+        
+        .print-container {
+          padding-top: 48px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          min-height: 100vh;
+          box-sizing: border-box;
+        }
+        
+        .print-page {
+          width: 210mm;
+          min-height: 297mm;
+          background: white;
+          margin-bottom: 16px;
+          position: relative;
+          box-sizing: border-box;
+        }
+        
+        .page-content {
+          position: relative;
+          min-height: 297mm;
+        }
+        
+        /* 保持元素样式 */
+        .canvas-element {
+          position: absolute !important;
+          box-sizing: border-box;
+        }
+        
+        .text-element {
+          white-space: pre-wrap;
+          word-break: break-word;
+        }
+        
+        .image-element img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="print-header no-print">
+        <h2 class="header-title">${currentTemplateData.value?.name || '未命名模板'} - 打印预览</h2>
+        <button class="print-btn" onclick="window.print()">打印文档</button>
+      </div>
+      <div class="print-container">
+        ${pages}
+      </div>
+    </body>
+    </html>
+  `
+
+  // 写入打印预览内容
+  printWindow.document.open()
+  printWindow.document.write(printContent)
+  printWindow.document.close()
 }
 </script>
 
