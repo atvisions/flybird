@@ -70,39 +70,61 @@
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             ]"
           >
-            <component :is="category.icon" class="w-4 h-4 mr-2 flex-shrink-0" />
+            <component 
+              v-if="category.icon" 
+              :is="category.icon" 
+              class="w-4 h-4 mr-2 flex-shrink-0" 
+            />
             {{ category.name }}
           </button>
         </div>
 
-        <!-- 右侧排序按钮 -->
-        <div class="relative flex-shrink-0 ml-4">
-          <button 
-            @click="showSortMenu = !showSortMenu"
-            class="h-10 inline-flex items-center px-4 bg-white border border-gray-200 rounded-lg text-sm font-medium hover:border-gray-300"
-          >
-            <ArrowsUpDownIcon class="w-4 h-4 mr-2 text-gray-500 flex-shrink-0" />
-            {{ sortOptions[currentSort]?.label || '排序' }}
-            <ChevronDownIcon class="w-4 h-4 ml-2 text-gray-500 flex-shrink-0" />
-          </button>
-          
-          <div v-if="showSortMenu"
-            class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-20"
-          >
+        <!-- 右侧操作区域 -->
+        <div class="flex items-center gap-4 flex-shrink-0 ml-4">
+          <!-- 只看我的开关 -->
+          <div class="flex items-center">
+            <span class="text-sm text-gray-600 mr-2">只看我的</span>
             <button
-              v-for="(option, key) in sortOptions"
-              :key="key"
-              @click="handleSort(key)"
-              class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 inline-flex items-center"
-              :class="{ 'text-gray-900 font-medium': currentSort === key, 'text-gray-600': currentSort !== key }"
+              @click="toggleOnlyMine"
+              class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
+              :class="[onlyMine ? 'bg-rose-600' : 'bg-gray-200']"
             >
-              <component 
-                :is="option.icon" 
-                class="w-4 h-4 mr-2 flex-shrink-0"
-                :class="currentSort === key ? 'text-gray-900' : 'text-gray-400'"
+              <span
+                class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+                :class="[onlyMine ? 'translate-x-6' : 'translate-x-1']"
               />
-              {{ option.label }}
             </button>
+          </div>
+
+          <!-- 排序按钮 -->
+          <div class="relative">
+            <button 
+              @click="showSortMenu = !showSortMenu"
+              class="h-10 inline-flex items-center px-4 bg-white border border-gray-200 rounded-lg text-sm font-medium hover:border-gray-300"
+            >
+              <ArrowsUpDownIcon class="w-4 h-4 mr-2 text-gray-500 flex-shrink-0" />
+              {{ sortOptions[currentSort]?.label || '排序' }}
+              <ChevronDownIcon class="w-4 h-4 ml-2 text-gray-500 flex-shrink-0" />
+            </button>
+            
+            <div v-if="showSortMenu"
+              class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-20"
+            >
+              <button
+                v-for="(option, key) in sortOptions"
+                :key="key"
+                @click="handleSort(key)"
+                class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 inline-flex items-center"
+                :class="{ 'text-gray-900 font-medium': currentSort === key, 'text-gray-600': currentSort !== key }"
+              >
+                <component 
+                  :is="option.icon" 
+                  class="w-4 h-4 mr-2 flex-shrink-0"
+                  :class="currentSort === key ? 'text-gray-900' : 'text-gray-400'"
+                />
+                {{ option.label }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -148,10 +170,14 @@ const props = defineProps({
   currentSort: {
     type: String,
     required: true
+  },
+  onlyMine: {
+    type: Boolean,
+    default: false
   }
 })
 
-const emit = defineEmits(['update:currentCategory', 'update:currentSort'])
+const emit = defineEmits(['update:currentCategory', 'update:currentSort', 'update:onlyMine'])
 
 const router = useRouter()
 const route = useRoute()
@@ -186,17 +212,17 @@ const getCategoryIcon = (categoryId) => {
 
 // 根据当前路由显示不同的分类选项
 const categories = computed(() => {
-  // 添加"全部"选项
+  // 添加"全部"和"推荐"选项
   const allOption = { id: 'all', name: '全部', icon: HomeIcon }
+  const recommendedOption = { id: 'recommended', name: '推荐', icon: SparklesIcon }
   
-  // 将后端分类数据转换为所需格式
+  // 将后端分类数据转换为所需格式，不包含图标
   const formattedCategories = categoryList.value.map(category => ({
     id: category.id,
-    name: category.name,
-    icon: getCategoryIcon(category.id)
+    name: category.name
   }))
   
-  return [allOption, ...formattedCategories]
+  return [allOption, recommendedOption, ...formattedCategories]
 })
 
 // 加载分类数据
@@ -221,7 +247,6 @@ const showSortMenu = ref(false)
 // 排序选项
 const sortOptions = {
   newest: { label: '最新发布', icon: ClockIcon },
-  recommended: { label: '飞鸟推荐', icon: SparklesIcon },
   likes: { label: '最多点赞', icon: HandThumbUpIcon },
   views: { label: '最多浏览', icon: EyeIcon }
 }
@@ -235,5 +260,10 @@ const handleSort = (value) => {
 // 处理分类变更
 const handleCategoryChange = (categoryId) => {
   emit('update:currentCategory', categoryId)
+}
+
+// 切换"只看我的"状态
+const toggleOnlyMine = () => {
+  emit('update:onlyMine', !props.onlyMine)
 }
 </script> 

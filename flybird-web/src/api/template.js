@@ -12,7 +12,7 @@ async function generateThumbnail(canvasElement) {
     const originalHeight = canvasElement.offsetHeight
 
     // 设置缩略图的宽度
-    const THUMB_WIDTH = 300
+    const THUMB_WIDTH = 600
     // 根据 A4 比例计算高度
     const THUMB_HEIGHT = Math.round(THUMB_WIDTH * A4_RATIO)
 

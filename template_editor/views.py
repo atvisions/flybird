@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from .models import Category, Template
 from .serializers import CategorySerializer, TemplateSerializer
 from .permissions import IsAdminUserOrReadOnly, CanModifyTemplate
+from django.db import transaction
 
 class CategoryViewSet(viewsets.ModelViewSet):
     """
@@ -138,24 +139,38 @@ class TemplateViewSet(viewsets.ModelViewSet):
             'pages': template.pages
         })
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def like(self, request, pk=None):
         """点赞/取消点赞模板"""
         template = self.get_object()
         user = request.user
         
-        if user in template.liked_by.all():
-            # 取消点赞
-            template.liked_by.remove(user)
-            template.likes -= 1
-            template.save()
-            return Response({'message': '已取消点赞', 'is_liked': False})
-        else:
-            # 添加点赞
-            template.liked_by.add(user)
-            template.likes += 1
-            template.save()
-            return Response({'message': '点赞成功', 'is_liked': True})
+        with transaction.atomic():
+            # 重新获取模板以确保数据最新
+            template = Template.objects.select_for_update().get(pk=template.pk)
+            
+            if user in template.liked_by.all():
+                # 取消点赞
+                template.liked_by.remove(user)
+                template.likes = template.liked_by.count()  # 重新计算点赞数
+                template.save()
+                return Response({
+                    'status': 'success',
+                    'message': '已取消点赞',
+                    'is_liked': False,
+                    'likes': template.likes
+                })
+            else:
+                # 添加点赞
+                template.liked_by.add(user)
+                template.likes = template.liked_by.count()  # 重新计算点赞数
+                template.save()
+                return Response({
+                    'status': 'success',
+                    'message': '点赞成功',
+                    'is_liked': True,
+                    'likes': template.likes
+                })
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def toggle_recommend(self, request, pk=None):

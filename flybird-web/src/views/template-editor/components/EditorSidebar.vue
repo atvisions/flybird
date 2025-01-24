@@ -77,83 +77,139 @@
 
       <!-- 模板列表 -->
       <div v-else-if="activeTab === 'templates'" class="template-panel">
-        <!-- 分类选择 -->
-        <div class="category-select">
-          <select v-model="selectedCategory" class="select-input">
-            <option value="">全部分类</option>
-            <option v-for="category in categories" :key="category.id" :value="category.id">
-              {{ category.name }}
-            </option>
-          </select>
-          <div class="filter-options">
-            <label class="filter-label">
-              <input type="checkbox" v-model="onlyMyTemplates"> 只看我的
-            </label>
+        <!-- 分类和排序 -->
+        <div class="template-header">
+          <div class="category-tabs"
+            ref="categoryTabsRef"
+            @mousedown.prevent="handleMouseDown"
+            @mouseleave="handleMouseLeave"
+            @mouseup="handleMouseUp"
+            @mousemove="handleMouseMove"
+            @click="handleCategoryClick"
+          >
+            <div 
+              v-for="cat in ['全部', '推荐', ...categories.map(c => c.name)]" 
+              :key="cat"
+              class="category-tab-wrapper"
+            >
+              <div
+                class="category-tab"
+                :class="{ active: selectedCategory === (cat === '全部' ? '' : cat === '推荐' ? 'recommended' : categories.find(c => c.name === cat)?.id) }"
+                @click.stop="handleCategorySelect(cat)"
+              >
+                {{ cat }}
+              </div>
+            </div>
+          </div>
+          <div class="filter-bar">
+            <div class="sort-select">
+              <select v-model="sortBy" class="select-input">
+                <option value="latest">最新发布</option>
+                <option value="likes">按点赞量</option>
+                <option value="views">按浏览量</option>
+              </select>
+            </div>
+            <div class="view-toggle">
+              <label class="toggle-label">
+                <input 
+                  type="checkbox" 
+                  v-model="onlyMyTemplates"
+                  class="toggle-input"
+                >
+                <span class="toggle-text">只看我的</span>
+              </label>
+            </div>
           </div>
         </div>
 
         <!-- 模板列表 -->
         <div class="template-list">
+          <!-- 加载状态 -->
           <div v-if="loading" class="loading-state">
-            加载中...
+            <div class="loading-spinner"></div>
+            <span>加载中...</span>
           </div>
-          <template v-else>
-            <div v-if="templates.length === 0" class="empty-state">
-              暂无模板
-            </div>
-            <div v-else class="template-grid">
-              <div
-                v-for="template in templates"
-                :key="template.id"
-                class="template-item"
-              >
-                <div class="template-preview" @click="handleTemplateSelect(template)">
-                  <img v-if="template.thumbnail" :src="template.thumbnail" :alt="template.name">
-                  <div v-else class="no-thumbnail">暂无预览图</div>
+          
+          <!-- 空状态 -->
+          <div v-else-if="templates.length === 0" class="empty-state">
+            <div class="empty-icon">📭</div>
+            <div class="empty-text">{{ onlyMyTemplates ? '暂无个人模版' : '暂无模版' }}</div>
+          </div>
+          
+          <!-- 模板列表 -->
+          <div v-else class="template-grid">
+            <!-- 统一的模板卡片布局 -->
+            <div 
+              v-for="template in sortedTemplates"
+              :key="template.id"
+              class="template-card"
+            >
+              <div class="template-card-content">
+                <div class="template-preview" @click="handlePreviewClick(template)">
+                  <img 
+                    v-if="template.thumbnail" 
+                    :src="template.thumbnail" 
+                    :alt="template.name"
+                    @error="handleImageError"
+                  >
+                  <div v-else class="no-thumbnail">无预览图</div>
                 </div>
                 <div class="template-info">
-                  <div class="template-name">{{ template.name }}</div>
+                  <div class="template-header">
+                    <div class="template-name">{{ template.name }}</div>
+                    <img 
+                      :src="template.creator_avatar || defaultAvatar"
+                      class="creator-avatar"
+                      :alt="template.creator_name"
+                      @error="handleImageError"
+                    >
+                  </div>
+                  <div class="template-desc">{{ template.description || '暂无简介' }}</div>
                   <div class="template-meta">
                     <span>{{ template.pages?.length || 1 }}页</span>
-                    <div class="template-actions">
-                      <button 
-                        v-if="template.creator === accountStore.userInfo?.id"
-                        class="action-btn"
-                        @click="handleEditTemplate(template)"
-                      >
-                        <Edit theme="outline" :size="16" />
-                        <span>编辑</span>
-                      </button>
-
-                      <button 
-                        v-if="template.creator === accountStore.userInfo?.id"
-                        class="action-btn danger"
-                        @click="handleDeleteTemplate(template)"
-                      >
-                        <Delete theme="outline" :size="16" />
-                        <span>删除</span>
-                      </button>
-
-                      <button 
-                        class="action-btn primary"
-                        @click="handleUseTemplate(template)"
-                      >
-                        <Plus theme="outline" :size="16" />
-                        <span>使用</span>
-                      </button>
-                    </div>
+                    <span v-if="template.views">· {{ template.views }}浏览</span>
+                    <span v-if="template.likes">· {{ template.likes }}赞</span>
+                    <span v-if="onlyMyTemplates" class="template-status" :class="getStatusClass(template.status)">
+                      {{ getStatusText(template.status) }}
+                    </span>
                   </div>
+                </div>
+                <div class="template-actions">
+                  <template v-if="onlyMyTemplates">
+                    <button 
+                      class="action-btn"
+                      @click="handleEditTemplate(template)"
+                    >
+                      <Edit theme="outline" :size="14" />
+                      编辑
+                    </button>
+                    <button 
+                      class="action-btn danger"
+                      @click="handleDeleteTemplate(template)"
+                    >
+                      <Delete theme="outline" :size="14" />
+                      删除
+                    </button>
+                  </template>
+                  <button 
+                    class="action-btn primary"
+                    @click="handleUseTemplate(template)"
+                  >
+                    <Plus theme="outline" :size="14" />
+                    使用
+                  </button>
                 </div>
               </div>
             </div>
-            <!-- 添加创建模板按钮 -->
-            <div v-if="onlyMyTemplates" class="create-template-btn-container">
-              <button class="create-template-btn" @click="handleCreateTemplate">
-                <span class="plus-icon">+</span>
-                创建新模板
-              </button>
-            </div>
-          </template>
+          </div>
+
+          <!-- 添加创建模板按钮 -->
+          <div v-if="onlyMyTemplates" class="create-template-btn-container">
+            <button class="create-template-btn" @click="handleCreateTemplate">
+              <span class="plus-icon">+</span>
+              创建新模板
+            </button>
+          </div>
         </div>
       </div>
 
@@ -162,6 +218,24 @@
         <!-- 保持原有的元素面板内容 -->
       </div>
     </div>
+
+    <!-- 添加预览弹窗 -->
+    <el-dialog
+      v-model="previewVisible"
+      :title="previewTemplate?.name"
+      width="1000px"
+      destroy-on-close
+      align-center
+    >
+      <div class="preview-dialog-content">
+        <img 
+          v-if="previewTemplate?.thumbnail"
+          :src="previewTemplate.thumbnail"
+          :alt="previewTemplate?.name"
+          class="preview-image"
+        >
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -178,7 +252,11 @@ import { showToast } from '@/components/ToastMessage'
 import { useAccountStore } from '@/stores/account'
 import { useRouter } from 'vue-router'
 import { Edit, Plus, Delete } from '@icon-park/vue-next'
-import { ElMessageBox } from 'element-plus'
+import { ElMessageBox, ElDialog } from 'element-plus'
+import { account } from '@/api/account'
+import config from '@/config'
+import { useAuthStore } from '@/stores/auth'
+import { ElMessage } from 'element-plus'
 
 const { activeTab, tabs, switchTab } = useTabs()
 const { components } = useComponents()
@@ -187,11 +265,25 @@ const loading = ref(false)
 const categories = ref([])
 const templates = ref([])
 const selectedCategory = ref('')
-const onlyMyTemplates = ref(false)
+const STORAGE_KEY = 'template_only_my'
+const onlyMyTemplates = ref(localStorage.getItem(STORAGE_KEY) === 'true')
 const accountStore = useAccountStore()
 const router = useRouter()
+const authStore = useAuthStore()
 
 const emit = defineEmits(['edit-template', 'use-template', 'create-resume'])
+
+// 在 script setup 开始处添加
+console.log('EditorSidebar setup start')
+
+// 监听 activeTab 变化
+watch(activeTab, (newValue) => {
+  console.log('activeTab changed:', newValue)
+  if (newValue === 'templates') {
+    loadCategories()
+    loadTemplates()
+  }
+})
 
 // 获取图标组件
 const getIconComponent = (iconName) => {
@@ -321,94 +413,182 @@ const getComponentDescription = (component) => {
   return descriptions[component.key] || '简历组件'
 }
 
-// 获取分类列表
+// 修改分类加载方法
 const loadCategories = async () => {
+  console.log('开始加载分类')
   try {
     const res = await categoryApi.getList()
+    console.log('获取到的分类数据:', res)
     categories.value = Array.isArray(res) ? res : []
+    // 如果没有选择分类，默认选择"全部"
+    if (!selectedCategory.value) {
+      handleCategorySelect('全部')
+    }
   } catch (error) {
     console.error('获取分类列表失败:', error)
     showToast('获取分类列表失败', 'error')
   }
 }
 
-// 获取模板列表
+// 添加排序选项
+const sortBy = ref('latest')
+
+// 修改分类选择处理
+const handleCategorySelect = (category) => {
+  console.log('选择分类:', category)
+  // 取消"只看我的"选中状态
+  onlyMyTemplates.value = false
+  
+  if (category === '全部') {
+    selectedCategory.value = ''
+  } else if (category === '推荐') {
+    selectedCategory.value = 'recommended'
+  } else {
+    const categoryObj = categories.value.find(c => c.name === category)
+    selectedCategory.value = categoryObj ? categoryObj.id : ''
+  }
+  console.log('设置的分类值:', selectedCategory.value)
+  loadTemplates()
+}
+
+// 添加状态文本和样式处理
+const getStatusText = (status) => {
+  const statusMap = {
+    0: '草稿',
+    1: '已发布',
+    2: '待审核'
+  }
+  return statusMap[status] || '未知'
+}
+
+const getStatusClass = (status) => {
+  const classMap = {
+    0: 'status-draft',
+    1: 'status-published',
+    2: 'status-pending'
+  }
+  return classMap[status] || ''
+}
+
+// 添加排序后的模版列表
+const sortedTemplates = computed(() => {
+  let sorted = [...templates.value]
+  
+  switch (sortBy.value) {
+    case 'likes':
+      sorted.sort((a, b) => (b.likes || 0) - (a.likes || 0))
+      break
+    case 'views':
+      sorted.sort((a, b) => (b.views || 0) - (a.views || 0))
+      break
+    case 'latest':
+    default:
+      sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+      break
+  }
+  
+  return sorted
+})
+
+// 修改模版加载方法
 const loadTemplates = async () => {
+  console.log('开始加载模版，当前状态:', {
+    activeTab: activeTab.value,
+    selectedCategory: selectedCategory.value,
+    onlyMyTemplates: onlyMyTemplates.value,
+    sortBy: sortBy.value,
+    currentUserId: accountStore.userInfo?.id
+  })
+  
   loading.value = true
   try {
     const params = {}
-    if (selectedCategory.value) {
-      params.category = selectedCategory.value
+    
+    if (onlyMyTemplates.value) {
+      // 只看我的模式：获取当前用户的所有状态模版
+      if (!accountStore.userInfo?.id) {
+        console.warn('未找到当前用户ID')
+        templates.value = []
+        return
+      }
+      params.creator = accountStore.userInfo.id
+    } else {
+      // 公开模式：只显示已发布的公开模版
+      params.status = 1
+      params.is_public = true
+      
+      // 根据分类和排序设置参数
+      if (selectedCategory.value === 'recommended') {
+        params.is_recommended = true
+      } else if (selectedCategory.value) {
+        params.category = selectedCategory.value
+      }
     }
-    console.log('开始加载模板列表，参数:', params)
+
+    // 设置排序参数
+    if (sortBy.value) {
+      params.sort = sortBy.value
+    }
+    
+    console.log('加载模版参数:', params)
     const res = await templateApi.getTemplates(params)
-    console.log('获取到的模板数据:', res)
+    console.log('获取到的模版数据:', res)
     
     let templateData = []
-    if (res.data?.results) {
+    if (res?.data?.results) {
       templateData = res.data.results
-    } else if (Array.isArray(res.data)) {
+    } else if (res?.data) {
       templateData = res.data
     } else if (Array.isArray(res)) {
       templateData = res
     }
-    
-    // 在前端进行过滤前，打印用户信息
-    const currentUserId = accountStore.userInfo?.id
-    console.log('当前用户信息:', {
-      userId: currentUserId,
-      userInfo: accountStore.userInfo
-    })
-    
-    // 先按分类过滤
-    if (selectedCategory.value) {
-      templateData = templateData.filter(template => template.category === selectedCategory.value)
-    }
-    
-    // 再按用户和状态过滤
+
+    // 在"只看我的"模式下，再次确保只显示当前用户的模版
     if (onlyMyTemplates.value) {
-      // 只看我的：显示所有我创建的模板
-      templateData = templateData.filter(template => {
-        const isMyTemplate = template.creator === currentUserId
-        console.log('模板过滤(只看我的):', {
-          templateId: template.id,
-          templateName: template.name,
-          creator: template.creator,
-          currentUserId,
-          category: template.category,
-          selectedCategory: selectedCategory.value,
-          isMyTemplate
-        })
-        return isMyTemplate
-      })
-    } else {
-      // 不是只看我的：显示已发布的公开模板和我的所有模板
-      templateData = templateData.filter(template => {
-        const isMyTemplate = template.creator === currentUserId
-        const isPublished = template.status === 1
-        console.log('模板过滤:', {
-          templateId: template.id,
-          templateName: template.name,
-          creator: template.creator,
-          currentUserId,
-          category: template.category,
-          selectedCategory: selectedCategory.value,
-          status: template.status,
-          isPublic: template.is_public,
-          isMyTemplate,
-          isPublished,
-          shouldShow: isMyTemplate || (isPublished && template.is_public)
-        })
-        return isMyTemplate || (isPublished && template.is_public)
-      })
+      templateData = templateData.filter(template => template.creator === accountStore.userInfo?.id)
     }
 
-    console.log('过滤后的模板数据:', {
-      total: templateData.length,
-      templates: templateData,
-      selectedCategory: selectedCategory.value
+    // 获取所有模板创建者的用户信息
+    const creatorIds = [...new Set(templateData.map(t => t.creator))].filter(Boolean)
+    console.log('需要获取的创建者信息:', creatorIds)
+    
+    const creatorInfoMap = new Map()
+    
+    for (const creatorId of creatorIds) {
+      try {
+        const userRes = await account.getUserPublicInfo(creatorId)
+        console.log(`获取用户 ${creatorId} 信息:`, userRes)
+        if (userRes?.data?.data) {
+          creatorInfoMap.set(creatorId, {
+            name: userRes.data.data.username,
+            avatar: userRes.data.data.avatar,
+            is_vip: userRes.data.data.is_vip,
+            position: userRes.data.data.position
+          })
+        }
+      } catch (error) {
+        console.error(`获取用户 ${creatorId} 信息失败:`, error)
+      }
+    }
+
+    // 处理模板数据，添加创建者信息
+    templates.value = templateData.map(template => {
+      const creatorInfo = creatorInfoMap.get(template.creator)
+      const avatar = creatorInfo?.avatar
+      const avatarUrl = avatar ? (
+        avatar.startsWith('http') ? avatar : `${config.mediaURL}/${avatar.replace(/^\/?(media\/)?/, '')}`
+      ) : null
+
+      const processedTemplate = {
+        ...template,
+        creator_name: creatorInfo?.name || template.creator_name || '匿名用户',
+        creator_avatar: avatarUrl,
+        creator_is_vip: creatorInfo?.is_vip || false,
+        creator_position: creatorInfo?.position || ''
+      }
+      console.log('处理后的模板数据:', processedTemplate)
+      return processedTemplate
     })
-    templates.value = templateData
   } catch (error) {
     console.error('获取模板列表失败:', error)
     showToast('获取模板列表失败', 'error')
@@ -417,6 +597,17 @@ const loadTemplates = async () => {
     loading.value = false
   }
 }
+
+// 监听分类和排序变化
+watch([selectedCategory, sortBy], () => {
+  loadTemplates()
+})
+
+// 监听"只看我的"变化
+watch(onlyMyTemplates, (newValue) => {
+  localStorage.setItem(STORAGE_KEY, newValue.toString())
+  loadTemplates()
+})
 
 // 选择模板
 const handleTemplateSelect = (template) => {
@@ -575,14 +766,69 @@ const handleDeleteTemplate = async (template) => {
   }
 }
 
-// 监听筛选条件变化
-watch([selectedCategory, onlyMyTemplates], () => {
-  console.log('筛选条件变更:', { 
-    category: selectedCategory.value, 
-    onlyMine: onlyMyTemplates.value 
-  })
-  loadTemplates()
-})
+// 添加预览相关的状态
+const previewVisible = ref(false)
+const previewTemplate = ref(null)
+
+// 添加预览点击处理函数
+const handlePreviewClick = (template) => {
+  previewTemplate.value = template
+  previewVisible.value = true
+}
+
+// 添加拖动相关的变量
+const isMouseDown = ref(false)
+const startX = ref(0)
+const scrollLeft = ref(0)
+const categoryTabsRef = ref(null)
+
+// 添加拖动相关的方法
+const handleMouseDown = (e) => {
+  isMouseDown.value = true
+  const categoryTabs = categoryTabsRef.value
+  if (!categoryTabs) return
+  
+  categoryTabs.style.cursor = 'grabbing'
+  startX.value = e.pageX - categoryTabs.offsetLeft
+  scrollLeft.value = categoryTabs.scrollLeft
+}
+
+const handleMouseUp = () => {
+  isMouseDown.value = false
+  const categoryTabs = categoryTabsRef.value
+  if (!categoryTabs) return
+  
+  categoryTabs.style.cursor = 'grab'
+}
+
+const handleMouseLeave = () => {
+  isMouseDown.value = false
+  const categoryTabs = categoryTabsRef.value
+  if (!categoryTabs) return
+  
+  categoryTabs.style.cursor = 'grab'
+}
+
+const handleMouseMove = (e) => {
+  if (!isMouseDown.value) return
+  
+  const categoryTabs = categoryTabsRef.value
+  if (!categoryTabs) return
+  
+  e.preventDefault()
+  const x = e.pageX - categoryTabs.offsetLeft
+  const walk = (x - startX.value) * 2
+  categoryTabs.scrollLeft = scrollLeft.value - walk
+}
+
+// 添加新的点击处理方法
+const handleCategoryClick = (e) => {
+  // 如果是拖动操作，不触发点击
+  if (isMouseDown.value) {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+}
 
 // 组件挂载时加载数据
 onMounted(() => {
@@ -595,6 +841,33 @@ onMounted(() => {
 defineExpose({
   loadTemplates
 })
+
+// 处理模板点赞
+const handleLike = async (template) => {
+  if (!authStore.isLoggedIn || !accountStore.userInfo) {
+    ElMessage.warning('请先登录后再点赞')
+    router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`)
+    return
+  }
+
+  try {
+    const res = await templateApi.like(template.id)
+    if (res.data) {
+      // 更新模板的点赞状态和数量
+      template.isLiked = !template.isLiked
+      template.likes = template.likes + (template.isLiked ? 1 : -1)
+    }
+  } catch (error) {
+    console.error('点赞失败:', error)
+    if (error.response?.status === 403) {
+      ElMessage.warning('登录已过期，请重新登录')
+      authStore.clearAuth()
+      router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`)
+    } else {
+      ElMessage.error('点赞失败，请稍后重试')
+    }
+  }
+}
 </script>
 
 <style scoped>
@@ -684,7 +957,7 @@ defineExpose({
 .sidebar-content {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 10px;
   background: linear-gradient(to bottom, rgba(255, 255, 255, 0.95), #fff);
 }
 
@@ -837,19 +1110,187 @@ defineExpose({
 }
 
 .template-panel {
-  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.category-select {
-  margin-bottom: 16px;
+.template-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 10px 10px 10px;
+  position: sticky;
+  top: -10px;
+  background: white;
+  z-index: 2000;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  margin: -10px -10px 4px -10px;
+  padding: 10px 20px 10px 20px;
+}
+
+.category-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 4px 0;
+  position: relative;
+  overflow-x: auto;
+  cursor: grab;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  white-space: nowrap;
+  width: 220px;
+  user-select: none;
+}
+
+.category-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.category-tabs:active {
+  cursor: grabbing;
+}
+
+/* 添加滚动提示阴影 */
+.category-tabs::before,
+.category-tabs::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 24px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.category-tabs::before {
+  left: 0;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0.9), transparent);
+}
+
+.category-tabs::after {
+  right: 0;
+  background: linear-gradient(to left, rgba(255, 255, 255, 0.9), transparent);
+}
+
+.category-tabs:hover::before,
+.category-tabs:hover::after {
+  opacity: 1;
+}
+
+.category-tab-wrapper {
+  pointer-events: none;
+}
+
+.category-tab {
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #666;
+  background: transparent;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+  flex-shrink: 0;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.category-tab:hover {
+  color: #1890ff;
+  background: rgba(24, 144, 255, 0.04);
+}
+
+.category-tab.active {
+  color: #1890ff;
+  background: rgba(24, 144, 255, 0.08);
+  border-color: #1890ff;
+  font-weight: 500;
+}
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 0 0;
+  border-top: 1px solid #f0f0f0;
+  width: 220px;
+}
+
+.sort-select {
+  position: relative;
+  flex: 1;
+  min-width: 0;
 }
 
 .select-input {
   width: 100%;
-  padding: 8px;
-  border: 1px solid #d9d9d9;
+  appearance: none;
+  padding: 6px 28px 6px 12px;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #666;
+  background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M2.293 4.293a1 1 0 0 1 1.414 0L6 6.586l2.293-2.293a1 1 0 1 1 1.414 1.414l-3 3a1 1 0 0 1-1.414 0l-3-3a1 1 0 0 1 0-1.414z'/%3E%3C/svg%3E") no-repeat right 8px center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.select-input:hover {
+  border-color: #1890ff;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: #f5f5f5;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.toggle-label:hover {
+  background: #e8e8e8;
+}
+
+.toggle-input {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #d9d9d9;
   border-radius: 4px;
-  outline: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.toggle-input:checked {
+  background: #1890ff;
+  border-color: #1890ff;
+}
+
+.toggle-input:checked::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.toggle-text {
+  font-size: 13px;
+  color: #666;
 }
 
 .template-list {
@@ -858,152 +1299,319 @@ defineExpose({
 
 .template-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fill, 220px);
   gap: 16px;
+  justify-content: space-between;
 }
 
-.template-item {
-  cursor: pointer;
-  border: 1px solid #e8e8e8;
-  border-radius: 4px;
+.template-card {
+  position: relative;
+  z-index: 1;
+  width: 220px;
+  height: auto;
+  min-height: 280px;
+  background: white;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
   overflow: hidden;
   transition: all 0.3s;
 }
 
-.template-item:hover {
-  border-color: #1890ff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+.template-card:hover {
+  border-color: #e6e6e6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.template-card-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .template-preview {
-  aspect-ratio: 1;
+  width: 100%;
+  height: 120px;
   background: #f5f5f5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+  transition: opacity 0.2s;
 }
 
-.no-thumbnail {
-  color: #999;
-  font-size: 12px;
+.template-preview:hover {
+  opacity: 0.9;
+}
+
+.template-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
 }
 
 .template-info {
-  padding: 8px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  min-height: 100px;
+}
+
+.template-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
 }
 
 .template-name {
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: 500;
   color: #333;
-  margin-bottom: 4px;
-  white-space: nowrap;
+  flex: 1;
+  line-height: 1.4;
+}
+
+.creator-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.template-desc {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
+  margin: 0;
 }
 
 .template-meta {
-  font-size: 12px;
+  font-size: 11px;
   color: #999;
-}
-
-.loading-state,
-.empty-state {
-  text-align: center;
-  padding: 32px;
-  color: #999;
-}
-
-.filter-options {
-  margin-top: 8px;
-}
-
-.filter-label {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: #666;
-  cursor: pointer;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+}
+
+.template-status {
+  padding: 1px 4px;
+  border-radius: 2px;
+  font-size: 11px;
+  color: white;
+}
+
+.status-draft {
+  background-color: #faad14;
+}
+
+.status-published {
+  background-color: #52c41a;
+}
+
+.status-pending {
+  background-color: #1890ff;
 }
 
 .template-actions {
   display: flex;
-  gap: 8px;
-  margin-top: 4px;
+  gap: 4px;
+  padding: 12px;
+  border-top: 1px solid #f0f0f0;
 }
 
 .action-btn {
-  padding: 4px 8px;
-  border: none;
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid #d9d9d9;
   border-radius: 4px;
   font-size: 12px;
+  background: white;
+  color: #666;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.2s;
 }
 
-.action-btn.edit {
-  background-color: #e6f7ff;
+.action-btn:hover {
+  border-color: #40a9ff;
+  color: #40a9ff;
+}
+
+.action-btn.primary {
   color: #1890ff;
+  border-color: #1890ff;
 }
 
-.action-btn.edit:hover {
-  background-color: #bae7ff;
-}
-
-.action-btn.use {
-  background-color: #f6ffed;
-  color: #52c41a;
-}
-
-.action-btn.use:hover {
-  background-color: #d9f7be;
+.action-btn.primary:hover {
+  background: #1890ff;
+  color: white;
 }
 
 .action-btn.danger {
-  color: #f56c6c;
+  color: #ff4d4f;
+  border-color: #ff4d4f;
 }
 
 .action-btn.danger:hover {
-  background-color: #fef0f0;
+  background: #ff4d4f;
+  color: white;
 }
 
-.action-btn.danger:active {
-  background-color: #fde2e2;
+.action-btn .i-icon {
+  font-size: 12px;
+}
+
+.no-thumbnail {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 12px;
+  background: #f5f5f5;
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
+  color: #999;
+}
+
+.loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #1890ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 8px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
+  color: #999;
+}
+
+.empty-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.empty-text {
+  font-size: 14px;
 }
 
 .create-template-btn-container {
-  margin-top: 20px;
   display: flex;
   justify-content: center;
+  margin-top: 16px;
 }
 
 .create-template-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 24px;
-  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  padding: 8px 16px;
+  background: #1890ff;
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 4px;
   font-size: 14px;
-  font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
+  transition: all 0.2s;
 }
 
 .create-template-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
-}
-
-.create-template-btn:active {
-  transform: translateY(0);
+  background: #40a9ff;
 }
 
 .plus-icon {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
+}
+
+/* 添加预览弹窗样式 */
+.preview-dialog-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 24px;
+  border-radius: 8px;
+  min-height: 80vh;
+  width: 794px;
+  margin: 0 auto;
+}
+
+.preview-image {
+  width: 794px;
+  height: auto;
+  min-height: 80vh;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: 4px;
+  padding: 40px 0;
+}
+
+:deep(.el-dialog) {
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 0 auto !important;
+  width: 842px !important;
+  height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+:deep(.el-dialog__body) {
+  padding: 0;
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: white;
+}
+
+:deep(.el-dialog__header) {
+  margin: 0;
+  padding: 16px 24px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+:deep(.el-dialog__title) {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* 添加一个包装容器来处理点击事件 */
+.category-tab-wrapper {
+  cursor: pointer;
+  pointer-events: auto;
 }
 </style> 

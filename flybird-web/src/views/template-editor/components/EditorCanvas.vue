@@ -824,6 +824,9 @@ const handleKeyUp = (e) => {
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown)
   window.addEventListener('keyup', handleKeyUp)
+  nextTick(() => {
+    restoreRotationState()
+  })
 })
 
 onUnmounted(() => {
@@ -1024,6 +1027,10 @@ const handleRotateEnd = () => {
   
   // 保存到历史记录
   pushState(elementsList.value)
+  
+  // 保存旋转状态
+  saveRotationState()
+  
   currentElement.value = null
 }
 
@@ -1287,6 +1294,9 @@ const handleGroupRotateEnd = () => {
   })
   isOperating.value = false
   pushState([...elementsList.value])
+  
+  // 保存旋转状态
+  saveRotationState()
 }
 
 // 添加对齐和分布方法
@@ -1550,6 +1560,37 @@ defineExpose({
   canUndo,
   canRedo
 })
+
+const STORAGE_KEY = 'element_rotations'
+
+// 保存元素旋转状态到 localStorage
+const saveRotationState = () => {
+  const rotations = {}
+  elementsList.value.forEach(element => {
+    if (element.rotate) {
+      rotations[element.id] = element.rotate
+    }
+  })
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(rotations))
+}
+
+// 从 localStorage 恢复元素旋转状态
+const restoreRotationState = () => {
+  const savedRotations = localStorage.getItem(STORAGE_KEY)
+  if (savedRotations) {
+    const rotations = JSON.parse(savedRotations)
+    elementsList.value.forEach(element => {
+      if (rotations[element.id]) {
+        element.rotate = rotations[element.id]
+        // 更新 DOM 样式
+        const domElement = document.querySelector(`[data-id='${element.id}']`)
+        if (domElement) {
+          domElement.style.transform = `translate(${element.x}px, ${element.y}px) rotate(${element.rotate}deg)`
+        }
+      }
+    })
+  }
+}
 </script>
 
 <style scoped>

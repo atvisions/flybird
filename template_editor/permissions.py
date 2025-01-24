@@ -18,10 +18,15 @@ class CanModifyTemplate(permissions.BasePermission):
     检查用户是否有权限修改模板：
     1. 管理员可以修改任何模板
     2. 创建者可以修改自己的模板(修改已发布的模板会重新进入审核状态)
+    3. 点赞操作不受限制
     """
     def has_object_permission(self, request, view, obj):
         # 允许所有用户进行只读操作
         if request.method in permissions.SAFE_METHODS:
+            return True
+            
+        # 点赞操作不受限制
+        if view.action == 'like':
             return True
             
         # 管理员可以修改任何模板

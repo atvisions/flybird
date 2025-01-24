@@ -11,26 +11,60 @@
       <ResumeNavigation 
         v-model:currentCategory="currentMainCategory"
         v-model:currentSort="currentSort"
+        v-model:onlyMine="onlyMine"
         class="hidden md:block"
       />
 
       <!-- 模板列表 -->
       <div class="max-w-7xl mx-auto mt-6">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-          <ResumeCard
-            v-for="template in filteredTemplates"
-            :key="template.id"
-            :template="{
-              ...template,
-              category: getTemplateCategoryName(template.category),
-              useCount: template.downloads || 0,
-              viewCount: template.views || 0,
-              isPro: template.isPro || false
-            }"
-            @like="handleLike(template)"
-            @use="handleUseTemplate"
-          />
+        <!-- 加载状态 -->
+        <div v-if="loading" class="grid grid-cols-5 gap-4">
+          <div v-for="i in 15" :key="i" class="animate-pulse">
+            <div class="aspect-[3/4] bg-gray-100 rounded-lg mb-3"></div>
+            <div class="h-4 bg-gray-100 rounded w-3/4 mb-2"></div>
+            <div class="h-3 bg-gray-100 rounded w-1/2"></div>
+          </div>
         </div>
+
+        <!-- 空状态 -->
+        <div v-else-if="!filteredTemplates.length" class="text-center py-12">
+          <DocumentIcon class="w-12 h-12 text-gray-300 mx-auto mb-4" />
+          <p class="text-gray-500">暂无相关模版</p>
+        </div>
+
+        <!-- 模板列表 -->
+        <template v-else>
+          <div class="grid grid-cols-5 gap-4">
+            <ResumeCard
+              v-for="template in filteredTemplates"
+              :key="template.id"
+              :template="{
+                ...template,
+                category: getTemplateCategoryName(template.category),
+                useCount: template.downloads || 0,
+                viewCount: template.views || 0,
+                isPro: template.isPro || false
+              }"
+              :like-loading="likeLoading.has(template.id)"
+              :only-mine="onlyMine"
+              @like="handleLike(template)"
+              @use="handleUseTemplate"
+              @edit="handleEditTemplate"
+              @delete="handleDeleteTemplate"
+            />
+          </div>
+
+          <!-- 加载更多 -->
+          <div v-if="hasMore" class="flex justify-center mt-8">
+            <button
+              @click="loadMore"
+              :disabled="loadingMore"
+              class="px-6 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:border-gray-400 transition-colors"
+            >
+              {{ loadingMore ? '加载中...' : '加载更多' }}
+            </button>
+          </div>
+        </template>
       </div>
     </div>
 
@@ -67,11 +101,15 @@ import {
   BriefcaseIcon,
   UserGroupIcon,
   SparklesIcon,
-  LanguageIcon
+  LanguageIcon,
+  DocumentIcon
 } from '@heroicons/vue/24/outline'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { useAccountStore } from '@/stores/account'
 
 const route = useRoute()
 const router = useRouter()
+const accountStore = useAccountStore()
 
 // 分类相关状态
 const currentMainCategory = ref('all')
@@ -82,6 +120,9 @@ const showCategoryMenu = ref(false)
 
 // 排序相关状态
 const currentSort = ref('newest')
+
+// 添加只看我的状态
+const onlyMine = ref(false)
 
 // 分类数据
 const categoryList = ref([])
@@ -123,29 +164,76 @@ const getIconForCategory = (categoryId) => {
 const templates = ref([])
 const loading = ref(false)
 
-// 加载模板数据
-const loadTemplates = async () => {
-  loading.value = true
+// 添加点赞锁定状态
+const likeLoading = ref(new Set())
+
+// 添加分页相关状态
+const pageSize = 15
+const currentPage = ref(1)
+const hasMore = ref(true)
+const loadingMore = ref(false)
+
+// 修改加载模板数据的函数
+const loadTemplates = async (isLoadMore = false) => {
+  if (!isLoadMore) {
+    loading.value = true
+    currentPage.value = 1
+  } else {
+    loadingMore.value = true
+  }
+
   try {
     const params = {
-      status: 1, // 1: 已发布
-      is_public: true // 只显示公开的模板
+      page: currentPage.value,
+      page_size: pageSize
     }
     
-    if (currentMainCategory.value !== 'all') {
+    // 只看我的模式
+    if (onlyMine.value) {
+      if (!accountStore.userInfo?.id) {
+        ElMessage.warning('请先登录')
+        router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`)
+        return
+      }
+      params.creator = accountStore.userInfo.id
+    } else {
+      // 非只看我的模式，只显示已发布的公开模板
+      params.status = 1
+      params.is_public = true
+    }
+    
+    // 根据分类和排序设置参数
+    if (currentMainCategory.value === 'recommended') {
+      params.is_recommended = true
+    } else if (currentMainCategory.value !== 'all') {
       params.category = currentMainCategory.value
     }
+
+    // 设置排序参数
+    if (currentSort.value) {
+      params.sort = currentSort.value
+    }
     
+    console.log('请求参数:', params)
     const res = await templateApi.getTemplates(params)
-    console.log('获取到的原始模板列表:', res)
+    console.log('API返回的原始数据:', res)
     
     let templateList = []
     if (res.data?.results) {
       templateList = res.data.results
+      // 更新是否有更多数据的状态
+      hasMore.value = res.data.next !== null
     } else if (Array.isArray(res.data)) {
       templateList = res.data
+      hasMore.value = templateList.length === pageSize
     } else if (Array.isArray(res)) {
       templateList = res
+      hasMore.value = templateList.length === pageSize
+    }
+    
+    // 在"只看我的"模式下，确保只显示当前用户的模板
+    if (onlyMine.value && accountStore.userInfo?.id) {
+      templateList = templateList.filter(template => template.creator === accountStore.userInfo.id)
     }
 
     // 获取所有模板创建者的用户信息
@@ -155,7 +243,6 @@ const loadTemplates = async () => {
     for (const creatorId of creatorIds) {
       try {
         const userRes = await account.getUserPublicInfo(creatorId)
-        console.log('获取到的用户信息:', userRes)
         if (userRes?.data?.data) {
           creatorInfoMap.set(creatorId, {
             name: userRes.data.data.username,
@@ -169,12 +256,9 @@ const loadTemplates = async () => {
       }
     }
 
-    // 处理模板数据，确保所有必要的字段都存在
-    templates.value = templateList.map(template => {
+    // 处理模板数据
+    const processedTemplates = templateList.map(template => {
       const creatorInfo = creatorInfoMap.get(template.creator)
-      console.log('模板创建者信息:', creatorInfo)
-      
-      // 如果有缩略图，确保使用完整的URL
       const thumbnail = template.thumbnail || template.cover
       const thumbnailUrl = thumbnail ? (
         thumbnail.startsWith('http') ? thumbnail : `${config.mediaURL}/${thumbnail.replace(/^\/?(media\/)?/, '')}`
@@ -196,43 +280,66 @@ const loadTemplates = async () => {
         isLiked: template.is_liked || false
       }
     })
+
+    // 更新模板列表
+    if (isLoadMore) {
+      templates.value = [...templates.value, ...processedTemplates]
+    } else {
+      templates.value = processedTemplates
+    }
+
   } catch (error) {
     console.error('获取模板列表失败:', error)
-    templates.value = []
+    if (!isLoadMore) {
+      templates.value = []
+    }
   } finally {
-    loading.value = false
+    if (isLoadMore) {
+      loadingMore.value = false
+    } else {
+      loading.value = false
+    }
   }
+}
+
+// 添加加载更多方法
+const loadMore = async () => {
+  if (loadingMore.value || !hasMore.value) return
+  currentPage.value++
+  await loadTemplates(true)
 }
 
 // 过滤模板列表
 const filteredTemplates = computed(() => {
-  // 首先过滤出已发布且公开的模板
-  let result = templates.value.filter(template => 
-    template.status === 1 && template.is_public === true
-  )
+  console.log('开始过滤模板，当前模板数量:', templates.value.length)
+  console.log('当前分类:', currentMainCategory.value)
+  console.log('只看我的状态:', onlyMine.value)
   
+  let result = templates.value
+
   // 应用分类过滤
-  if (currentMainCategory.value !== 'all') {
+  if (currentMainCategory.value === 'recommended') {
+    result = result.filter(template => template.is_recommended === true)
+    console.log('推荐模板数量:', result.length)
+  } else if (currentMainCategory.value !== 'all') {
     result = result.filter(template => template.category === currentMainCategory.value)
+    console.log('分类过滤后的模板数量:', result.length)
   }
   
   // 应用排序
   switch (currentSort.value) {
     case 'newest':
-      result.sort((a, b) => new Date(b.created_at || b.date) - new Date(a.created_at || a.date))  // 按创建时间排序
-      break
-    case 'recommended':
-      result = result.filter(template => template.is_recommended === true)  // 只显示推荐的模板
-      result.sort((a, b) => new Date(b.created_at || b.date) - new Date(a.created_at || a.date))  // 推荐的模板按创建时间排序
+      result.sort((a, b) => new Date(b.created_at || b.date) - new Date(a.created_at || a.date))
       break
     case 'likes':
-      result.sort((a, b) => b.likes - a.likes)  // 按点赞数排序
+      result.sort((a, b) => b.likes - a.likes)
       break
     case 'views':
-      result.sort((a, b) => b.views - a.views)  // 按浏览量排序
+      result.sort((a, b) => b.views - a.views)
       break
   }
   
+  console.log('最终返回的模板数量:', result.length)
   return result
 })
 
@@ -263,14 +370,44 @@ const handleCategoryChange = (categoryId, level = 'main') => {
 // 处理模板点赞
 const handleLike = async (template) => {
   try {
+    // 检查登录状态
+    if (!accountStore.userInfo) {
+      ElMessage.warning('请先登录后再点赞')
+      router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`)
+      return
+    }
+
+    // 检查是否正在处理点赞
+    if (likeLoading.value.has(template.id)) {
+      return
+    }
+
+    // 添加锁定状态
+    likeLoading.value.add(template.id)
+
     const res = await templateApi.like(template.id)
-    if (res.data) {
+    console.log('点赞响应:', res)
+
+    if (res?.data) {
       // 更新模板的点赞状态和数量
-      template.isLiked = !template.isLiked
-      template.likes = template.likes + (template.isLiked ? 1 : -1)
+      const newLikeStatus = res.data.is_liked !== undefined ? res.data.is_liked : !template.isLiked
+      template.isLiked = newLikeStatus
+      template.likes = res.data.likes || (template.likes + (newLikeStatus ? 1 : -1))
+      ElMessage.success(newLikeStatus ? '点赞成功' : '取消点赞成功')
     }
   } catch (error) {
     console.error('点赞失败:', error)
+    if (error.response?.status === 403) {
+      ElMessage.warning('登录已过期，请重新登录')
+      router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`)
+    } else {
+      ElMessage.error('点赞失败，请稍后重试')
+    }
+  } finally {
+    // 移除锁定状态
+    setTimeout(() => {
+      likeLoading.value.delete(template.id)
+    }, 5000) // 增加到5秒的冷却时间
   }
 }
 
@@ -288,6 +425,38 @@ const handleUseTemplate = async (template) => {
   } catch (error) {
     console.error('获取模板详情失败:', error)
     showToast('获取模板详情失败', 'error')
+  }
+}
+
+// 处理编辑模板
+const handleEditTemplate = async (template) => {
+  try {
+    // 获取模板详情
+    const res = await templateApi.getDetail(template.id)
+    if (res?.data) {
+      // 跳转到编辑页面
+      router.push(`/editor/template/${template.id}`)
+    }
+  } catch (error) {
+    console.error('获取模板详情失败:', error)
+    ElMessage.error('获取模板详情失败')
+  }
+}
+
+// 处理删除模板
+const handleDeleteTemplate = async (template) => {
+  try {
+    // 调用删除 API
+    await templateApi.delete(template.id)
+    
+    // 从列表中移除该模板
+    templates.value = templates.value.filter(t => t.id !== template.id)
+    
+    // 显示成功提示
+    ElMessage.success('删除成功')
+  } catch (error) {
+    console.error('删除模板失败:', error)
+    ElMessage.error('删除失败')
   }
 }
 
@@ -312,8 +481,8 @@ const menuGroups = ref([
   }
 ])
 
-// 监听分类变化重新加载模板
-watch([currentMainCategory], () => {
+// 监听分类和只看我的变化重新加载模板
+watch([currentMainCategory, onlyMine], () => {
   loadTemplates()
 })
 
