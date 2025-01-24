@@ -32,7 +32,7 @@
           <template v-if="isAuthenticated">
             <!-- 创建按钮 -->
             <router-link 
-              to="/editor/template/new"
+              to="/editor/create"
               class="h-9 px-4 sm:px-5 bg-gradient-to-r from-rose-600 to-rose-700 text-white rounded-full hover:shadow-lg hover:shadow-rose-500/20 transition-all duration-300 text-sm font-medium flex items-center group"
             >
               <PlusIcon class="w-4 h-4 mr-1.5 sm:mr-2 group-hover:scale-110 transition-transform" />

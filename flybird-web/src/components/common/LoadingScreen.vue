@@ -17,8 +17,8 @@
       </div>
       
       <!-- 加载文字 -->
-      <h2 class="text-2xl font-bold text-white mb-4">正在准备编辑器</h2>
-      <p class="text-rose-400 text-lg">{{ loadingText }}</p>
+      <h2 class="text-2xl font-bold text-white mb-4">{{ loadingText }}</h2>
+      <p class="text-rose-400 text-lg">{{ loadingDescription }}</p>
       
       <!-- 错误重试按钮 -->
       <template v-if="error">
@@ -35,7 +35,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useAccountStore } from '@/stores/account'
 import { useRoute, useRouter } from 'vue-router'
 import { templateApi } from '@/api/template'
@@ -56,7 +56,32 @@ const props = defineProps({
 
 const emit = defineEmits(['load-complete'])
 
-const loadingText = ref('正在加载...')
+const loadingText = computed(() => {
+  switch (props.mode) {
+    case 'create':
+      return '准备创建新模板'
+    case 'edit':
+      return '加载模板数据'
+    case 'use':
+      return '准备使用模板'
+    default:
+      return '加载中'
+  }
+})
+
+const loadingDescription = computed(() => {
+  switch (props.mode) {
+    case 'create':
+      return '正在初始化编辑器...'
+    case 'edit':
+      return '正在加载模板内容...'
+    case 'use':
+      return '正在准备模板数据...'
+    default:
+      return '请稍候...'
+  }
+})
+
 const error = ref('')
 const accountStore = useAccountStore()
 const router = useRouter()

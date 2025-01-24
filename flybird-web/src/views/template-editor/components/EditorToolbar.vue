@@ -16,22 +16,14 @@
     <div class="toolbar-right">
       <!-- 模板编辑模式 -->
       <template v-if="showTemplateButtons">
-        <button class="toolbar-btn" @click="handleSaveDraft">
-          <Save theme="outline" :size="16" />
-          <span>保存草稿</span>
-        </button>
         <button class="toolbar-btn primary" @click="handleSubmitReview">
           <Save theme="outline" :size="16" />
-          <span>提交审核</span>
+          <span>保存模板</span>
         </button>
       </template>
 
       <!-- 简历创建/编辑模式 -->
       <template v-if="showResumeButtons">
-        <button class="toolbar-btn" @click="handleSaveDraft">
-          <Save theme="outline" :size="16" />
-          <span>保存草稿</span>
-        </button>
         <button class="toolbar-btn primary" @click="handleSave('publish')">
           <Save theme="outline" :size="16" />
           <span>{{ $route.name === 'resume-edit' ? '发布简历' : '创建简历' }}</span>
@@ -256,26 +248,52 @@ const handleLogout = async () => {
 const showSaveDialog = ref(false)
 const saveMode = ref('')
 
-// 根据路由获取当前模式
-const currentMode = computed(() => {
-  const routeName = route.name
-  if (routeName === 'template-edit' || routeName === 'template-create') {
-    return 'template'
-  } else if (routeName === 'resume-create-from-template' || routeName === 'resume-create' || routeName === 'resume-edit') {
-    return 'resume'
-  }
+// 判断当前模式
+const editorMode = computed(() => {
+  if (route.name === 'template-create') return 'create'
+  if (route.name === 'template-edit') return 'edit'
+  if (route.name === 'template-use') return 'use'
   return ''
 })
 
-// 是否显示模板相关按钮
-const showTemplateButtons = computed(() => currentMode.value === 'template')
+// 显示模板按钮
+const showTemplateButtons = computed(() => {
+  return ['create', 'edit'].includes(editorMode.value)
+})
 
-// 是否显示简历相关按钮
-const showResumeButtons = computed(() => currentMode.value === 'resume')
+// 显示简历按钮
+const showResumeButtons = computed(() => {
+  return editorMode.value === 'use'
+})
+
+// 保存按钮文本
+const saveButtonText = computed(() => {
+  switch (editorMode.value) {
+    case 'create':
+      return '创建模板'
+    case 'edit':
+      return '保存修改'
+    case 'use':
+      return '保存简历'
+    default:
+      return '保存'
+  }
+})
 
 // 处理保存
-const handleSave = (action) => {
-  emit('save', { mode: currentMode.value, action })
+const handleSave = async () => {
+  try {
+    if (props.mode === 'draft') {
+      await emit('save', 'draft')
+      ElMessage.success('草稿保存成功')
+    } else {
+      await emit('save', 'publish')
+      ElMessage.success('提交审核成功')
+    }
+  } catch (error) {
+    console.error('保存失败:', error)
+    ElMessage.error('保存失败，请重试')
+  }
 }
 
 // 处理从模板创建简历
@@ -287,17 +305,9 @@ const handleCreateResume = () => {
   })
 }
 
-// 处理保存草稿
-const handleSaveDraft = () => {
-  console.log('保存草稿，当前模板数据:', props.currentTemplate)
-  saveMode.value = 'draft'
-  showSaveDialog.value = true
-}
-
 // 处理提交审核
 const handleSubmitReview = () => {
-  console.log('提交审核，当前模板数据:', props.currentTemplate)
-  saveMode.value = 'submit'
+  saveMode.value = 'review'
   showSaveDialog.value = true
 }
 
@@ -323,30 +333,26 @@ const currentTemplate = computed(() => {
 
 // 处理保存模板
 const handleSaveTemplate = (templateData) => {
-  console.log('保存模板，提交的数据:', templateData)
+  console.log('EditorToolbar - 保存模板，接收到的数据:', templateData)
   const data = {
     ...templateData,
-    status: saveMode.value === 'draft' ? 0 : 2 // 草稿:0, 待审核:2
+    status: templateData.status // 使用传入的数据中的status
   }
+  console.log('EditorToolbar - 最终发送的数据:', data)
   
   emit('save', { 
-    mode: currentMode.value, 
-    action: saveMode.value, 
+    mode: editorMode.value, 
+    action: templateData.status === 0 ? 'draft' : 'review', // 根据status判断action
     data,
     callback: (success) => {
       if (success) {
         showSaveDialog.value = false
-        ElMessage.success(saveMode.value === 'draft' ? '保存草稿成功' : '提交审核成功')
+        ElMessage.success(data.status === 0 ? '草稿保存成功' : '提交审核成功')
         
         // 通知父组件更新模板数据
         emit('update:template', {
           ...props.currentTemplate,
-          status: data.status,
-          name: data.name,
-          category: data.category,
-          description: data.description,
-          is_public: data.is_public,
-          keywords: data.keywords
+          ...data
         })
       }
     }

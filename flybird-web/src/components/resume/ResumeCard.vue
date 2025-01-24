@@ -185,12 +185,24 @@
         </div>
 
         <!-- 使用按钮 -->
-        <button 
-          @click="handleUseTemplate(template)"
-          class="w-full py-2 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm font-medium transition-colors"
-        >
-          使用该模版
-        </button>
+        <div class="flex gap-2">
+          <button 
+            v-if="template.is_owner"
+            @click.stop="router.push(`/editor/edit/${template.id}`)"
+            class="flex-1 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm font-medium transition-colors"
+          >
+            编辑模版
+          </button>
+          <button 
+            @click.stop="router.push(`/editor/use/${template.id}`)"
+            :class="[
+              'py-2 text-white rounded text-sm font-medium transition-colors',
+              template.is_owner ? 'flex-1 bg-green-500 hover:bg-green-600' : 'w-full bg-blue-500 hover:bg-blue-600'
+            ]"
+          >
+            使用该模版
+          </button>
+        </div>
       </div>
     </div>
 
@@ -198,14 +210,14 @@
     <div v-if="onlyMine" class="card-actions">
       <button 
         class="action-btn"
-        @click="$emit('edit', template)"
+        @click.stop="router.push(`/editor/edit/${template.id}`)"
       >
         <Edit theme="outline" :size="14" />
         编辑
       </button>
       <button 
         class="action-btn danger"
-        @click="handleDelete"
+        @click.stop="handleDelete"
       >
         <Delete theme="outline" :size="14" />
         删除
@@ -238,16 +250,12 @@ import {
   TransitionChild
 } from '@headlessui/vue'
 
-const emit = defineEmits(['like', 'use', 'edit', 'delete'])
+const emit = defineEmits(['like', 'edit', 'delete'])
 
 const router = useRouter()
 const showPreview = ref(false)
 const showDeleteConfirm = ref(false)
 const deleteLoading = ref(false)
-
-const handleUseTemplate = (template) => {
-  router.push(`/editor/resume/new/${template.id}`)
-}
 
 const handleDelete = () => {
   showDeleteConfirm.value = true

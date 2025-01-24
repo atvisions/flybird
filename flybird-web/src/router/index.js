@@ -96,52 +96,23 @@ const routes = [
       layout: 'blank'
     },
     children: [
-      // 模板相关路由
       {
-        path: 'template/new',
+        path: 'create',
         name: 'template-create',
         component: () => import('@/views/template-editor/index.vue'),
-        meta: { 
-          mode: 'template-create',
-          title: '创建模板'
-        }
+        meta: { mode: 'create' }
       },
       {
-        path: 'template/:id',
+        path: 'edit/:id',
         name: 'template-edit',
         component: () => import('@/views/template-editor/index.vue'),
-        meta: { 
-          mode: 'template-edit',
-          title: '编辑模板'
-        }
-      },
-      // 简历相关路由
-      {
-        path: 'resume/new',
-        name: 'resume-create',
-        component: () => import('@/views/template-editor/index.vue'),
-        meta: { 
-          mode: 'resume-create',
-          title: '创建简历'
-        }
+        meta: { mode: 'edit' }
       },
       {
-        path: 'resume/new/:templateId',
-        name: 'resume-create-from-template',
+        path: 'use/:id',
+        name: 'template-use',
         component: () => import('@/views/template-editor/index.vue'),
-        meta: { 
-          mode: 'resume-create',
-          title: '从模板创建简历'
-        }
-      },
-      {
-        path: 'resume/:id',
-        name: 'resume-edit',
-        component: () => import('@/views/template-editor/index.vue'),
-        meta: { 
-          mode: 'resume-edit',
-          title: '编辑简历'
-        }
+        meta: { mode: 'use' }
       }
     ],
     beforeEnter: (to, from, next) => {

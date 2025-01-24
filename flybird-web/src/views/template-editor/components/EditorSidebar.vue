@@ -436,8 +436,6 @@ const sortBy = ref('latest')
 // 修改分类选择处理
 const handleCategorySelect = (category) => {
   console.log('选择分类:', category)
-  // 取消"只看我的"选中状态
-  onlyMyTemplates.value = false
   
   if (category === '全部') {
     selectedCategory.value = ''
@@ -605,6 +603,7 @@ watch([selectedCategory, sortBy], () => {
 
 // 监听"只看我的"变化
 watch(onlyMyTemplates, (newValue) => {
+  console.log('只看我的状态变化:', newValue)
   localStorage.setItem(STORAGE_KEY, newValue.toString())
   loadTemplates()
 })
@@ -627,113 +626,19 @@ const isTemplateEditable = (template) => {
   return template.creator === currentUserId
 }
 
-// 编辑模板
-const handleEditTemplate = async (template) => {
-  try {
-    // 先获取模板详情
-    const res = await templateApi.getDetail(template.id)
-    if (res?.data) {  // 确保有 data 属性
-      // 发出编辑事件，传递模板数据
-      emit('edit-template', res.data)
-      
-      // 然后跳转到编辑页面
-      router.push({
-        name: 'template-edit',
-        params: { id: template.id }
-      })
-    }
-  } catch (error) {
-    console.error('获取模板详情失败:', error)
-    showToast('获取模板详情失败', 'error')
-  }
+// 处理编辑模板
+const handleEditTemplate = (template) => {
+  router.push(`/editor/edit/${template.id}`)
 }
 
-// 使用模板创建简历
-const handleUseTemplate = async (template) => {
-  try {
-    // 获取模板详情
-    const res = await templateApi.getDetail(template.id)
-    if (res?.data) {  // 确保有 data 属性
-      console.log('获取到模板详情:', res.data)  // 使用 res.data
-      
-      // 确保数据格式正确
-      if (!Array.isArray(res.data.pages)) {
-        // 如果没有 pages 数组，构造一个默认的
-        res.data.pages = [{
-          page_index: 0,
-          page_data: {
-            elements: res.data.elements || [],
-            config: {
-              width: 794,
-              height: 1123,
-              backgroundColor: '#ffffff',
-              showGrid: false,
-              showGuideLine: true,
-              ...(res.data.config || {})
-            }
-          }
-        }]
-      }
-
-      // 触发父组件的 use-template 事件，传递模板数据
-      emit('use-template', res.data)  // 传递 res.data
-
-      // 等待一段时间确保数据更新完成
-      await new Promise(resolve => setTimeout(resolve, 300))
-      
-      // 最后再跳转路由
-      router.push({
-        name: 'resume-create-from-template',
-        params: { templateId: template.id }
-      })
-    }
-  } catch (error) {
-    console.error('获取模板详情失败:', error)
-    showToast('获取模板详情失败', 'error')
-  }
+// 处理使用模板
+const handleUseTemplate = (template) => {
+  router.push(`/editor/use/${template.id}`)
 }
 
-// 创建新模板
+// 处理创建新模板
 const handleCreateTemplate = () => {
-  const currentUserId = accountStore.userInfo?.id
-  console.log('创建模板时的用户信息:', {
-    userId: currentUserId,
-    userInfo: accountStore.userInfo
-  })
-
-  const newTemplate = {
-    id: null,
-    name: '新建模板',
-    creator: currentUserId,
-    category: selectedCategory.value || null,
-    is_public: false,
-    status: 0,  // 新创建的模板默认为草稿状态
-    pages: [{
-      page_index: 0,  // 从0开始
-      page_data: {
-        elements: [],
-        config: {
-          width: 794,
-          height: 1123,
-          backgroundColor: '#ffffff',
-          showGrid: true,
-          showGuideLine: true
-        }
-      }
-    }]
-  }
-  
-  console.log('新创建的模板数据:', newTemplate)
-  console.log('模板数据结构验证:', {
-    hasPages: !!newTemplate.pages,
-    pagesLength: newTemplate.pages?.length,
-    hasPageData: !!newTemplate.pages?.[0]?.page_data,
-    hasElements: !!newTemplate.pages?.[0]?.page_data?.elements,
-    hasConfig: !!newTemplate.pages?.[0]?.page_data?.config
-  })
-  
-  // 直接发出编辑事件，不需要调用 handleEditTemplate
-  emit('edit-template', newTemplate)
+  router.push('/editor/create')
 }
 
 // 添加删除模板方法
@@ -830,9 +735,10 @@ const handleCategoryClick = (e) => {
   }
 }
 
-// 组件挂载时加载数据
+// 组件挂载时初始化
 onMounted(() => {
-  console.log('组件挂载，开始加载数据')
+  console.log('组件挂载，开始初始化')
+  console.log('初始只看我的状态:', onlyMyTemplates.value)
   loadCategories()
   loadTemplates()
 })

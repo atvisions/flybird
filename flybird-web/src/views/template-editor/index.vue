@@ -128,16 +128,6 @@
         />
       </div>
 
-      <!-- 保存模板对话框 -->
-      <SaveTemplateDialog
-        v-if="showSaveDialog"
-        :visible="showSaveDialog"
-        :default-data="defaultTemplateData"
-        :is-edit="!!currentTemplateId"
-        @update:visible="showSaveDialog = $event"
-        @save="handleSaveTemplate"
-      />
-
       <!-- 清除确认弹窗 -->
       <TransitionRoot appear :show="showClearConfirm" as="template">
         <Dialog as="div" @close="showClearConfirm = false" class="relative z-50">
@@ -275,6 +265,28 @@ const templateId = computed(() => {
     return null
   }
   return route.params.templateId || route.params.id
+})
+
+// 编辑器模式
+const editorMode = computed(() => {
+  if (route.name === 'template-create') return 'create'
+  if (route.name === 'template-edit') return 'edit'
+  if (route.name === 'template-use') return 'use'
+  return ''
+})
+
+// 保存按钮文本
+const saveButtonText = computed(() => {
+  switch (editorMode.value) {
+    case 'create':
+      return '创建模板'
+    case 'edit':
+      return '保存修改'
+    case 'use':
+      return '保存简历'
+    default:
+      return '保存'
+  }
 })
 
 // 处理加载完成
@@ -891,230 +903,6 @@ const handleEditTemplate = async (templateData) => {
   }
 }
 
-// 修改工具栏按钮的文本
-const saveButtonText = computed(() => {
-  return currentTemplateId.value ? '保存模板' : '创建模板'
-})
-
-const handleSave = async ({ mode, action, data, callback }) => {
-  try {
-    // 获取所有页面数据
-    const pages = templateData.value.canvases.map((canvas, index) => {
-      return {
-        page_index: index,
-        page_data: {
-          elements: canvas.elements.map(element => ({
-            type: element.type || 'text',
-            position: {
-              x: element.x || 0,
-              y: element.y || 0
-            },
-            style: element.style || {},
-            content: element.content || '',
-            props: element.props || {},
-            width: element.width || 100,
-            height: element.height || 100
-          })),
-          config: {
-            width: canvas.config?.width || 794,
-            height: canvas.config?.height || 1123,
-            backgroundColor: canvas.config?.backgroundColor || '#ffffff',
-            showGrid: canvas.config?.showGrid || false,
-            showGuideLine: canvas.config?.showGuideLine !== false,
-            scale: canvas.config?.scale || 1
-          }
-        }
-      }
-    })
-
-    // 准备提交的模板数据
-    const submitData = {
-      name: data.name,
-      category: data.category,
-      description: data.description || '',
-      is_public: data.is_public ?? true,
-      keywords: data.keywords ? (Array.isArray(data.keywords) ? data.keywords : data.keywords.split(',').map(k => k.trim())) : [],
-      status: action === 'draft' ? 0 : 2,  // 0: 草稿, 2: 待审核
-      pages: pages  // 直接提交 pages 数组，不需要包装在 content 对象中
-    }
-
-    console.log('准备提交的模板数据:', submitData)
-
-    let res
-    if (currentTemplateId.value) {
-      // 获取当前画布元素
-      const canvasWrapper = document.querySelector('.canvas-wrapper')
-      // 等待下一个渲染周期，确保画布内容已更新
-      await nextTick()
-      res = await templateApi.update(currentTemplateId.value, submitData, canvasWrapper)
-    } else {
-      // 获取当前画布元素
-      const canvasWrapper = document.querySelector('.canvas-wrapper')
-      // 等待下一个渲染周期，确保画布内容已更新
-      await nextTick()
-      res = await templateApi.create(submitData, canvasWrapper)
-    }
-
-    if (callback) {
-      callback(true)
-    }
-
-    showToast(action === 'draft' ? '保存草稿成功' : '提交审核成功', 'success')
-    return res
-  } catch (error) {
-    console.error('保存模板失败:', error)
-    if (callback) {
-      callback(false)
-    }
-    showToast(error.response?.data?.message || error.message || '保存失败', 'error')
-    throw error
-  }
-}
-
-// 处理使用模板
-const handleUseTemplate = async (templateData) => {
-  try {
-    isLoading.value = true  // 在开始加载时显示 LoadingScreen
-    
-    // 获取用户档案数据
-    const profileStore = useProfileStore()
-    if (!profileStore.profileData) {
-      await profileStore.loadProfileData()
-    }
-
-    // 将 Proxy 对象转换为普通对象
-    const profileData = JSON.parse(JSON.stringify(profileStore.profileData))
-
-    // 预加载样式
-    await new Promise(resolve => {
-      const styleSheets = Array.from(document.styleSheets)
-      const promises = styleSheets.map(sheet => {
-        if (sheet.href) {
-          return new Promise((resolve) => {
-            const link = document.createElement('link')
-            link.rel = 'stylesheet'
-            link.href = sheet.href
-            link.onload = resolve
-            document.head.appendChild(link)
-          })
-        }
-        return Promise.resolve()
-      })
-      Promise.all(promises).then(resolve)
-    })
-
-    // 构造新的画布数据
-    const canvases = templateData.pages.map((page, index) => {
-      // 处理每个元素，替换档案数据
-      const elements = page.page_data.elements.map(element => {
-        // 如果是简历字段组件，需要处理数据绑定
-        if (element.type === 'resume-field') {
-          const { dataPath } = element.props
-          if (dataPath) {
-            try {
-              // 从档案数据中获取对应的值
-              const pathParts = dataPath.split('.')
-              let value = profileData
-              
-              // 遍历路径获取嵌套值
-              for (const part of pathParts) {
-                if (value && typeof value === 'object' && part in value) {
-                  value = value[part]
-                } else {
-                  console.warn(`找不到数据路径: ${dataPath}`)
-                  value = ''
-                  break
-                }
-              }
-
-              // 确保值是字符串类型
-              value = value?.toString() || ''
-
-              // 更新元素的值
-              return {
-                ...element,
-                props: {
-                  ...element.props,
-                  value: value
-                }
-              }
-            } catch (error) {
-              console.error(`处理数据路径 ${dataPath} 时出错:`, error)
-              return element
-            }
-          }
-        }
-        return element
-      })
-
-      return {
-        id: index,
-        elements,
-        config: {
-          width: DEFAULT_CANVAS_CONFIG.width,
-          height: DEFAULT_CANVAS_CONFIG.height,
-          backgroundColor: '#ffffff',
-          showGrid: false,
-          showGuideLine: true,
-          ...(page.page_data.config || {})
-        }
-      }
-    })
-
-    // 等待下一个渲染周期，确保 DOM 更新完成
-    await nextTick()
-
-    // 更新画布数据
-    updateCanvasData(canvases)
-
-    // 设置当前画板为第一个
-    currentCanvasId.value = 0
-
-    // 清除当前模板ID，表示这是一个新实例
-    currentTemplateId.value = null
-
-    // 设置默认的模板数据
-    defaultTemplateData.value = {
-      name: `${templateData.name} 的副本`,
-      description: templateData.description || '',
-      category: templateData.category || '',
-      keywords: Array.isArray(templateData.keywords) ? templateData.keywords.join(',') : '',
-      is_public: templateData.is_public ?? true
-    }
-
-    console.log('使用模板，更新后的画布数据:', canvases)
-
-    // 给样式加载一个短暂的延迟，确保所有样式都已应用
-    await new Promise(resolve => setTimeout(resolve, 100))
-    
-    isLoading.value = false  // 所有数据和样式都准备好后再隐藏 LoadingScreen
-  } catch (error) {
-    console.error('使用模板失败:', error)
-    showToast('加载模板数据失败', 'error')
-    isLoading.value = false
-  }
-}
-
-// 处理缩放变化
-const handleScaleChange = (newScale) => {
-  scale.value = newScale
-}
-
-// 处理元素添加
-const handleElementAdd = (element) => {
-  if (!element) return
-  
-  // 更新元素列表
-  const updatedElements = [...templateData.value.canvases[currentCanvasId.value - 1].page_data.elements, element]
-  templateData.value.canvases[currentCanvasId.value - 1].page_data.elements = updatedElements
-  
-  // 触发更新事件
-  emit('elements-change', updatedElements)
-  
-  // 保存到历史记录
-  pushState(updatedElements)
-}
-
 // 计算当前模板数据
 const currentTemplateData = computed(() => {
   const currentCanvas = getCurrentCanvas()
@@ -1181,6 +969,79 @@ const showClearConfirm = ref(false)
 const handleConfirmClear = () => {
   handleClear()
   showClearConfirm.value = false
+}
+
+// 处理保存
+const handleSave = async ({ mode, action, data, callback }) => {
+  try {
+    // 获取所有页面数据
+    const pages = templateData.value.canvases.map((canvas, index) => {
+      return {
+        page_index: index,
+        page_data: {
+          elements: canvas.elements.map(element => ({
+            type: element.type || 'text',
+            position: {
+              x: element.x || 0,
+              y: element.y || 0
+            },
+            style: element.style || {},
+            content: element.content || '',
+            props: element.props || {},
+            width: element.width || 100,
+            height: element.height || 100
+          })),
+          config: {
+            width: canvas.config?.width || 794,
+            height: canvas.config?.height || 1123,
+            backgroundColor: canvas.config?.backgroundColor || '#ffffff',
+            showGrid: canvas.config?.showGrid || false,
+            showGuideLine: canvas.config?.showGuideLine !== false,
+            scale: canvas.config?.scale || 1
+          }
+        }
+      }
+    })
+
+    // 准备提交的模板数据
+    const submitData = {
+      name: data?.name || defaultTemplateData.value.name,
+      category: data?.category || defaultTemplateData.value.category,
+      description: data?.description || defaultTemplateData.value.description || '',
+      is_public: data?.is_public ?? defaultTemplateData.value.is_public ?? true,
+      keywords: data?.keywords ? (Array.isArray(data.keywords) ? data.keywords : data.keywords.split(',').map(k => k.trim())) : [],
+      status: action === 'draft' ? 0 : 2,  // 0: 草稿, 2: 待审核
+      pages: pages
+    }
+
+    console.log('准备提交的模板数据:', submitData)
+
+    let res
+    // 获取当前画布元素
+    const canvasWrapper = document.querySelector('.canvas-wrapper')
+    // 等待下一个渲染周期，确保画布内容已更新
+    await nextTick()
+
+    if (mode === 'edit') {
+      res = await templateApi.update(templateId.value, submitData, canvasWrapper)
+    } else {
+      res = await templateApi.create(submitData, canvasWrapper)
+    }
+
+    if (callback) {
+      callback(true)
+    }
+
+    showToast(action === 'draft' ? '保存草稿成功' : '提交审核成功', 'success')
+    return res
+  } catch (error) {
+    console.error('保存模板失败:', error)
+    if (callback) {
+      callback(false)
+    }
+    showToast(error.response?.data?.message || error.message || '保存失败', 'error')
+    throw error
+  }
 }
 </script>
 

@@ -27,9 +27,7 @@
             <DialogPanel class="w-full max-w-2xl transform overflow-hidden rounded-xl bg-white text-left align-middle shadow-xl transition-all">
               <!-- 头部 -->
               <DialogTitle as="div" class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-medium text-gray-900">
-                  {{ mode === 'draft' ? '保存草稿' : '提交审核' }}
-                </h3>
+                <h3 class="text-lg font-medium text-gray-900">保存模板</h3>
                 <button
                   @click="handleClose"
                   class="p-1 rounded-full hover:bg-gray-100 transition-colors"
@@ -41,6 +39,48 @@
               <!-- 表单内容 -->
               <form @submit.prevent="handleConfirm" class="p-6">
                 <div class="space-y-4">
+                  <!-- 保存方式选择 -->
+                  <div class="flex flex-col gap-3 p-4 bg-gray-50 rounded-lg">
+                    <div class="text-sm font-medium text-gray-700">选择保存方式</div>
+                    <div class="flex gap-4">
+                      <label class="flex items-center gap-2 cursor-pointer">
+                        <input
+                          v-model="saveMode"
+                          type="radio"
+                          value="draft"
+                          class="w-4 h-4 text-blue-500 focus:ring-blue-500"
+                        />
+                        <span class="text-sm text-gray-900">保存草稿</span>
+                      </label>
+                      <label class="flex items-center gap-2 cursor-pointer">
+                        <input
+                          v-model="saveMode"
+                          type="radio"
+                          value="publish"
+                          class="w-4 h-4 text-blue-500 focus:ring-blue-500"
+                        />
+                        <span class="text-sm text-gray-900">正式发布</span>
+                      </label>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                      {{ saveMode === 'draft' ? '草稿不会展示在作品集中，可随时继续编辑' : '发布后将展示在作品集中，可选择是否公开' }}
+                    </div>
+                  </div>
+
+                  <!-- 审核提示 - 仅发布时显示 -->
+                  <div v-if="saveMode === 'publish'" class="flex items-start p-3 bg-blue-50 rounded-lg">
+                    <div class="flex-shrink-0">
+                      <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clip-rule="evenodd" />
+                      </svg>
+                    </div>
+                    <div class="ml-3">
+                      <p class="text-sm text-blue-700">
+                        为确保模板质量，发布的模板需要经过系统审核。审核通过后，模板将在市场中展示。
+                      </p>
+                    </div>
+                  </div>
+
                   <!-- 模板名称 -->
                   <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -114,28 +154,37 @@
                     ></textarea>
                   </div>
 
-                  <!-- 关键词 -->
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                      关键词
-                    </label>
-                    <input
-                      v-model="formData.keywords"
-                      type="text"
-                      class="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      placeholder="请输入关键词，多个关键词用逗号分隔"
-                    />
-                  </div>
+                  <!-- 以下字段仅在发布时显示 -->
+                  <template v-if="saveMode === 'publish'">
+                    <!-- 关键词 -->
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">
+                        关键词
+                      </label>
+                      <input
+                        v-model="formData.keywords"
+                        type="text"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        placeholder="请输入关键词，多个关键词用逗号分隔"
+                      />
+                    </div>
 
-                  <!-- 是否公开 -->
-                  <div class="flex items-center">
-                    <input
-                      v-model="formData.is_public"
-                      type="checkbox"
-                      class="h-4 w-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
-                    />
-                    <label class="ml-2 text-sm text-gray-700">设为公开模板</label>
-                  </div>
+                    <!-- 是否公开 -->
+                    <div class="flex flex-col gap-1">
+                      <div class="flex items-center">
+                        <input
+                          v-model="formData.is_public"
+                          type="checkbox"
+                          class="h-4 w-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500 ring-1 ring-gray-400"
+                        />
+                        <label class="ml-2 text-sm text-gray-700">设为公开模板</label>
+                      </div>
+                      <div class="ml-6 space-y-1">
+                        <p class="text-xs text-gray-500">若不设置为公开模板，发布后仅自己可见，但会在您的作品集中展示</p>
+                        <p class="text-xs text-blue-500">设为公开模板后，当其他用户使用您的模板时，您将获得积分奖励</p>
+                      </div>
+                    </div>
+                  </template>
                 </div>
 
                 <!-- 按钮组 -->
@@ -152,7 +201,7 @@
                     :disabled="loading"
                     class="rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
                   >
-                    {{ loading ? '保存中...' : (mode === 'draft' ? '保存草稿' : '提交审核') }}
+                    {{ loading ? '保存中...' : (saveMode === 'draft' ? '保存草稿' : '发布模板') }}
                   </button>
                 </div>
               </form>
@@ -204,6 +253,7 @@ const emit = defineEmits(['update:modelValue', 'confirm'])
 
 const loading = ref(false)
 const categories = ref([])
+const saveMode = ref('draft')
 
 // 表单数据
 const formData = ref({
@@ -226,16 +276,10 @@ const initFormData = () => {
     keywords: Array.isArray(template.keywords) ? template.keywords.join(',') : '',
     status: template.status || 0
   }
+  // 确保每次初始化时都设置为draft
+  saveMode.value = 'draft'
   console.log('初始化后的表单数据:', formData.value)
 }
-
-// 监听模板数据变化
-watch(() => props.template, (newVal) => {
-  console.log('模板数据变化:', newVal)
-  if (newVal) {
-    initFormData()
-  }
-}, { immediate: true, deep: true })
 
 // 监听对话框显示状态
 watch(() => props.modelValue, (newVal) => {
@@ -293,10 +337,19 @@ const handleConfirm = async () => {
 
   try {
     loading.value = true
-    emit('confirm', {
+    console.log('提交的保存模式:', saveMode.value)
+    console.log('提交的表单数据:', formData.value)
+    const submitData = {
       ...formData.value,
+      status: saveMode.value === 'draft' ? 0 : 2,
       keywords: formData.value.keywords ? formData.value.keywords.split(',').filter(Boolean) : []
-    })
+    }
+    console.log('最终提交的数据:', submitData)
+    await emit('confirm', submitData)
+    handleClose()
+  } catch (error) {
+    console.error('保存失败:', error)
+    ElMessage.error('保存失败，请重试')
   } finally {
     loading.value = false
   }
