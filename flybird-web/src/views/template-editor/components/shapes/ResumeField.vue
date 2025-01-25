@@ -59,6 +59,14 @@ const props = defineProps({
     type: String,
     default: ''
   },
+  dataPath: {
+    type: String,
+    default: ''
+  },
+  mappingType: {
+    type: String,
+    default: ''
+  },
   selected: {
     type: Boolean,
     default: false

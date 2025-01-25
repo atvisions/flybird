@@ -517,6 +517,11 @@ import {
 
 import { BellIcon as BellIconSolid } from '@heroicons/vue/24/solid'
 
+const route = useRoute()
+const router = useRouter()
+const authStore = useAuthStore()
+const accountStore = useAccountStore()
+
 // 添加图标映射函数
 const getIcon = (menuKey) => {
   const iconMap = {  
@@ -538,10 +543,6 @@ const getIcon = (menuKey) => {
 }
 
 // 状态管理 - 将所有状态管理放在一起
-const router = useRouter()
-const route = useRoute()
-const authStore = useAuthStore()
-const accountStore = useAccountStore()
 const mobileMenuOpen = ref(false)
 const showDropdown = ref(false)
 const showMessageMenu = ref(false)
@@ -705,22 +706,14 @@ const username = computed(() => {
 })
 
 const avatarUrl = computed(() => {
-  const avatar = accountStore.userInfo?.avatar
-  
-  // 如果没有头像，返回默认头像
-  if (!avatar) {
+  if (!accountStore.userInfo?.avatar) {
     return defaultAvatar
   }
-  
-  // 如果是完整的 URL 或 base64 图片，直接使用
+  const avatar = accountStore.userInfo.avatar
   if (avatar.startsWith('http') || avatar.startsWith('data:image')) {
     return avatar
   }
-  
-  // 处理相对路径，移除可能的前导 /media/
   const cleanPath = avatar.replace(/^\/?(media\/)?/, '')
-  
-  // 使用 config.mediaURL 构建完整的 URL
   return `${config.mediaURL}/${cleanPath}`
 })
 

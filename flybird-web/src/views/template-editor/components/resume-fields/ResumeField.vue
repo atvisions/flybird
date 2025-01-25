@@ -4,7 +4,7 @@
     <template v-if="type === 'avatar'">
       <div class="avatar-field" :style="{ width: `${props.width}px`, height: `${props.height}px` }">
         <template v-if="previewValue">
-          <img :src="previewValue" :alt="getPlaceholder" class="avatar-image" />
+          <img :src="previewValue" :alt="getPlaceholder" class="avatar-image" @error="handleImageError" />
         </template>
         <div v-else class="avatar-placeholder">
           <UserOutlined />
@@ -35,6 +35,8 @@
 import { computed } from 'vue'
 import { UserOutlined } from '@ant-design/icons-vue'
 import { useProfileStore } from '@/stores/profile'
+import config from '@/config'
+import defaultAvatar from '@/assets/images/default-avatar.png'
 
 const props = defineProps({
   label: {
@@ -48,6 +50,10 @@ const props = defineProps({
   type: {
     type: String,
     default: 'text'
+  },
+  mappingType: {
+    type: String,
+    default: ''
   },
   isPreview: {
     type: Boolean,
@@ -87,6 +93,77 @@ const emit = defineEmits(['update:value'])
 
 const profileStore = useProfileStore()
 
+// 处理不同类型的值
+const processValue = (value) => {
+  if (value === undefined || value === null) {
+    return ''
+  }
+
+  switch (props.mappingType) {
+    case 'avatar':
+      // 处理头像URL
+      if (!value) return defaultAvatar
+      // 如果已经是完整URL或者是Data URL，直接返回
+      if (value.startsWith('http') || value.startsWith('data:image')) {
+        return value
+      }
+      // 清理路径并使用环境变量中的API URL
+      const cleanPath = value.replace(/^\/?(media\/)?/, '')
+      return `${config.mediaURL}/${cleanPath}`
+      
+    case 'date':
+    case 'birth_date':
+      // 处理日期格式
+      try {
+        const date = new Date(value)
+        return date.toLocaleDateString('zh-CN', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        })
+      } catch (error) {
+        console.error('日期格式化失败:', error)
+        return value
+      }
+      
+    case 'gender':
+      // 处理性别显示
+      return value === 'male' ? '男' : value === 'female' ? '女' : value
+      
+    case 'job_type':
+      // 处理工作类型
+      const jobTypeMap = {
+        'full_time': '全职',
+        'part_time': '兼职',
+        'internship': '实习',
+        'freelance': '自由职业'
+      }
+      return jobTypeMap[value] || value
+      
+    case 'job_status':
+      // 处理求职状态
+      const jobStatusMap = {
+        'looking': '正在找工作',
+        'not_looking': '暂不找工作',
+        'open': '随时看机会'
+      }
+      return jobStatusMap[value] || value
+      
+    case 'language_proficiency':
+      // 处理语言水平
+      const proficiencyMap = {
+        'beginner': '初级',
+        'intermediate': '中级',
+        'advanced': '高级',
+        'native': '母语'
+      }
+      return proficiencyMap[value] || value
+      
+    default:
+      return value
+  }
+}
+
 // 获取用户档案数据
 const previewValue = computed(() => {
   // 预览模式下获取实际数据
@@ -104,11 +181,19 @@ const previewValue = computed(() => {
     value = value[part]
   }
   
-  if (value === undefined || value === null) {
-    return ''
-  }
+  // 处理值
+  const processedValue = processValue(value)
+  const finalValue = `${processedValue}${props.suffix}`
   
-  const finalValue = `${value}${props.suffix}`
+  console.log('字段值映射:', {
+    id: props.id,
+    dataPath: props.dataPath,
+    mappingType: props.mappingType,
+    rawValue: value,
+    processedValue,
+    finalValue
+  })
+  
   emit('update:value', finalValue)
   return finalValue
 })
@@ -210,6 +295,13 @@ const valueStyle = computed(() => ({
   width: props.label ? `calc(100% - ${props.labelWidth}px)` : '100%',
   height: props.type === 'textarea' ? `calc(100% - 22px)` : 'auto'
 }))
+
+// 添加图片错误处理
+const handleImageError = (e) => {
+  if (e.target) {
+    e.target.src = defaultAvatar
+  }
+}
 </script>
 
 <style scoped>

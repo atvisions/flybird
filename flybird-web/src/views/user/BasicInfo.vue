@@ -33,6 +33,7 @@ import { Plus } from '@element-plus/icons-vue'
 import { showToast } from '@/components/ToastMessage'
 import AvatarUploadDialog from './MyProfile/dialogs/AvatarUploadDialog.vue'
 import profile from '@/api/profile'
+import config from '@/config'
 
 const profileStore = useProfileStore()
 const showAvatarDialog = ref(false)
@@ -45,11 +46,19 @@ const handleImageLoad = () => {
   imageLoaded.value = true
 }
 
+const getFullUrl = (url) => {
+  if (!url) return ''
+  if (url.startsWith('http') || url.startsWith('data:')) {
+    return url
+  }
+  return `${config.mediaURL}${url}`
+}
+
 const profileAvatar = computed(() => {
   if (!profileStore.basicInfo) return null
   const url = currentAvatar.value || profileStore.basicInfo?.avatar
   if (!url) return null
-  return `${import.meta.env.VITE_API_URL}${url}`
+  return getFullUrl(url)
 })
 
 onMounted(() => {

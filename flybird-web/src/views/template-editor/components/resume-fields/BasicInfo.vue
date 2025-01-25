@@ -42,20 +42,99 @@ const getFieldComponent = (type) => {
 }
 
 const getFieldProps = (field) => {
+  console.log('【BasicInfo】生成字段属性:', {
+    field,
+    label: field.label,
+    dataPath: field.dataPath,
+    type: field.type
+  })
+  
   return {
     label: field.label,
-    value: '', // 预览时可以传入示例数据
+    value: field.defaultValue || '', // 预览时的示例数据
+    dataPath: field.dataPath, // 直接使用配置中的 dataPath
+    mappingType: field.type, // 添加映射类型
     ...field.defaultStyle
   }
 }
 
 const handleDragStart = (event, field) => {
-  event.dataTransfer.setData('application/json', JSON.stringify({
+  // 根据字段类型设置特定属性
+  const getFieldSpecificProps = (fieldType) => {
+    switch (fieldType) {
+      case 'avatar':
+        return {
+          defaultStyle: {
+            objectFit: 'cover',
+            borderRadius: '50%'
+          },
+          width: 100,
+          height: 100
+        }
+      case 'textarea':
+        return {
+          defaultStyle: {
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+            minHeight: '60px',
+            padding: '8px'
+          },
+          width: 300,
+          height: 100
+        }
+      default:
+        return {
+          defaultStyle: {
+            fontSize: field.key === 'name' ? '24px' : '14px',
+            fontWeight: field.key === 'name' ? 'bold' : 'normal',
+            lineHeight: '1.5'
+          },
+          width: 200,
+          height: 30
+        }
+    }
+  }
+
+  const specificProps = getFieldSpecificProps(field.type)
+  
+  console.log('【BasicInfo】开始拖拽字段:', {
+    field,
+    specificProps,
+    dataPath: field.dataPath,
+    mappingType: field.type
+  })
+  
+  const fieldData = {
     type: 'resume-field',
     fieldType: field.type,
     category: 'basic-info',
-    field
-  }))
+    field: {
+      ...field,
+      // 使用配置中的 dataPath
+      dataPath: field.dataPath,
+      mappingType: field.type,
+      label: field.label,
+      defaultStyle: {
+        ...field.defaultStyle,
+        ...specificProps.defaultStyle
+      }
+    },
+    width: specificProps.width,
+    height: specificProps.height,
+    props: {
+      label: field.label,
+      value: '', // 初始值为空，等待数据映射
+      dataPath: field.dataPath,
+      mappingType: field.type,
+      defaultStyle: {
+        ...field.defaultStyle,
+        ...specificProps.defaultStyle
+      }
+    }
+  }
+  
+  console.log('【BasicInfo】生成的字段数据:', fieldData)
+  event.dataTransfer.setData('application/json', JSON.stringify(fieldData))
 }
 </script>
 

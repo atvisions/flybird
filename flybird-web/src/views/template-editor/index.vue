@@ -4,8 +4,11 @@
     <LoadingScreen
       v-if="isLoading"
       :template-id="templateId"
-      :mode="route.name === 'template-create' ? 'create' : currentTemplateId ? 'edit' : 'use'"
-      @load-complete="handleLoadComplete"
+      :mode="editorMode"
+      @load-complete="(data) => {
+        console.log('【index】接收到LoadingScreen事件:', data)
+        handleLoadComplete(data)
+      }"
     />
 
     <!-- 编辑器内容 -->
@@ -203,6 +206,7 @@ import { templateApi } from '@/api/template'
 import { showToast } from '@/components/ToastMessage'
 import { useRoute, useRouter } from 'vue-router'
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
+import { mapProfileDataToElements } from '@/utils/dataMapping'
 
 // 导入组合式函数
 import { useZoom } from './composables/useZoom'
@@ -269,10 +273,16 @@ const templateId = computed(() => {
 
 // 编辑器模式
 const editorMode = computed(() => {
-  if (route.name === 'template-create') return 'create'
-  if (route.name === 'template-edit') return 'edit'
-  if (route.name === 'template-use') return 'use'
-  return ''
+  if (route.path.includes('/editor/create')) {
+    console.log('【index】编辑器模式: create')
+    return 'create'
+  }
+  if (route.path.includes('/editor/edit')) {
+    console.log('【index】编辑器模式: edit')
+    return 'edit'
+  }
+  console.log('【index】编辑器模式: use')
+  return 'use'
 })
 
 // 保存按钮文本
@@ -292,117 +302,49 @@ const saveButtonText = computed(() => {
 // 添加画布总数计算属性
 const canvasCount = computed(() => templateData.value.canvases.length)
 
-// 处理加载完成
-const handleLoadComplete = async ({ success, templateData: loadedTemplateData, profileData, error }) => {
-  console.log('handleLoadComplete 被调用:', {
-    success,
-    mode: editorMode.value,
-    hasProfileData: !!profileData,
-    profileDataContent: profileData?.data
-  })
-
-  if (!success) {
-    ElMessage.error(error || '加载失败')
-    router.push('/')
-    return
-  }
-
-  // 如果是使用模式且有档案数据，替换字段值
-  if (editorMode.value === 'use' && profileData?.data) {
-    console.log('开始处理用户档案数据:', profileData.data)
-    
-    // 遍历所有画布页面
-    loadedTemplateData.pages.forEach((page, pageIndex) => {
-      console.log(`处理第 ${pageIndex + 1} 页的元素:`, page.page_data?.elements)
-      
-      if (page.page_data && page.page_data.elements) {
-        page.page_data.elements.forEach((element, elementIndex) => {
-          console.log(`处理元素 ${elementIndex + 1}:`, {
-            type: element.type,
-            dataPath: element.props?.dataPath,
-            currentValue: element.props?.value
-          })
-          
-          // 根据 dataPath 获取档案数据中的值
-          if (element.props?.dataPath) {
-            const pathParts = element.props.dataPath.split('.')
-            let value = profileData.data
-            
-            // 遍历路径获取值
-            for (const part of pathParts) {
-              if (value && typeof value === 'object') {
-                value = value[part]
-                console.log(`获取路径 ${part} 的值:`, value)
-              } else {
-                value = null
-                console.log(`路径 ${part} 获取失败`)
-                break
-              }
-            }
-            
-            // 如果找到值，更新元素
-            if (value !== null && value !== undefined) {
-              // 如果是头像，需要处理完整的 URL
-              if (element.type === 'avatar' && value) {
-                if (!value.startsWith('http') && !value.startsWith('data:')) {
-                  value = `/media/${value.replace(/^\/?(media\/)?/, '')}`
-                  console.log('处理后的头像 URL:', value)
-                }
-              }
-              
-              // 更新元素值
-              if (!element.props) {
-                element.props = {}
-              }
-              element.props.value = value
-              console.log('元素值已更新:', {
-                type: element.type,
-                dataPath: element.props.dataPath,
-                newValue: element.props.value
-              })
-            }
-          }
-        })
-      }
-    })
-  }
-
-  if (route.name === 'template-create') {
-    // 初始化一个新的空模板
-    updateCanvasData([{
-      id: 0,
-      elements: [],
-      config: DEFAULT_CANVAS_CONFIG
-    }])
-    currentCanvasId.value = 0
-  } else {
-    console.log('准备调用 handleEditTemplate，传入数据:', loadedTemplateData)
-    handleEditTemplate(loadedTemplateData)
-  }
-  
-  isLoading.value = false
-}
+// 在 script setup 中添加
+const userProfileData = ref(null)
 
 // 监听路由参数变化
 watch(templateId, async (newId) => {
+  console.log('【index】templateId变化:', {
+    newId,
+    routeName: route.name,
+    editorMode: editorMode.value,
+    isLoading: isLoading.value
+  })
+
   // 如果是创建新模板的路由，不需要加载模板数据
   if (route.name === 'template-create') {
+    console.log('【index】创建模式，不加载模板数据')
     isLoading.value = false
     return
   }
 
-  if (newId) {
+  // 如果是use模式，由LoadingScreen组件处理数据加载
+  if (editorMode.value === 'use') {
+    console.log('【index】使用模式，由LoadingScreen处理数据加载')
+    // 确保isLoading为true，这样LoadingScreen组件会显示
+    isLoading.value = true
+    return
+  }
+
+  // 编辑模式下的模板加载
+  if (newId && editorMode.value === 'edit') {
     isLoading.value = true
     try {
+      console.log('【index】开始加载模板详情:', newId)
       const res = await templateApi.getDetail(newId)
       if (res?.data) {
+        console.log('【index】获取模板详情成功:', res.data)
         handleEditTemplate(res.data)
       } else {
+        console.warn('【index】获取模板详情失败: 响应数据为空')
         showToast('获取模板详情失败', 'error')
         router.push('/templates/resume')
       }
     } catch (error) {
-      console.error('获取模板详情失败:', error)
+      console.error('【index】获取模板详情失败:', error)
       showToast('获取模板详情失败', 'error')
       router.push('/templates/resume')
     } finally {
@@ -410,6 +352,95 @@ watch(templateId, async (newId) => {
     }
   }
 }, { immediate: true })
+
+// 处理加载完成事件
+const handleLoadComplete = async (data) => {
+  console.log('【index】handleLoadComplete被调用，参数:', {
+    hasTemplateData: !!data.templateData,
+    templateDataType: typeof data.templateData,
+    hasProfileData: !!data.profileData,
+    profileDataType: typeof data.profileData,
+    mode: editorMode.value,
+    profileDataStructure: data.profileData ? {
+      code: data.profileData.code,
+      message: data.profileData.message,
+      hasData: !!data.profileData.data,
+      dataKeys: data.profileData.data ? Object.keys(data.profileData.data) : []
+    } : null
+  })
+
+  try {
+    // 保存用户档案数据
+    if (data.profileData?.data) {
+      console.log('【index】开始保存用户档案数据:', {
+        hasData: true,
+        dataKeys: Object.keys(data.profileData.data),
+        dataStructure: JSON.stringify(data.profileData.data)
+      })
+      userProfileData.value = data.profileData.data
+      console.log('【index】用户档案数据已保存:', {
+        hasData: !!userProfileData.value,
+        dataKeys: Object.keys(userProfileData.value),
+        dataStructure: JSON.stringify(userProfileData.value)
+      })
+    }
+
+    // 处理模板数据
+    if (data.templateData) {
+      console.log('【index】开始处理模板数据:', {
+        canvasCount: data.templateData.canvases.length,
+        hasCanvases: !!data.templateData.canvases,
+        firstCanvasElements: data.templateData.canvases[0]?.elements?.length
+      })
+
+      // 数据映射
+      if (editorMode.value === 'use' && userProfileData.value) {
+        console.log('【index】开始数据映射:', {
+          mode: editorMode.value,
+          hasUserProfileData: !!userProfileData.value,
+          profileDataKeys: Object.keys(userProfileData.value),
+          profileDataStructure: JSON.stringify(userProfileData.value)
+        })
+
+        // 处理每个画布的元素
+        data.templateData.canvases.forEach((canvas, index) => {
+          console.log(`【index】处理第${index + 1}页画布:`, {
+            elementsCount: canvas.elements.length,
+            hasElements: !!canvas.elements,
+            elementsWithDataPath: canvas.elements.filter(e => e.dataPath).length
+          })
+
+          // 映射数据
+          canvas.elements = mapProfileDataToElements(canvas.elements, userProfileData.value)
+
+          console.log(`【index】第${index + 1}页画布处理完成:`, {
+            elementsCount: canvas.elements.length,
+            hasElements: !!canvas.elements,
+            mappedElementsCount: canvas.elements.filter(e => e.content).length
+          })
+        })
+      }
+
+      // 更新模板数据
+      templateData.value = data.templateData
+      console.log('【index】模板数据更新完成:', {
+        canvasCount: templateData.value.canvases.length,
+        totalElements: templateData.value.canvases.reduce((sum, canvas) => sum + canvas.elements.length, 0)
+      })
+    }
+
+    // 等待下一个渲染周期，确保数据已更新到视图
+    await nextTick()
+    
+    // 设置加载状态为false
+    isLoading.value = false
+    console.log('【index】加载完成，isLoading设置为false')
+  } catch (error) {
+    console.error('【index】处理数据时出错:', error)
+    showToast('加载数据失败', 'error')
+    isLoading.value = false
+  }
+}
 
 const handleTrackClick = (e) => {
   if (e.target.classList.contains('zoom-handle')) return
@@ -897,55 +928,62 @@ const currentTemplateId = ref(null)
 
 // 修改 handleEditTemplate 方法
 const handleEditTemplate = async (templateData) => {
+  console.log('【index】开始处理模板数据:', templateData)
   currentTemplateId.value = templateData.id
   
   try {
     // 构造新的画布数据
-    const canvases = templateData.pages.map((page, index) => ({
-      id: index,
-      elements: page.page_data.elements.map(element => {
-        // 先提取基本属性
-        const baseElement = {
-          id: element.id || `element-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          type: element.type || 'text',
-          x: element.position?.x || 0,
-          y: element.position?.y || 0,
-          width: element.width || 100,
-          height: element.height || 100,
-          content: element.content || '',
-          style: element.style || {},
-          props: element.props || {},
-          // 添加可拖拽相关的属性
-          draggable: true,
-          resizable: true,
-          rotatable: true,
-          lockAspectRatio: false,
-          selected: false,
-          zIndex: element.zIndex || 1,
-          // 添加变换相关的属性
-          transform: element.transform || {
-            rotate: 0,
-            scaleX: 1,
-            scaleY: 1
+    const canvases = templateData.pages.map((page, index) => {
+      console.log(`【index】处理第${index + 1}页数据:`, page)
+      return {
+        id: index,
+        elements: page.page_data.elements.map(element => {
+          // 先提取基本属性
+          const baseElement = {
+            id: element.id || `element-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            type: element.type || 'text',
+            x: element.position?.x || 0,
+            y: element.position?.y || 0,
+            width: element.width || 100,
+            height: element.height || 100,
+            content: element.content || '',
+            style: element.style || {},
+            props: element.props || {},
+            // 添加可拖拽相关的属性
+            draggable: true,
+            resizable: true,
+            rotatable: true,
+            lockAspectRatio: false,
+            selected: false,
+            zIndex: element.zIndex || 1,
+            // 添加变换相关的属性
+            transform: element.transform || {
+              rotate: 0,
+              scaleX: 1,
+              scaleY: 1
+            }
           }
-        }
 
-        // 根据元素类型添加特定属性
-        if (element.type === 'text') {
-          baseElement.editable = true
-        }
+          // 根据元素类型添加特定属性
+          if (element.type === 'text') {
+            baseElement.editable = true
+          }
 
-        return baseElement
-      }),
-      config: {
-        width: DEFAULT_CANVAS_CONFIG.width,
-        height: DEFAULT_CANVAS_CONFIG.height,
-        backgroundColor: '#ffffff',
-        showGrid: false,
-        showGuideLine: true,
-        ...(page.page_data.config || {})
+          console.log('【index】处理元素:', baseElement)
+          return baseElement
+        }),
+        config: {
+          width: DEFAULT_CANVAS_CONFIG.width,
+          height: DEFAULT_CANVAS_CONFIG.height,
+          backgroundColor: '#ffffff',
+          showGrid: false,
+          showGuideLine: true,
+          ...(page.page_data.config || {})
+        }
       }
-    }))
+    })
+
+    console.log('【index】构造的画布数据:', canvases)
 
     // 更新画布数据
     updateCanvasData(canvases)
@@ -961,7 +999,14 @@ const handleEditTemplate = async (templateData) => {
       keywords: Array.isArray(templateData.keywords) ? templateData.keywords.join(',') : '',
       is_public: templateData.is_public ?? true
     }
+
+    console.log('【index】模板数据加载完成:', {
+      canvasCount: canvases.length,
+      currentCanvasId: currentCanvasId.value,
+      defaultTemplateData: defaultTemplateData.value
+    })
   } catch (error) {
+    console.error('【index】加载模板数据失败:', error)
     showToast('加载模板数据失败', 'error')
   }
 }
@@ -1304,9 +1349,22 @@ const handlePrintPreview = () => {
 }
 
 
-const handleUseTemplate = (template) => {
-  // 处理使用模板的逻辑
-  console.log('使用模板:', template)
+const handleUseTemplate = async (template) => {
+  console.log('【index】开始使用模板:', template)
+  
+  try {
+    // 只需要更新当前模板ID并跳转到use模式
+    templateId.value = template.id
+    
+    // 跳转到use模式，LoadingScreen组件会自动处理数据加载
+    await router.push(`/editor/use/${template.id}`)
+    
+    console.log('【index】已跳转到use模式，等待LoadingScreen加载数据')
+    
+  } catch (error) {
+    console.error('【index】跳转失败:', error)
+    showToast('使用模板失败', 'error')
+  }
 }
 
 const handleElementAdd = (element) => {

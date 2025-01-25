@@ -228,7 +228,7 @@ import Star from './shapes/Star.vue'
 import Text from './shapes/Text.vue'
 import Title from './shapes/Title.vue'
 import Icon from './shapes/Icon.vue'
-import Avatar from './shapes/Avatar.vue'
+import Avatar from './shapes/ResumeAvatar.vue'
 import ResumeField from './shapes/ResumeField.vue'
 
 // 注册组件
