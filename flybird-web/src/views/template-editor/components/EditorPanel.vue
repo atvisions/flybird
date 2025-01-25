@@ -125,21 +125,22 @@
               <div class="opacity-control">
                 <input
                   type="range"
-                  :value="element.props?.opacity || 1"
-                  @input="(e) => handleElementPropChange('opacity', parseFloat(e.target.value))"
+                  :value="(element.props?.opacity || 1) * 100"
+                  @input="(e) => handleElementPropChange('opacity', Number(e.target.value) / 100)"
                   min="0"
-                  max="1"
-                  step="0.1"
+                  max="100"
+                  step="1"
                 >
-                <input
-                  type="number"
-                  :value="element.props?.opacity || 1"
-                  @input="(e) => handleElementPropChange('opacity', Math.min(1, Math.max(0, parseFloat(e.target.value) || 0)))"
-                  min="0"
-                  max="1"
-                  step="0.1"
-                  style="width: 70px"
-                >
+                <div class="input-group">
+                  <input 
+                    type="number" 
+                    min="0"
+                    max="100"
+                    :value="Math.round((element.props?.opacity || 1) * 100)"
+                    @input="(e) => handleElementPropChange('opacity', Math.max(0, Math.min(1, Number(e.target.value) / 100)))"
+                  >
+                  <span class="unit">%</span>
+                </div>
               </div>
             </div>
             <!-- 标题样式设置 -->
@@ -612,7 +613,7 @@
             </template>
 
             <!-- 文本属性 -->
-            <template v-if="element?.type === 'text' || element?.type === 'title' || element?.type === 'resume-field'">
+            <template v-if="element?.type === 'text' || element?.type === 'title' || (element?.type === 'resume-field' && element.props?.type !== 'avatar')">
               <!-- 文本内容 -->
               <div class="form-group" v-if="element?.type !== 'resume-field'">
                 <label>文本内容</label>
@@ -671,84 +672,69 @@
                         <em>I</em>
                       </button>
                     </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 文本对齐 -->
+              <div class="form-group">
+                <label>对齐方式</label>
+                <div class="align-settings">
+                  <div class="align-buttons">
                     <!-- 水平对齐 -->
-                    <div class="button-group">
-                      <button 
-                        class="btn-icon" 
-                        :class="{ active: element.props?.textAlign === 'left' }"
-                        @click="() => handleElementPropChange('textAlign', 'left')"
-                        title="左对齐"
-                      >
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <rect x="2" y="4" width="8" height="1.5" :fill="element.props?.textAlign === 'left' ? '#1890ff' : '#333'" />
-                          <rect x="2" y="7.25" width="12" height="1.5" :fill="element.props?.textAlign === 'left' ? '#1890ff' : '#333'" />
-                          <rect x="2" y="10.5" width="8" height="1.5" :fill="element.props?.textAlign === 'left' ? '#1890ff' : '#333'" />
-                        </svg>
-                      </button>
-                      <button 
-                        class="btn-icon" 
-                        :class="{ active: element.props?.textAlign === 'center' }"
-                        @click="() => handleElementPropChange('textAlign', 'center')"
-                        title="居中对齐"
-                      >
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <rect x="4" y="4" width="8" height="1.5" :fill="element.props?.textAlign === 'center' ? '#1890ff' : '#333'" />
-                          <rect x="2" y="7.25" width="12" height="1.5" :fill="element.props?.textAlign === 'center' ? '#1890ff' : '#333'" />
-                          <rect x="4" y="10.5" width="8" height="1.5" :fill="element.props?.textAlign === 'center' ? '#1890ff' : '#333'" />
-                        </svg>
-                      </button>
-                      <button 
-                        class="btn-icon" 
-                        :class="{ active: element.props?.textAlign === 'right' }"
-                        @click="() => handleElementPropChange('textAlign', 'right')"
-                        title="右对齐"
-                      >
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <rect x="6" y="4" width="8" height="1.5" :fill="element.props?.textAlign === 'right' ? '#1890ff' : '#333'" />
-                          <rect x="2" y="7.25" width="12" height="1.5" :fill="element.props?.textAlign === 'right' ? '#1890ff' : '#333'" />
-                          <rect x="6" y="10.5" width="8" height="1.5" :fill="element.props?.textAlign === 'right' ? '#1890ff' : '#333'" />
-                        </svg>
-                      </button>
-                    </div>
+                    <button 
+                      class="btn-icon" 
+                      :class="{ active: element.props?.textAlign === 'left' }"
+                      @click="() => handleElementPropChange('textAlign', 'left')"
+                      title="左对齐"
+                    >
+                      <AlignLeft theme="outline" size="16" fill="#374151" />
+                    </button>
+                    <button 
+                      class="btn-icon" 
+                      :class="{ active: element.props?.textAlign === 'center' }"
+                      @click="() => handleElementPropChange('textAlign', 'center')"
+                      title="居中对齐"
+                    >
+                      <AlignTextCenter theme="outline" size="16" fill="#374151" />
+                    </button>
+                    <button 
+                      class="btn-icon" 
+                      :class="{ active: element.props?.textAlign === 'right' }"
+                      @click="() => handleElementPropChange('textAlign', 'right')"
+                      title="右对齐"
+                    >
+                      <AlignRight theme="outline" size="16" fill="#374151" />
+                    </button>
+                    
+                    <!-- 分隔线 -->
+                    <div class="divider"></div>
+                    
                     <!-- 垂直对齐 -->
-                    <div class="button-group">
-                      <button 
-                        class="btn-icon" 
-                        :class="{ active: element.props?.verticalAlign === 'top' }"
-                        @click="() => handleElementPropChange('verticalAlign', 'top')"
-                        title="顶部对齐"
-                      >
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <rect x="2" y="2" width="12" height="1.5" :fill="element.props?.verticalAlign === 'top' ? '#1890ff' : '#333'" />
-                          <rect x="4" y="5" width="8" height="1.5" :fill="element.props?.verticalAlign === 'top' ? '#1890ff' : '#333'" />
-                          <rect x="4" y="8" width="8" height="1.5" :fill="element.props?.verticalAlign === 'top' ? '#1890ff' : '#333'" />
-                        </svg>
-                      </button>
-                      <button 
-                        class="btn-icon" 
-                        :class="{ active: element.props?.verticalAlign === 'middle' }"
-                        @click="() => handleElementPropChange('verticalAlign', 'middle')"
-                        title="垂直居中"
-                      >
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <rect x="4" y="4" width="8" height="1.5" :fill="element.props?.verticalAlign === 'middle' ? '#1890ff' : '#333'" />
-                          <rect x="2" y="7.25" width="12" height="1.5" :fill="element.props?.verticalAlign === 'middle' ? '#1890ff' : '#333'" />
-                          <rect x="4" y="10.5" width="8" height="1.5" :fill="element.props?.verticalAlign === 'middle' ? '#1890ff' : '#333'" />
-                        </svg>
-                      </button>
-                      <button 
-                        class="btn-icon" 
-                        :class="{ active: element.props?.verticalAlign === 'bottom' }"
-                        @click="() => handleElementPropChange('verticalAlign', 'bottom')"
-                        title="底部对齐"
-                      >
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <rect x="4" y="7" width="8" height="1.5" :fill="element.props?.verticalAlign === 'bottom' ? '#1890ff' : '#333'" />
-                          <rect x="4" y="10" width="8" height="1.5" :fill="element.props?.verticalAlign === 'bottom' ? '#1890ff' : '#333'" />
-                          <rect x="2" y="13" width="12" height="1.5" :fill="element.props?.verticalAlign === 'bottom' ? '#1890ff' : '#333'" />
-                        </svg>
-                      </button>
-                    </div>
+                    <button 
+                      class="btn-icon" 
+                      :class="{ active: element.props?.verticalAlign === 'top' }"
+                      @click="() => handleElementPropChange('verticalAlign', 'top')"
+                      title="顶部对齐"
+                    >
+                      <AlignTop theme="outline" size="16" fill="#374151" />
+                    </button>
+                    <button 
+                      class="btn-icon" 
+                      :class="{ active: element.props?.verticalAlign === 'middle' }"
+                      @click="() => handleElementPropChange('verticalAlign', 'middle')"
+                      title="垂直居中"
+                    >
+                      <AlignTextMiddle theme="outline" size="16" fill="#374151" />
+                    </button>
+                    <button 
+                      class="btn-icon" 
+                      :class="{ active: element.props?.verticalAlign === 'bottom' }"
+                      @click="() => handleElementPropChange('verticalAlign', 'bottom')"
+                      title="底部对齐"
+                    >
+                      <AlignBottom theme="outline" size="16" fill="#374151" />
+                    </button>
                   </div>
                 </div>
               </div>
@@ -775,6 +761,101 @@
                     step="0.1"
                   >
                 </div>
+              </div>
+            </template>
+
+            <!-- 头像特有的样式设置 -->
+            <template v-if="element?.type === 'resume-field' && element.props?.type === 'avatar'">
+              <div class="form-group">
+                <label>边框</label>
+                <div class="border-settings">
+                  <div class="border-style-wrapper">
+                    <div class="border-style-group">
+                      <button 
+                        class="btn-icon" 
+                        :class="{ active: element.props?.borderStyle === 'solid' }"
+                        @click="() => handleElementPropChange('borderStyle', 'solid')"
+                        title="实线"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <rect x="2" y="7.5" width="12" height="1.5" :fill="element.props?.borderStyle === 'solid' ? '#1890ff' : '#333'" />
+                        </svg>
+                      </button>
+                      <button 
+                        class="btn-icon" 
+                        :class="{ active: element.props?.borderStyle === 'dashed' }"
+                        @click="() => handleElementPropChange('borderStyle', 'dashed')"
+                        title="虚线"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <rect x="2" y="7.5" width="3" height="1.5" :fill="element.props?.borderStyle === 'dashed' ? '#1890ff' : '#333'" />
+                          <rect x="6.5" y="7.5" width="3" height="1.5" :fill="element.props?.borderStyle === 'dashed' ? '#1890ff' : '#333'" />
+                          <rect x="11" y="7.5" width="3" height="1.5" :fill="element.props?.borderStyle === 'dashed' ? '#1890ff' : '#333'" />
+                        </svg>
+                      </button>
+                      <button 
+                        class="btn-icon" 
+                        :class="{ active: element.props?.borderStyle === 'dotted' }"
+                        @click="() => handleElementPropChange('borderStyle', 'dotted')"
+                        title="点线"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <rect x="2" y="7.5" width="1.5" height="1.5" :fill="element.props?.borderStyle === 'dotted' ? '#1890ff' : '#333'" />
+                          <rect x="5.5" y="7.5" width="1.5" height="1.5" :fill="element.props?.borderStyle === 'dotted' ? '#1890ff' : '#333'" />
+                          <rect x="9" y="7.5" width="1.5" height="1.5" :fill="element.props?.borderStyle === 'dotted' ? '#1890ff' : '#333'" />
+                          <rect x="12.5" y="7.5" width="1.5" height="1.5" :fill="element.props?.borderStyle === 'dotted' ? '#1890ff' : '#333'" />
+                        </svg>
+                      </button>
+                    </div>
+                    <input
+                      type="number"
+                      :value="element.props?.borderWidth || 0"
+                      @input="(e) => handleElementPropChange('borderWidth', Math.max(0, parseInt(e.target.value) || 0))"
+                      min="0"
+                      max="20"
+                      placeholder="线宽"
+                    >
+                  </div>
+                  <div class="border-color">
+                    <label>边框颜色</label>
+                    <ColorPicker
+                      :model-value="element.props?.borderColor"
+                      @update:model-value="(color) => handleElementPropChange('borderColor', color)"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>圆角</label>
+                <div class="radius-control">
+                  <input
+                    type="range"
+                    :value="element.props?.borderRadius?.replace('%', '') || 50"
+                    @input="(e) => handleElementPropChange('borderRadius', `${e.target.value}%`)"
+                    min="0"
+                    max="50"
+                    step="1"
+                  >
+                  <div class="input-group">
+                    <input 
+                      type="number" 
+                      min="0"
+                      max="50"
+                      :value="element.props?.borderRadius?.replace('%', '') || 50"
+                      @input="(e) => handleElementPropChange('borderRadius', `${e.target.value}%`)"
+                    >
+                    <span class="unit">%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>背景颜色</label>
+                <ColorPicker
+                  :model-value="element.props?.backgroundColor"
+                  @update:model-value="(color) => handleElementPropChange('backgroundColor', color)"
+                />
               </div>
             </template>
 
@@ -924,18 +1005,18 @@
                 <div class="z-index-control">
                   <button 
                     class="btn-stepper"
-                    @click="handleElementPropChange('zIndex', Math.max(1, (element.zIndex || 1) - 1))"
+                    @click="handleElementPropChange('zIndex', Math.max(1, (element.props?.zIndex || 1) - 1))"
                   >-</button>
                   <input
                     type="number"
-                    :value="element.zIndex || 1"
+                    :value="element.props?.zIndex || 1"
                     @input="(e) => handleElementPropChange('zIndex', Math.max(1, parseInt(e.target.value) || 1))"
                     min="1"
                     step="1"
                   >
                   <button 
                     class="btn-stepper"
-                    @click="handleElementPropChange('zIndex', (element.zIndex || 1) + 1)"
+                    @click="handleElementPropChange('zIndex', (element.props?.zIndex || 1) + 1)"
                   >+</button>
                 </div>
                 <button 
@@ -1383,29 +1464,29 @@ watch(() => props.currentCanvasId, () => {
 const showRulerSettings = ref(false)
 
 // 更新文本属性
-const handleElementPropChange = (prop, value) => {
+const handleElementPropChange = (propName, value) => {
   if (!props.element) return
-
-  // 创建更新后的元素对象
-  const updatedElement = {
-    ...props.element,
-    props: {
-      ...props.element.props,
-      [prop]: value
-    }
-  }
-
-  // 如果是 zIndex 属性，直接更新到元素根级别
-  if (prop === 'zIndex') {
-    updatedElement.zIndex = value
-    delete updatedElement.props.zIndex
-  }
-
-  // 触发更新事件
-  emit('update', updatedElement)
   
-  // 立即触发选中事件，强制更新当前选中的元素
-  emit('element-select', updatedElement)
+  const newProps = {
+    ...props.element.props,
+    [propName]: value
+  }
+  
+  // 确保所有样式属性都被正确更新
+  if (props.element.type === 'resume-field' && props.element.props?.type !== 'avatar') {
+    // 文本相关属性
+    if (!newProps.textAlign) newProps.textAlign = 'left'
+    if (!newProps.verticalAlign) newProps.verticalAlign = 'middle'
+    if (!newProps.opacity) newProps.opacity = 1
+    if (!newProps.fontFamily) newProps.fontFamily = 'Arial'
+    if (!newProps.fontSize) newProps.fontSize = 14
+    if (!newProps.fontWeight) newProps.fontWeight = 'normal'
+    if (!newProps.fontStyle) newProps.fontStyle = 'normal'
+    if (!newProps.lineHeight) newProps.lineHeight = 1.5
+    if (!newProps.color) newProps.color = '#000000'
+  }
+
+  updateElementProp('props', newProps)
 }
 
 const isContentDisabled = computed(() => {
@@ -2426,60 +2507,47 @@ textarea:focus {
 .opacity-control {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 
 .opacity-control input[type="range"] {
   flex: 1;
   height: 4px;
-  -webkit-appearance: none;
-  background: #e5e7eb;
   border-radius: 2px;
-  outline: none;
+  background: #e5e7eb;
+  -webkit-appearance: none;
 }
 
 .opacity-control input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
-  background: white;
-  border: 2px solid #1890ff;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
+  background: #1890ff;
   cursor: pointer;
-  margin-top: 0px;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.opacity-control input[type="range"]::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  background: white;
-  border: 2px solid #1890ff;
-  border-radius: 50%;
-  cursor: pointer;
-}
-
-.opacity-control input[type="range"]::-ms-thumb {
-  width: 16px;
-  height: 16px;
-  background: white;
-  border: 2px solid #1890ff;
-  border-radius: 50%;
-  cursor: pointer;
+.opacity-control .input-group {
+  display: flex;
+  align-items: center;
+  width: 80px;
 }
 
 .opacity-control input[type="number"] {
-  width: 70px;
+  width: 50px;
+  height: 24px;
+  padding: 0 4px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
   text-align: center;
 }
 
-.opacity-control input[type="number"]:hover {
-  border-color: #40a9ff;
-}
-
-.opacity-control input[type="number"]:focus {
-  border-color: #1890ff;
-  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
-  outline: none;
+.opacity-control .unit {
+  margin-left: 4px;
+  color: #6b7280;
+  font-size: 12px;
 }
 
 .switch-item {
@@ -2948,5 +3016,77 @@ textarea.disabled:hover {
 
 .btn-delete:active {
   transform: scale(0.9);
+}
+
+.align-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #f9fafb;
+  padding: 8px;
+  border-radius: 6px;
+}
+
+.align-settings .button-group {
+  display: flex;
+  gap: 4px;
+  background: #f5f5f5;
+  padding: 2px;
+  border-radius: 4px;
+}
+
+.align-settings .button-group .btn-icon {
+  flex: 1;
+  height: 32px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.align-settings .button-group .btn-icon:hover {
+  border-color: #1890ff;
+  background: #f0f5ff;
+}
+
+.align-settings .button-group .btn-icon:hover :deep(svg) {
+  fill: #1890ff;
+}
+
+.align-settings .button-group .btn-icon.active {
+  background: #e6f4ff;
+  border-color: #1890ff;
+}
+
+.align-settings .button-group .btn-icon.active :deep(svg) {
+  fill: #1890ff;
+}
+
+.align-settings .align-buttons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #f5f5f5;
+  padding: 2px;
+  border-radius: 4px;
+}
+
+.align-settings .btn-icon {
+  height: 32px;
+  width: 32px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.align-settings .divider {
+  width: 1px;
+  height: 20px;
+  background-color: #e5e7eb;
+  margin: 0 4px;
 }
 </style> 

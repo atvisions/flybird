@@ -1,88 +1,146 @@
 <template>
-  <div class="resume-text" :style="textStyle">
-    <span v-if="label" class="label">{{ label }}：</span>
-    <el-input
-      v-model="modelValue"
-      :placeholder="placeholder"
-      @update:modelValue="handleInput"
-    />
+  <div 
+    class="resume-text canvas-element"
+    :style="textStyle"
+  >
+    <div 
+      class="text-content"
+      :style="contentStyle"
+    >
+      {{ value || `[${label}]` }}
+    </div>
   </div>
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed } from 'vue'
 
 const props = defineProps({
   value: {
-    type: [String, Number],
+    type: String,
     default: ''
   },
   label: {
     type: String,
     default: ''
   },
-  placeholder: {
+  width: {
+    type: Number,
+    default: 200
+  },
+  height: {
+    type: Number,
+    default: 40
+  },
+  textAlign: {
     type: String,
-    default: '请输入'
+    default: 'left'
+  },
+  verticalAlign: {
+    type: String,
+    default: 'middle'
+  },
+  opacity: {
+    type: Number,
+    default: 1
+  },
+  color: {
+    type: String,
+    default: '#000000'
   },
   fontSize: {
     type: Number,
     default: 14
   },
+  fontFamily: {
+    type: String,
+    default: 'Arial'
+  },
   fontWeight: {
     type: String,
     default: 'normal'
   },
-  color: {
+  fontStyle: {
     type: String,
-    default: '#333'
+    default: 'normal'
+  },
+  lineHeight: {
+    type: Number,
+    default: 1.5
+  },
+  labelColor: {
+    type: String,
+    default: '#666666'
+  },
+  dataPath: {
+    type: String,
+    required: true
+  },
+  zIndex: {
+    type: Number,
+    default: 1
   }
 })
 
-const emit = defineEmits(['update:value'])
-
-const modelValue = ref(props.value)
-
-watch(() => props.value, (newVal) => {
-  modelValue.value = newVal
-})
-
 const textStyle = computed(() => ({
+  width: '100%',
+  height: '100%',
+  display: 'flex',
+  alignItems: props.verticalAlign === 'top' ? 'flex-start' : 
+             props.verticalAlign === 'bottom' ? 'flex-end' : 'center',
+  opacity: props.opacity,
+  color: props.color,
   fontSize: `${props.fontSize}px`,
+  fontFamily: props.fontFamily,
   fontWeight: props.fontWeight,
-  color: props.color
+  fontStyle: props.fontStyle,
+  lineHeight: props.lineHeight,
+  padding: '4px',
+  boxSizing: 'border-box',
+  zIndex: props.zIndex
 }))
 
-const handleInput = (value) => {
-  emit('update:value', value)
-}
+const labelStyle = computed(() => ({
+  color: props.labelColor,
+  fontSize: `${props.fontSize}px`,
+  fontWeight: 500,
+  flexShrink: 0
+}))
+
+const contentStyle = computed(() => ({
+  width: '100%',
+  display: 'block',
+  textAlign: props.textAlign
+}))
 </script>
 
 <style scoped>
 .resume-text {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  box-sizing: border-box;
+  overflow: hidden;
+  word-break: break-word;
+  user-select: none;
+  position: relative;
+}
+
+.text-content {
+  outline: none;
   width: 100%;
+  min-height: 1em;
+  overflow: visible;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
-.label {
-  white-space: nowrap;
-  color: #666;
+.text-label {
+  margin-right: 4px;
+  white-space: pre-wrap;
 }
 
-:deep(.el-input__wrapper) {
-  background: transparent;
-  box-shadow: none !important;
-}
-
-:deep(.el-input__inner) {
-  border: none;
-  background: transparent;
-  padding: 0;
-}
-
-:deep(.el-input__inner:focus) {
-  box-shadow: none;
+.text-value {
+  flex: 1;
+  overflow: visible;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 </style> 

@@ -28,11 +28,11 @@ import { Icon } from '@iconify/vue'
 const props = defineProps({
   width: {
     type: Number,
-    required: true
+    default: 24
   },
   height: {
     type: Number,
-    required: true
+    default: 24
   },
   iconType: {
     type: String,

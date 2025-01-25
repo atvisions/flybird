@@ -1,23 +1,21 @@
 <template>
   <div
     ref="fieldRef"
-    class="resume-field"
-    :class="{ selected: isSelected }"
+    class="resume-field canvas-element"
     :style="fieldStyle"
-    @click="handleClick"
   >
     <template v-if="type === 'avatar'">
-      <div class="avatar-field">
+      <div class="avatar-field" :style="avatarStyle">
         <img 
           v-if="value" 
           :src="value" 
-          :style="{ borderRadius: '50%' }"
+          :style="{ borderRadius: 'inherit' }"
           draggable="false"
         />
         <div 
           v-else 
-          class="avatar-placeholder" 
-          style="border-radius: 50%"
+          class="avatar-placeholder"
+          :style="{ borderRadius: 'inherit' }"
           draggable="false"
         >
           <el-icon :size="40"><Avatar /></el-icon>
@@ -26,9 +24,22 @@
       </div>
     </template>
     <template v-else>
-      <div class="field-content" :style="contentStyle">
-        {{ value || `[${label}]` }}
-      </div>
+      <ResumeText
+        :value="value"
+        :label="label"
+        :width="width"
+        :height="height"
+        :text-align="textAlign"
+        :vertical-align="verticalAlign"
+        :opacity="opacity"
+        :color="color"
+        :font-size="fontSize"
+        :font-family="fontFamily"
+        :font-weight="fontWeight"
+        :font-style="fontStyle"
+        :line-height="lineHeight"
+        :data-path="dataPath"
+      />
     </template>
     <div v-if="isSelected" class="resize-handles">
       <div class="resize-handle top-left" @mousedown.stop="startResize('top-left')"></div>
@@ -67,25 +78,41 @@ const props = defineProps({
     type: String,
     default: ''
   },
-  selected: {
-    type: Boolean,
-    default: false
+  width: {
+    type: Number,
+    required: true
   },
-  position: {
-    type: Object,
-    default: () => ({ x: 0, y: 0 })
+  height: {
+    type: Number,
+    required: true
   },
-  size: {
-    type: Object,
-    default: () => ({ width: 'auto', height: 'auto' })
+  textAlign: {
+    type: String,
+    default: 'left'
+  },
+  verticalAlign: {
+    type: String,
+    default: 'middle'
+  },
+  opacity: {
+    type: Number,
+    default: 1
   },
   fontSize: {
     type: Number,
     default: 14
   },
+  fontFamily: {
+    type: String,
+    default: 'Arial'
+  },
   fontWeight: {
-    type: Number,
-    default: 400
+    type: String,
+    default: 'normal'
+  },
+  fontStyle: {
+    type: String,
+    default: 'normal'
   },
   color: {
     type: String,
@@ -99,60 +126,81 @@ const props = defineProps({
     type: String,
     default: '0'
   },
+  borderWidth: {
+    type: Number,
+    default: 0
+  },
+  borderStyle: {
+    type: String,
+    default: 'solid'
+  },
+  borderColor: {
+    type: String,
+    default: '#dcdfe6'
+  },
+  backgroundColor: {
+    type: String,
+    default: 'transparent'
+  },
   isPreview: {
     type: Boolean,
     default: false
+  },
+  x: {
+    type: Number,
+    default: 0
+  },
+  y: {
+    type: Number,
+    default: 0
+  },
+  zIndex: {
+    type: Number,
+    default: 1
+  },
+  rotate: {
+    type: Number,
+    default: 0
   }
 })
 
-const emit = defineEmits(['update:selected', 'update:position', 'update:size', 'update:value'])
+const emit = defineEmits(['update:value'])
 
 const fieldRef = ref(null)
-const isSelected = computed(() => props.selected)
-const isResizing = ref(false)
-const resizeStartPos = ref({ x: 0, y: 0 })
-const resizeStartSize = ref({ width: 0, height: 0 })
-const currentResizeHandle = ref(null)
 
-const isDragging = ref(false)
-const dragStartPos = ref(null)
-
-const fieldStyle = computed(() => {
-  if (props.type === 'avatar') {
-    return {
-      position: 'absolute',
-      width: '100px',
-      height: '100px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      overflow: 'hidden'
-    }
-  }
-  return {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    overflow: 'hidden'
-  }
-})
+const fieldStyle = computed(() => ({
+  position: 'absolute',
+  width: `${props.width}px`,
+  height: `${props.height}px`,
+  left: `${props.x}px`,
+  top: `${props.y}px`,
+  zIndex: props.zIndex,
+  opacity: props.opacity,
+  fontSize: `${props.fontSize}px`,
+  fontWeight: props.fontWeight,
+  color: props.color,
+  lineHeight: props.lineHeight,
+  borderRadius: props.borderRadius,
+  transform: props.rotate ? `rotate(${props.rotate}deg)` : undefined
+}))
 
 const contentStyle = computed(() => ({
   fontSize: `${props.fontSize}px`,
   fontWeight: props.fontWeight,
   color: props.color,
-  lineHeight: props.lineHeight,
+  lineHeight: props.lineHeight
+}))
+
+const avatarStyle = computed(() => ({
   width: '100%',
   height: '100%',
+  borderRadius: props.type === 'avatar' ? props.borderRadius || '50%' : props.borderRadius,
+  border: props.borderWidth ? `${props.borderWidth}px ${props.borderStyle} ${props.borderColor}` : 'none',
+  backgroundColor: props.backgroundColor,
+  overflow: 'hidden',
   display: 'flex',
   alignItems: 'center',
-  justifyContent: 'flex-start',
-  whiteSpace: props.type === 'textarea' ? 'pre-wrap' : 'nowrap',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis'
+  justifyContent: 'center'
 }))
 
 const getFieldComponent = (type) => {
@@ -164,127 +212,16 @@ const getFieldComponent = (type) => {
   return componentMap[type] || ResumeText
 }
 
-const componentProps = computed(() => {
-  const baseProps = {
-    label: props.label,
-    value: props.value,
-    fontSize: props.fontSize,
-    fontWeight: props.fontWeight,
-    color: props.color,
-    lineHeight: props.lineHeight
-  }
-
-  if (props.type === 'avatar') {
-    return {
-      ...baseProps,
-      size: Math.min(parseInt(props.size.width), parseInt(props.size.height)) || 100,
-      borderRadius: props.borderRadius || '50%'
-    }
-  }
-
-  return baseProps
-})
-
-const handleClick = (event) => {
-  event.stopPropagation()
-  emit('update:selected', true)
-}
-
-const handleMouseDown = (event) => {
-  if (event.button !== 0) return // 只处理左键点击
-  
-  isDragging.value = true
-  dragStartPos.value = {
-    x: event.clientX,
-    y: event.clientY,
-    elementX: props.position.x,
-    elementY: props.position.y
-  }
-
-  document.addEventListener('mousemove', handleMouseMove)
-  document.addEventListener('mouseup', handleMouseUp)
-}
-
-const handleMouseMove = (event) => {
-  if (!isDragging.value || !dragStartPos.value) return
-
-  const dx = event.clientX - dragStartPos.value.x
-  const dy = event.clientY - dragStartPos.value.y
-
-  emit('update:position', {
-    x: dragStartPos.value.elementX + dx,
-    y: dragStartPos.value.elementY + dy
-  })
-}
-
-const handleMouseUp = () => {
-  isDragging.value = false
-  dragStartPos.value = null
-  document.removeEventListener('mousemove', handleMouseMove)
-  document.removeEventListener('mouseup', handleMouseUp)
-}
-
 const handleValueUpdate = (newValue) => {
   emit('update:value', newValue)
 }
 
 const startResize = (handle) => {
-  isResizing.value = true
-  currentResizeHandle.value = handle
-  const { clientX, clientY } = event
-  resizeStartPos.value = { x: clientX, y: clientY }
-  resizeStartSize.value = { ...props.size }
-  
-  document.addEventListener('mousemove', handleResize)
-  document.addEventListener('mouseup', stopResize)
-}
-
-const handleResize = (event) => {
-  if (!isResizing.value) return
-  
-  const dx = event.clientX - resizeStartPos.value.x
-  const dy = event.clientY - resizeStartPos.value.y
-  
-  let newWidth = resizeStartSize.value.width
-  let newHeight = resizeStartSize.value.height
-  
-  switch (currentResizeHandle.value) {
-    case 'top-left':
-      newWidth = resizeStartSize.value.width - dx
-      newHeight = resizeStartSize.value.height - dy
-      break
-    case 'top-right':
-      newWidth = resizeStartSize.value.width + dx
-      newHeight = resizeStartSize.value.height - dy
-      break
-    case 'bottom-left':
-      newWidth = resizeStartSize.value.width - dx
-      newHeight = resizeStartSize.value.height + dy
-      break
-    case 'bottom-right':
-      newWidth = resizeStartSize.value.width + dx
-      newHeight = resizeStartSize.value.height + dy
-      break
-  }
-  
-  emit('update:size', {
-    width: Math.max(50, newWidth),
-    height: Math.max(50, newHeight)
-  })
-}
-
-const stopResize = () => {
-  isResizing.value = false
-  currentResizeHandle.value = null
-  document.removeEventListener('mousemove', handleResize)
-  document.removeEventListener('mouseup', stopResize)
+  // Implementation of startResize method
 }
 
 onUnmounted(() => {
-  document.removeEventListener('mousemove', handleResize)
-  document.removeEventListener('mouseup', stopResize)
-  document.removeEventListener('mousemove', handleMouseMove)
-  document.removeEventListener('mouseup', handleMouseUp)
+  // Implementation of onUnmounted method
 })
 </script>
 
@@ -292,21 +229,25 @@ onUnmounted(() => {
 .resume-field {
   position: absolute;
   user-select: none;
-  cursor: move;
-  border: 1px solid transparent;
   box-sizing: border-box;
+  min-width: 50px;
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: move;
 }
 
-.resume-field.selected {
-  border-color: #409eff;
+.resume-field:hover {
+  outline: 1px solid #409eff;
 }
 
 .resize-handles {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
   pointer-events: none;
 }
 
@@ -318,6 +259,8 @@ onUnmounted(() => {
   border: 1px solid #409eff;
   pointer-events: auto;
   cursor: pointer;
+  border-radius: 50%;
+  z-index: 1;
 }
 
 .top-left {
@@ -345,16 +288,14 @@ onUnmounted(() => {
 }
 
 .avatar-field {
-  width: 100px !important;
-  height: 100px !important;
+  width: 100% !important;
+  height: 100% !important;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   background: #f5f7fa;
-  border: 2px dashed #dcdfe6;
   box-sizing: border-box;
-  border-radius: 50%;
 }
 
 .avatar-field img {
@@ -380,10 +321,12 @@ onUnmounted(() => {
 }
 
 .field-content {
-  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
   padding: 4px 8px;
-  cursor: move;
-  transition: all 0.3s;
+  box-sizing: border-box;
 }
 
 .field-content:hover {

@@ -230,6 +230,7 @@ import Title from './shapes/Title.vue'
 import Icon from './shapes/Icon.vue'
 import Avatar from './shapes/ResumeAvatar.vue'
 import ResumeField from './shapes/ResumeField.vue'
+import ResumeText from './shapes/ResumeText.vue'
 
 // 注册组件
 const components = {
@@ -243,7 +244,8 @@ const components = {
   title: Title,
   icon: Icon,
   avatar: Avatar,
-  'resume-field': ResumeField
+  'resume-field': ResumeField,
+  'resume-text': ResumeText
 }
 
 const props = defineProps({
@@ -378,17 +380,19 @@ const shadow = computed(() => ({
 }))
 
 // 获取元素样式
-const getElementStyle = (element) => ({
-  position: 'absolute',
-  width: `${element.width}px`,
-  height: `${element.height}px`,
-  transform: `translate(${element.x}px, ${element.y}px) rotate(${element.rotate || 0}deg)`,
-  transformOrigin: 'center',
-  zIndex: element.zIndex || 1,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center'
-})
+const getElementStyle = (element) => {
+  return {
+    position: 'absolute',
+    width: `${element.width}px`,
+    height: `${element.height}px`,
+    transform: `translate(${element.x}px, ${element.y}px) rotate(${element.rotate || 0}deg)`,
+    transformOrigin: 'center',
+    zIndex: element.props?.zIndex || 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  }
+}
 
 // 监听 props 变化
 watch(() => props.selectedElement, (newVal) => {
@@ -589,12 +593,12 @@ const getRandomAvatar = () => {
 // 修改 handleDrop 方法
 const handleDrop = (e) => {
   e.preventDefault()
-  e.stopPropagation()
   
-  const canvasRect = e.currentTarget.getBoundingClientRect()
-  const x = (e.clientX - canvasRect.left) / props.scale
-  const y = (e.clientY - canvasRect.top) / props.scale
-
+  // 获取放置位置
+  const rect = e.target.getBoundingClientRect()
+  const x = Math.round((e.clientX - rect.left) / props.scale)
+  const y = Math.round((e.clientY - rect.top) / props.scale)
+  
   const componentData = e.dataTransfer.getData('text/plain')
   if (!componentData) {
     console.log('没有获取到组件数据')
@@ -620,6 +624,7 @@ const handleDrop = (e) => {
           width: field.type === 'avatar' ? 100 : (field.width || 200),
           height: field.type === 'avatar' ? 100 : (field.type === 'textarea' ? (field.height || 100) : 30),
           rotate: 0,
+          zIndex: elementsList.value.length + 1,
           props: {
             label: field.label,
             dataPath: `basic_info.${field.key}`,
@@ -630,6 +635,18 @@ const handleDrop = (e) => {
             labelWidth: 70,
             labelColor: '#666666',
             isPreview: false,
+            opacity: 1,
+            textAlign: 'left',
+            verticalAlign: 'middle',
+            fontFamily: 'Arial',
+            fontWeight: 'normal',
+            fontStyle: 'normal',
+            lineHeight: 1.5,
+            borderRadius: field.type === 'avatar' ? '50%' : '0',
+            borderWidth: 0,
+            borderStyle: 'solid',
+            borderColor: '#dcdfe6',
+            backgroundColor: 'transparent',
             ...field.defaultStyle
           }
         }
@@ -637,36 +654,41 @@ const handleDrop = (e) => {
         elementsList.value.push(element)
         currentY += element.height + 10
       })
-
-      // 选中第一个元素
-      if (elementsList.value.length > 0) {
-        emit('element-select', elementsList.value[elementsList.value.length - basicInfoConfig.fields.length])
-      }
     } else {
-      // 处理其他类型的组件
-      const newElement = {
+      // 处理单个组件的拖放
+      const element = {
         id: generateId(),
         type: parsedData.type,
-        x,
-        y,
-        width: parsedData.props?.width || 100,
-        height: parsedData.props?.height || 100,
+        x: x,
+        y: y,
+        width: parsedData.type === 'icon' ? 24 : (parsedData.props?.width || 200),
+        height: parsedData.type === 'icon' ? 24 : (parsedData.props?.height || 30),
         rotate: 0,
         props: {
           ...parsedData.props,
-          value: parsedData.props?.type === 'avatar' ? getRandomAvatar() : (parsedData.props?.value || '')
+          zIndex: elementsList.value.length + 1,
+          opacity: 1,
+          textAlign: 'left',
+          verticalAlign: 'middle',
+          fontFamily: 'Arial',
+          fontWeight: 'normal',
+          fontStyle: 'normal',
+          lineHeight: 1.5,
+          borderRadius: parsedData.props?.type === 'avatar' ? '50%' : '0',
+          borderWidth: 0,
+          borderStyle: 'solid',
+          borderColor: '#dcdfe6',
+          backgroundColor: 'transparent'
         }
       }
 
-      elementsList.value.push(newElement)
-      emit('element-select', newElement)
+      elementsList.value.push(element)
     }
 
-    emit('elements-change', elementsList.value)
-    pushState(elementsList.value)
+    // 选中新添加的元素
+    emit('element-select', elementsList.value[elementsList.value.length - 1])
   } catch (error) {
-    console.error('拖放错误:', error)
-    console.error('原始数据:', componentData)
+    console.error('解析拖放数据失败:', error)
   }
 }
 

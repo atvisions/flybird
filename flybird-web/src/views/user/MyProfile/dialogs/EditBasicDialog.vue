@@ -118,8 +118,16 @@
                         v-model="formData.birth_date"
                         type="date"
                         :max="maxDate"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        class="w-full px-3 py-2 border rounded-lg"
+                        :class="[
+                          formErrors.birth_date 
+                            ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
+                            : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                        ]"
                       />
+                      <p v-if="formErrors.birth_date" class="mt-1 text-sm text-red-500">
+                        {{ formErrors.birth_date }}
+                      </p>
                     </div>
                     <div>
                       <label class="block text-sm font-medium text-gray-700 mb-1">手机号码</label>
@@ -249,6 +257,19 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'submit'])
 
+// 添加日期格式化函数
+const formatDate = (dateStr) => {
+  if (!dateStr) return ''
+  try {
+    const date = new Date(dateStr)
+    if (isNaN(date.getTime())) return '' // 无效日期返回空字符串
+    return date.toISOString().split('T')[0] // 返回 YYYY-MM-DD 格式
+  } catch (error) {
+    console.error('日期格式化错误:', error)
+    return ''
+  }
+}
+
 // 表单验证规则
 const rules = {
   name: [
@@ -309,12 +330,29 @@ const rules = {
     }
   ],
   email: [
+    { required: true, message: '请输入邮箱地址' },
     {
       validator: (value) => {
-        if (!value) return true // 选填
+        if (!value) return true
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        if (!emailRegex.test(value)) {
-          return '请输入正确的邮箱格式'
+        return emailRegex.test(value) ? true : '请输入有效的邮箱地址'
+      }
+    }
+  ],
+  birth_date: [
+    { required: true, message: '请选择出生日期' },
+    {
+      validator: (value) => {
+        if (!value) return true
+        const birthDate = new Date(value)
+        const today = new Date()
+        if (birthDate > today) {
+          return '出生日期不能晚于今天'
+        }
+        const minDate = new Date()
+        minDate.setFullYear(minDate.getFullYear() - 100)
+        if (birthDate < minDate) {
+          return '出生日期不能早于100年前'
         }
         return true
       }
@@ -338,7 +376,10 @@ const formData = ref({
 // 监听初始数据变化
 watch(() => props.initialData, (newData) => {
   if (newData) {
-    formData.value = { ...newData }
+    formData.value = {
+      ...newData,
+      birth_date: formatDate(newData.birth_date) // 格式化日期
+    }
   }
 }, { immediate: true })
 
@@ -385,7 +426,7 @@ const handleSubmit = async () => {
     const submitData = {
       name: formData.value.name,
       gender: formData.value.gender,
-      birth_date: formData.value.birth_date,
+      birth_date: formData.value.birth_date, // 已经是正确的格式
       phone: formData.value.phone,
       email: formData.value.email,
       location: formData.value.location,
@@ -427,9 +468,36 @@ const validateEmail = () => {
   }
 }
 
+// 添加出生日期实时验证函数
+const validateBirthDate = () => {
+  const birthDateRules = rules.birth_date
+  const value = formData.value.birth_date
+  
+  formErrors.value.birth_date = undefined // 清除之前的错误
+  
+  for (const rule of birthDateRules) {
+    if (rule.required && !value) {
+      formErrors.value.birth_date = rule.message
+      break
+    }
+    if (rule.validator) {
+      const validationResult = rule.validator(value)
+      if (typeof validationResult === 'string') {
+        formErrors.value.birth_date = validationResult
+        break
+      }
+    }
+  }
+}
+
 // 监听邮箱值的变化
 watch(() => formData.value.email, () => {
   validateEmail()
+})
+
+// 监听出生日期的变化
+watch(() => formData.value.birth_date, () => {
+  validateBirthDate()
 })
 
 // 添加最大日期计算

@@ -12,7 +12,7 @@
           @dragstart="handleDragStart($event, icon)"
           @dragend="handleDragEnd"
         >
-          <svg-icon :component="icon.component" :size="20" />
+          <svg-icon :component="icon.component" :size="24" />
         </div>
       </div>
     </div>
@@ -29,7 +29,7 @@
           @dragstart="handleDragStart($event, icon)"
           @dragend="handleDragEnd"
         >
-          <component :is="icon.component" :icon="icon.icon" width="20" height="20" />
+          <component :is="icon.component" :icon="icon.icon" width="24" height="24" />
         </div>
       </div>
     </div>
@@ -46,7 +46,7 @@
           @dragstart="handleDragStart($event, icon)"
           @dragend="handleDragEnd"
         >
-          <component :is="icon.component" :style="{ fontSize: '20px' }" />
+          <component :is="icon.component" :style="{ fontSize: '24px' }" />
         </div>
       </div>
     </div>
@@ -255,7 +255,7 @@ const handleDragStart = (event, icon) => {
       iconType: icon.type,
       component: icon.component.name,
       icon: icon.icon, // 添加 icon 属性
-      size: 20,
+      size: 24,
       fill: '#1890ff',
       stroke: '#096dd9',
       strokeWidth: 0,
@@ -336,8 +336,8 @@ const handleDragEnd = (event) => {
 }
 
 .icon-item :deep(svg) {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   color: #666;
   transition: color 0.2s ease;
 }

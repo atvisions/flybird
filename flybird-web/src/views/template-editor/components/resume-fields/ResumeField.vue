@@ -38,6 +38,23 @@ import { useProfileStore } from '@/stores/profile'
 import config from '@/config'
 import defaultAvatar from '@/assets/images/default-avatar.png'
 
+// 添加日期格式化函数
+const formatDate = (dateStr) => {
+  if (!dateStr) return ''
+  try {
+    const date = new Date(dateStr)
+    if (isNaN(date.getTime())) return ''
+    return date.toLocaleDateString('zh-CN', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+  } catch (error) {
+    console.error('日期格式化错误:', error)
+    return ''
+  }
+}
+
 const props = defineProps({
   label: {
     type: String,
@@ -113,18 +130,7 @@ const processValue = (value) => {
       
     case 'date':
     case 'birth_date':
-      // 处理日期格式
-      try {
-        const date = new Date(value)
-        return date.toLocaleDateString('zh-CN', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit'
-        })
-      } catch (error) {
-        console.error('日期格式化失败:', error)
-        return value
-      }
+      return formatDate(value)
       
     case 'gender':
       // 处理性别显示
@@ -281,7 +287,8 @@ const displayContent = computed(() => {
 // 样式计算
 const containerStyle = computed(() => ({
   width: `${props.width}px`,
-  height: props.type === 'textarea' ? `${props.height}px` : `${props.height}px`,
+  height: props.type === 'textarea' ? `${props.height}px` : 'auto',
+  minHeight: props.type === 'textarea' ? `${props.height}px` : `${props.height}px`,
   fontSize: `${props.fontSize}px`,
   color: props.color
 }))
@@ -293,7 +300,8 @@ const labelStyle = computed(() => ({
 
 const valueStyle = computed(() => ({
   width: props.label ? `calc(100% - ${props.labelWidth}px)` : '100%',
-  height: props.type === 'textarea' ? `calc(100% - 22px)` : 'auto'
+  height: props.type === 'textarea' ? `calc(100% - 22px)` : 'auto',
+  minHeight: props.type === 'textarea' ? `calc(100% - 22px)` : 'auto'
 }))
 
 // 添加图片错误处理
@@ -307,21 +315,25 @@ const handleImageError = (e) => {
 <style scoped>
 .resume-field {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   padding: 0 10px;
   box-sizing: border-box;
+  min-height: 30px;
+  height: auto;
 }
 
 .field-label {
   flex-shrink: 0;
   font-weight: 500;
+  padding-top: 2px;
 }
 
 .field-value {
   flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow: visible;
+  white-space: pre-wrap;
+  word-break: break-word;
+  height: auto;
 }
 
 .field-value.textarea {
