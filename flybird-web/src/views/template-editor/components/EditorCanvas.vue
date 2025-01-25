@@ -588,6 +588,12 @@ const generateId = () => {
   return Date.now() + Math.random().toString(36).substr(2, 9)
 }
 
+// 添加获取随机头像的函数
+const getRandomAvatar = () => {
+  const index = Math.floor(Math.random() * 10) + 1
+  return `/face/face-${index.toString().padStart(2, '0')}.png`
+}
+
 // 修改 handleDrop 方法
 const handleDrop = (e) => {
   e.preventDefault()
@@ -619,19 +625,20 @@ const handleDrop = (e) => {
           type: 'resume-field',
           x: x,
           y: currentY,
-          width: field.width || 200,
-          height: field.type === 'textarea' ? (field.height || 100) : 30,
+          width: field.type === 'avatar' ? 100 : (field.width || 200),
+          height: field.type === 'avatar' ? 100 : (field.type === 'textarea' ? (field.height || 100) : 30),
           rotate: 0,
           props: {
             label: field.label,
             dataPath: `basic_info.${field.key}`,
             type: field.type || 'text',
-            value: '',
+            value: field.type === 'avatar' ? getRandomAvatar() : '',
             fontSize: 14,
             color: '#333333',
             labelWidth: 70,
             labelColor: '#666666',
-            isPreview: false
+            isPreview: false,
+            ...field.defaultStyle
           }
         }
 
@@ -650,19 +657,13 @@ const handleDrop = (e) => {
         type: parsedData.type,
         x,
         y,
-        width: 100,
-        height: 100,
+        width: parsedData.props?.width || 100,
+        height: parsedData.props?.height || 100,
         rotate: 0,
-        props: parsedData.props || {}
-      }
-
-      // 根据类型调整默认尺寸
-      if (parsedData.type === 'icon') {
-        newElement.width = 40
-        newElement.height = 40
-      } else if (parsedData.type === 'text' || parsedData.type === 'title') {
-        newElement.width = 200
-        newElement.height = 40
+        props: {
+          ...parsedData.props,
+          value: parsedData.props?.type === 'avatar' ? getRandomAvatar() : (parsedData.props?.value || '')
+        }
       }
 
       elementsList.value.push(newElement)

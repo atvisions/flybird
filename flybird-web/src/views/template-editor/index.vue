@@ -294,32 +294,93 @@ const saveButtonText = computed(() => {
 const canvasCount = computed(() => templateData.value.canvases.length)
 
 // 处理加载完成
-const handleLoadComplete = ({ success, templateData, error }) => {
-  if (success && templateData) {
-    if (route.name === 'template-create') {
-      // 初始化一个新的空模板，确保网格相关配置正确设置
-      updateCanvasData([{
-        id: 0,
-        elements: [],
-        config: {
-          ...DEFAULT_CANVAS_CONFIG,
-          width: 794,
-          height: 1123,
-          backgroundColor: '#ffffff',
-          showGrid: true,
-          showGuideLine: true,
-          gridSize: 10,
-          gridColor: 'rgba(0, 0, 0, 0.15)'
-        }
-      }])
-      currentCanvasId.value = 0
-    } else {
-      handleEditTemplate(templateData)
-    }
-  } else {
-    showToast(error || '加载失败', 'error')
-    router.push('/templates/resume')
+const handleLoadComplete = async ({ success, templateData: loadedTemplateData, profileData, error }) => {
+  console.log('handleLoadComplete 被调用:', {
+    success,
+    mode: editorMode.value,
+    hasProfileData: !!profileData,
+    profileDataContent: profileData?.data
+  })
+
+  if (!success) {
+    ElMessage.error(error || '加载失败')
+    router.push('/')
+    return
   }
+
+  // 如果是使用模式且有档案数据，替换字段值
+  if (editorMode.value === 'use' && profileData?.data) {
+    console.log('开始处理用户档案数据:', profileData.data)
+    
+    // 遍历所有画布页面
+    loadedTemplateData.pages.forEach((page, pageIndex) => {
+      console.log(`处理第 ${pageIndex + 1} 页的元素:`, page.page_data?.elements)
+      
+      if (page.page_data && page.page_data.elements) {
+        page.page_data.elements.forEach((element, elementIndex) => {
+          console.log(`处理元素 ${elementIndex + 1}:`, {
+            type: element.type,
+            dataPath: element.props?.dataPath,
+            currentValue: element.props?.value
+          })
+          
+          // 根据 dataPath 获取档案数据中的值
+          if (element.props?.dataPath) {
+            const pathParts = element.props.dataPath.split('.')
+            let value = profileData.data
+            
+            // 遍历路径获取值
+            for (const part of pathParts) {
+              if (value && typeof value === 'object') {
+                value = value[part]
+                console.log(`获取路径 ${part} 的值:`, value)
+              } else {
+                value = null
+                console.log(`路径 ${part} 获取失败`)
+                break
+              }
+            }
+            
+            // 如果找到值，更新元素
+            if (value !== null && value !== undefined) {
+              // 如果是头像，需要处理完整的 URL
+              if (element.type === 'avatar' && value) {
+                if (!value.startsWith('http') && !value.startsWith('data:')) {
+                  value = `/media/${value.replace(/^\/?(media\/)?/, '')}`
+                  console.log('处理后的头像 URL:', value)
+                }
+              }
+              
+              // 更新元素值
+              if (!element.props) {
+                element.props = {}
+              }
+              element.props.value = value
+              console.log('元素值已更新:', {
+                type: element.type,
+                dataPath: element.props.dataPath,
+                newValue: element.props.value
+              })
+            }
+          }
+        })
+      }
+    })
+  }
+
+  if (route.name === 'template-create') {
+    // 初始化一个新的空模板
+    updateCanvasData([{
+      id: 0,
+      elements: [],
+      config: DEFAULT_CANVAS_CONFIG
+    }])
+    currentCanvasId.value = 0
+  } else {
+    console.log('准备调用 handleEditTemplate，传入数据:', loadedTemplateData)
+    handleEditTemplate(loadedTemplateData)
+  }
+  
   isLoading.value = false
 }
 
@@ -1244,6 +1305,24 @@ const handlePrintPreview = () => {
   printWindow.document.open()
   printWindow.document.write(printContent)
   printWindow.document.close()
+}
+
+// 添加缺失的方法
+const handleScaleChange = (newScale) => {
+  scale.value = newScale
+}
+
+const handleUseTemplate = (template) => {
+  // 处理使用模板的逻辑
+  console.log('使用模板:', template)
+}
+
+const handleElementAdd = (element) => {
+  // 处理添加元素的逻辑
+  console.log('添加元素:', element)
+  if (canvasRef.value) {
+    canvasRef.value.addElement(element)
+  }
 }
 </script>
 

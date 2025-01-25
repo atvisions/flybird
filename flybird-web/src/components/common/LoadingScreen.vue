@@ -35,11 +35,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useAccountStore } from '@/stores/account'
 import { useRoute, useRouter } from 'vue-router'
 import { templateApi } from '@/api/template'
 import { ElMessage } from 'element-plus'
+import * as profileApi from '@/api/profile'
+
+console.log('导入的 profileApi 对象:', profileApi)  // 添加调试日志
 
 const props = defineProps({
   templateId: {
@@ -56,31 +59,27 @@ const props = defineProps({
 
 const emit = defineEmits(['load-complete'])
 
-const loadingText = computed(() => {
-  switch (props.mode) {
-    case 'create':
-      return '准备创建新模板'
-    case 'edit':
-      return '加载模板数据'
-    case 'use':
-      return '准备使用模板'
-    default:
-      return '加载中'
-  }
-})
+// 改为 ref 而不是 computed
+const loadingText = ref('加载中')
+const loadingDescription = ref('请稍候...')
 
-const loadingDescription = computed(() => {
+// 根据模式设置初始文本
+const updateLoadingText = () => {
   switch (props.mode) {
     case 'create':
-      return '正在初始化编辑器...'
+      loadingText.value = '准备创建新模板'
+      loadingDescription.value = '正在初始化编辑器...'
+      break
     case 'edit':
-      return '正在加载模板内容...'
+      loadingText.value = '加载模板数据'
+      loadingDescription.value = '正在加载模板内容...'
+      break
     case 'use':
-      return '正在准备模板数据...'
-    default:
-      return '请稍候...'
+      loadingText.value = '准备使用模板'
+      loadingDescription.value = '正在准备模板数据...'
+      break
   }
-})
+}
 
 const error = ref('')
 const accountStore = useAccountStore()
@@ -95,9 +94,33 @@ const loadUserInfo = async () => {
       throw new Error('无法获取用户信息')
     }
     console.log('用户信息加载完成:', accountStore.userInfo.id)
+    return accountStore.userInfo.id
   } catch (error) {
     console.error('加载用户信息失败:', error)
     throw new Error('无法获取用户信息')
+  }
+}
+
+// 加载用户档案数据
+const loadProfileData = async () => {
+  loadingText.value = '正在获取用户档案数据...'
+  try {
+    console.log('开始获取用户档案数据...')
+    const response = await profileApi.default.getData()
+    console.log('获取到用户档案数据:', response)
+    
+    // 检查响应状态
+    if (!response || response.status !== 200 || !response.data) {
+      throw new Error('档案数据请求失败')
+    }
+    
+    // 将档案数据存储到 localStorage
+    localStorage.setItem('user_profile_data', JSON.stringify(response.data))
+    
+    return response.data
+  } catch (error) {
+    console.error('加载用户档案数据失败:', error)
+    throw new Error('无法获取用户档案数据')
   }
 }
 
@@ -136,54 +159,42 @@ const loadTemplateData = async () => {
 }
 
 const initialize = async () => {
-  error.value = '' // 清除之前的错误
   try {
-    // 1. 先加载用户信息
-    await loadUserInfo()
-    
-    // 2. 根据模式处理
-    if (props.mode === 'create') {
-      // 创建新模板模式
-      loadingText.value = '初始化编辑器...'
-      emit('load-complete', { 
-        success: true, 
-        templateData: {
-          name: '',
-          description: '',
-          category: '',
-          keywords: [],
-          is_public: true,
-          pages: [{
-            page_index: 0,
-            page_data: {
-              elements: [],
-              config: {
-                width: 794,
-                height: 1123,
-                backgroundColor: '#ffffff',
-                showGrid: true,
-                showGuideLine: true,
-                gridSize: 10,
-                gridColor: 'rgba(0, 0, 0, 0.15)'
-              }
-            }
-          }]
-        }
-      })
-    } else {
-      // 编辑或使用模式
-      const templateData = await loadTemplateData()
-      loadingText.value = '初始化编辑器...'
-      emit('load-complete', { success: true, templateData })
+    // 加载用户信息
+    const userId = await loadUserInfo()
+    console.log('用户信息加载完成:', userId)
+
+    // 如果是使用模式，需要加载用户档案数据
+    let profileData = null
+    if (props.mode === 'use') {
+      profileData = await loadProfileData()
     }
+
+    // 加载模板数据
+    const templateData = await loadTemplateData()
+    console.log('获取到模板数据:', templateData)
+
+    // 触发加载完成事件
+    emit('load-complete', {
+      success: true,
+      templateData: templateData.data,
+      profileData,
+      error: null
+    })
+
   } catch (error) {
     console.error('初始化失败:', error)
-    error.value = error.message || '加载失败'
-    emit('load-complete', { success: false, error: error.message })
+    emit('load-complete', {
+      success: false,
+      templateData: null,
+      profileData: null,
+      error: error.message || '加载失败'
+    })
   }
 }
 
 onMounted(() => {
+  updateLoadingText()
   initialize()
 })
 </script>

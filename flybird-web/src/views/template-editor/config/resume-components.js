@@ -3,6 +3,19 @@ export const resumeComponents = [
     key: 'basicInfo',
     label: '基本信息',
     fields: [
+      { 
+        type: 'avatar',
+        label: '头像', 
+        key: 'avatar',
+        dataPath: 'basic_info.avatar', 
+        width: 100,
+        height: 100,
+        defaultStyle: {
+          borderRadius: '50%',
+          width: '100px',
+          height: '100px'
+        }
+      },
       { label: '姓名', dataPath: 'basic_info.name', width: 200 },
       { label: '性别', dataPath: 'basic_info.gender', width: 100 },
       { label: '出生日期', dataPath: 'basic_info.birth_date', width: 200 },

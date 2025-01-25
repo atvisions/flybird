@@ -309,6 +309,17 @@ import config from '@/config'
 import { useAuthStore } from '@/stores/auth'
 import { ElMessage } from 'element-plus'
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
+import ResumeFieldGroup from './resume-fields/ResumeFieldGroup.vue'
+import {
+  basicInfoFields,
+  jobIntentionFields,
+  workExperienceFields,
+  educationFields,
+  skillFields,
+  projectFields,
+  certificateFields,
+  languageFields
+} from './resume-fields/config'
 
 const { activeTab, tabs, switchTab } = useTabs()
 const { components } = useComponents()
@@ -828,6 +839,49 @@ const handleConfirmDelete = async () => {
     templateToDelete.value = null
   }
 }
+
+const resumeFieldGroups = [
+  {
+    key: 'basicInfo',
+    title: '基本信息',
+    fields: basicInfoFields
+  },
+  {
+    key: 'jobIntention',
+    title: '求职意向',
+    fields: jobIntentionFields
+  },
+  {
+    key: 'workExperience',
+    title: '工作经历',
+    fields: workExperienceFields
+  },
+  {
+    key: 'education',
+    title: '教育经历',
+    fields: educationFields
+  },
+  {
+    key: 'skills',
+    title: '技能特长',
+    fields: skillFields
+  },
+  {
+    key: 'projects',
+    title: '项目经验',
+    fields: projectFields
+  },
+  {
+    key: 'certificates',
+    title: '证书',
+    fields: certificateFields
+  },
+  {
+    key: 'languages',
+    title: '语言能力',
+    fields: languageFields
+  }
+]
 </script>
 
 <style scoped>
