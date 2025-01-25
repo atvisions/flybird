@@ -89,12 +89,10 @@ export const templateApi = {
   // 获取模板分类
   async getCategories() {
     try {
-      console.log('开始请求模板分类')
       const response = await request({
         url: '/api/v1/template-editor/categories/',
         method: 'get'
       })
-      console.log('获取模板分类成功:', response)
       return response
     } catch (error) {
       console.error('获取模板分类失败:', error.response || error)
@@ -105,13 +103,11 @@ export const templateApi = {
   // 获取模板列表
   async getTemplates(params = {}) {
     try {
-      console.log('开始请求模板列表，参数:', params)
       const response = await request({
         url: '/api/v1/template-editor/templates/',
         method: 'get',
         params
       })
-      console.log('获取模板列表成功:', response)
       return response
     } catch (error) {
       console.error('获取模板列表失败:', error.response || error)
@@ -122,12 +118,10 @@ export const templateApi = {
   // 获取模板详情
   async getDetail(id) {
     try {
-      console.log('开始请求模板详情，ID:', id)
       const response = await request({
         url: `/api/v1/template-editor/templates/${id}/`,
         method: 'get'
       })
-      console.log('获取模板详情成功:', response)
       return response
     } catch (error) {
       console.error('获取模板详情失败:', error.response || error)
@@ -138,8 +132,6 @@ export const templateApi = {
   // 创建模板
   async create(data, canvasElement) {
     try {
-      console.log('开始创建模板，数据:', data)
-      
       // 生成缩略图
       const thumbnail = await generateThumbnail(canvasElement)
       
@@ -186,7 +178,6 @@ export const templateApi = {
           'Content-Type': 'multipart/form-data'
         }
       })
-      console.log('创建模板成功:', response)
       return response
     } catch (error) {
       console.error('创建模板失败:', error.response || error)
@@ -196,9 +187,7 @@ export const templateApi = {
 
   // 更新模板
   async update(id, data, canvasElement) {
-    try {
-      console.log('开始更新模板，ID:', id, '数据:', data)
-      
+    try {     
       // 生成缩略图
       const thumbnail = await generateThumbnail(canvasElement)
       
@@ -259,7 +248,6 @@ export const templateApi = {
         url: `/api/v1/template-editor/templates/${id}/`,
         method: 'delete'
       })
-      console.log('删除模板成功:', response)
       return response
     } catch (error) {
       console.error('删除模板失败:', error.response || error)
@@ -270,12 +258,10 @@ export const templateApi = {
   // 点赞/取消点赞模板
   async like(id) {
     try {
-      console.log('开始点赞/取消点赞模板，ID:', id)
       const response = await request({
         url: `/api/v1/template-editor/templates/${id}/like/`,
         method: 'post'
       })
-      console.log('点赞/取消点赞成功:', response)
       return response
     } catch (error) {
       console.error('点赞/取消点赞失败:', error.response || error)

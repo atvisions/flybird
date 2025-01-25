@@ -21,7 +21,6 @@
         @save="handleSave"
         @undo="handleUndo"
         @redo="handleRedo"
-        @scale-change="handleScaleChange"
         @update:template="handleTemplateUpdate"
         @print-preview="handlePrintPreview"
       />
@@ -899,7 +898,6 @@ const currentTemplateId = ref(null)
 // 修改 handleEditTemplate 方法
 const handleEditTemplate = async (templateData) => {
   currentTemplateId.value = templateData.id
-  console.log('开始编辑模板:', templateData)
   
   try {
     // 构造新的画布数据
@@ -1002,7 +1000,6 @@ const currentTemplateData = computed(() => {
 
 // 添加模板更新处理函数
 const handleTemplateUpdate = (updatedTemplate) => {
-  console.log('更新模板数据:', updatedTemplate)
   // 更新默认模板数据
   defaultTemplateData.value = {
     name: updatedTemplate.name,
@@ -1110,7 +1107,6 @@ const handleSave = async ({ mode, action, data, callback }) => {
       pages: pages
     }
 
-    console.log('准备提交的模板数据:', submitData)
 
     let res
     // 获取当前画布元素
@@ -1307,10 +1303,6 @@ const handlePrintPreview = () => {
   printWindow.document.close()
 }
 
-// 添加缺失的方法
-const handleScaleChange = (newScale) => {
-  scale.value = newScale
-}
 
 const handleUseTemplate = (template) => {
   // 处理使用模板的逻辑

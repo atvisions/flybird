@@ -49,10 +49,6 @@ const initApp = async () => {
   try {
     const authStore = useAuthStore()
     await authStore.initialize()
-    console.log('Auth initialized:', {
-      isLoggedIn: authStore.isLoggedIn,
-      token: localStorage.getItem('token')
-    })
   } catch (error) {
     console.error('Auth initialization failed:', error)
   } finally {

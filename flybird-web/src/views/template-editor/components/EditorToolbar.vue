@@ -343,7 +343,6 @@ const handleSubmitReview = () => {
 
 // 计算当前模板数据
 const currentTemplate = computed(() => {
-  console.log('计算当前模板数据，props:', props.currentTemplate)
   if (!props.currentTemplate) return null
   
   // 确保返回一个新的对象，避免直接修改 props
@@ -357,18 +356,15 @@ const currentTemplate = computed(() => {
     status: props.currentTemplate.status || 0,
     pages: props.currentTemplate.pages || []
   }
-  console.log('处理后的模板数据:', template)
   return template
 })
 
 // 处理保存模板
 const handleSaveTemplate = (templateData) => {
-  console.log('EditorToolbar - 保存模板，接收到的数据:', templateData)
   const data = {
     ...templateData,
     status: templateData.status // 使用传入的数据中的status
   }
-  console.log('EditorToolbar - 最终发送的数据:', data)
   
   emit('save', { 
     mode: editorMode.value, 

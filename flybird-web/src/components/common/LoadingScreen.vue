@@ -42,7 +42,6 @@ import { templateApi } from '@/api/template'
 import { ElMessage } from 'element-plus'
 import * as profileApi from '@/api/profile'
 
-console.log('导入的 profileApi 对象:', profileApi)  // 添加调试日志
 
 const props = defineProps({
   templateId: {
@@ -93,7 +92,6 @@ const loadUserInfo = async () => {
     if (!accountStore.userInfo?.id) {
       throw new Error('无法获取用户信息')
     }
-    console.log('用户信息加载完成:', accountStore.userInfo.id)
     return accountStore.userInfo.id
   } catch (error) {
     console.error('加载用户信息失败:', error)
@@ -105,9 +103,7 @@ const loadUserInfo = async () => {
 const loadProfileData = async () => {
   loadingText.value = '正在获取用户档案数据...'
   try {
-    console.log('开始获取用户档案数据...')
     const response = await profileApi.default.getData()
-    console.log('获取到用户档案数据:', response)
     
     // 检查响应状态
     if (!response || response.status !== 200 || !response.data) {
@@ -136,8 +132,6 @@ const loadTemplateData = async () => {
   
   try {
     const response = await templateApi.getDetail(props.templateId)
-    console.log('获取到模板数据:', response)
-
     const templateData = response.data
     
     // 仅在编辑模式下检查权限
@@ -162,7 +156,6 @@ const initialize = async () => {
   try {
     // 加载用户信息
     const userId = await loadUserInfo()
-    console.log('用户信息加载完成:', userId)
 
     // 如果是使用模式，需要加载用户档案数据
     let profileData = null
@@ -172,7 +165,7 @@ const initialize = async () => {
 
     // 加载模板数据
     const templateData = await loadTemplateData()
-    console.log('获取到模板数据:', templateData)
+
 
     // 触发加载完成事件
     emit('load-complete', {

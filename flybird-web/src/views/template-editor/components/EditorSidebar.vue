@@ -336,8 +336,6 @@ const authStore = useAuthStore()
 
 const emit = defineEmits(['edit-template', 'use-template', 'create-resume'])
 
-// 在 script setup 开始处添加
-console.log('EditorSidebar setup start')
 
 // 监听 activeTab 变化
 watch(activeTab, (newValue) => {
@@ -478,10 +476,8 @@ const getComponentDescription = (component) => {
 
 // 修改分类加载方法
 const loadCategories = async () => {
-  console.log('开始加载分类')
   try {
     const res = await categoryApi.getList()
-    console.log('获取到的分类数据:', res)
     categories.value = Array.isArray(res) ? res : []
     // 如果没有选择分类，默认选择"全部"
     if (!selectedCategory.value) {
@@ -498,7 +494,6 @@ const sortBy = ref('latest')
 
 // 修改分类选择处理
 const handleCategorySelect = (category) => {
-  console.log('选择分类:', category)
   
   if (category === '全部') {
     selectedCategory.value = ''
@@ -508,7 +503,6 @@ const handleCategorySelect = (category) => {
     const categoryObj = categories.value.find(c => c.name === category)
     selectedCategory.value = categoryObj ? categoryObj.id : ''
   }
-  console.log('设置的分类值:', selectedCategory.value)
   loadTemplates()
 }
 
@@ -553,14 +547,7 @@ const sortedTemplates = computed(() => {
 
 // 修改模版加载方法
 const loadTemplates = async () => {
-  console.log('开始加载模版，当前状态:', {
-    activeTab: activeTab.value,
-    selectedCategory: selectedCategory.value,
-    onlyMyTemplates: onlyMyTemplates.value,
-    sortBy: sortBy.value,
-    currentUserId: accountStore.userInfo?.id
-  })
-  
+
   loading.value = true
   try {
     const params = {}
@@ -590,10 +577,8 @@ const loadTemplates = async () => {
     if (sortBy.value) {
       params.sort = sortBy.value
     }
-    
-    console.log('加载模版参数:', params)
-    const res = await templateApi.getTemplates(params)
-    console.log('获取到的模版数据:', res)
+     const res = await templateApi.getTemplates(params)
+ 
     
     let templateData = []
     if (res?.data?.results) {
@@ -611,14 +596,12 @@ const loadTemplates = async () => {
 
     // 获取所有模板创建者的用户信息
     const creatorIds = [...new Set(templateData.map(t => t.creator))].filter(Boolean)
-    console.log('需要获取的创建者信息:', creatorIds)
     
     const creatorInfoMap = new Map()
     
     for (const creatorId of creatorIds) {
       try {
         const userRes = await account.getUserPublicInfo(creatorId)
-        console.log(`获取用户 ${creatorId} 信息:`, userRes)
         if (userRes?.data?.data) {
           creatorInfoMap.set(creatorId, {
             name: userRes.data.data.username,
@@ -647,7 +630,6 @@ const loadTemplates = async () => {
         creator_is_vip: creatorInfo?.is_vip || false,
         creator_position: creatorInfo?.position || ''
       }
-      console.log('处理后的模板数据:', processedTemplate)
       return processedTemplate
     })
   } catch (error) {
@@ -671,23 +653,7 @@ watch(onlyMyTemplates, (newValue) => {
   loadTemplates()
 })
 
-// 选择模板
-const handleTemplateSelect = (template) => {
-  // TODO: 实现模板选择逻辑
-  console.log('选择模板:', template)
-}
 
-// 判断模板是否可编辑
-const isTemplateEditable = (template) => {
-  const currentUserId = accountStore.userInfo?.id
-  console.log('模板权限检查:', {
-    templateId: template.id,
-    templateCreator: template.creator,
-    currentUserId: currentUserId,
-    isMatch: template.creator === currentUserId
-  })
-  return template.creator === currentUserId
-}
 
 // 处理编辑模板
 const handleEditTemplate = (template) => {
@@ -774,8 +740,6 @@ const handleCategoryClick = (e) => {
 
 // 组件挂载时初始化
 onMounted(() => {
-  console.log('组件挂载，开始初始化')
-  console.log('初始只看我的状态:', onlyMyTemplates.value)
   loadCategories()
   loadTemplates()
 })

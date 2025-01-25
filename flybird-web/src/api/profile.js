@@ -5,9 +5,7 @@ import request from '@/utils/request'
 const profile = {
   // 获取完整档案数据
   getData() {
-    console.log('Calling getData...')
     return request.get('/api/v1/users/profile/data/').then(response => {
-      console.log('getData raw response:', response)
       return response
     })
   },

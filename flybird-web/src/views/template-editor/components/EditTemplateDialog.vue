@@ -278,12 +278,10 @@ const initFormData = () => {
   }
   // 确保每次初始化时都设置为draft
   saveMode.value = 'draft'
-  console.log('初始化后的表单数据:', formData.value)
 }
 
 // 监听对话框显示状态
 watch(() => props.modelValue, (newVal) => {
-  console.log('对话框显示状态变化:', newVal)
   if (newVal) {
     // 当对话框打开时，重新初始化表单数据
     initFormData()
@@ -295,9 +293,7 @@ const loadCategories = async () => {
   try {
     const res = await categoryApi.getList()
     categories.value = Array.isArray(res) ? res : []
-    console.log('加载的分类数据:', categories.value)
   } catch (error) {
-    console.error('获取分类列表失败:', error)
     ElMessage.error('获取分类列表失败')
   }
 }
@@ -306,7 +302,6 @@ const loadCategories = async () => {
 const getCategoryLabel = (value) => {
   const category = categories.value.find(cat => cat.id === value)
   const label = category ? category.name : ''
-  console.log('获取分类标签:', { value, label })
   return label
 }
 

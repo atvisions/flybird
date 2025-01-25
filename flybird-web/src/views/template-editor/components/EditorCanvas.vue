@@ -416,15 +416,7 @@ watch(() => props.scale, (newScale, oldScale) => {
   })
 })
 
-// 添加调试信息
-watch(() => props.canvasConfig, (newConfig) => {
-  console.log('Canvas config changed:', {
-    showGuideLine: newConfig?.showGuideLine,
-    width: newConfig?.width,
-    height: newConfig?.height,
-    rulerColor: newConfig?.rulerColor
-  })
-}, { immediate: true, deep: true })
+
 
 // 修改元素选中处理函数
 const handleElementSelect = (element, event) => {
