@@ -654,15 +654,40 @@ watch(onlyMyTemplates, (newValue) => {
 })
 
 
+// 判断模板是否可编辑
+const isTemplateEditable = (template) => {
+  const currentUserId = accountStore.userInfo?.id
+  console.log('模板权限检查:', {
+    templateId: template.id,
+    templateCreator: template.creator,
+    currentUserId: currentUserId,
+    isMatch: template.creator === currentUserId
+  })
+  return template.creator === currentUserId
+}
 
 // 处理编辑模板
 const handleEditTemplate = (template) => {
-  router.push(`/editor/edit/${template.id}`)
+  router.push({
+    path: `/editor/edit/${template.id}`,
+    replace: true,
+    force: true
+  }).then(() => {
+    // 强制重新加载页面数据
+    window.location.reload()
+  })
 }
 
 // 处理使用模板
 const handleUseTemplate = (template) => {
-  router.push(`/editor/use/${template.id}`)
+  router.push({
+    path: `/editor/use/${template.id}`,
+    replace: true,
+    force: true
+  }).then(() => {
+    // 强制重新加载页面数据
+    window.location.reload()
+  })
 }
 
 // 添加临时存储要删除的模板
