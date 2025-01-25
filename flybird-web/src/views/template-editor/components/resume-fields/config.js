@@ -146,48 +146,87 @@ export const workExperienceFields = [
     type: 'text',
     label: '公司名称',
     key: 'company',
-    dataPath: 'company',
+    dataPath: 'work_experience[0].company',
     defaultStyle: {
       fontSize: 16,
-      fontWeight: 'bold'
+      fontWeight: 'bold',
+      color: '#333333'
     }
   },
   {
     type: 'text',
-    label: '职位',
+    label: '职位名称',
     key: 'position',
-    dataPath: 'position',
+    dataPath: 'work_experience[0].position',
     defaultStyle: {
-      fontSize: 14
+      fontSize: 14,
+      color: '#666666'
     }
   },
   {
     type: 'text',
-    label: '部门',
+    label: '所在部门',
     key: 'department',
-    dataPath: 'department',
+    dataPath: 'work_experience[0].department',
     defaultStyle: {
-      fontSize: 14
+      fontSize: 14,
+      color: '#666666'
     }
   },
   {
-    type: 'dateRange',
-    label: '工作时间',
-    startKey: 'start_date',
-    endKey: 'end_date',
-    dataPath: ['start_date', 'end_date'],
+    type: 'date',
+    label: '开始时间',
+    key: 'start_date',
+    dataPath: 'work_experience[0].start_date',
     defaultStyle: {
-      fontSize: 14
+      fontSize: 14,
+      color: '#666666'
+    }
+  },
+  {
+    type: 'date',
+    label: '结束时间',
+    key: 'end_date',
+    dataPath: 'work_experience[0].end_date',
+    defaultStyle: {
+      fontSize: 14,
+      color: '#666666'
     }
   },
   {
     type: 'textarea',
     label: '工作描述',
     key: 'description',
-    dataPath: 'description',
+    dataPath: 'work_experience[0].description',
     defaultStyle: {
       fontSize: 14,
-      lineHeight: 1.5
+      lineHeight: 1.5,
+      height: 100,
+      color: '#666666'
+    }
+  },
+  {
+    type: 'textarea',
+    label: '工作成就',
+    key: 'achievements',
+    dataPath: 'work_experience[0].achievements',
+    defaultStyle: {
+      fontSize: 14,
+      lineHeight: 1.5,
+      height: 100,
+      color: '#666666'
+    }
+  },
+  {
+    type: 'textarea',
+    label: '技术栈',
+    key: 'technologies',
+    dataPath: 'work_experience[0].technologies',
+    defaultStyle: {
+      fontSize: 14,
+      lineHeight: 1.5,
+      height: 60,
+      color: '#666666'
     }
   }
 ]

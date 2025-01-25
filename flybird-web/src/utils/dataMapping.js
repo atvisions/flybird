@@ -7,24 +7,100 @@ const getValueByPath = (obj, path) => {
     return ''
   }
 
+  // 统一使用 work_experience 作为字段名
+  const normalizedPath = path.replace(/^(workExperience|workExperiences)\[/, 'work_experience[')
+
   // 处理路径为空的情况
-  if (path === 'basic_info.') {
+  if (normalizedPath === 'basic_info.') {
     return ''
   }
 
-  const pathParts = path.split('.')
+  // 处理数组路径，如 work_experience[0].company
+  const arrayMatch = normalizedPath.match(/(.+?)\[(\d+)\]\.(.+)/)
+  if (arrayMatch) {
+    const [, arrayPath, index, field] = arrayMatch
+    console.log('【dataMapping】处理数组路径:', {
+      arrayPath,
+      index,
+      field,
+      originalPath: path,
+      normalizedPath,
+      hasArray: !!obj[arrayPath],
+      isArray: Array.isArray(obj[arrayPath]),
+      availableKeys: obj ? Object.keys(obj) : []
+    })
+
+    // 获取数组
+    const array = obj['work_experience']
+    if (!array || !Array.isArray(array)) {
+      console.log('【dataMapping】数组不存在:', {
+        arrayPath,
+        availableKeys: obj ? Object.keys(obj) : [],
+        value: array
+      })
+      return ''
+    }
+
+    // 获取数组元素
+    const item = array[parseInt(index, 10)]
+    if (!item) {
+      console.log('【dataMapping】数组元素不存在:', {
+        index,
+        arrayLength: array.length
+      })
+      return ''
+    }
+
+    // 获取字段值
+    let value = item[field]
+    console.log('【dataMapping】获取字段值:', {
+      field,
+      value,
+      itemKeys: Object.keys(item),
+      valueType: typeof value,
+      item
+    })
+
+    // 特殊处理某些字段
+    if (field === 'achievements' || field === 'technologies') {
+      if (!value || value === '[]' || (Array.isArray(value) && value.length === 0)) {
+        return '未设置'
+      }
+      try {
+        if (typeof value === 'string') {
+          if (value === '[]') {
+            return '未设置'
+          }
+          // 如果是普通字符串，直接返回
+          if (!value.startsWith('[')) {
+            return value
+          }
+          // 尝试解析 JSON
+          const parsed = JSON.parse(value)
+          if (Array.isArray(parsed)) {
+            return parsed.length > 0 ? parsed.join(field === 'technologies' ? '、' : '\n') : '未设置'
+          }
+          return String(parsed) || '未设置'
+        }
+        if (Array.isArray(value)) {
+          return value.length > 0 ? value.join(field === 'technologies' ? '、' : '\n') : '未设置'
+        }
+        return String(value) || '未设置'
+      } catch (error) {
+        console.warn('【dataMapping】解析数组字段失败:', { field, value, error })
+        return typeof value === 'string' ? value : '未设置'
+      }
+    }
+    
+    return value === undefined || value === null || value === '' ? '未设置' : value
+  }
+
+  const pathParts = normalizedPath.split('.')
   let value = obj
 
   // 处理 basic_info 字段
   if (pathParts[0] === 'basic_info' && value.basic_info) {
     const field = pathParts[1]
-    console.log('【dataMapping】处理basic_info字段:', {
-      field,
-      hasBasicInfo: !!value.basic_info,
-      hasField: field in value.basic_info,
-      value: value.basic_info[field],
-      basicInfoContent: JSON.stringify(value.basic_info)
-    })
 
     // 字段映射
     const fieldMap = {
@@ -38,7 +114,6 @@ const getValueByPath = (obj, path) => {
     const fieldValue = value.basic_info[mappedField]
 
     if (fieldValue === undefined || fieldValue === null) {
-      console.log(`【dataMapping】字段 ${field} 不存在或为空`)
       return ''
     }
 
@@ -58,9 +133,71 @@ const getValueByPath = (obj, path) => {
 
 // 处理字段值
 const processFieldValue = (value, mappingType, dataPath) => {
+  
   // 如果值为空，根据字段类型返回默认值
   if (!value) {
     return mappingType === 'text' ? '' : '未设置'
+  }
+
+  // 检查是否是工作经历字段
+  const isWorkExperience = /^work_experience\[/.test(dataPath)
+  if (isWorkExperience) {
+    console.log('【dataMapping】处理工作经历字段:', { dataPath, value, mappingType })
+    const field = dataPath.split('.')[1]
+    switch (field) {
+      case 'achievements':
+        if (!value || value === '[]' || (Array.isArray(value) && value.length === 0)) {
+          return '未设置'
+        }
+        try {
+          if (typeof value === 'string' && value !== '[]') {
+            return value
+          }
+          const achievementArray = Array.isArray(value) ? value : [value]
+          return achievementArray.length > 0 ? achievementArray.join('\n') : '未设置'
+        } catch (error) {
+          console.warn('【dataMapping】解析成就数据失败:', { value, error })
+          return value || '未设置'
+        }
+      case 'technologies':
+        if (!value || value === '[]' || (Array.isArray(value) && value.length === 0)) {
+          return '未设置'
+        }
+        if (typeof value === 'string' && value !== '[]') {
+          return value
+        }
+        if (Array.isArray(value)) {
+          return value.join('、')
+        }
+        return value || '未设置'
+      case 'start_date':
+      case 'end_date':
+        try {
+          if (!value || value === 'Invalid Date') {
+            return field === 'end_date' ? '至今' : ''
+          }
+          const date = new Date(value)
+          if (isNaN(date.getTime())) {
+            return field === 'end_date' ? '至今' : ''
+          }
+          const year = date.getFullYear()
+          const month = String(date.getMonth() + 1).padStart(2, '0')
+          return `${year}.${month}`
+        } catch (error) {
+          console.warn('【dataMapping】日期格式化失败:', { value, error, field })
+          return field === 'end_date' ? '至今' : ''
+        }
+      case 'company':
+      case 'position':
+      case 'department':
+        return value?.trim() || '未设置'
+      case 'description':
+        return value?.trim() || '未设置'
+      case 'duration':
+        return value?.trim() || ''
+      default:
+        return String(value || '').trim() || '未设置'
+    }
   }
 
   switch (mappingType) {
@@ -72,7 +209,6 @@ const processFieldValue = (value, mappingType, dataPath) => {
       return `${config.mediaURL}/${cleanPath}`
 
     case 'date':
-    case 'birth_date':
       try {
         if (value === 'Invalid Date' || !value) {
           return '未设置'
@@ -83,8 +219,7 @@ const processFieldValue = (value, mappingType, dataPath) => {
         }
         return date.toLocaleDateString('zh-CN', {
           year: 'numeric',
-          month: '2-digit',
-          day: '2-digit'
+          month: 'long'
         })
       } catch (error) {
         console.error('日期格式化失败:', error)
@@ -100,6 +235,17 @@ const processFieldValue = (value, mappingType, dataPath) => {
       return genderMap[value] || value
 
     case 'textarea':
+      if (typeof value === 'string' && (value.startsWith('[') || value.startsWith('{'))) {
+        try {
+          const parsed = JSON.parse(value)
+          if (Array.isArray(parsed)) {
+            return parsed.length > 0 ? parsed.join('\n') : '未设置'
+          }
+          return parsed.toString()
+        } catch {
+          return value || '未设置'
+        }
+      }
       return value || '未设置'
 
     case 'text':
@@ -149,50 +295,28 @@ const processFieldValue = (value, mappingType, dataPath) => {
             }
             return value || ''
           case 'expected_city':
-            // 期望城市直接返回，因为已经是中文
             return value
           default:
             return value
         }
       }
-      // 其他文本字段直接返回值
-      return value
+      return String(value)
 
     default:
-      return value || '未设置'
+      return String(value) || '未设置'
   }
 }
 
 // 检查元素是否需要数据映射
 export const needsDataMapping = (element) => {
   const needs = element.type === 'resume-field' && (element.dataPath || element.field?.dataPath)
-  console.log('【dataMapping】检查元素是否需要映射:', {
-    id: element.id,
-    type: element.type,
-    hasDataPath: !!element.dataPath,
-    hasField: !!element.field,
-    hasFieldDataPath: !!element.field?.dataPath,
-    needs
-  })
   return needs
 }
 
 // 映射用户档案数据到模板元素
 export const mapProfileDataToElements = (elements, profileData) => {
-  console.log('【dataMapping】开始映射数据:', {
-    elementsCount: elements?.length,
-    profileDataKeys: profileData ? Object.keys(profileData) : [],
-    profileDataStructure: profileData ? JSON.stringify(profileData) : null,
-    elements: elements
-  })
 
   if (!elements || !profileData) {
-    console.log('【dataMapping】无效的参数:', {
-      hasElements: !!elements,
-      elementsCount: elements?.length,
-      hasProfileData: !!profileData,
-      profileDataKeys: profileData ? Object.keys(profileData) : []
-    })
     return elements
   }
 
@@ -200,16 +324,7 @@ export const mapProfileDataToElements = (elements, profileData) => {
   const data = profileData.data || profileData
 
   return elements.map(element => {
-    // 检查元素是否需要映射
-    console.log('【dataMapping】检查元素:', {
-      id: element.id,
-      type: element.type,
-      hasDataPath: !!element.dataPath,
-      hasField: !!element.field,
-      hasFieldDataPath: !!element.field?.dataPath,
-      dataPath: element.dataPath || element.field?.dataPath,
-      mappingType: element.mappingType || element.field?.type
-    })
+
 
     // 获取数据路径和映射类型
     const dataPath = element.dataPath || element.field?.dataPath
@@ -217,32 +332,17 @@ export const mapProfileDataToElements = (elements, profileData) => {
 
     // 如果是普通元素或没有数据路径，直接返回
     if (!dataPath) {
-      console.log('【dataMapping】元素无需映射:', {
-        id: element.id,
-        type: element.type,
-        content: element.content
-      })
+
       return element
     }
 
     // 获取映射值
     const value = getValueByPath(data, dataPath)
-    console.log('【dataMapping】获取到的值:', {
-      id: element.id,
-      dataPath,
-      value,
-      valueType: typeof value
-    })
+
     
     // 处理值
     const processedValue = processFieldValue(value, mappingType, dataPath)
-    console.log('【dataMapping】处理后的值:', {
-      id: element.id,
-      dataPath,
-      originalValue: value,
-      processedValue,
-      mappingType
-    })
+
 
     // 返回更新后的元素
     return {

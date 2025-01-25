@@ -22,7 +22,7 @@
           />
         </svg>
       </div>
-      <p class="text-gray-600 text-lg">加载中...</p>
+      <p class="text-gray-600 text-lg">{{ message || '加载中...' }}</p>
     </div>
   </div>
 </template>
@@ -34,6 +34,14 @@ const props = defineProps({
   loading: {
     type: Boolean,
     required: true
+  },
+  message: {
+    type: String,
+    default: ''
+  },
+  minLoadingTime: {
+    type: Number,
+    default: 2000 // 最小加载时间（2秒）
   }
 })
 
@@ -41,7 +49,6 @@ const emit = defineEmits(['loading-complete'])
 
 const show = ref(true)
 const startTime = ref(0)
-const minLoadingTime = 2000 // 最小加载时间（2秒）
 let loadingCompleteTimeout = null
 const loadingFinished = ref(false)
 const minTimeReached = ref(false)
@@ -72,7 +79,7 @@ watch(() => props.loading, (newLoading) => {
     loadingCompleteTimeout = setTimeout(() => {
       minTimeReached.value = true
       checkComplete()
-    }, minLoadingTime)
+    }, props.minLoadingTime)
   } else {
     // 标记加载完成
     loadingFinished.value = true
@@ -87,7 +94,7 @@ onMounted(() => {
   loadingCompleteTimeout = setTimeout(() => {
     minTimeReached.value = true
     checkComplete()
-  }, minLoadingTime)
+  }, props.minLoadingTime)
 })
 
 // 组件卸载时清理定时器

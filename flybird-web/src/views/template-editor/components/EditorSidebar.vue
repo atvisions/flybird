@@ -55,12 +55,7 @@
             @dragstart="handleDragStart($event, {
               type: 'resume-field',
               component: group.key,
-              label: group.label,
-              props: {
-                background: '#fff',
-                padding: '20px',
-                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-              }
+              label: group.label
             })"
           >
             <div class="component-icon">
@@ -290,7 +285,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { computed, ref, onMounted, watch, nextTick } from 'vue'
 import { useTabs } from '../composables/useTabs'
 import { useComponents } from '../composables/useComponents'
 import * as Icons from '@icon-park/vue-next'
@@ -307,12 +302,16 @@ import config from '@/config'
 import { useAuthStore } from '@/stores/auth'
 import { ElMessage } from 'element-plus'
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
+import ResumeFieldGroup from './resume-fields/ResumeFieldGroup.vue'
 import {
   basicInfoFields,
   jobIntentionFields,
   workExperienceFields,
   educationFields,
-  skillFields
+  skillFields,
+  projectFields,
+  certificateFields,
+  languageFields
 } from './resume-fields/config'
 
 const { activeTab, tabs, switchTab } = useTabs()
@@ -351,46 +350,73 @@ const getIconComponent = (iconName) => {
 
 // 处理图标选择
 const handleIconSelect = (iconData) => {
+  // 创建一个模拟的拖拽事件
+  const e = new DragEvent('dragstart', {
+    bubbles: true,
+    cancelable: true
+  })
+  
+  // 设置拖拽数据
   const dragData = {
     type: 'icon',
     props: {
       name: iconData.name,
       size: 24,
-      fill: '#333333',
-      width: 24,
-      height: 24
+      color: '#333333'
     }
   }
   
-  console.log('图标拖拽数据:', dragData)
-  event.dataTransfer.setData('text/plain', JSON.stringify(dragData))
+  // 创建一个新的 DataTransfer 对象
+  const dataTransfer = new DataTransfer()
+  dataTransfer.setData('text/plain', JSON.stringify(dragData))
+  Object.defineProperty(e, 'dataTransfer', {
+    value: dataTransfer,
+    writable: false
+  })
+  
+  handleDragStart(e, dragData)
 }
 
 // 处理拖拽开始
-const handleDragStart = (event, item) => {
-  if (activeTab.value === 'resume') {
-    // 处理简历组件拖拽
-    const dragData = {
+const handleDragStart = (e, item) => {
+  let dragData = null
+  
+  if (item.type === 'resume-field') {
+    // 处理简历字段组件
+    const componentKey = item.component === 'basicInfo' ? 'basicInfo' : 
+                        item.component === 'jobIntention' ? 'jobIntention' :
+                        item.component === 'workExperience' ? 'workExperience' : ''
+    
+    const componentConfig = resumeComponents.find(group => group.key === componentKey)
+    
+    dragData = {
       type: item.component === 'basicInfo' ? 'basic-info' : 
-            item.component === 'jobIntention' ? 'job-intention' : 
-            'resume-field',
-      component: item.component,
+            item.component === 'jobIntention' ? 'job-intention' :
+            item.component === 'workExperience' ? 'work-experience' : 'resume-field',
       field: {
-        key: item.component,
-        label: item.label,
-        type: 'group',
-        fields: resumeComponents.find(group => group.key === item.component)?.fields || []
+        key: componentKey,
+        label: componentConfig?.label || '',
+        fields: componentConfig?.fields || [],
+        defaultStyle: componentConfig?.defaultStyle || {}
       }
     }
-    event.dataTransfer.setData('text/plain', JSON.stringify(dragData))
+    console.log('拖拽数据:', dragData)
+  } else if (item.type === 'icon') {
+    // 处理图标组件
+    dragData = {
+      type: 'icon',
+      props: item.props
+    }
   } else {
-    // 处理其他组件拖拽
-    event.dataTransfer.setData('text/plain', JSON.stringify({
+    // 处理基础组件
+    dragData = {
       type: item.type,
-      component: item.component,
-      defaultProps: item.props
-    }))
+      props: item.defaultProps || {}
+    }
   }
+  
+  e.dataTransfer.setData('text/plain', JSON.stringify(dragData))
+  e.dataTransfer.effectAllowed = 'copy'
 }
 
 // 获取字段图标
@@ -805,11 +831,52 @@ const handleConfirmDelete = async () => {
 
 // 组织简历组件数据
 const resumeComponents = [
-  { key: 'basicInfo', label: '基本信息', fields: basicInfoFields },
-  { key: 'jobIntention', label: '求职意向', fields: jobIntentionFields },
-  { key: 'workExperience', label: '工作经历', fields: workExperienceFields },
-  { key: 'education', label: '教育经历', fields: educationFields },
-  { key: 'skills', label: '技能特长', fields: skillFields }
+  { 
+    key: 'basicInfo', 
+    label: '基本信息', 
+    fields: basicInfoFields 
+  },
+  { 
+    key: 'jobIntention', 
+    label: '求职意向', 
+    fields: jobIntentionFields 
+  },
+  { 
+    key: 'workExperience', 
+    label: '工作经历', 
+    fields: workExperienceFields,
+    defaultStyle: {
+      fontSize: 14,
+      color: '#333333',
+      labelWidth: 70,
+      labelColor: '#666666'
+    }
+  },
+  { 
+    key: 'education', 
+    label: '教育经历', 
+    fields: educationFields 
+  },
+  { 
+    key: 'skills', 
+    label: '技能特长', 
+    fields: skillFields 
+  },
+  { 
+    key: 'projects', 
+    label: '项目经验', 
+    fields: projectFields 
+  },
+  { 
+    key: 'certificates', 
+    label: '证书', 
+    fields: certificateFields 
+  },
+  { 
+    key: 'languages', 
+    label: '语言能力', 
+    fields: languageFields 
+  }
 ]
 </script>
 

@@ -37,6 +37,7 @@ import { UserOutlined } from '@ant-design/icons-vue'
 import { useProfileStore } from '@/stores/profile'
 import config from '@/config'
 import defaultAvatar from '@/assets/images/default-avatar.png'
+import { processFieldValue, getValueByPath } from '@/utils/dataMapping'
 
 // 添加日期格式化函数
 const formatDate = (dateStr) => {
@@ -56,6 +57,10 @@ const formatDate = (dateStr) => {
 }
 
 const props = defineProps({
+  id: {
+    type: String,
+    required: true
+  },
   label: {
     type: String,
     default: ''
@@ -70,7 +75,7 @@ const props = defineProps({
   },
   mappingType: {
     type: String,
-    default: ''
+    default: 'text'
   },
   isPreview: {
     type: Boolean,
@@ -110,74 +115,6 @@ const emit = defineEmits(['update:value'])
 
 const profileStore = useProfileStore()
 
-// 处理不同类型的值
-const processValue = (value) => {
-  if (value === undefined || value === null) {
-    return ''
-  }
-
-  switch (props.mappingType) {
-    case 'avatar':
-      // 处理头像URL
-      if (!value) return defaultAvatar
-      // 如果已经是完整URL或者是Data URL，直接返回
-      if (value.startsWith('http') || value.startsWith('data:image')) {
-        return value
-      }
-      // 清理路径并使用环境变量中的API URL
-      const cleanPath = value.replace(/^\/?(media\/)?/, '')
-      return `${config.mediaURL}/${cleanPath}`
-      
-    case 'date':
-    case 'birth_date':
-      return formatDate(value)
-      
-    case 'gender':
-      // 处理性别显示
-      return value === 'male' ? '男' : value === 'female' ? '女' : value
-      
-    case 'location':
-      // 处理所在地显示
-      return value || props.label
-      
-    case 'personal_summary':
-      // 处理个人简介显示
-      return value || props.label
-      
-    case 'job_type':
-      // 处理工作类型
-      const jobTypeMap = {
-        'full_time': '全职',
-        'part_time': '兼职',
-        'internship': '实习',
-        'freelance': '自由职业'
-      }
-      return jobTypeMap[value] || value
-      
-    case 'job_status':
-      // 处理求职状态
-      const jobStatusMap = {
-        'looking': '正在找工作',
-        'not_looking': '暂不找工作',
-        'open': '随时看机会'
-      }
-      return jobStatusMap[value] || value
-      
-    case 'language_proficiency':
-      // 处理语言水平
-      const proficiencyMap = {
-        'beginner': '初级',
-        'intermediate': '中级',
-        'advanced': '高级',
-        'native': '母语'
-      }
-      return proficiencyMap[value] || value
-      
-    default:
-      return value
-  }
-}
-
 // 获取用户档案数据
 const previewValue = computed(() => {
   // 预览模式下获取实际数据
@@ -185,18 +122,11 @@ const previewValue = computed(() => {
     return ''
   }
   
-  const pathParts = props.dataPath.split('.')
-  let value = profileStore.profileData
-  
-  for (const part of pathParts) {
-    if (!value || !(part in value)) {
-      return ''
-    }
-    value = value[part]
-  }
+  // 获取字段值
+  const value = getValueByPath(profileStore.profileData, props.dataPath)
   
   // 处理值
-  const processedValue = processValue(value)
+  const processedValue = processFieldValue(value, props.mappingType, props.dataPath)
   const finalValue = `${processedValue}${props.suffix}`
   
   console.log('字段值映射:', {
@@ -233,13 +163,14 @@ const getPlaceholder = computed(() => {
     'job_intention.industries': '期望行业',
     
     // 工作经验
-    'work_experience.company': '公司名称',
-    'work_experience.position': '职位名称',
-    'work_experience.department': '所在部门',
-    'work_experience.start_date': '开始时间',
-    'work_experience.end_date': '结束时间',
-    'work_experience.description': '工作描述',
-    'work_experience.achievements': '工作成就',
+    'work_experience[0].company': '公司名称',
+    'work_experience[0].position': '职位名称',
+    'work_experience[0].department': '所在部门',
+    'work_experience[0].start_date': '开始时间',
+    'work_experience[0].end_date': '结束时间',
+    'work_experience[0].description': '工作描述',
+    'work_experience[0].achievements': '工作成就',
+    'work_experience[0].technologies': '技术栈',
     
     // 教育经历
     'education.school': '学校名称',

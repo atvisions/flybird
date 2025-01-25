@@ -62,6 +62,10 @@ const props = defineProps({
     type: String,
     default: 'text'
   },
+  isSelected: {
+    type: Boolean,
+    default: false
+  },
   label: {
     type: String,
     required: true
@@ -161,10 +165,6 @@ const props = defineProps({
   rotate: {
     type: Number,
     default: 0
-  },
-  isSelected: {
-    type: Boolean,
-    default: false
   }
 })
 

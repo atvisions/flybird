@@ -627,19 +627,12 @@ const handleDrop = (e) => {
     const parsedData = JSON.parse(componentData)
     console.log('解析的拖放数据:', parsedData)
 
-    if (parsedData.type === 'basic-info' || parsedData.type === 'job-intention') {
-      // 从 resumeComponents 中获取对应的字段配置
-      const configKey = parsedData.type === 'basic-info' ? 'basicInfo' : 'jobIntention'
-      const groupConfig = resumeComponents.find(group => group.key === configKey)
-      if (!groupConfig) {
-        console.error('未找到对应的字段配置:', configKey)
-        return
-      }
-
-      console.log('找到的字段配置:', groupConfig)
+    if (parsedData.type === 'basic-info' || parsedData.type === 'job-intention' || parsedData.type === 'work-experience') {
+      // 从字段配置中获取字段列表
+      const fields = parsedData.field.fields || []
+      console.log('字段配置:', fields)
       
       let currentY = y
-      const fields = parsedData.field.fields || groupConfig.fields
       fields.forEach((field, index) => {
         const element = {
           id: generateId(),
@@ -651,12 +644,12 @@ const handleDrop = (e) => {
           rotate: 0,
           props: {
             label: field.label,
-            dataPath: field.dataPath || `${configKey === 'basicInfo' ? 'basic_info' : 'job_intention'}.${field.key}`,
+            dataPath: field.dataPath,
             type: field.type || 'text',
             mappingType: field.mappingType,
             mappingOptions: field.mappingOptions,
-            fontSize: 14,
-            color: '#333333',
+            fontSize: field.defaultStyle?.fontSize || 14,
+            color: field.defaultStyle?.color || '#333333',
             labelWidth: 70,
             labelColor: '#666666',
             isPreview: false,
@@ -664,9 +657,9 @@ const handleDrop = (e) => {
             textAlign: 'left',
             verticalAlign: 'middle',
             fontFamily: 'Arial',
-            fontWeight: 'normal',
+            fontWeight: field.defaultStyle?.fontWeight || 'normal',
             fontStyle: 'normal',
-            lineHeight: 1.5,
+            lineHeight: field.defaultStyle?.lineHeight || 1.5,
             borderRadius: field.type === 'avatar' ? '50%' : '0',
             borderWidth: 0,
             borderStyle: 'solid',
