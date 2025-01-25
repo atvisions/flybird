@@ -27,7 +27,7 @@
     </template>
     <template v-else>
       <div class="field-content" :style="contentStyle">
-        {{ isPreview ? value || `[${label}]` : `[${label}]` }}
+        {{ value || `[${label}]` }}
       </div>
     </template>
     <div v-if="isSelected" class="resize-handles">
@@ -382,15 +382,11 @@ onUnmounted(() => {
 .field-content {
   position: relative;
   padding: 4px 8px;
-  border: 1px dashed #dcdfe6;
-  border-radius: 4px;
-  background: rgba(64, 158, 255, 0.1);
   cursor: move;
   transition: all 0.3s;
 }
 
 .field-content:hover {
-  border-color: #409eff;
-  background: rgba(64, 158, 255, 0.2);
+  color: #409eff;
 }
 </style> 
