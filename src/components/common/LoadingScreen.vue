@@ -79,10 +79,10 @@ const loadProfileData = async () => {
     }
 
     // 确保所有必要的字段都存在
-    const requiredFields = ['basic_info', 'education', 'work_experience', 'skill']
+    const requiredFields = ['basic_info', 'education', 'work_experience', 'skill', 'job_intention']
     for (const field of requiredFields) {
       if (!profileData[field]) {
-        profileData[field] = field === 'basic_info' ? {} : []
+        profileData[field] = field === 'basic_info' || field === 'job_intention' ? {} : []
       }
     }
 
@@ -91,6 +91,14 @@ const loadProfileData = async () => {
     for (const field of basicInfoFields) {
       if (!profileData.basic_info[field]) {
         profileData.basic_info[field] = ''
+      }
+    }
+
+    // 确保 job_intention 中的所有字段都存在
+    const jobIntentionFields = ['job_type', 'job_status', 'expected_salary', 'expected_city', 'industries']
+    for (const field of jobIntentionFields) {
+      if (!profileData.job_intention[field]) {
+        profileData.job_intention[field] = ''
       }
     }
     

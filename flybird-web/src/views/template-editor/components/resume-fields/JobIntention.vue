@@ -1,16 +1,20 @@
 <template>
   <div class="job-intention-fields">
-    <div class="field-group">
-      <div class="field-item"
-        v-for="field in jobIntentionFields"
-        :key="field.key"
-        draggable="true"
-        @dragstart="handleDragStart($event, field)"
-        @dragend="handleDragEnd"
-      >
-        <div class="field-preview">
-          <div class="field-label">{{ field.label }}</div>
-          <div class="field-value">{{ getPreviewValue(field) }}</div>
+    <div 
+      class="field-group"
+      draggable="true"
+      @dragstart="handleDragStart"
+    >
+      <h3>求职意向</h3>
+      <div class="fields-container">
+        <div
+          v-for="field in jobIntentionFields"
+          :key="field.key"
+          class="field-item"
+        >
+          <div class="field-content">
+            {{ field.label }}
+          </div>
         </div>
       </div>
     </div>
@@ -19,97 +23,68 @@
 
 <script setup>
 import { jobIntentionFields } from './config'
+import { ref } from 'vue'
 
-const emit = defineEmits(['select-field'])
-
-// 获取预览值
-const getPreviewValue = (field) => {
-  switch (field.key) {
-    case 'job_type':
-      return '全职'
-    case 'job_status':
-      return '在职找工作'
-    case 'expected_salary':
-      return '15k-20k'
-    case 'expected_city':
-      return '北京'
-    case 'industries':
-      return 'IT互联网'
-    default:
-      return '点击编辑'
-  }
-}
-
-// 处理拖拽开始
-const handleDragStart = (event, field) => {
-  event.dataTransfer.effectAllowed = 'copy'
-  event.dataTransfer.dropEffect = 'copy'
-  
-  const componentData = {
-    type: 'resume-field',
-    component: field.type,
-    label: field.label,
-    props: {
-      ...field,
-      isPreview: false
+const handleDragStart = (event) => {
+  const dragData = {
+    type: 'job-intention',
+    component: 'jobIntention',
+    field: {
+      key: 'job_intention',
+      label: '求职意向',
+      type: 'group',
+      fields: jobIntentionFields
     }
   }
   
-  event.dataTransfer.setData('text/plain', JSON.stringify(componentData))
-  event.target.classList.add('dragging')
-}
-
-const handleDragEnd = (event) => {
-  event.target.classList.remove('dragging')
+  console.log('求职意向拖拽数据:', dragData)
+  event.dataTransfer.setData('text/plain', JSON.stringify(dragData))
 }
 </script>
 
 <style scoped>
 .job-intention-fields {
-  padding: 12px;
+  padding: 16px;
 }
 
 .field-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  margin-bottom: 24px;
+  background: #f5f7fa;
+  border: 1px solid #e4e7ed;
+  border-radius: 8px;
+  padding: 16px;
+  cursor: move;
+  transition: all 0.3s;
+}
+
+.field-group:hover {
+  background: #ecf5ff;
+  border-color: #409eff;
+}
+
+.field-group h3 {
+  font-size: 16px;
+  margin-bottom: 16px;
+  color: #333;
+}
+
+.fields-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
 }
 
 .field-item {
+  background: white;
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
   padding: 8px;
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  cursor: grab;
-  transition: all 0.2s;
 }
 
-.field-item:hover {
-  border-color: #1890ff;
-  box-shadow: 0 2px 6px rgba(24, 144, 255, 0.1);
-  transform: translateY(-1px);
-}
-
-.field-item.dragging {
-  opacity: 0.5;
-  cursor: grabbing;
-}
-
-.field-preview {
+.field-content {
   display: flex;
   align-items: center;
-  gap: 8px;
-}
-
-.field-label {
-  font-size: 13px;
-  color: #666;
-  min-width: 70px;
-}
-
-.field-value {
-  font-size: 13px;
-  color: #333;
-  flex: 1;
+  justify-content: center;
+  min-height: 40px;
 }
 </style> 

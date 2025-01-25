@@ -136,6 +136,14 @@ const processValue = (value) => {
       // 处理性别显示
       return value === 'male' ? '男' : value === 'female' ? '女' : value
       
+    case 'location':
+      // 处理所在地显示
+      return value || props.label
+      
+    case 'personal_summary':
+      // 处理个人简介显示
+      return value || props.label
+      
     case 'job_type':
       // 处理工作类型
       const jobTypeMap = {

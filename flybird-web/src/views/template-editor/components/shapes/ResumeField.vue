@@ -161,6 +161,10 @@ const props = defineProps({
   rotate: {
     type: Number,
     default: 0
+  },
+  isSelected: {
+    type: Boolean,
+    default: false
   }
 })
 

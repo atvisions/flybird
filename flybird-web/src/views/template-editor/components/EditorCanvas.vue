@@ -216,7 +216,25 @@ import { ref, computed, watch, onMounted, onUnmounted, nextTick, h } from 'vue'
 import VueMoveable from 'vue3-moveable'
 import { useHistory } from '../composables/useHistory'
 import GuideLine from './GuideLine.vue'
-import { resumeComponents } from '../config/resume-components'
+import { 
+  basicInfoFields, 
+  jobIntentionFields, 
+  workExperienceFields, 
+  educationFields,
+  skillFields
+} from './resume-fields/config'
+
+// 组织简历组件数据
+const resumeFields = [
+  { key: 'basicInfo', label: '基本信息', fields: basicInfoFields },
+  { key: 'jobIntention', label: '求职意向', fields: jobIntentionFields },
+  { key: 'workExperience', label: '工作经历', fields: workExperienceFields },
+  { key: 'education', label: '教育经历', fields: educationFields },
+  { key: 'skills', label: '技能特长', fields: skillFields }
+]
+
+// 替换原来的 resumeComponents
+const resumeComponents = resumeFields
 
 // 导入基础组件
 import Rectangle from './shapes/Rectangle.vue'
@@ -609,13 +627,20 @@ const handleDrop = (e) => {
     const parsedData = JSON.parse(componentData)
     console.log('解析的拖放数据:', parsedData)
 
-    if (parsedData.type === 'basic-info') {
-      // 从 resumeComponents 中获取基本信息字段配置
-      const basicInfoConfig = resumeComponents.find(group => group.key === 'basicInfo')
-      if (!basicInfoConfig) return
+    if (parsedData.type === 'basic-info' || parsedData.type === 'job-intention') {
+      // 从 resumeComponents 中获取对应的字段配置
+      const configKey = parsedData.type === 'basic-info' ? 'basicInfo' : 'jobIntention'
+      const groupConfig = resumeComponents.find(group => group.key === configKey)
+      if (!groupConfig) {
+        console.error('未找到对应的字段配置:', configKey)
+        return
+      }
 
+      console.log('找到的字段配置:', groupConfig)
+      
       let currentY = y
-      basicInfoConfig.fields.forEach((field, index) => {
+      const fields = parsedData.field.fields || groupConfig.fields
+      fields.forEach((field, index) => {
         const element = {
           id: generateId(),
           type: 'resume-field',
@@ -624,12 +649,12 @@ const handleDrop = (e) => {
           width: field.type === 'avatar' ? 100 : (field.width || 200),
           height: field.type === 'avatar' ? 100 : (field.type === 'textarea' ? (field.height || 100) : 30),
           rotate: 0,
-          zIndex: elementsList.value.length + 1,
           props: {
             label: field.label,
-            dataPath: `basic_info.${field.key}`,
+            dataPath: field.dataPath || `${configKey === 'basicInfo' ? 'basic_info' : 'job_intention'}.${field.key}`,
             type: field.type || 'text',
-            value: field.type === 'avatar' ? getRandomAvatar() : '',
+            mappingType: field.mappingType,
+            mappingOptions: field.mappingOptions,
             fontSize: 14,
             color: '#333333',
             labelWidth: 70,
@@ -650,43 +675,68 @@ const handleDrop = (e) => {
             ...field.defaultStyle
           }
         }
-
+        
+        console.log('创建的元素:', element)
         elementsList.value.push(element)
         currentY += element.height + 10
       })
+      
+      // 选中最后添加的元素
+      selectedElements.value = elementsList.value[elementsList.value.length - 1]
+    } else if (parsedData.type === 'resume-field') {
+      // 处理单个字段的拖放
+      const element = {
+        id: generateId(),
+        type: 'resume-field',
+        x: x,
+        y: y,
+        width: parsedData.width || 100,
+        height: parsedData.height || 30,
+        rotate: 0,
+        props: {
+          ...parsedData.field,
+          value: '',
+          isPreview: false
+        }
+      }
+
+      elementsList.value.push(element)
+      emit('element-select', element)
+      
+      // 保存到历史记录
+      pushState([...elementsList.value])
     } else {
-      // 处理单个组件的拖放
+      // 处理普通组件的拖放
       const element = {
         id: generateId(),
         type: parsedData.type,
         x: x,
         y: y,
-        width: parsedData.type === 'icon' ? 24 : (parsedData.props?.width || 200),
-        height: parsedData.type === 'icon' ? 24 : (parsedData.props?.height || 30),
+        width: parsedData.type === 'triangle' ? 100 : 
+               parsedData.type === 'circle' ? 100 :
+               parsedData.type === 'rectangle' ? 100 :
+               parsedData.type === 'text' ? 100 :
+               parsedData.type === 'star' ? 100 :
+               parsedData.defaultProps?.width || parsedData.width || 200,
+        height: parsedData.type === 'triangle' ? 100 : 
+                parsedData.type === 'circle' ? 100 :
+                parsedData.type === 'rectangle' ? 100 :
+                parsedData.type === 'text' ? 30 :
+                parsedData.type === 'star' ? 100 :
+                parsedData.defaultProps?.height || parsedData.height || 30,
         rotate: 0,
         props: {
-          ...parsedData.props,
-          zIndex: elementsList.value.length + 1,
-          opacity: 1,
-          textAlign: 'left',
-          verticalAlign: 'middle',
-          fontFamily: 'Arial',
-          fontWeight: 'normal',
-          fontStyle: 'normal',
-          lineHeight: 1.5,
-          borderRadius: parsedData.props?.type === 'avatar' ? '50%' : '0',
-          borderWidth: 0,
-          borderStyle: 'solid',
-          borderColor: '#dcdfe6',
-          backgroundColor: 'transparent'
+          ...parsedData.defaultProps,
+          isPreview: false
         }
       }
 
       elementsList.value.push(element)
+      emit('element-select', element)
+      
+      // 保存到历史记录
+      pushState([...elementsList.value])
     }
-
-    // 选中新添加的元素
-    emit('element-select', elementsList.value[elementsList.value.length - 1])
   } catch (error) {
     console.error('解析拖放数据失败:', error)
   }

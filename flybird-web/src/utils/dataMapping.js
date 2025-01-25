@@ -112,6 +112,49 @@ const processFieldValue = (value, mappingType, dataPath) => {
         }
         return genderMap[value] || value
       }
+      // 检查是否是求职意向字段
+      if (dataPath.startsWith('job_intention.')) {
+        const field = dataPath.split('.')[1]
+        switch (field) {
+          case 'job_type':
+            const jobTypeMap = {
+              'full_time': '全职',
+              'part_time': '兼职',
+              'internship': '实习',
+              'freelance': '自由职业'
+            }
+            return jobTypeMap[value] || value
+          case 'job_status':
+            const jobStatusMap = {
+              'actively_looking': '积极找工作',
+              'open_to_offers': '考虑机会',
+              'not_looking': '暂不找工作'
+            }
+            return jobStatusMap[value] || value
+          case 'expected_salary':
+            const salaryMap = {
+              '0-5': '5K以下',
+              '5-10': '5-10K',
+              '10-15': '10-15K',
+              '15-20': '15-20K',
+              '20-30': '20-30K',
+              '30-50': '30-50K',
+              '50-100': '50-100K',
+              '100+': '100K以上'
+            }
+            return salaryMap[value] || value
+          case 'industries':
+            if (typeof value === 'string') {
+              return value.split(',').join('、')
+            }
+            return value || ''
+          case 'expected_city':
+            // 期望城市直接返回，因为已经是中文
+            return value
+          default:
+            return value
+        }
+      }
       // 其他文本字段直接返回值
       return value
 

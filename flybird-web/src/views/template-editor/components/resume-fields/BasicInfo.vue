@@ -97,23 +97,42 @@ const handleDragStart = (event, field) => {
 
   const specificProps = getFieldSpecificProps(field.type)
   
+  // 获取字段的映射类型
+  const getMappingType = (key) => {
+    switch (key) {
+      case 'birth_date':
+        return 'birth_date'
+      case 'location':
+        return 'location'
+      case 'personal_summary':
+        return 'personal_summary'
+      case 'avatar':
+        return 'avatar'
+      default:
+        return field.type
+    }
+  }
+
+  const mappingType = getMappingType(field.key)
+  
   console.log('【BasicInfo】开始拖拽字段:', {
     field,
     specificProps,
     dataPath: field.dataPath,
-    mappingType: field.type
+    mappingType
   })
   
   const fieldData = {
     type: 'resume-field',
+    component: 'basic_info',
     fieldType: field.type,
     category: 'basic-info',
     field: {
       ...field,
-      // 使用配置中的 dataPath
       dataPath: field.dataPath,
-      mappingType: field.type,
+      mappingType,
       label: field.label,
+      key: field.key,
       defaultStyle: {
         ...field.defaultStyle,
         ...specificProps.defaultStyle
@@ -123,9 +142,10 @@ const handleDragStart = (event, field) => {
     height: specificProps.height,
     props: {
       label: field.label,
-      value: '', // 初始值为空，等待数据映射
+      value: '',
+      key: field.key,
       dataPath: field.dataPath,
-      mappingType: field.type,
+      mappingType,
       defaultStyle: {
         ...field.defaultStyle,
         ...specificProps.defaultStyle

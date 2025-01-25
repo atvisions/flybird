@@ -4,24 +4,15 @@ import html2canvas from 'html2canvas'
 // 生成缩略图的辅助函数
 async function generateThumbnail(canvasElement) {
   try {
-    // A4 纸的宽高比 1:1.414 (794:1123)
-    const A4_RATIO = 1.414
+    // A4 纸的标准尺寸 (794:1123)
+    const A4_WIDTH = 794
+    const A4_HEIGHT = 1123
     
-    // 获取原始画布的尺寸
+    // 获取原始画布的尺寸（这里的尺寸应该已经是 A4 比例）
     const originalWidth = canvasElement.offsetWidth
     const originalHeight = canvasElement.offsetHeight
 
-    // 设置缩略图的宽度
-    const THUMB_WIDTH = 600
-    // 根据 A4 比例计算高度
-    const THUMB_HEIGHT = Math.round(THUMB_WIDTH * A4_RATIO)
-
-    // 计算缩放比例
-    const scaleX = THUMB_WIDTH / originalWidth
-    const scaleY = THUMB_HEIGHT / originalHeight
-    const scale = Math.min(scaleX, scaleY)
-
-    // 配置 html2canvas
+    // 配置 html2canvas，使用 1 倍缩放以保持原始清晰度
     const canvas = await html2canvas(canvasElement, {
       width: originalWidth,
       height: originalHeight,
@@ -29,8 +20,7 @@ async function generateThumbnail(canvasElement) {
       logging: false,
       useCORS: true,
       allowTaint: true,
-      scale: 2, // 使用2倍缩放以获得更清晰的图像
-      // 确保正确渲染字体
+      scale: 1, // 使用1倍缩放，保持原始清晰度
       onclone: (clonedDoc) => {
         // 等待字体加载完成
         const promises = [];
@@ -55,28 +45,24 @@ async function generateThumbnail(canvasElement) {
       }
     })
 
-    // 创建一个新的 canvas 用于缩放
+    // 创建一个新的 canvas，使用 A4 标准尺寸
     const scaledCanvas = document.createElement('canvas')
-    scaledCanvas.width = THUMB_WIDTH
-    scaledCanvas.height = THUMB_HEIGHT
+    scaledCanvas.width = A4_WIDTH
+    scaledCanvas.height = A4_HEIGHT
     const ctx = scaledCanvas.getContext('2d')
 
     // 设置白色背景
     ctx.fillStyle = '#ffffff'
-    ctx.fillRect(0, 0, THUMB_WIDTH, THUMB_HEIGHT)
+    ctx.fillRect(0, 0, A4_WIDTH, A4_HEIGHT)
 
-    // 在中心绘制并缩放原始画布
-    const scaledWidth = originalWidth * scale
-    const scaledHeight = originalHeight * scale
-    const x = (THUMB_WIDTH - scaledWidth) / 2
-    const y = (THUMB_HEIGHT - scaledHeight) / 2
-    ctx.drawImage(canvas, x, y, scaledWidth, scaledHeight)
+    // 直接将原始画布缩放到 A4 尺寸
+    ctx.drawImage(canvas, 0, 0, A4_WIDTH, A4_HEIGHT)
 
-    // 将 canvas 转换为 Blob
+    // 将 canvas 转换为 Blob，使用较低的压缩质量来控制文件大小
     return new Promise((resolve) => {
       scaledCanvas.toBlob((blob) => {
         resolve(blob)
-      }, 'image/jpeg', 0.9) // 使用 JPEG 格式，90% 质量
+      }, 'image/jpeg', 0.6) // 使用 JPEG 格式，60% 质量
     })
   } catch (error) {
     console.error('生成缩略图失败:', error)

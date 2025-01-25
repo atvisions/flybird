@@ -32,7 +32,7 @@ export const basicInfoFields = [
   },
   {
     type: 'text',
-    label: '生日',
+    label: '出生日期',
     key: 'birth_date',
     dataPath: 'basic_info.birth_date',
     defaultStyle: {
@@ -59,7 +59,7 @@ export const basicInfoFields = [
   },
   {
     type: 'text',
-    label: '所在地',
+    label: '所在城市',
     key: 'location',
     dataPath: 'basic_info.location',
     defaultStyle: {
@@ -68,7 +68,7 @@ export const basicInfoFields = [
   },
   {
     type: 'textarea',
-    label: '个人总结',
+    label: '个人简介',
     key: 'personal_summary',
     dataPath: 'basic_info.personal_summary',
     defaultStyle: {
@@ -85,6 +85,13 @@ export const jobIntentionFields = [
     label: '工作类型',
     key: 'job_type',
     dataPath: 'job_intention.job_type',
+    mappingType: 'job_type',
+    mappingOptions: [
+      { value: 'full_time', label: '全职' },
+      { value: 'part_time', label: '兼职' },
+      { value: 'internship', label: '实习' },
+      { value: 'freelance', label: '自由职业' }
+    ],
     defaultStyle: {
       fontSize: 14
     }
@@ -94,6 +101,12 @@ export const jobIntentionFields = [
     label: '求职状态',
     key: 'job_status',
     dataPath: 'job_intention.job_status',
+    mappingType: 'job_status',
+    mappingOptions: [
+      { value: 'actively_looking', label: '正在积极找工作' },
+      { value: 'open_to_offers', label: '对机会持开放态度' },
+      { value: 'not_looking', label: '暂时不找工作' }
+    ],
     defaultStyle: {
       fontSize: 14
     }

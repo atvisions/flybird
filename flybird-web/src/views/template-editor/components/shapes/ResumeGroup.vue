@@ -1,122 +1,84 @@
 <template>
-  <div class="resume-group">
+  <div class="resume-group" :style="containerStyle">
     <div class="group-header">
-      <div class="group-title">{{ label }}</div>
+      <div class="group-title">{{ title }}</div>
     </div>
     <div class="group-content">
-      <template v-if="isArray">
-        <div class="array-item" v-for="(item, index) in defaultData" :key="index">
-          <div v-for="(field, key) in fields" :key="key" class="field-item">
-            <div class="field-label">{{ field.label }}</div>
-            <ResumeField
-              :content="item[key] || '暂无数据'"
-              :width="200"
-              :height="24"
-              :fontSize="13"
-              :color="'#333'"
-              :lineHeight="1.5"
-              :contentEditable="false"
-            />
-          </div>
-        </div>
-      </template>
-      <template v-else>
-        <div v-for="(field, key) in fields" :key="key" class="field-item">
-          <div class="field-label">{{ field.label }}</div>
-          <ResumeField
-            :content="defaultData[key] || '暂无数据'"
-            :width="200"
-            :height="24"
-            :fontSize="13"
-            :color="'#333'"
-            :lineHeight="1.5"
-            :contentEditable="false"
-          />
-        </div>
-      </template>
+      <div v-for="field in fields" :key="field.key" class="field-item">
+        <ResumeField
+          :type="field.type"
+          :label="field.label"
+          :data-path="field.dataPath"
+          :mapping-type="field.mappingType"
+          :mapping-options="field.mappingOptions"
+          :width="field.width || 200"
+          :height="field.height || 30"
+          :default-style="field.defaultStyle"
+          :is-preview="false"
+        />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import ResumeField from './ResumeField.vue'
 
-defineProps({
-  label: {
+const props = defineProps({
+  title: {
     type: String,
     required: true
   },
   fields: {
-    type: Object,
+    type: Array,
     required: true
   },
-  isArray: {
-    type: Boolean,
-    default: false
+  width: {
+    type: Number,
+    default: 400
   },
-  defaultData: {
-    type: [Object, Array],
-    default: () => ({})
+  height: {
+    type: Number,
+    default: 300
   }
 })
+
+const containerStyle = computed(() => ({
+  width: `${props.width}px`,
+  minHeight: `${props.height}px`
+}))
 </script>
 
 <style scoped>
 .resume-group {
-  width: 100%;
-  height: 100%;
+  background: white;
+  border: 1px solid #e4e7ed;
   border-radius: 8px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .group-header {
-  padding: 12px 16px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  margin-bottom: 20px;
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 12px;
 }
 
 .group-title {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 500;
   color: #333;
+  margin: 0;
 }
 
 .group-content {
-  flex: 1;
-  padding: 16px;
-  overflow-y: auto;
-}
-
-.array-item {
-  padding: 12px;
-  background: #f8fafc;
-  border-radius: 6px;
-  margin-bottom: 12px;
-}
-
-.array-item:last-child {
-  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .field-item {
-  margin-bottom: 12px;
-}
-
-.field-item:last-child {
-  margin-bottom: 0;
-}
-
-.field-label {
-  font-size: 12px;
-  color: #666;
-  margin-bottom: 4px;
-}
-
-.field-value {
-  font-size: 13px;
-  color: #333;
-  line-height: 1.5;
+  min-height: 30px;
 }
 </style> 

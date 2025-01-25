@@ -2,9 +2,13 @@ const { defineConfig } = require('@vue/cli-service')
 const path = require('path')
 require('dotenv').config()
 
+
 module.exports = defineConfig({
   transpileDependencies: true,
   runtimeCompiler: true,
+  define: {
+    __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'false'
+  },
   configureWebpack: {
     resolve: {
       alias: {

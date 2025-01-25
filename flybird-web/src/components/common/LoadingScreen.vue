@@ -223,32 +223,78 @@ const handleLoadComplete = () => {
             })
 
             // 获取字段配置
-            const fieldKey = (() => {
-              // 基于字段类型和标签推断key
+            const fieldConfig = (() => {
+              // 基于字段类型和标签推断配置
+              const label = element.props?.label
+              
+              // 求职意向字段
+              if (label === '工作类型' || label === '求职状态' || 
+                  label === '期望薪资' || label === '期望城市' || 
+                  label === '期望行业') {
+                const key = {
+                  '工作类型': 'job_type',
+                  '求职状态': 'job_status',
+                  '期望薪资': 'expected_salary',
+                  '期望城市': 'expected_city',
+                  '期望行业': 'industries'
+                }[label]
+                
+                return {
+                  key,
+                  dataPath: `job_intention.${key}`,
+                  type: element.props?.type || 'text'
+                }
+              }
+              
+              // 基本信息字段
               switch(element.props?.type) {
-                case 'avatar': return 'avatar'
-                case 'text':
-                  switch(element.props?.label) {
-                    case '姓名': return 'name'
-                    case '性别': return 'gender'
-                    case '出生日期': return 'birth_date'
-                    case '电话': return 'phone'
-                    case '邮箱': return 'email'
-                    case '所在城市': return 'location'
-                    default: return ''
+                case 'avatar': 
+                  return {
+                    key: 'avatar',
+                    dataPath: 'basic_info.avatar',
+                    type: 'avatar'
                   }
+                case 'text':
+                  const basicInfoKey = {
+                    '姓名': 'name',
+                    '性别': 'gender',
+                    '出生日期': 'birth_date',
+                    '电话': 'phone',
+                    '邮箱': 'email',
+                    '所在城市': 'location'
+                  }[label]
+                  
+                  if (basicInfoKey) {
+                    return {
+                      key: basicInfoKey,
+                      dataPath: `basic_info.${basicInfoKey}`,
+                      type: 'text'
+                    }
+                  }
+                  break
                 case 'textarea':
-                  if (element.props?.label === '个人简介') return 'personal_summary'
-                  return ''
-                default: return ''
+                  if (label === '个人简介') {
+                    return {
+                      key: 'personal_summary',
+                      dataPath: 'basic_info.personal_summary',
+                      type: 'textarea'
+                    }
+                  }
+                  break
+              }
+              
+              return {
+                key: '',
+                dataPath: '',
+                type: element.props?.type || ''
               }
             })()
 
             console.log('【LoadingScreen】处理后的field属性:', {
               hasField: !!element.field,
-              fieldDataPath: `basic_info.${fieldKey}`,
-              fieldType: element.props?.type || '',
-              fieldKey,
+              fieldDataPath: fieldConfig.dataPath,
+              fieldType: fieldConfig.type,
+              fieldKey: fieldConfig.key,
               fieldLabel: element.props?.label || '',
               propsContent: element.props
             })
@@ -264,8 +310,8 @@ const handleLoadComplete = () => {
               style: element.style || {},
               props: element.props || {},
               field: element.field,
-              dataPath: `basic_info.${fieldKey}`,
-              mappingType: element.props?.type || '',
+              dataPath: fieldConfig.dataPath,
+              mappingType: fieldConfig.type,
               // 添加可拖拽相关的属性
               draggable: true,
               resizable: true,

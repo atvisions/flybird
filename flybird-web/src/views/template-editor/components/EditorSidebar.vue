@@ -48,7 +48,7 @@
 
       <!-- 简历组件面板 -->
       <div v-else-if="activeTab === 'resume'" class="resume-panel">
-        <div v-for="group in resumeComponents" :key="group.key" class="resume-category">
+        <div v-for="group in resumeFields" :key="group.key" class="resume-category">
           <div class="category-title">{{ group.label }}</div>
           <div class="resume-component-item"
             draggable="true"
@@ -59,7 +59,6 @@
               props: {
                 background: '#fff',
                 padding: '20px',
-                borderRadius: '8px',
                 boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
               }
             })"
@@ -291,12 +290,11 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useTabs } from '../composables/useTabs'
 import { useComponents } from '../composables/useComponents'
 import * as Icons from '@icon-park/vue-next'
 import IconPanel from './icons/IconPanel.vue'
-import { resumeComponents } from '../config/resume-components'
 import { categoryApi } from '@/api/category'
 import { templateApi } from '@/api/template'
 import { showToast } from '@/components/ToastMessage'
@@ -309,7 +307,6 @@ import config from '@/config'
 import { useAuthStore } from '@/stores/auth'
 import { ElMessage } from 'element-plus'
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
-import ResumeFieldGroup from './resume-fields/ResumeFieldGroup.vue'
 import {
   basicInfoFields,
   jobIntentionFields,
@@ -391,14 +388,10 @@ const handleDragStart = (e, item) => {
   if (item.type === 'resume-field') {
     // 处理简历字段组件
     dragData = {
-      type: item.component === 'basicInfo' ? 'basic-info' : 'resume-field',
+      type: item.component === 'basicInfo' ? 'basic-info' : 
+            item.component === 'jobIntention' ? 'job-intention' : 'resume-field',
       component: item.component,
-      label: item.label,
-      props: {
-        ...item.props,
-        isPreview: false,
-        dataPath: item.component
-      }
+      field: item.field || {}
     }
     console.log('拖拽数据:', dragData)
   } else if (item.type === 'icon') {
@@ -829,47 +822,13 @@ const handleConfirmDelete = async () => {
   }
 }
 
-const resumeFieldGroups = [
-  {
-    key: 'basicInfo',
-    title: '基本信息',
-    fields: basicInfoFields
-  },
-  {
-    key: 'jobIntention',
-    title: '求职意向',
-    fields: jobIntentionFields
-  },
-  {
-    key: 'workExperience',
-    title: '工作经历',
-    fields: workExperienceFields
-  },
-  {
-    key: 'education',
-    title: '教育经历',
-    fields: educationFields
-  },
-  {
-    key: 'skills',
-    title: '技能特长',
-    fields: skillFields
-  },
-  {
-    key: 'projects',
-    title: '项目经验',
-    fields: projectFields
-  },
-  {
-    key: 'certificates',
-    title: '证书',
-    fields: certificateFields
-  },
-  {
-    key: 'languages',
-    title: '语言能力',
-    fields: languageFields
-  }
+// 组织简历组件数据
+const resumeFields = [
+  { key: 'basicInfo', label: '基本信息', fields: basicInfoFields },
+  { key: 'jobIntention', label: '求职意向', fields: jobIntentionFields },
+  { key: 'workExperience', label: '工作经历', fields: workExperienceFields },
+  { key: 'education', label: '教育经历', fields: educationFields },
+  { key: 'skills', label: '技能特长', fields: skillFields }
 ]
 </script>
 
