@@ -682,7 +682,9 @@ const handleDrop = (e) => {
       })
       
       // 选中最后添加的元素
-      selectedElements.value = elementsList.value[elementsList.value.length - 1]
+      emit('element-select', elementsList.value[elementsList.value.length - 1])
+      // 保存到历史记录
+      pushState([...elementsList.value])
     } else if (parsedData.type === 'resume-field') {
       // 处理单个字段的拖放
       const element = {
@@ -712,20 +714,27 @@ const handleDrop = (e) => {
         type: parsedData.type,
         x: x,
         y: y,
-        width: parsedData.type === 'triangle' ? 100 : 
+        width: parsedData.type === 'icon' ? (parsedData.props?.width || 24) :
+               parsedData.type === 'triangle' ? 100 : 
                parsedData.type === 'circle' ? 100 :
                parsedData.type === 'rectangle' ? 100 :
                parsedData.type === 'text' ? 100 :
                parsedData.type === 'star' ? 100 :
                parsedData.defaultProps?.width || parsedData.width || 200,
-        height: parsedData.type === 'triangle' ? 100 : 
+        height: parsedData.type === 'icon' ? (parsedData.props?.height || 24) :
+                parsedData.type === 'triangle' ? 100 : 
                 parsedData.type === 'circle' ? 100 :
                 parsedData.type === 'rectangle' ? 100 :
                 parsedData.type === 'text' ? 30 :
                 parsedData.type === 'star' ? 100 :
                 parsedData.defaultProps?.height || parsedData.height || 30,
         rotate: 0,
-        props: {
+        props: parsedData.type === 'icon' ? {
+          ...parsedData.props,
+          isPreview: false,
+          opacity: 1,
+          fill: parsedData.props?.fill || '#333333'
+        } : {
           ...parsedData.defaultProps,
           isPreview: false
         }
