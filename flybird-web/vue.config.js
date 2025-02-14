@@ -6,9 +6,6 @@ require('dotenv').config()
 module.exports = defineConfig({
   transpileDependencies: true,
   runtimeCompiler: true,
-  define: {
-    __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'false'
-  },
   configureWebpack: {
     resolve: {
       alias: {
@@ -28,7 +25,7 @@ module.exports = defineConfig({
     port: 8080,
     proxy: {
       '/api': {
-        target: 'http://192.168.3.16:8000',
+        target: 'http://192.168.3.22:8000',
         changeOrigin: true,
         ws: true,
         pathRewrite: {

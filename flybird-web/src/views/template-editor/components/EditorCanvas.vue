@@ -438,7 +438,19 @@ watch(() => props.scale, (newScale, oldScale) => {
   })
 })
 
-
+// 修改画布点击处理函数
+const handleCanvasClick = (e) => {
+  // 检查点击是否在多选框内
+  if (e.target.closest('.moveable-control-box') || 
+      e.target.closest('.canvas-element') ||
+      e.target.closest('.group-delete-btn')) {
+    return
+  }
+  // 清空选中状态
+  selectedElements.value = []
+  emit('element-select', null)
+  emit('selected-elements-change', [])
+}
 
 // 修改元素选中处理函数
 const handleElementSelect = (element, event) => {
@@ -452,39 +464,18 @@ const handleElementSelect = (element, event) => {
       }
       // 添加新元素到选中组
       selectedElements.value.push(element)
-      emit('element-select', null)
-      emit('selected-elements-change', selectedElements.value)
     } else {
       // 从选中组中移除元素
       selectedElements.value.splice(index, 1)
-      if (selectedElements.value.length === 1) {
-        emit('element-select', selectedElements.value[0])
-        emit('selected-elements-change', [])
-      } else if (selectedElements.value.length === 0) {
-        emit('element-select', null)
-        emit('selected-elements-change', [])
-      } else {
-        emit('selected-elements-change', selectedElements.value)
-      }
     }
+    emit('element-select', null)
+    emit('selected-elements-change', selectedElements.value)
   } else {
     // 普通点选模式
-    selectedElements.value = []
+    selectedElements.value = [element]
     emit('element-select', element)
     emit('selected-elements-change', [])
   }
-}
-
-// 修改画布点击处理函数
-const handleCanvasClick = (e) => {
-  if (e.target.closest('.moveable-control-box') || 
-      e.target.closest('.canvas-element') ||
-      e.target.closest('.group-delete-btn')) {
-    return
-  }
-  selectedElements.value = []
-  emit('element-select', null)
-  emit('selected-elements-change', [])
 }
 
 // 处理拖拽开始
@@ -878,6 +869,18 @@ const handleKeyDown = (e) => {
   if ((e.metaKey || e.ctrlKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
     e.preventDefault()
     handleRedo()
+  }
+
+  // 复制快捷键 (Cmd/Ctrl + C)
+  if ((e.metaKey || e.ctrlKey) && e.key === 'c') {
+    e.preventDefault()
+    copyComponent()
+  }
+
+  // 粘贴快捷键 (Cmd/Ctrl + V)
+  if ((e.metaKey || e.ctrlKey) && e.key === 'v') {
+    e.preventDefault()
+    pasteComponent()
   }
 }
 
@@ -1656,6 +1659,43 @@ const restoreRotationState = () => {
         }
       }
     })
+  }
+}
+
+const copiedComponents = ref([])
+
+const copyComponent = () => {
+  if (selectedElements.value.length > 0) {
+    copiedComponents.value = selectedElements.value.map(element => ({ ...element }))
+    console.log('组件已复制:', copiedComponents.value)
+  } else if (props.selectedElement) {
+    copiedComponents.value = [{ ...props.selectedElement }]
+    console.log('组件已复制:', copiedComponents.value)
+  } else {
+    console.log('没有选中的组件')
+  }
+}
+
+const pasteComponent = () => {
+  if (copiedComponents.value.length > 0) {
+    copiedComponents.value.forEach(copiedComponent => {
+      const element = {
+        id: generateId(),
+        type: copiedComponent.type,
+        x: copiedComponent.x + 10, // 粘贴时稍微偏移
+        y: copiedComponent.y + 10,
+        width: copiedComponent.width,
+        height: copiedComponent.height,
+        rotate: copiedComponent.rotate,
+        props: { ...copiedComponent.props }
+      }
+      elementsList.value.push(element)
+      emit('element-select', element)
+    })
+    emit('elements-change', [...elementsList.value])
+    pushState([...elementsList.value])
+  } else {
+    console.log('没有复制的组件')
   }
 }
 </script>
